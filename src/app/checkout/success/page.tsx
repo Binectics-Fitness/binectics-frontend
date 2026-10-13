@@ -12,6 +12,7 @@ import { MembershipPlanType } from "@/lib/types";
 import DashboardLoading from "@/components/DashboardLoading";
 import { Button } from "@/components/Button";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { cardNotSavedCopy } from "@/lib/billing/autoRenew";
 
 function SuccessContent() {
   const router = useRouter();
@@ -20,6 +21,12 @@ function SuccessContent() {
 
   const listingId = searchParams.get("listing");
   const planId = searchParams.get("plan");
+  // Set by the checkout only when the member ticked "Renew automatically".
+  // Wording only: Billing re-reads the real state from the API.
+  const renewal = searchParams.get("renewal");
+  // Why the card wasn't saved (the API's card_not_saved_reason code). Only
+  // ever looked up in the copy table, never rendered as given.
+  const notSavedReason = searchParams.get("reason");
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [plan, setPlan] = useState<MarketplaceMembershipPlan | null>(null);
@@ -44,6 +51,8 @@ function SuccessContent() {
   }, [listingId, planId]);
 
   useEffect(() => {
+    // Reading the plan from the API is the external sync this effect is for.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!authLoading && user) void loadData();
   }, [user, authLoading, loadData]);
 
@@ -119,6 +128,18 @@ function SuccessContent() {
               </div>
             </div>
           </div>
+        )}
+
+        {renewal === "on" && (
+          <p role="status" className="mb-6 rounded-(--r-3) border border-border bg-bg-2 px-4 py-3 text-left text-sm text-fg-2">
+            Auto-renew is on. We&apos;ll remind you before each charge, and you can turn it off or remove your card in Billing at any time.
+          </p>
+        )}
+        {renewal === "not_saved" && (
+          <p role="status" className="mb-6 rounded-(--r-3) border border-warn bg-warn-soft px-4 py-3 text-left text-sm text-warn-ink">
+            {notSavedReason ? `${cardNotSavedCopy(notSavedReason)} ` : "We couldn't save this card for renewals. "}
+            Auto-renew is off. Renew in Billing when your term ends.
+          </p>
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">

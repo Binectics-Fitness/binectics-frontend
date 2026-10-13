@@ -13,7 +13,10 @@ import {
   useUnreadNotificationCount,
 } from "@/lib/queries/notifications";
 import { NotificationCategory } from "@/lib/api/notifications";
-import { resolveNotificationLink } from "@/utils/resolveNotificationLink";
+import Link from "next/link";
+import { resolveNotificationTarget } from "@/utils/resolveNotificationLink";
+import { renewHrefForNotification } from "@/lib/billing/autoRenew";
+import type { NotificationItem } from "@/lib/api/notifications";
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -90,18 +93,14 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
     await Promise.all([listQuery.refetch(), unreadQuery.refetch()]);
   };
 
-  const handleNotificationClick = async (
-    notificationId: string,
-    isRead: boolean,
-    actionUrl?: string,
-  ) => {
-    if (!isRead && !markAsReadMutation.isPending) {
-      await markAsReadMutation.mutateAsync(notificationId);
+  const handleNotificationClick = async (n: NotificationItem) => {
+    if (!n.isRead && !markAsReadMutation.isPending) {
+      await markAsReadMutation.mutateAsync(n.id);
       await Promise.all([listQuery.refetch(), unreadQuery.refetch()]);
     }
 
-    if (typeof actionUrl === "string") {
-      const nextPath = resolveNotificationLink(actionUrl, user?.role);
+    if (typeof n.actionUrl === "string" || n.type) {
+      const nextPath = resolveNotificationTarget(n, user?.role);
       onClose();
       router.push(nextPath);
     }
@@ -151,14 +150,14 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
             <p className="text-[13.5px] text-fg-3">No notifications</p>
           </div>
         ) : (
-          filtered.map((n) => (
+          filtered.map((n) => {
+            const renewHref = renewHrefForNotification(n);
+            return (
+            <div key={n.id} className={`border-b border-border ${n.isRead ? "" : "bg-bg-2"}`}>
             <button
-              key={n.id}
               type="button"
-              onClick={() => handleNotificationClick(n.id, n.isRead, n.actionUrl)}
-              className={`flex gap-3 border-b border-border px-6 py-4 ${
-                n.isRead ? "" : "bg-bg-2"
-              }`}
+              onClick={() => handleNotificationClick(n)}
+              className="flex gap-3 px-6 py-4"
               style={{ width: "100%", textAlign: "left" }}
             >
               <NotificationIconTile type={n.type} category={n.category} />
@@ -181,7 +180,16 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
                 </p>
               </div>
             </button>
-          ))
+            {renewHref && (
+              <div className="-mt-1 pb-4 pl-[68px] pr-6">
+                <Link href={renewHref} onClick={onClose} className="btn-primary-v2 md inline-flex" aria-label={`Renew: ${n.title}`}>
+                  Renew
+                </Link>
+              </div>
+            )}
+            </div>
+            );
+          })
         )}
       </div>
     </Drawer>
