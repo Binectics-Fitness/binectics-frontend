@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 
@@ -13,10 +12,98 @@ import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 
 type DocType = "privacy" | "terms" | "cookies";
 
-const DOCS: Record<DocType, { label: string; version: string; sections: { num: string; title: string; content: React.ReactNode }[] }> = {
+type Section = {
+  num: string;
+  title: string;
+  /** A stable anchor for sections linked from outside (default `s-<num>`). */
+  id?: string;
+  content: React.ReactNode;
+};
+
+const sectionId = (s: Section) => s.id ?? `s-${s.num}`;
+
+/* Shared styles for the connected-health section (same values as the rest of the page). */
+const hcP = "text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]";
+const hcH3 = "text-[16px] font-medium mt-7 mb-2.5";
+const hcUl = "flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch] mb-3.5";
+const hcStrong = { color: "var(--ink)", fontWeight: 500 } as const;
+
+const HEALTH_DATA_SECTION: Section = {
+  num: "06",
+  id: "health-data",
+  title: "Connected health apps",
+  content: (<>
+    <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-1" style={{ color: "var(--fg-3)" }}>In one paragraph</div>
+      <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>If you connect <strong>Health Connect</strong> in the Binectics Android app, we read only the health data types you allow, and we never write to it. We use that data for your Health log and, only if you turn it on, to complete your program tasks. <strong>No ads, and we never sell it.</strong> Disconnecting deletes what we imported unless you choose to keep it, and deleting your account deletes all of it.</p>
+    </div>
+    <p className={hcP} style={{ color: "var(--fg-2)" }}>This section applies only if you connect Health Connect, Android&apos;s shared health store. It includes data that other apps, such as Samsung Health or a Galaxy Watch, have saved to Health Connect.</p>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>What we read</h3>
+    <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
+      <li><strong style={hcStrong}>Only these types, and only the ones you allow</strong>: steps, workouts (exercise sessions, with their distance), sleep, resting heart rate and weight. You choose them on Health Connect&apos;s permission screen and can change them there at any time.</li>
+      <li><strong style={hcStrong}>Read only</strong>. Binectics never writes anything to Health Connect.</li>
+      <li><strong style={hcStrong}>When</strong>: up to 30 days from before you connect, then whatever is new each time you open the app. Nothing is read in the background.</li>
+      <li><strong style={hcStrong}>Steps</strong> are added up on your phone, and we store a total per day, not every reading. We read resting heart rate only, not your continuous heart rate.</li>
+      <li><strong style={hcStrong}>With each record</strong> we keep which app saved it and whether it was recorded by a device or typed in by hand.</li>
+    </ul>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>What we use it for</h3>
+    <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
+      <li><strong style={hcStrong}>Your Health log</strong>. Imported workouts and weigh‑ins appear next to the ones you log yourself, so you don&apos;t type them twice. They can&apos;t be edited or deleted in Binectics: delete them in the app that recorded them, and they go here on the next sync.</li>
+      <li><strong style={hcStrong}>Your program tasks, only if you turn on &ldquo;Use for my program tasks&rdquo;</strong>. It is off until you turn it on. A task such as &ldquo;Walk 8,000 steps&rdquo; then completes itself. By default only data recorded by a device counts, not entries typed in by hand, unless the provider who set the task allowed hand entries. That provider sees the task completed and, for a measurement task such as hours slept or weight, the value that filled it. If the data is later deleted, the task stays completed and is marked.</li>
+      <li><strong style={hcStrong}>Nothing else</strong>. Imported data never earns loyalty points or rewards.</li>
+    </ul>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>What your providers see</h3>
+    <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
+      <li><strong style={hcStrong}>Sharing is per type and starts off</strong>. Steps, workouts, sleep, heart rate and weight each have their own &ldquo;share with my providers&rdquo; switch, in the connect flow and in Settings → Privacy. Every one starts off.</li>
+      <li><strong style={hcStrong}>Imported data is shared only for the types you switch on</strong>, and only while &ldquo;Share my progress with my providers&rdquo; is also on. It goes only to providers you are currently working with (and authorised staff at their gym or practice). With a type off, providers see none of what you imported of it.</li>
+      <li><strong style={hcStrong}>Today, that means weight</strong>. Shared imported weigh‑ins appear in your weight history for those providers. Imported steps, workouts, sleep and resting heart rate don&apos;t appear anywhere a provider can see yet, even when shared.</li>
+      <li><strong style={hcStrong}>What you type in yourself</strong> is not covered by these switches. It follows &ldquo;Share my progress with my providers&rdquo;, as before.</li>
+      <li><strong style={hcStrong}>Program tasks</strong>, as described above, if you turned on &ldquo;Use for my program tasks&rdquo;.</li>
+    </ul>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>What we never do</h3>
+    <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
+      <li>We don&apos;t use it for advertising, and we never sell it or give it to data brokers.</li>
+      <li>We don&apos;t use it for insurance, credit, lending or employment decisions, or to train AI models.</li>
+      <li>Our servers keep it out of error reports and logs. The contents of health data requests are dropped before they reach our error monitoring, and our logs record counts and types, never values.</li>
+      <li>There is no Binectics staff screen for it. People at Binectics look at it only to help with a request you make, to keep accounts secure, or when the law requires it.</li>
+    </ul>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>How long we keep it</h3>
+    <div className="rounded-(--r-3) overflow-hidden my-4 max-w-[60ch]" style={{ border: "1px solid var(--border)" }}>
+      <div className="grid font-mono text-[11px] uppercase tracking-[0.04em]" style={{ gridTemplateColumns: "1fr 1.5fr", padding: "10px 16px", background: "var(--bg-2)", borderBottom: "1px solid var(--border)", color: "var(--fg-3)" }}><span>Data</span><span>Retention</span></div>
+      {[
+        ["Records we read", "13 months after the activity, then deleted automatically"],
+        ["Daily totals", "About 25 months after the day was last updated, then deleted automatically"],
+        ["Workouts & weigh‑ins in your Health log", "Until you delete them at the source, disconnect, or delete your account"],
+        ["Consent history", "When you connected, the types you allowed and what you changed. Kept until you delete your account"],
+      ].map(([k, v], i, rows) => (
+        <div key={k} className="grid text-[14px]" style={{ gridTemplateColumns: "1fr 1.5fr", padding: "12px 16px", borderBottom: i < rows.length - 1 ? "1px solid var(--border)" : "none" }}>
+          <span className="font-medium" style={{ color: "var(--ink)" }}>{k}</span>
+          <span style={{ color: "var(--fg-2)" }}>{v}</span>
+        </div>
+      ))}
+    </div>
+
+    <h3 className={hcH3} style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Disconnecting and deleting</h3>
+    <ul className={hcUl} style={{ color: "var(--fg-2)" }}>
+      <li><strong style={hcStrong}>Disconnect</strong> from Connected apps in the app. By default this deletes everything we imported: the records, the daily totals, and the imported workouts and weigh‑ins. What you logged yourself is not touched. Binectics also gives up its Health Connect access on your phone.</li>
+      <li><strong style={hcStrong}>&ldquo;Keep my history&rdquo;</strong> is the option. Syncing stops and what was already imported stays, still deleted on the schedule above or when you delete your account.</li>
+      <li><strong style={hcStrong}>Either way</strong>, program tasks already completed stay completed.</li>
+      <li><strong style={hcStrong}>Deleting your account</strong> deletes all of it: imported data, the connection and your consent history.</li>
+      <li><strong style={hcStrong}>In Health Connect</strong> you can also remove Binectics&apos;s access, or single types, at any time. We stop reading them.</li>
+    </ul>
+    <p className={hcP} style={{ color: "var(--fg-2)" }}>Your phone sends this data to our servers over an encrypted connection, and it is stored with the rest of your account (see &ldquo;Where it lives&rdquo;). Questions go to <span className="font-mono text-[14px]" style={{ color: "var(--ink)" }}>privacy@binectics.com</span>.</p>
+  </>),
+};
+
+const DOCS: Record<DocType, { label: string; version: string; sections: Section[] }> = {
   privacy: {
     label: "Privacy policy",
-    version: "v 3.1 · 14 May 2026",
+    version: "v 3.2 · 13 Oct 2026",
     sections: [
       { num: "00", title: "Plain‑English summary", content: (
         <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
@@ -78,17 +165,19 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
             ["Bookings & payments", "7 years (tax compliance)"],
             ["Messages", "2 years after last interaction"],
             ["Health & meal logs", "Deleted when you delete your account · backup copies expire within 35 days"],
+            ["Connected health app data", "13 months for records, about 25 months for daily totals · see Connected health apps"],
             ["Verification documents", "Hash + outcome only · originals deleted in 90 days"],
             ["Behavioral analytics", "Anonymized after 14 days · aggregated indefinitely"],
           ].map(([k, v], i) => (
-            <div key={k} className="grid text-[14px]" style={{ gridTemplateColumns: "1fr 1.5fr", padding: "12px 16px", borderBottom: i < 4 ? "1px solid var(--border)" : "none" }}>
+            <div key={k} className="grid text-[14px]" style={{ gridTemplateColumns: "1fr 1.5fr", padding: "12px 16px", borderBottom: i < 5 ? "1px solid var(--border)" : "none" }}>
               <span className="font-medium" style={{ color: "var(--ink)" }}>{k}</span>
               <span style={{ color: "var(--fg-2)" }}>{v}</span>
             </div>
           ))}
         </div>
       )},
-      { num: "06", title: "Your rights", content: (<>
+      HEALTH_DATA_SECTION,
+      { num: "07", title: "Your rights", content: (<>
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Wherever you are, you have these rights. Data protection law and our own policy converge on them.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, download a full copy of your data from settings.</li>
@@ -98,7 +187,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: { num: s
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Object to processing</strong>, turn off behavioral analytics in cookie settings.</li>
         </ul>
       </>)},
-      { num: "07", title: "Contact us", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Email <span className="font-mono text-[14px]" style={{ color: "var(--ink)" }}>privacy@binectics.com</span> for any privacy request.</p> },
+      { num: "08", title: "Contact us", content: <p className="text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Email <span className="font-mono text-[14px]" style={{ color: "var(--ink)" }}>privacy@binectics.com</span> for any privacy request.</p> },
     ],
   },
   terms: {
@@ -149,19 +238,28 @@ function LegalPageContent() {
   const [activeDoc, setActiveDoc] = useState<DocType>(initialTab);
   const doc = DOCS[activeDoc];
 
+  // The page renders on the client, so the browser's own jump to a #anchor
+  // (e.g. /privacy#health-data, linked from the Android app) runs before the
+  // section exists. Scroll to it once it does.
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    document.getElementById(decodeURIComponent(hash))?.scrollIntoView();
+  }, [activeDoc]);
+
   return (
     <div style={{ background: "var(--bg)" }}>
       <MarketingTopbar />
 
       {/* Hero */}
       <section className="mx-auto max-w-360 px-5 sm:px-10 pt-10 sm:pt-14 pb-5 sm:pb-7">
-        <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Legal · last updated 14 May 2026</div>
+        <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Legal · last updated 13 October 2026</div>
         <h1 className="text-[48px] font-medium max-w-[18ch]" style={{ lineHeight: 1.02, letterSpacing: "-0.032em", color: "var(--ink)", marginTop: "14px" }}>
           The fine print, in <em className="font-serif font-normal italic">plain English</em>.
         </h1>
         <p className="text-[16px] max-w-[56ch] leading-[1.55] mt-4" style={{ color: "var(--fg-2)" }}>Plain language where possible. If something is unclear, email legal@binectics.com and we&apos;ll explain it like humans.</p>
         <div className="font-mono text-[11.5px] uppercase tracking-[0.04em] flex flex-wrap gap-6 mt-5.5" style={{ color: "var(--fg-3)" }}>
-          <span>Privacy <strong className="text-[13px] font-medium uppercase-none" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>v 3.1</strong></span>
+          <span>Privacy <strong className="text-[13px] font-medium uppercase-none" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>v 3.2</strong></span>
           <span>Terms <strong className="text-[13px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>v 2.4</strong></span>
           <span>Cookies <strong className="text-[13px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>v 1.2</strong></span>
         </div>
@@ -186,7 +284,7 @@ function LegalPageContent() {
         <aside className="hidden lg:flex sticky flex-col gap-0.5" style={{ top: "24px" }}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2.5 py-2" style={{ color: "var(--fg-3)" }}>{doc.label}</div>
           {doc.sections.map((s, i) => (
-            <a key={s.num} href={`#s-${s.num}`} className={`flex justify-between items-center py-1.5 px-2.5 rounded-(--r-2) text-[13px] ${i === 0 ? "bg-bg-2 font-medium" : "hover:bg-bg-2"}`} style={{ color: i === 0 ? "var(--ink)" : "var(--fg-3)", borderLeft: i === 0 ? "2px solid var(--ink)" : "2px solid transparent", paddingLeft: i === 0 ? "8px" : "10px", textDecoration: "none" }}>
+            <a key={s.num} href={`#${sectionId(s)}`} className={`flex justify-between items-center py-1.5 px-2.5 rounded-(--r-2) text-[13px] ${i === 0 ? "bg-bg-2 font-medium" : "hover:bg-bg-2"}`} style={{ color: i === 0 ? "var(--ink)" : "var(--fg-3)", borderLeft: i === 0 ? "2px solid var(--ink)" : "2px solid transparent", paddingLeft: i === 0 ? "8px" : "10px", textDecoration: "none" }}>
               {s.title}
               <span className="font-mono text-[11px]" style={{ color: i === 0 ? "var(--ink)" : "var(--fg-4)" }}>{s.num}</span>
             </a>
@@ -196,7 +294,7 @@ function LegalPageContent() {
         {/* Content */}
         <main className="max-w-[720px]">
           {doc.sections.map((s, i) => (
-            <div key={s.num} id={`s-${s.num}`} style={{ marginTop: i > 0 ? "56px" : 0, paddingTop: i > 0 ? "12px" : 0, borderTop: i > 0 ? "1px solid var(--border)" : "none" }}>
+            <div key={s.num} id={sectionId(s)} style={{ marginTop: i > 0 ? "56px" : 0, paddingTop: i > 0 ? "12px" : 0, borderTop: i > 0 ? "1px solid var(--border)" : "none" }}>
               <h2 className="text-[26px] font-medium leading-[1.1]" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>
                 <span className="font-mono text-[13px] font-normal mr-3 tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{s.num}</span>
                 {s.title}
