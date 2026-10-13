@@ -138,6 +138,22 @@ describe("NotificationPreferencesPanel", () => {
   });
 });
 
+describe("NotificationPreferencesPanel payment receipts", () => {
+  afterEach(() => cleanup());
+
+  it("has no email switch for payment receipts, says they are always emailed, and keeps the push switch", () => {
+    mockUseNotificationPreferences.mockReturnValue({ data: basePreferences, isLoading: false, refetch: vi.fn() });
+    mockUseUpdateNotificationPreferences.mockReturnValue({ mutateAsync: vi.fn(), isPending: false, isError: false });
+
+    render(<NotificationPreferencesPanel />);
+
+    expect(screen.getByText("Payment receipts")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Payment receipts email/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Payment receipts are always emailed.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Payment receipts push/i })).toBeEnabled();
+  });
+});
+
 describe("NotificationPreferencesPanel nudges", () => {
   afterEach(() => cleanup());
 
