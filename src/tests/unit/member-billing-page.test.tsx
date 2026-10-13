@@ -11,6 +11,7 @@ import {
   MembershipSubscriptionStatus,
   type MembershipSubscription,
 } from "@/lib/types";
+import { formatDate } from "@/utils/format";
 
 vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -432,5 +433,64 @@ describe("saved cards", () => {
     const dialog = await screen.findByRole("dialog");
     await userEvent.click(within(dialog).getByRole("button", { name: "Remove card" }));
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Card not found");
+  });
+});
+
+describe("a membership cancelled mid-term", () => {
+  const cancelled = (over: Partial<MembershipSubscription> = {}) =>
+    sub({ cancel_requested_at: new Date(Date.now() - DAY).toISOString(), end_date: soon, ...over });
+
+  it("turning auto-renew back on says first that it takes the cancellation back, and when the card is charged", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [cancelled()] });
+    const firstCharge = new Date(Date.now() + 4 * DAY).toISOString();
+    setAutoRenew
+      .mockResolvedValueOnce({
+        success: false,
+        status: 400,
+        code: "CONSENT_REQUIRED",
+        message: "x",
+        details: { consent: { ...offered, rendered: { first_charge_at: firstCharge } as never } },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: sub({ auto_renew: true, collection_method: "card_auto", end_date: soon }),
+      });
+    renderPage();
+    await userEvent.click(await screen.findByRole("switch", { name: /Auto-renew/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Turn on auto-renew" });
+    const note = within(dialog).getByTestId("uncancel-note");
+    expect(note).toHaveTextContent(
+      "You cancelled this membership. Turning auto-renew back on takes that back: your membership keeps going and your card will be charged on",
+    );
+    expect(note).toHaveTextContent(formatDate(firstCharge));
+    await userEvent.click(within(dialog).getByRole("checkbox", { name: offered.text }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Turn on auto-renew" }));
+    expect(await screen.findByText(/your cancellation is taken back/)).toBeInTheDocument();
+  });
+
+  it("still offers Renew near its end, as mobile does: paying keeps it going for another term", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [cancelled()] });
+    renderPage();
+    expect(await screen.findByText(/Cancelled, access ends/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Renew Monthly" })).toHaveAttribute("href", "/checkout?listing=l1&plan=p1");
+  });
+
+  it("cancelling refreshes the saved cards, so none still shows a next charge", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ auto_renew: true, collection_method: "card_auto", payment_method_id: "pm1" })],
+    });
+    listCards.mockResolvedValue({ success: true, data: [visa] });
+    const cancel = vi
+      .spyOn(marketplaceService, "cancelMembershipSubscription")
+      .mockResolvedValue({ success: true, data: cancelled() });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderPage();
+    expect(await screen.findByText(/Monthly: next charge/)).toBeInTheDocument();
+    const before = listCards.mock.calls.length;
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(cancel).toHaveBeenCalledWith("s1"));
+    await waitFor(() => expect(listCards.mock.calls.length).toBeGreaterThan(before));
+    confirm.mockRestore();
   });
 });
