@@ -23,10 +23,13 @@ import {
 import {
   autoRenewSuccessQuery,
   autoRenewUnavailableCopy,
+  cancelledTermForPlan,
   consentFromError,
   isOfferedConsent,
   reasonFromError,
+  uncancelCheckoutLine,
 } from "@/lib/billing/autoRenew";
+import { formatDate } from "@/utils/format";
 
 /**
  * Plan checkout.
@@ -45,6 +48,10 @@ import {
  * word for word beside an unticked box. Ticking it sends the text's version
  * and hash with the checkout, which makes it card-only and saves the card
  * once Paystack says it can be charged again. Not offered, no box.
+ *
+ * Renewing a membership the member cancelled mid-term: ticking the box takes
+ * the cancellation back (the API clears it), so a line above the terms says
+ * so first (web PR 228, mobile PR 107).
  */
 
 // ==================== CHECKOUT CONTENT ====================
@@ -67,6 +74,8 @@ function CheckoutContent() {
   const [consent, setConsent] = useState<AutoRenewConsentOffer | null>(null);
   const [renewTicked, setRenewTicked] = useState(false);
   const [consentNotice, setConsentNotice] = useState<string | null>(null);
+  // Renewing a membership cancelled mid-term: ticking the box takes it back.
+  const [renewsCancelled, setRenewsCancelled] = useState(false);
   // One checkout at a time: a second click while the popup is up is ignored.
   const inFlight = useRef(false);
 
@@ -76,15 +85,20 @@ function CheckoutContent() {
     setLoading(true);
     setError("");
     try {
-      const [listingRes, plansRes, consentRes] = await Promise.all([
+      const [listingRes, plansRes, consentRes, subsRes] = await Promise.all([
         marketplaceService.getListingById(listingId),
         marketplaceService.getPublicListingPlans(listingId),
         // A failed read just leaves the box out: paying once still works.
         memberBillingService
           .getPlanAutoRenewConsent(listingId, planId)
           .catch(() => null),
+        // Only for the take-back line: a failed read leaves it out.
+        marketplaceService.getMyMembershipSubscriptions().catch(() => null),
       ]);
       setConsent(consentRes?.success && consentRes.data ? consentRes.data : null);
+      setRenewsCancelled(
+        !!subsRes?.success && !!cancelledTermForPlan(subsRes.data, planId),
+      );
 
       if (listingRes.success && listingRes.data) {
         setListing(listingRes.data);
@@ -446,6 +460,11 @@ function CheckoutContent() {
                 <>
                   {isOfferedConsent(consent) && (
                     <div className="mb-5">
+                      {renewsCancelled && (
+                        <p className="mb-3 text-[13.5px] text-ink" data-testid="uncancel-note">
+                          {uncancelCheckoutLine(consent, (iso) => formatDate(iso))}
+                        </p>
+                      )}
                       <AutoRenewConsentBox
                         consent={consent}
                         checked={renewTicked}

@@ -6,6 +6,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { openPaystackCheckout, PaystackUnavailableError } from "@/lib/payments/paystackInline";
 import { MembershipPlanType, type MarketplaceListing, type MarketplaceMembershipPlan } from "@/lib/types";
 import { memberBillingService } from "@/lib/api/memberBilling";
+import { formatDate } from "@/utils/format";
 
 const push = vi.fn();
 // One router for the whole run, as Next keeps it: a new object per render
@@ -76,6 +77,7 @@ describe("plan checkout", () => {
   const start = vi.spyOn(marketplaceService, "startPlanCheckout");
   const subscribe = vi.spyOn(marketplaceService, "subscribeToListingPlan");
   const consent = vi.spyOn(memberBillingService, "getPlanAutoRenewConsent");
+  const mySubs = vi.spyOn(marketplaceService, "getMyMembershipSubscriptions");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -84,6 +86,7 @@ describe("plan checkout", () => {
     vi.spyOn(marketplaceService, "getPublicListingPlans").mockResolvedValue({ success: true, data: [plan] });
     start.mockResolvedValue({ success: true, data: checkout });
     subscribe.mockResolvedValue({ success: true, data: {} as never });
+    mySubs.mockResolvedValue({ success: true, data: [] });
   });
 
   it("shows the plan price in its own currency and offers only Paystack", async () => {
@@ -310,6 +313,68 @@ describe("plan checkout", () => {
       );
       expect(screen.queryByRole("checkbox")).toBeNull();
       expect(open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("renewing a membership cancelled mid-term", () => {
+    const cancelledSub = (over: Record<string, unknown> = {}) =>
+      ({
+        _id: "s1",
+        plan_id: { _id: "p1", name: "Monthly" },
+        listing_id: "l1",
+        status: "active",
+        end_date: "2026-11-08T00:00:00.000Z",
+        cancel_requested_at: "2026-10-05T10:00:00.000Z",
+        ...over,
+      }) as never;
+
+    it("says ticking the box takes the cancellation back, with the terms' first charge date", async () => {
+      consent.mockResolvedValue({ success: true, data: offered });
+      mySubs.mockResolvedValue({ success: true, data: [cancelledSub()] });
+      render(<CheckoutPage />);
+      const note = await screen.findByTestId("uncancel-note");
+      expect(note.textContent).toBe(
+        `You cancelled this membership. Ticking the box to renew automatically takes that back: your membership keeps going and your card will be charged on ${formatDate(offered.rendered.first_charge_at)}.`,
+      );
+      // Read before the terms and their box.
+      const box = screen.getByRole("checkbox", { name: CONSENT_TEXT });
+      expect(note.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("says nothing when the membership wasn't cancelled", async () => {
+      consent.mockResolvedValue({ success: true, data: offered });
+      mySubs.mockResolvedValue({ success: true, data: [cancelledSub({ cancel_requested_at: null })] });
+      render(<CheckoutPage />);
+      await screen.findByRole("checkbox");
+      expect(screen.queryByTestId("uncancel-note")).toBeNull();
+    });
+
+    it("says nothing when auto-renew isn't offered, as there is no box to tick", async () => {
+      mySubs.mockResolvedValue({ success: true, data: [cancelledSub()] });
+      render(<CheckoutPage />);
+      await screen.findByRole("button", { name: /Pay .* with Paystack/ });
+      expect(screen.queryByTestId("uncancel-note")).toBeNull();
+    });
+
+    it("says nothing on a free plan", async () => {
+      consent.mockResolvedValue({ success: true, data: offered });
+      vi.spyOn(marketplaceService, "getPublicListingPlans").mockResolvedValue({
+        success: true,
+        data: [{ ...plan, price_minor: 0 }],
+      });
+      mySubs.mockResolvedValue({ success: true, data: [cancelledSub()] });
+      render(<CheckoutPage />);
+      await screen.findByRole("button", { name: /Activate Free Subscription/ });
+      expect(screen.queryByTestId("uncancel-note")).toBeNull();
+      expect(screen.queryByText(/will be charged/)).toBeNull();
+    });
+
+    it("still offers checkout when the memberships can't be read", async () => {
+      consent.mockResolvedValue({ success: true, data: offered });
+      mySubs.mockRejectedValue(new Error("offline"));
+      render(<CheckoutPage />);
+      await screen.findByRole("checkbox");
+      expect(screen.queryByTestId("uncancel-note")).toBeNull();
     });
   });
 });
