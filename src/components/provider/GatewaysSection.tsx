@@ -13,6 +13,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { providerCurrencyMessage } from "@/lib/currencies/helpers";
 import { ProviderCurrenciesPanel } from "./ProviderCurrenciesPanel";
+import { PaystackWebhookPanel } from "./PaystackWebhookPanel";
 
 /** "stripe" -> "Stripe", for a saved gateway the API no longer lists. */
 function titleCase(id: string): string {
@@ -41,7 +42,9 @@ const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
  *
  * A connected, active gateway also lists the currencies its account can take
  * (ProviderCurrenciesPanel): the platform's, plus ones the provider adds and
- * the API checks with the gateway. Used by gyms, trainers and dietitians:
+ * the API checks with the gateway. A connected Paystack account also shows
+ * its webhook (PaystackWebhookPanel): the URL to paste into the provider's
+ * own Paystack dashboard and when one last arrived. Used by gyms, trainers and dietitians:
  * every org that sells membership plans can collect on its own keys.
  */
 export function GatewaysSection({
@@ -174,6 +177,14 @@ export function GatewaysSection({
                 gateway={c.gateway}
                 label={label}
                 currencies={c.currencies ?? []}
+              />
+            )}
+            {/* Only when the API sends the webhook fields (an older one doesn't). */}
+            {!legacy && c.is_active && c.gateway === "paystack" && c.webhook_url !== undefined && (
+              <PaystackWebhookPanel
+                publicKey={c.public_key}
+                webhookUrl={c.webhook_url}
+                lastReceivedAt={c.webhook_last_received_at ?? null}
               />
             )}
             </div>
