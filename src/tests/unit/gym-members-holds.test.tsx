@@ -22,7 +22,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/app/dashboard/gym-owner/members/PendingOffers", () => ({ PendingOffers: () => null }));
-vi.mock("@/app/dashboard/gym-owner/members/_actions", () => ({ AddMemberButton: () => null }));
+vi.mock("@/app/dashboard/gym-owner/members/_actions", () => ({ AddMemberButton: () => null, ImportMembersButton: () => null }));
+vi.mock("@/app/dashboard/gym-owner/members/import/RecentImports", () => ({ RecentImports: () => null }));
 vi.mock("@/app/dashboard/gym-owner/members/[memberId]/TrainerCard", () => ({ TrainerCard: () => null }));
 vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
 const authState = { user: { id: "owner1" }, isLoading: false };

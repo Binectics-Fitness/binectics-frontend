@@ -52,6 +52,8 @@ export function EnrollmentOffersCard({ onAccepted }: { onAccepted?: () => void }
       } else if (result?.transfer_account) {
         setTransfer({ gym, account: result.transfer_account });
         toast.success(`Accepted. Transfer to activate your ${gym} membership.`);
+      } else if (offer.source === "import") {
+        toast.success(`Your ${gym} membership is on Binectics now`);
       } else {
         toast.success(`You're now a member of ${gym}`);
       }
@@ -139,8 +141,18 @@ export function EnrollmentOffersCard({ onAccepted }: { onAccepted?: () => void }
                     {offer.organization_id.name}
                   </div>
                   <div className="text-[12.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                    {plan.name} · {money(plan.price_minor, plan.currency)}
-                    {isTransfer ? " · pay by bank transfer" : ""} · expires {fmtDate(offer.expires_at)}
+                    {offer.source === "import" ? (
+                      // Brought over from the gym's old system: already paid,
+                      // and accepting keeps the end date it had there.
+                      <>
+                        {plan.name} · already paid · runs until {fmtDate(offer.term_end ?? offer.expires_at)}
+                      </>
+                    ) : (
+                      <>
+                        {plan.name} · {money(plan.price_minor, plan.currency)}
+                        {isTransfer ? " · pay by bank transfer" : ""} · expires {fmtDate(offer.expires_at)}
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">

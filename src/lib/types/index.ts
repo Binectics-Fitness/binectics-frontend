@@ -754,6 +754,11 @@ export interface MembershipSubscription {
   is_archived?: boolean;
   /** The team member (usually a trainer) the gym assigned this member to. */
   assigned_staff_user_id?: string | null;
+  /**
+   * `import`: brought over from the gym's previous system (member import).
+   * Paid before Binectics: amount_paid_minor is 0 and it is not revenue.
+   */
+  source?: "import" | null;
   created_at: string;
   updated_at: string;
 }

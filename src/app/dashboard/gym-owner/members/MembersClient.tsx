@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { PendingOffers } from "./PendingOffers";
-import { AddMemberButton } from "./_actions";
+import { AddMemberButton, ImportMembersButton } from "./_actions";
+import { RecentImports } from "./import/RecentImports";
 import { buildMembersCsv } from "./members-csv";
 import { marketplaceService } from "@/lib/api/marketplace";
 import {
@@ -749,11 +750,14 @@ export default function GymMembersClient() {
         className="mb-0!"
         title="Members"
         actions={
-          isOwner ? (
-            <Link href="/dashboard/gym-owner/card-renewals" className="btn-ghost-v2 md">
-              Card renewals
-            </Link>
-          ) : undefined
+          <div className="flex flex-wrap gap-2">
+            <ImportMembersButton orgId={currentOrg?._id} onImported={() => setRefreshKey((k) => k + 1)} />
+            {isOwner ? (
+              <Link href="/dashboard/gym-owner/card-renewals" className="btn-ghost-v2 md">
+                Card renewals
+              </Link>
+            ) : null}
+          </div>
         }
         subtitle={
           loading
@@ -857,8 +861,25 @@ export default function GymMembersClient() {
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-                    {search || filter !== "all" ? "No members match your filters." : "No members yet."}
+                  <td colSpan={7} className="text-center py-12 px-4 text-[13.5px]" style={{ color: "var(--fg-3)" }}>
+                    {search || filter !== "all" ? (
+                      "No members match your filters."
+                    ) : (
+                      // A new gym with no one on the books is exactly who has
+                      // a member list in another system.
+                      <div className="mx-auto flex max-w-[420px] flex-col items-center gap-2">
+                        <span style={{ color: "var(--ink)" }}>No members yet.</span>
+                        <span>
+                          Moving from another system? Import your member list. Everyone keeps the time left on
+                          their membership.
+                        </span>
+                        <ImportMembersButton
+                          orgId={currentOrg?._id}
+                          variant="primary"
+                          onImported={() => setRefreshKey((k) => k + 1)}
+                        />
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -908,6 +929,15 @@ export default function GymMembersClient() {
                       <td className="px-4.5 py-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <StatusPill tone={statusMeta.tone} label={statusMeta.label} title={statusMeta.hint} />
+                          {sub.source === "import" && (
+                            <span
+                              className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
+                              style={{ color: "var(--fg-3)", background: "var(--bg-2)", border: "1px solid var(--border)" }}
+                              title="Brought over from your previous system. Paid before Binectics, so it isn't counted as revenue."
+                            >
+                              Imported
+                            </span>
+                          )}
                           {sub.is_archived && (
                             <span
                               className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full"
@@ -925,7 +955,13 @@ export default function GymMembersClient() {
                         )}
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
-                        {fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency), sub.currency)}
+                        {sub.source === "import" ? (
+                          <span className="font-sans text-[12px] font-normal" style={{ color: "var(--fg-3)" }}>
+                            Paid before Binectics
+                          </span>
+                        ) : (
+                          fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency), sub.currency)
+                        )}
                       </td>
                       <td className="px-4.5 py-3">
                         {currentOrg && (
@@ -959,7 +995,8 @@ export default function GymMembersClient() {
         )}
       </DSCard>
 
-      <PendingOffers orgId={currentOrg?._id} />
+      <PendingOffers orgId={currentOrg?._id} refreshKey={refreshKey} />
+      <RecentImports orgId={currentOrg?._id} refreshKey={refreshKey} />
     </GymDashboardShell>
   );
 }
