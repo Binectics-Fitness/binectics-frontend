@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MessageSide, ThreadKind, type ChatMessage } from "@/lib/api/messaging";
+import { truncateGraphemes } from "@/lib/text/graphemes";
 import { MessageBubble, PendingBubble } from "./MessageBubble";
 import { dayKey, dayLabel } from "./format";
 import type { ThreadSync } from "./useThreadSync";
@@ -143,7 +144,7 @@ export function Transcript({
         setAnnouncement(
           last.deleted_at
             ? ""
-            : `New message from ${last.author.name}: ${last.body.slice(0, 140)}`,
+            : `New message from ${last.author.name}: ${truncateGraphemes(last.body, 140)}`,
         );
       }
     }
