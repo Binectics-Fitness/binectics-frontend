@@ -27,7 +27,14 @@ function occurrenceLabel(dateStr: string): string {
  * Booking requires login + an active membership — the API's error messages
  * (lead time, class full, no membership) surface inline per class.
  */
-export function ListingClassesSection({ listingId }: { listingId: string }) {
+export function ListingClassesSection({
+  listingId,
+  organizationId = null,
+}: {
+  listingId: string;
+  /** The gym's id. A membership the gym enrolled directly has no listing, so a hold on it is found by the gym. */
+  organizationId?: string | null;
+}) {
   const { data: classes = [], isLoading } = useQuery<GymClass[]>({
     queryKey: ["listingClasses", listingId],
     queryFn: async () => {
@@ -57,7 +64,7 @@ export function ListingClassesSection({ listingId }: { listingId: string }) {
               <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>{WEEKDAYS[day]}</div>
               <div className="flex flex-col gap-2">
                 {dayClasses.map((c) => (
-                  <BookableClassRow key={c._id} listingId={listingId} gymClass={c} />
+                  <BookableClassRow key={c._id} listingId={listingId} organizationId={organizationId} gymClass={c} />
                 ))}
               </div>
             </div>
@@ -68,7 +75,15 @@ export function ListingClassesSection({ listingId }: { listingId: string }) {
   );
 }
 
-function BookableClassRow({ listingId, gymClass: c }: { listingId: string; gymClass: GymClass }) {
+function BookableClassRow({
+  listingId,
+  organizationId,
+  gymClass: c,
+}: {
+  listingId: string;
+  organizationId: string | null;
+  gymClass: GymClass;
+}) {
   const queryClient = useQueryClient();
   const dates = nextOccurrences(c.day_of_week, 4);
   const [date, setDate] = useState(dates[0]);
@@ -81,7 +96,7 @@ function BookableClassRow({ listingId, gymClass: c }: { listingId: string; gymCl
       // member's membership here is paused or suspended, say so instead.
       if (!res.success && res.status === 403 && /active membership/i.test(res.message ?? "")) {
         const mine = await marketplaceService.getMyMembershipSubscriptions().catch(() => null);
-        const hold = mine?.success && mine.data ? holdAtGym(mine.data, { listingId }) : null;
+        const hold = mine?.success && mine.data ? holdAtGym(mine.data, { listingId, organizationId }) : null;
         if (hold) {
           const copy = holdRefusalCopy(hold, formatDate, "book classes");
           return { ...res, message: `${copy.title} ${copy.body}` };
