@@ -89,11 +89,11 @@ describe("check-in refused while on hold", () => {
 });
 
 describe("class booking refused while on hold", () => {
-  const renderSection = () => {
+  const renderSection = (organizationId?: string) => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
       <QueryClientProvider client={client}>
-        <ListingClassesSection listingId="l1" />
+        <ListingClassesSection listingId="l1" organizationId={organizationId} />
       </QueryClientProvider>,
     );
   };
@@ -123,6 +123,20 @@ describe("class booking refused while on hold", () => {
   it("names the suspension instead of the generic refusal", async () => {
     mine.mockResolvedValue({ success: true, data: [sub({ status: S.SUSPENDED, suspension_reason: "Dues" })] });
     renderSection();
+    await userEvent.click(await screen.findByRole("button", { name: "Book" }));
+    expect(
+      await screen.findByText(
+        "Your membership is suspended. Iron Temple suspended this membership: “Dues”. Contact Iron Temple to restore your access.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("finds the hold on a membership the gym enrolled directly (no listing) by the gym", async () => {
+    mine.mockResolvedValue({
+      success: true,
+      data: [sub({ listing_id: undefined, status: S.SUSPENDED, suspension_reason: "Dues" })],
+    });
+    renderSection("o1");
     await userEvent.click(await screen.findByRole("button", { name: "Book" }));
     expect(
       await screen.findByText(

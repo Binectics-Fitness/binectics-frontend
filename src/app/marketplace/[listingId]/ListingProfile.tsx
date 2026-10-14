@@ -358,7 +358,10 @@ export function ListingProfile({
           {/* Booking: gyms run a class timetable; solo providers take 1:1
               consultation bookings. */}
           {listing.account_type === "gym_owner" ? (
-            <ListingClassesSection listingId={listingId} />
+            <ListingClassesSection
+              listingId={listingId}
+              organizationId={listing.organization_id?._id ?? listing.organization?._id ?? null}
+            />
           ) : (
             <section className="rounded-(--r-3) p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
               <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Book a session</h2>
