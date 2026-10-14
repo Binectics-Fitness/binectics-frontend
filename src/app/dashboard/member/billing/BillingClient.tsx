@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
+import Modal from "@/components/Modal";
+import { toast } from "@/components/Toast";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import {
@@ -51,6 +53,32 @@ function dayBeforeTermEnd(s: MembershipSubscription): Date {
 }
 
 /**
+ * What cancelling does, as the API decides it (cancelMembershipSubscription):
+ * an ACTIVE membership whose paid term hasn't ended runs to its end date and
+ * then ends; anything else (past due, paused, suspended) ends straight away.
+ * Either way nothing renews and the card consent is revoked.
+ */
+function runsToTermEnd(s: MembershipSubscription): boolean {
+  return (
+    s.status === MembershipSubscriptionStatus.ACTIVE &&
+    !!s.end_date &&
+    new Date(s.end_date).getTime() > Date.now()
+  );
+}
+
+/** "Your Monthly membership with Iron Temple", or as much of it as is known. */
+function membershipPhrase(s: MembershipSubscription): string {
+  const name = planOf(s)?.name;
+  const gym = gymNameOf(s);
+  // A plan already called "Gold Membership" doesn't get a second "membership".
+  const what = name ? `Your ${name}${/membership$/i.test(name.trim()) ? "" : " membership"}` : "This membership";
+  return `${what}${gym ? ` with ${gym}` : ""}`;
+}
+
+const paysByCard = (s: MembershipSubscription) =>
+  s.collection_method === "card_auto" || !!s.payment_method_id;
+
+/**
  * The fields the auto-renew PATCH changes; the rest stay as populated.
  * Turning renewal back on also takes back a mid-term cancellation.
  */
@@ -74,6 +102,8 @@ export function BillingClient() {
   const { data: cards = [] } = useMyPaymentMethods();
   const cancel = useCancelSubscription();
   const queryClient = useQueryClient();
+  const [cancelling, setCancelling] = useState<MembershipSubscription | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   // A notification can open this page at one membership (?subscriptionId=).
   // Read once from the address bar; no Suspense boundary needed.
@@ -155,10 +185,30 @@ export function BillingClient() {
     { label: "Next renewal", value: nextRenewal, delta: usable.find((s) => s.auto_renew && s.collection_method === "card_auto") ? "auto-renews by card" : "you renew it", small: true },
   ];
 
-  const onCancel = (s: MembershipSubscription) => {
-    const plan = planOf(s);
-    if (window.confirm(`Cancel your ${plan?.name ?? "membership"} subscription? You keep access until ${s.end_date ? formatDate(s.end_date) : "the end of the period"}.`)) {
-      void cancel.mutateAsync(s._id);
+  const closeCancel = () => {
+    if (cancel.isPending) return;
+    setCancelling(null);
+    setCancelError(null);
+  };
+
+  const onConfirmCancel = async () => {
+    if (!cancelling || cancel.isPending) return;
+    setCancelError(null);
+    const target = cancelling;
+    try {
+      const res = await cancel.mutateAsync(target._id);
+      if (res.success) {
+        toast.success(
+          runsToTermEnd(target) && target.end_date
+            ? `Membership cancelled. You keep access until ${formatDate(target.end_date)}.`
+            : "Membership cancelled.",
+        );
+        setCancelling(null);
+      } else {
+        setCancelError(res.message ?? "We couldn't cancel this membership. Please try again.");
+      }
+    } catch {
+      setCancelError("We couldn't cancel this membership. Please try again.");
     }
   };
 
@@ -288,7 +338,15 @@ export function BillingClient() {
                 </Link>
               )}
               {live && !s.cancel_requested_at && (
-                <button className="btn-ghost-v2 md shrink-0" disabled={cancel.isPending} onClick={() => onCancel(s)}>
+                <button
+                  type="button"
+                  className="btn-ghost-v2 md shrink-0"
+                  disabled={cancel.isPending}
+                  onClick={() => {
+                    setCancelError(null);
+                    setCancelling(s);
+                  }}
+                >
                   Cancel
                 </button>
               )}
@@ -331,6 +389,52 @@ export function BillingClient() {
       </div>
 
       <SavedCards />
+
+      <Modal
+        open={!!cancelling}
+        onClose={closeCancel}
+        title="Cancel this membership?"
+        size="sm"
+        disableCloseGuard
+        footer={
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost-v2 md" onClick={closeCancel} disabled={cancel.isPending}>
+              Keep membership
+            </button>
+            <button
+              type="button"
+              className="btn-primary-v2 md"
+              // Destructive: the danger ink, with the page colour for text
+              // (inline, because button text classes don't apply here).
+              style={{ background: "var(--danger-ink)", borderColor: "var(--danger-ink)", color: "var(--bg)" }}
+              onClick={() => void onConfirmCancel()}
+              disabled={cancel.isPending}
+            >
+              {cancel.isPending ? "Cancelling…" : "Cancel membership"}
+            </button>
+          </div>
+        }
+      >
+        {cancelling && (
+          <div className="flex flex-col gap-3 text-[13.5px] text-fg-2" data-testid="cancel-membership-copy">
+            <p>
+              {membershipPhrase(cancelling)}{" "}
+              {runsToTermEnd(cancelling) && cancelling.end_date
+                ? `stays active until ${formatDate(cancelling.end_date)}, the end of the period you've paid for. Then it ends.`
+                : "ends now, and you lose access straight away."}
+            </p>
+            <p>It won&rsquo;t renew, and you won&rsquo;t be charged for it again.</p>
+            {paysByCard(cancelling) && (
+              <p>Your card stays saved. A payment already being processed may still go through.</p>
+            )}
+            {cancelError && (
+              <p role="alert" className="text-danger-ink">
+                {cancelError}
+              </p>
+            )}
+          </div>
+        )}
+      </Modal>
 
       <p className="text-[12px] text-fg-2">
         A full payment history is coming. For now this shows your memberships, your saved cards and what you&rsquo;ve paid.

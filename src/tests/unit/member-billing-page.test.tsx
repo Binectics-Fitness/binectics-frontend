@@ -102,6 +102,9 @@ const listCards = vi.spyOn(memberBillingService, "listPaymentMethods");
 const removeCard = vi.spyOn(memberBillingService, "removePaymentMethod");
 const setAutoRenew = vi.spyOn(memberBillingService, "setAutoRenew");
 const subConsent = vi.spyOn(memberBillingService, "getSubscriptionAutoRenewConsent");
+// One spy for the whole file: a second spyOn would wrap this one and the
+// tests would be setting answers on a spy that isn't called.
+const cancel = vi.spyOn(marketplaceService, "cancelMembershipSubscription");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -481,16 +484,113 @@ describe("a membership cancelled mid-term", () => {
       data: [sub({ auto_renew: true, collection_method: "card_auto", payment_method_id: "pm1" })],
     });
     listCards.mockResolvedValue({ success: true, data: [visa] });
-    const cancel = vi
-      .spyOn(marketplaceService, "cancelMembershipSubscription")
-      .mockResolvedValue({ success: true, data: cancelled() });
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    cancel.mockResolvedValue({ success: true, data: cancelled() });
     renderPage();
     expect(await screen.findByText(/Monthly: next charge/)).toBeInTheDocument();
     const before = listCards.mock.calls.length;
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel membership" }));
     await waitFor(() => expect(cancel).toHaveBeenCalledWith("s1"));
     await waitFor(() => expect(listCards.mock.calls.length).toBeGreaterThan(before));
-    confirm.mockRestore();
+  });
+});
+
+describe("cancelling a membership", () => {
+  it("asks in the app's own dialog, never the browser's", async () => {
+    const native = vi.spyOn(window, "confirm");
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(await screen.findByRole("dialog", { name: "Cancel this membership?" })).toBeInTheDocument();
+    expect(native).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
+    native.mockRestore();
+  });
+
+  it("a running paid term: stays active until its end date, then no more charges", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ auto_renew: true, collection_method: "card_auto", payment_method_id: "pm1" })],
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    const lines = within(within(dialog).getByTestId("cancel-membership-copy"))
+      .getAllByText(/./, { selector: "p" })
+      .map((p) => p.textContent);
+    expect(lines).toEqual([
+      `Your Monthly membership with Iron Temple stays active until ${formatDate(later)}, the end of the period you've paid for. Then it ends.`,
+      "It won’t renew, and you won’t be charged for it again.",
+      "Your card stays saved. A payment already being processed may still go through.",
+    ]);
+  });
+
+  it("doesn't say membership twice when the plan is already called one", async () => {
+    const base = sub();
+    const plan = typeof base.plan_id === "object" ? base.plan_id : null;
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ plan_id: { ...plan!, name: "Gold Membership" } })],
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    expect(dialog).toHaveTextContent("Your Gold Membership with Iron Temple stays active until");
+  });
+
+  it("without a card: no line about card payments", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    expect(dialog).toHaveTextContent("It won’t renew, and you won’t be charged for it again.");
+    expect(dialog).not.toHaveTextContent(/card/i);
+  });
+
+  it("past due (or paused, or suspended): the API ends it now, and the dialog says so", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: false })],
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    expect(dialog).toHaveTextContent(
+      "Your Monthly membership with Iron Temple ends now, and you lose access straight away.",
+    );
+    expect(dialog).not.toHaveTextContent(/stays active/);
+  });
+
+  it("disables both buttons while the request is pending", async () => {
+    let resolve!: (v: Awaited<ReturnType<typeof marketplaceService.cancelMembershipSubscription>>) => void;
+    cancel.mockReturnValue(new Promise((r) => (resolve = r)));
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel membership" }));
+    expect(await within(dialog).findByRole("button", { name: "Cancelling…" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Keep membership" })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancelling…" }));
+    expect(cancel).toHaveBeenCalledTimes(1);
+    resolve({ success: true, data: sub({ cancel_requested_at: new Date().toISOString() }) });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Cancel this membership?" })).toBeNull(),
+    );
+  });
+
+  it("shows a refusal inside the dialog and keeps it open", async () => {
+    cancel.mockResolvedValue({ success: false, status: 400, message: "Subscription is already cancelled" });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: "Cancel this membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel membership" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Subscription is already cancelled");
+    expect(within(dialog).getByRole("button", { name: "Cancel membership" })).toBeEnabled();
+  });
+
+  it("backing out changes nothing", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Keep membership" }));
+    expect(cancel).not.toHaveBeenCalled();
   });
 });

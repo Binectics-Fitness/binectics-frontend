@@ -5,6 +5,7 @@ import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import {
   paystackKeyMode,
   webhookIsStale,
+  webhookReceivedDay,
   webhookReceivedLabel,
 } from "@/components/provider/PaystackWebhookPanel";
 import { normalizePaymentConfig } from "@/lib/api/marketplace";
@@ -104,14 +105,19 @@ describe("Paystack webhook panel", () => {
     expect(within(panel()).getAllByRole("listitem")[1]).toHaveTextContent("Live Webhook URL");
   });
 
-  it('shows "Not received yet" until one arrives', () => {
+  it('never received: "Not received yet", with no stale note and no date', () => {
     h.configs = [paystack()];
     render(<GatewaysSection />);
-    expect(within(panel()).getAllByText(/not received yet/i).length).toBeGreaterThan(0);
-    expect(panel()).not.toHaveTextContent(/last received/i);
+    expect(within(panel()).getByText("Not received yet")).toBeInTheDocument();
+    expect(panel()).toHaveTextContent(
+      "Not received yet. Paystack sends one with the next payment, renewal or refund on your account.",
+    );
+    expect(panel()).not.toHaveTextContent(/last received|last webhook/i);
+    expect(within(panel()).queryByTestId("paystack-webhook-stale")).toBeNull();
+    expect(within(panel()).queryByText("Receiving")).toBeNull();
   });
 
-  it("shows when the last one arrived", () => {
+  it("recent: Receiving, with when the last one arrived", () => {
     // Relative to now, so the test doesn't go stale with the calendar.
     const at = new Date(Date.now() - 2 * 86_400_000).toISOString();
     h.configs = [paystack({ webhook_last_received_at: at })];
@@ -119,27 +125,32 @@ describe("Paystack webhook panel", () => {
     expect(panel()).toHaveTextContent(`Last received ${webhookReceivedLabel(at)}.`);
     expect(within(panel()).getByText("Receiving")).toBeInTheDocument();
     expect(panel()).not.toHaveTextContent(/not received yet/i);
+    expect(within(panel()).queryByTestId("paystack-webhook-stale")).toBeNull();
   });
 
-  it("stops saying Receiving after 30 days without one, and suggests a check", () => {
-    const at = new Date(Date.now() - 31 * 86_400_000).toISOString();
-    h.configs = [paystack({ webhook_last_received_at: at })];
-    render(<GatewaysSection />);
-    expect(within(panel()).queryByText("Receiving")).toBeNull();
-    expect(within(panel()).getByText("Quiet for 30 days")).toBeInTheDocument();
-    expect(within(panel()).getByTestId("paystack-webhook-stale")).toHaveTextContent(
-      "No payment notifications from Paystack in 30 days. If you take payments, check the webhook is still set in your Paystack dashboard.",
-    );
-    // When the last one arrived is still said, in words, not by colour alone.
-    expect(panel()).toHaveTextContent(`Last received ${webhookReceivedLabel(at)}.`);
-  });
-
-  it("shows no stale note while webhooks are recent", () => {
+  it("recent up to the threshold: still Receiving at 29 days", () => {
     const at = new Date(Date.now() - 29 * 86_400_000).toISOString();
     h.configs = [paystack({ webhook_last_received_at: at })];
     render(<GatewaysSection />);
     expect(within(panel()).getByText("Receiving")).toBeInTheDocument();
     expect(within(panel()).queryByTestId("paystack-webhook-stale")).toBeNull();
+  });
+
+  it("stale: says 30+ days, not an exact gap, gives the real last date and what to check", () => {
+    // 75 days: the copy must not claim "30 days" as if that were the gap.
+    const at = new Date(Date.now() - 75 * 86_400_000).toISOString();
+    h.configs = [paystack({ webhook_last_received_at: at })];
+    render(<GatewaysSection />);
+    expect(within(panel()).queryByText("Receiving")).toBeNull();
+    expect(within(panel()).getByText("No webhook in 30+ days")).toBeInTheDocument();
+    expect(within(panel()).getByTestId("paystack-webhook-stale")).toHaveTextContent(
+      `No webhook received in the last 30+ days. Last webhook received ${webhookReceivedDay(at)}. ` +
+        "If you’ve taken payments, renewals or refunds since then, check the webhook is still set in your " +
+        "Paystack dashboard. If you haven’t, a quiet spell is expected.",
+    );
+    expect(panel()).not.toHaveTextContent(/quiet for 30 days/i);
+    // The date is said once, in the note.
+    expect(panel()).not.toHaveTextContent(/last received/i);
   });
 
   it("explains, without a Copy button, when the API has no URL to give", () => {
@@ -185,7 +196,12 @@ describe("webhook helpers", () => {
     expect(webhookIsStale("not a date", now)).toBe(false);
   });
 
-  it("formats a received time, and nothing for a bad one", () => {
+  it("formats a received time or day, and nothing for a bad one", () => {
+    expect(webhookReceivedDay(null)).toBeNull();
+    expect(webhookReceivedDay("not a date")).toBeNull();
+    expect(webhookReceivedDay("2026-08-14T12:00:00.000Z")).toMatch(/14/);
+    expect(webhookReceivedDay("2026-08-14T12:00:00.000Z")).toMatch(/2026/);
+    expect(webhookReceivedDay("2026-08-14T12:00:00.000Z")).not.toMatch(/:/);
     expect(webhookReceivedLabel(null)).toBeNull();
     expect(webhookReceivedLabel("not a date")).toBeNull();
     expect(webhookReceivedLabel("2026-10-13T09:30:00.000Z")).toMatch(/2026/);
