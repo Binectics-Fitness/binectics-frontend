@@ -9,6 +9,9 @@ import { HeroStatCard } from "@/components/ds/HeroStatCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkinsService } from "@/lib/api/checkins";
 import { dayUnit, isPersonalBest, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
+import { marketplaceService } from "@/lib/api/marketplace";
+import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
+import { formatDate } from "@/utils/format";
 
 type Outcome =
   | { state: "working" }
@@ -27,6 +30,13 @@ type Outcome =
       gymName: string;
       /** Published marketplace listing, when the gym has a storefront. */
       listingId: string | null;
+    }
+  | {
+      /** Refused because the member's membership here is paused or suspended. */
+      state: "on_hold";
+      kind: "paused" | "suspended";
+      title: string;
+      body: string;
     }
   | { state: "error"; message: string };
 
@@ -104,6 +114,18 @@ function CheckInScanContent() {
         // first-time login) — same recovery as no token: scan again.
         setOutcome({ state: "scan_required", gymName });
       } else if (msg.includes("no active subscription")) {
+        // A paused or suspended membership is refused the same way as none:
+        // say which, and why, rather than offering plans to buy.
+        const mine = await marketplaceService.getMyMembershipSubscriptions().catch(() => null);
+        const hold =
+          mine?.success && mine.data
+            ? holdAtGym(mine.data, { organizationId: gymId, listingId: storeListingId })
+            : null;
+        if (hold) {
+          const copy = holdRefusalCopy(hold, formatDate, "check in");
+          setOutcome({ state: "on_hold", kind: hold.kind, ...copy });
+          return;
+        }
         setOutcome({ state: "no_subscription", gymName, listingId: storeListingId });
       } else {
         setOutcome({
@@ -213,6 +235,29 @@ function CheckInScanContent() {
               )}
               <Link href="/dashboard/member/billing" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
                 My billing
+              </Link>
+            </div>
+          </>
+        )}
+
+        {outcome.state === "on_hold" && (
+          <>
+            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
+              {outcome.title}
+            </h1>
+            <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }} data-testid="hold-body">
+              {outcome.body}
+            </p>
+            <div className="mt-8 flex flex-col gap-2">
+              <Link
+                href="/dashboard/member/billing"
+                className={outcome.kind === "paused" ? "btn-primary-v2" : "btn-ghost-v2"}
+                style={{ textDecoration: "none" }}
+              >
+                {outcome.kind === "paused" ? "Resume my membership" : "My memberships"}
+              </Link>
+              <Link href="/dashboard/member" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
+                Back to my dashboard
               </Link>
             </div>
           </>
