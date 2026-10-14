@@ -15,6 +15,7 @@ import {
   type ReactionSummary,
   type ThreadState,
 } from "@/lib/api/messaging";
+import { messageLength, truncateGraphemes } from "@/lib/text/graphemes";
 import type { ApiResponse } from "@/lib/types";
 import type { MessageDecorations } from "./Transcript";
 import type { ReplyTarget, ThreadSync } from "./useThreadSync";
@@ -293,7 +294,7 @@ function InlineEditor({
     el.setSelectionRange(el.value.length, el.value.length);
   }, []);
   const trimmed = text.trim();
-  const valid = trimmed.length > 0 && text.length <= MESSAGE_MAX_LENGTH;
+  const valid = trimmed.length > 0 && messageLength(text) <= MESSAGE_MAX_LENGTH;
   return (
     <div className="flex w-[min(28rem,70vw)] flex-col gap-2">
       <textarea
@@ -484,7 +485,7 @@ export function useMessageActions({
               <MenuItem
                 onSelect={() => {
                   closeMenu();
-                  onReply({ message_id: m._id, author_name: mine ? "You" : m.author.name, excerpt: m.body.slice(0, 140) });
+                  onReply({ message_id: m._id, author_name: mine ? "You" : m.author.name, excerpt: truncateGraphemes(m.body, 140) });
                 }}
               >
                 Reply

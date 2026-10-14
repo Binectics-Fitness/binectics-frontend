@@ -5,6 +5,7 @@
 
 import type { ReactNode } from "react";
 import { ReadOnlyReason } from "@/lib/api/messaging";
+import { firstGrapheme } from "@/lib/text/graphemes";
 
 export function initials(name: string | null | undefined): string {
   return (
@@ -12,7 +13,7 @@ export function initials(name: string | null | undefined): string {
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
+      .map((p) => firstGrapheme(p).toUpperCase())
       .join("") || "?"
   );
 }
