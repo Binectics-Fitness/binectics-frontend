@@ -45,7 +45,7 @@ shadows, Stripe/Linear rather than Headspace.
 
 - Next.js 16 (App Router), React 19, Tailwind CSS 4
 - Backend: external API on Azure (not in this repo)
-- Fonts: Geist (display/body/UI), Geist Mono (numerals/timestamps/IDs/eyebrows), Instrument Serif Italic (emphasis — see the serif rule under Design Principles)
+- Fonts: Geist (display/body/UI), Geist Mono (numerals/timestamps/IDs/eyebrows), Instrument Serif Italic (marketing pages only — see the serif rule under Design Principles)
 
 ## Design Tokens (source of truth: globals.css)
 
@@ -84,8 +84,8 @@ Easing            --ease-out: (.16,1,.3,1)  --ease-spring: (.34,1.4,.64,1)
 - No exclamation marks in product copy
 - Mono uppercase for eyebrow labels: 11px, .06em tracking, --fg-3 (`Eyebrow` / `.eyebrow`)
 - Only celebratory animation: QR check-in success
-- Serif italic (owner ruling, Oct 2026):
-  - **Product screens** (the signed-in routes in `protectedRoutes`, `src/middleware.ts`: dashboard, member, admin, check-in, checkout, teams, onboarding): at most ONE serif-italic word per screen, and only in the screen's main title. Render it with `TitleWithEmphasis` or `PageHeader title={{ emphasis }}` from `src/components/ds` — never a hand-written `<em>`/`.serif`, and never in buttons, labels, eyebrows or body copy.
+- Serif italic (owner ruling, Oct 14 2026, reversing the Oct 6 "one serif word per title" rule):
+  - **Product screens** (the signed-in routes in `protectedRoutes`, `src/middleware.ts` (dashboard, member, admin, check-in, checkout, teams, onboarding), plus auth (login, register, password reset, email verification), the account-state pages (account-*, session-expired, rate-limit) and maintenance): NO serif italic and no decorative italic at all. Main titles still go through `TitleWithEmphasis` / `PageHeader title={{ … }}` / `SuccessTakeover`, which render the parts as one plain heading. Never a hand-written `<em>`, `.serif`, `font-serif` or `italic`. `src/tests/unit/no-product-italic.test.ts` enforces this.
   - **Marketing pages**: 1-2 serif-italic moments per page, never on every heading.
 - Dark surfaces: the only dark product surfaces are the hero stat card and the check-in success takeover. On `--ink` use `--bg` for primary text, `--on-ink-2` for secondary, `--on-ink-3` for muted/eyebrows, and `--ink-2` for a raised surface or progress track.
 - Mosaic pattern (homepage mockups → product): build screens from the `src/components/ds` primitives — `PageHeader`, `TitleWithEmphasis`, `Eyebrow`, `DSStatCard`, `HeroStatCard`, `ProgressBar`, `WeekStrip`, `ActivityHeatmap`, `ListRow`, `Sparkline`, `SuccessTakeover` — with day states from `src/lib/ui/activity.ts` (computed on the client: pass `useClientNow()` from `src/lib/ui/useClientNow.ts` as the required `now`). Keep the 10px `--r-3` card with a hairline border; don't copy the mockup's 14-18px borderless white phone cards. No invented numbers: omit a figure, target or delta the API doesn't give you.

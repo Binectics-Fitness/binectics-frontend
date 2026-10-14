@@ -40,13 +40,12 @@ describe("check-in success takeover", () => {
       data: { has_checked_in_today: true, current_streak_days: 6, total_check_ins: 15, longest_streak_days: 6 } as never,
     });
     render(<CheckInScanPage />);
-    // jsdom's name computation pads the <em> with a space; browsers don't.
-    const dialog = await screen.findByRole("dialog", { name: /^You’re in ?, Yemi\.$/ });
+    const dialog = await screen.findByRole("dialog", { name: "You’re in, Yemi." });
     // The takeover IS the screen (the page behind is inert): its title is the h1.
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("You’re in, Yemi.");
     expect(dialog.style.background).toBe("var(--ink)");
     expect(dialog).toHaveAccessibleDescription(`Checked in · ${clock}`);
-    expect(dialog.querySelector("em")?.textContent).toBe("in");
+    expect(dialog.querySelector("em")).toBeNull();
     expect(screen.getByText("Dapo Fitness Hub · welcome back")).toBeInTheDocument();
     const card = dialog.querySelector("[data-surface='raised']") as HTMLElement;
     expect(card).toHaveAttribute("data-align", "center");

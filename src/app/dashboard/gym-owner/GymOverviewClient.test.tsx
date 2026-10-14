@@ -54,14 +54,14 @@ describe("Gym overview", () => {
     seriesRows = null;
   });
 
-  it("has one serif word and the gym's own place in the subtitle", async () => {
+  it("has a plain title and the gym's own place in the subtitle", async () => {
     renderWithProviders(<GymOverviewClient />);
     // The subtitle's place comes from the stats call, so wait for it.
     const subtitle = await screen.findAllByText("Here's how Dapo Fitness Hub is doing · Lagos, NG", {}, { timeout: 5000 });
     expect(subtitle.length).toBeGreaterThan(0);
     const [h1] = screen.getAllByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("Welcome back, Dapo");
-    expect(h1.querySelectorAll("em")).toHaveLength(1);
+    expect(h1.querySelector("em")).toBeNull();
   });
 
   it("shows real KPIs: revenue with its daily sparkline, check-ins and attendance, no churn", async () => {

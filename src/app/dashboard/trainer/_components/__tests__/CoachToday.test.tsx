@@ -94,12 +94,11 @@ const props = {
 };
 
 describe("CoachToday", () => {
-  it("has one serif word, the coach's first name, in the title", () => {
+  it("has the coach's first name in a plain title", () => {
     render(<CoachToday {...props} data={data()} />);
     const h1 = screen.getByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("Today, Tunde");
-    expect(h1.querySelectorAll("em")).toHaveLength(1);
-    expect(h1.querySelector("em")?.textContent).toBe("Tunde");
+    expect(h1.querySelector("em")).toBeNull();
   });
 
   it("lists today's sessions in a time-gutter schedule, cancelled and expired ones muted", () => {

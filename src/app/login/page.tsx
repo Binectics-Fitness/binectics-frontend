@@ -171,7 +171,7 @@ function AuthContent() {
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Signed in</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
                   You&apos;re already signed in{user.first_name ? (
-                    <> as <em className="font-serif font-normal italic">{user.first_name}</em></>
+                    <> as {user.first_name}</>
                   ) : null}.
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>
@@ -193,7 +193,7 @@ function AuthContent() {
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Sign in</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  Welcome back.<br />Pick up where you <em className="font-serif font-normal italic">left off</em>.
+                  Welcome back.<br />Pick up where you left off.
                 </h1>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5 mt-8">
@@ -304,7 +304,7 @@ function AuthContent() {
               <>
                 <div className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Create an account</div>
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
-                  Find your <em className="font-serif font-normal italic">people</em>.<br />It takes a minute.
+                  Find your people.<br />It takes a minute.
                 </h1>
                 <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book. Cancel any session up to 24h before.</p>
 
@@ -465,7 +465,7 @@ function AuthContent() {
 
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.05em] mb-4.5" style={{ color: "oklch(0.65 0.005 85)" }}>The promise</div>
-          <p className="font-serif italic text-[48px] leading-[1.1] max-w-[18ch]" style={{ letterSpacing: "-0.02em", color: "var(--bg)" }}>
+          <p className="text-[40px] font-medium leading-[1.1] max-w-[18ch]" style={{ letterSpacing: "-0.03em", color: "var(--bg)" }}>
             Your gym, your coaching, and your payments, in one place.
           </p>
           <div className="flex items-center gap-3 mt-8">

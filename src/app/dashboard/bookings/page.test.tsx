@@ -67,7 +67,7 @@ describe("My bookings", () => {
     renderWithProviders(<MyBookingsPage />);
     const h1 = await screen.findByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("Your bookings");
-    expect(h1.querySelectorAll("em")).toHaveLength(1);
+    expect(h1.querySelector("em")).toBeNull();
     // The member shell's own nav, with Home and Activity, is back.
     expect(screen.getAllByRole("link", { name: "Home" }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole("link", { name: "Activity" }).length).toBeGreaterThan(0);

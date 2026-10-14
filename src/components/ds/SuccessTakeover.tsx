@@ -10,7 +10,7 @@
  * checkin.html and live in globals.css under `.takeover*`.
  *
  * Layout: --ink ground; 80px --signal circle with an ink tick; mono status
- * line in --signal; title with one serif-italic word; optional sub line;
+ * line in --signal; plain title (TitleParts); optional sub line;
  * `children` (e.g. <HeroStatCard surface="raised" align="center">); a
  * full-width --bg primary action pinned to the bottom.
  *
