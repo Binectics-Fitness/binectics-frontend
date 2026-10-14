@@ -3465,6 +3465,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization’s recent member imports */
+        get: operations["MemberImportController_list"];
+        put?: never;
+        /** Upload a member list (CSV, up to 5,000 rows). Nothing is imported yet: the response is a first preview with guessed column mapping. */
+        post: operations["MemberImportController_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports/{importId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An import’s state: progress while confirming, then the result */
+        get: operations["MemberImportController_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports/{importId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import the ready rows, within the seat limit. Idempotent: members already imported are not added again. */
+        post: operations["MemberImportController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports/{importId}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send the invitations an import held back. They go out within the daily send limit. */
+        post: operations["MemberImportController_sendInvites"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports/{importId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save the column, plan, branch and date-format choices and check every row (dry run: no member is written) */
+        post: operations["MemberImportController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/archive": {
         parameters: {
             query?: never;
@@ -3908,7 +3994,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Suspend a member. Access stops immediately and the suspended time is NOT credited back. The seat is still held. */
+        /** Suspend a member. Access stops immediately and the suspended time is NOT credited back. The seat is still held. The reason is stored as suspension_reason (with suspended_at) and shown to the member. */
         patch: operations["MarketplaceOrgController_suspendOrgSubscription"];
         trace?: never;
     };
@@ -7677,6 +7763,13 @@ export interface components {
             /** @example Consultation completed successfully */
             note?: string;
         };
+        ConfirmMemberImportDto: {
+            /**
+             * @description now: email each imported member (within the daily send limit). later: add them without telling them; send from the import later.
+             * @enum {string}
+             */
+            invite_mode: "now" | "later";
+        };
         ConnectDeviceDto: {
             app_version: string;
             background_granted: boolean;
@@ -8770,6 +8863,18 @@ export interface components {
              */
             width?: number;
         };
+        ImportBranchChoiceDto: {
+            /** @description One of the gym’s listings */
+            listing_id: string;
+            /** @description The branch name as written in the file */
+            value: string;
+        };
+        ImportPlanChoiceDto: {
+            /** @description One of the gym’s active plans */
+            plan_id: string;
+            /** @description The plan name as written in the file */
+            value: string;
+        };
         InviteClientDto: {
             /** @example client@example.com */
             email: string;
@@ -8914,6 +9019,28 @@ export interface components {
             payment_proof_url?: string;
             /** @description External payment reference (e.g. bank transfer narration) */
             payment_reference?: string;
+        };
+        MemberImportMappingDto: {
+            /** @description Column index (0-based) holding branch; leave out when the file has none. */
+            branch?: number;
+            /** @description Column index (0-based) holding email; leave out when the file has none. */
+            email?: number;
+            /** @description Column index (0-based) holding end_date; leave out when the file has none. */
+            end_date?: number;
+            /** @description Column index (0-based) holding first_name; leave out when the file has none. */
+            first_name?: number;
+            /** @description Column index (0-based) holding full_name; leave out when the file has none. */
+            full_name?: number;
+            /** @description Column index (0-based) holding last_name; leave out when the file has none. */
+            last_name?: number;
+            /** @description Column index (0-based) holding notes; leave out when the file has none. */
+            notes?: number;
+            /** @description Column index (0-based) holding phone; leave out when the file has none. */
+            phone?: number;
+            /** @description Column index (0-based) holding plan; leave out when the file has none. */
+            plan?: number;
+            /** @description Column index (0-based) holding start_date; leave out when the file has none. */
+            start_date?: number;
         };
         MessageDto: {
             _id: string;
@@ -9129,6 +9256,21 @@ export interface components {
              * @example 1
              */
             payout_day?: number;
+        };
+        PreviewMemberImportDto: {
+            /** @description Branch names in the file the gym matched to its listings; replaces the saved list. */
+            branch_map?: components["schemas"]["ImportBranchChoiceDto"][];
+            /**
+             * @description How numeric dates are written. auto reads only dates that can’t be taken two ways and flags the rest.
+             * @enum {string}
+             */
+            date_format?: "auto" | "dmy" | "mdy" | "ymd";
+            /** @description The listing a row with no recognised branch joins; null for none. Defaults to the newest listing. */
+            default_listing_id?: string | null;
+            /** @description The whole mapping; replaces the saved one. */
+            mapping?: components["schemas"]["MemberImportMappingDto"];
+            /** @description Plan names in the file the gym matched to its plans; replaces the saved list. */
+            plan_map?: components["schemas"]["ImportPlanChoiceDto"][];
         };
         ProgramAutoRuleDto: {
             activity_types?: ("cardio" | "strength" | "flexibility" | "hiit" | "yoga" | "swimming" | "cycling" | "running" | "walking" | "other")[];
@@ -15856,6 +15998,139 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmMemberImportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_sendInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberImportController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewMemberImportDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

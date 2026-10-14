@@ -82,6 +82,25 @@ describe("EnrollmentOffersCard", () => {
     expect(screen.getByText(/Monthly/).textContent).not.toMatch(/1,500,000/);
   });
 
+  it("an imported membership reads as already paid, with the end date it keeps", async () => {
+    vi.spyOn(marketplaceService, "getMyEnrollmentOffers").mockResolvedValue({
+      success: true,
+      data: [
+        offer({
+          source: "import",
+          term_end: "2026-12-31T22:59:59.999Z",
+          expires_at: "2026-12-31T22:59:59.999Z",
+        }),
+      ],
+    });
+    renderCard();
+    const line = await screen.findByText(/already paid/);
+    expect(line.textContent).toMatch(/Monthly · already paid · runs until/);
+    expect(line.textContent).toMatch(/2026/);
+    // No price: nothing is charged for a membership the gym carried over.
+    expect(line.textContent).not.toMatch(/15,000/);
+  });
+
   it("accepting a transfer offer shows the account to pay into", async () => {
     vi.spyOn(marketplaceService, "getMyEnrollmentOffers")
       .mockResolvedValueOnce({ success: true, data: [offer({ payment_mode: "paystack_transfer" })] })

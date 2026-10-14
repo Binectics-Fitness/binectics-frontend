@@ -377,6 +377,13 @@ export interface EnrollmentOffer {
   expires_at: string;
   created_at: string;
   status: EnrollmentOfferStatus;
+  /**
+   * `import`: the gym brought this membership over from its previous
+   * system. Already paid; accepting keeps it running until term_end.
+   */
+  source?: "import" | null;
+  term_start?: string | null;
+  term_end?: string | null;
 }
 
 export interface AcceptEnrollmentOfferResult {
@@ -397,6 +404,15 @@ export interface OrgEnrollmentOffer {
   status: EnrollmentOfferStatus;
   expires_at: string;
   created_at: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  /** `import`: a member brought over by a member import (see memberImports.ts). */
+  source?: "import" | null;
+  /** Imported only: when the membership they already paid for ends. */
+  term_end?: string | null;
+  /** Imported only: whether their invitation email has gone out. */
+  invite_status?: "held" | "queued" | "sending" | "sent" | null;
+  invite_sent_at?: string | null;
 }
 
 // ==================== FEATURED ====================

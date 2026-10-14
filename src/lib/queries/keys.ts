@@ -83,6 +83,8 @@ export const queryKeys = {
       [...queryKeys.marketplace.all, "myEnrollmentOffers"] as const,
     orgEnrollmentOffers: (orgId: string) =>
       [...queryKeys.marketplace.all, "orgEnrollmentOffers", orgId] as const,
+    memberImports: (orgId: string) =>
+      [...queryKeys.marketplace.all, "memberImports", orgId] as const,
   },
 
   privacy: {
