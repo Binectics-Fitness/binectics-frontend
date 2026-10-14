@@ -13,6 +13,8 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { TrainerCard } from "./TrainerCard";
+import { canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import { LiftSuspensionModal, SuspendMemberModal, holdDetailLine } from "../HoldActions";
 
 function getMemberName(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
@@ -55,6 +57,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const [subscription, setSubscription] = useState<MembershipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [holdDialog, setHoldDialog] = useState<"suspend" | "lift" | null>(null);
 
   useEffect(() => {
     if (!currentOrg) return;
@@ -125,6 +128,8 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const canMessage =
     subscription.status === MembershipSubscriptionStatus.ACTIVE && !!memberUserId;
 
+  const holdLine = holdDetailLine(subscription, fmtDate);
+
   const kpis = [
     { label: "Plan", value: planName },
     {
@@ -147,6 +152,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     // The hint spells out what the state means for access and for the bill —
     // "Suspended" alone does not tell an operator that paid time keeps running.
     { label: "Status", value: `${statusLabel}, ${statusMeta.hint}` },
+    ...(holdLine ? [{ label: subscription.status === MembershipSubscriptionStatus.PAUSED ? "Pause" : "Suspension", value: holdLine }] : []),
     {
       label: "Started",
       value: fmtDate(subscription.start_date),
@@ -189,7 +195,17 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
             {fmtDate(subscription.created_at)}
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {canSuspend(subscription) && (
+            <button type="button" className="btn-ghost-v2 md" onClick={() => setHoldDialog("suspend")}>
+              Suspend
+            </button>
+          )}
+          {canUnsuspend(subscription) && (
+            <button type="button" className="btn-primary-v2 md" onClick={() => setHoldDialog("lift")}>
+              Lift suspension
+            </button>
+          )}
           {canMessage && (
             <StartConversationButton
               recipientUserId={memberUserId!}
@@ -249,6 +265,27 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           onAssigned={(userId) => setSubscription((s) => (s ? { ...s, assigned_staff_user_id: userId } : s))}
         />
       </div>
+
+      {currentOrg && (
+        <>
+          <SuspendMemberModal
+            open={holdDialog === "suspend"}
+            sub={subscription}
+            orgId={currentOrg._id}
+            fmtDate={fmtDate}
+            onClose={() => setHoldDialog(null)}
+            onDone={setSubscription}
+          />
+          <LiftSuspensionModal
+            open={holdDialog === "lift"}
+            sub={subscription}
+            orgId={currentOrg._id}
+            fmtDate={fmtDate}
+            onClose={() => setHoldDialog(null)}
+            onDone={setSubscription}
+          />
+        </>
+      )}
 
       {/* Activity — not yet available */}
       <DSCard className="p-5.5 flex flex-col items-center justify-center gap-2 min-h-[120px]">

@@ -10,6 +10,7 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import {
   useMySubscriptions,
   useCancelSubscription,
+  useMembershipHold,
 } from "@/lib/queries/marketplace";
 import { formatCurrency } from "@/utils/format";
 import { formatDate } from "@/utils/format";
@@ -26,6 +27,14 @@ import { queryKeys } from "@/lib/queries/keys";
 import { useMyPaymentMethods } from "@/lib/queries/memberBilling";
 import { cardLabel, cardRetryFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
 import { MembershipPlanType } from "@/lib/types";
+import {
+  canPause,
+  canResume,
+  endIfResumedAt,
+  pauseEffectLines,
+  pausedLine,
+  suspendedLine,
+} from "@/lib/billing/membershipHolds";
 import { AutoRenewControl } from "./AutoRenewControl";
 import { SavedCards } from "./SavedCards";
 
@@ -104,6 +113,9 @@ export function BillingClient() {
   const queryClient = useQueryClient();
   const [cancelling, setCancelling] = useState<MembershipSubscription | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const hold = useMembershipHold();
+  const [holding, setHolding] = useState<{ sub: MembershipSubscription; action: "pause" | "resume" } | null>(null);
+  const [holdError, setHoldError] = useState<string | null>(null);
 
   // A notification can open this page at one membership (?subscriptionId=).
   // Read once from the address bar; no Suspense boundary needed.
@@ -212,6 +224,44 @@ export function BillingClient() {
     }
   };
 
+  const closeHold = () => {
+    if (hold.isPending) return;
+    setHolding(null);
+    setHoldError(null);
+  };
+
+  const onConfirmHold = async () => {
+    if (!holding || hold.isPending) return;
+    setHoldError(null);
+    const { sub: target, action } = holding;
+    try {
+      const res = await hold.mutateAsync({ subscriptionId: target._id, action });
+      if (res.success) {
+        toast.success(
+          action === "pause"
+            ? "Membership paused. Resume it here when you're back."
+            : res.data?.end_date
+              ? `Welcome back. Your membership now runs to ${formatDate(res.data.end_date)}.`
+              : "Welcome back. Your membership is active again.",
+        );
+        setHolding(null);
+      } else {
+        setHoldError(
+          res.message ??
+            (action === "pause"
+              ? "We couldn't pause this membership. Please try again."
+              : "We couldn't resume this membership. Please try again."),
+        );
+      }
+    } catch {
+      setHoldError(
+        action === "pause"
+          ? "We couldn't pause this membership. Please try again."
+          : "We couldn't resume this membership. Please try again.",
+      );
+    }
+  };
+
   // Billing has no main-nav entry, so nothing is highlighted (it was "Home").
   return (
     <MemberDashboardShell activeLabel="">
@@ -308,8 +358,19 @@ export function BillingClient() {
                       window — calling either "ended" is simply wrong. */}
                   {s.end_date ? ` · ${TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) ? "ended" : "renews/ends"} ${formatDate(s.end_date)}` : ""}
                 </div>
-                {!meta.hasAccess && !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && (
-                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }}>{meta.hint}</div>
+                {s.status === MembershipSubscriptionStatus.PAUSED ? (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-2)" }} data-testid="paused-line">
+                    {pausedLine(s, formatDate)} You can&apos;t check in or book classes until you resume.
+                  </div>
+                ) : s.status === MembershipSubscriptionStatus.SUSPENDED ? (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--danger-ink)" }} data-testid="suspended-line">
+                    {suspendedLine(s, formatDate)}
+                  </div>
+                ) : (
+                  !meta.hasAccess &&
+                  !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) && (
+                    <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }}>{meta.hint}</div>
+                  )
                 )}
                 {s.cancel_requested_at && s.status === MembershipSubscriptionStatus.ACTIVE && (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }} data-testid="membership-ends">
@@ -337,6 +398,34 @@ export function BillingClient() {
                   Renew
                 </Link>
               )}
+              {canResume(s) && (
+                <button
+                  type="button"
+                  className="btn-primary-v2 md shrink-0"
+                  disabled={hold.isPending}
+                  aria-label={`Resume ${plan?.name ?? "membership"}`}
+                  onClick={() => {
+                    setHoldError(null);
+                    setHolding({ sub: s, action: "resume" });
+                  }}
+                >
+                  Resume
+                </button>
+              )}
+              {canPause(s) && (
+                <button
+                  type="button"
+                  className="btn-ghost-v2 md shrink-0"
+                  disabled={hold.isPending}
+                  aria-label={`Pause ${plan?.name ?? "membership"}`}
+                  onClick={() => {
+                    setHoldError(null);
+                    setHolding({ sub: s, action: "pause" });
+                  }}
+                >
+                  Pause
+                </button>
+              )}
               {live && !s.cancel_requested_at && (
                 <button
                   type="button"
@@ -351,7 +440,9 @@ export function BillingClient() {
                 </button>
               )}
             </div>
-            {live && recurring && (
+            {/* Not while suspended: the API takes no auto-renew change then
+                (on or off), so the switch would only ever refuse. */}
+            {live && recurring && s.status !== MembershipSubscriptionStatus.SUSPENDED && (
               <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-6">
                 {s.enrolled_by ? (
                   <p className="text-[12.5px] text-fg-2">Your gym manages renewals for this membership. Pay your gym to renew it.</p>
@@ -374,7 +465,13 @@ export function BillingClient() {
                       : "We'll try your card again soon."}
                   </p>
                 )}
-                {byCard && s.status !== MembershipSubscriptionStatus.PAST_DUE && !cardRetryFor(s).pending && (
+                {byCard && s.status === MembershipSubscriptionStatus.PAUSED && (
+                  <p className="text-[12.5px] text-fg-2 sm:pt-3">Auto-renew won&apos;t charge your card while paused.</p>
+                )}
+                {byCard &&
+                  s.status !== MembershipSubscriptionStatus.PAST_DUE &&
+                  s.status !== MembershipSubscriptionStatus.PAUSED &&
+                  !cardRetryFor(s).pending && (
                   <p className="text-[12.5px] text-fg-2 sm:pt-3">
                     {s.next_charge_at ? `Next charge ${formatDate(s.next_charge_at)}` : "Renews automatically"}
                     {s.renewal_price_minor != null ? ` · ${formatMinor(s.currency, s.renewal_price_minor)}` : ""}
@@ -430,6 +527,59 @@ export function BillingClient() {
             {cancelError && (
               <p role="alert" className="text-danger-ink">
                 {cancelError}
+              </p>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={!!holding}
+        onClose={closeHold}
+        title={holding?.action === "resume" ? "Resume this membership?" : "Pause this membership?"}
+        size="sm"
+        disableCloseGuard
+        footer={
+          <div className="flex justify-end gap-2">
+            <button type="button" className="btn-ghost-v2 md" onClick={closeHold} disabled={hold.isPending}>
+              {holding?.action === "resume" ? "Stay paused" : "Keep it active"}
+            </button>
+            <button
+              type="button"
+              className="btn-primary-v2 md"
+              onClick={() => void onConfirmHold()}
+              disabled={hold.isPending}
+            >
+              {holding?.action === "resume"
+                ? hold.isPending
+                  ? "Resuming…"
+                  : "Resume membership"
+                : hold.isPending
+                  ? "Pausing…"
+                  : "Pause membership"}
+            </button>
+          </div>
+        }
+      >
+        {holding && (
+          <div className="flex flex-col gap-3 text-[13.5px] text-fg-2" data-testid="hold-copy">
+            <p className="text-ink">{membershipPhrase(holding.sub)}.</p>
+            {holding.action === "pause" ? (
+              pauseEffectLines(holding.sub, formatDate).map((line) => <p key={line}>{line}</p>)
+            ) : (
+              <>
+                <p>You can check in and book again straight away.</p>
+                {endIfResumedAt(holding.sub) && (
+                  <p>
+                    The days you were paused are added back, so it now runs to{" "}
+                    {formatDate(endIfResumedAt(holding.sub)!)}.
+                  </p>
+                )}
+              </>
+            )}
+            {holdError && (
+              <p role="alert" className="text-danger-ink">
+                {holdError}
               </p>
             )}
           </div>

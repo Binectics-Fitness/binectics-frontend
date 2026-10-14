@@ -39,6 +39,8 @@ import {
   type RecordRenewalMethod,
 } from "@/lib/api/memberBilling";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import { LiftSuspensionModal, SuspendMemberModal, holdDetailLine } from "./HoldActions";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -126,6 +128,9 @@ function RowActions({
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [recordRenewalOpen, setRecordRenewalOpen] = useState(false);
+  const [suspendOpen, setSuspendOpen] = useState(false);
+  const [liftOpen, setLiftOpen] = useState(false);
+  const { fmtDate } = useOrgFormat();
   const [busy, setBusy] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -318,6 +323,20 @@ function RowActions({
               Clear scheduled change ({scheduledPlan.name})
             </button>
           )}
+          {/* Gym-side holds. Pause and resume are the member's own (the API
+              takes them only from the member), so the gym gets suspend. */}
+          {canSuspend(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setSuspendOpen(true); }}>
+              Suspend…
+            </button>
+          )}
+          {canUnsuspend(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setLiftOpen(true); }}>
+              Lift suspension…
+            </button>
+          )}
           {isLive && (
             <button type="button" className={item} style={{ color: "var(--danger, #b00020)" }} onClick={handleCancel}>
               Cancel membership
@@ -355,6 +374,22 @@ function RowActions({
         orgId={orgId}
         onClose={() => setRecordRenewalOpen(false)}
         onRecorded={onRosterChange}
+      />
+      <SuspendMemberModal
+        open={suspendOpen}
+        sub={sub}
+        orgId={orgId}
+        fmtDate={fmtDate}
+        onClose={() => setSuspendOpen(false)}
+        onDone={onUpdate}
+      />
+      <LiftSuspensionModal
+        open={liftOpen}
+        sub={sub}
+        orgId={orgId}
+        fmtDate={fmtDate}
+        onClose={() => setLiftOpen(false)}
+        onDone={onUpdate}
       />
     </div>
   );
@@ -832,6 +867,7 @@ export default function GymMembersClient() {
                   const email = getMemberEmail(sub);
                   const plan = getPlanName(sub);
                   const statusMeta = membershipStatusMeta(sub.status);
+                  const holdLine = holdDetailLine(sub, fmtDate);
                   return (
                     <tr
                       key={sub._id}
@@ -882,6 +918,11 @@ export default function GymMembersClient() {
                             </span>
                           )}
                         </div>
+                        {holdLine && (
+                          <div className="text-[11.5px] mt-1 max-w-[260px]" style={{ color: "var(--fg-3)" }} data-testid="hold-line">
+                            {holdLine}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4.5 py-3 text-right font-mono font-medium" style={{ color: "var(--ink)" }}>
                         {fmtMoney(minorToMajor(sub.amount_paid_minor, sub.currency), sub.currency)}

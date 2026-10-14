@@ -729,6 +729,13 @@ export interface MembershipSubscription {
   paused_at?: string | null;
   /** Total time spent paused, in ms, across all pauses. Credited to end_date. */
   accumulated_pause_ms?: number;
+  /**
+   * When the gym suspended it. Null in every state except `suspended`, and
+   * absent on suspensions made before the API recorded it.
+   */
+  suspended_at?: string | null;
+  /** The gym's reason, written for the member to read. Null when none given. */
+  suspension_reason?: string | null;
   /** When `past_due` grace runs out. Null in every other state. */
   grace_expires_at?: string | null;
   /**

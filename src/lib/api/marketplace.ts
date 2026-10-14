@@ -1103,6 +1103,27 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * Pause your own membership (active only). Access stops; the days paused
+   * are credited back to end_date on resume.
+   */
+  async pauseMembershipSubscription(
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/my-subscriptions/${encodeURIComponent(subscriptionId)}/pause`,
+    );
+  },
+
+  /** Resume a paused membership; end_date moves out by the time paused. */
+  async resumeMembershipSubscription(
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/my-subscriptions/${encodeURIComponent(subscriptionId)}/resume`,
+    );
+  },
+
   async toggleAutoRenew(
     subscriptionId: string,
   ): Promise<ApiResponse<MembershipSubscription>> {
@@ -1236,6 +1257,32 @@ export const marketplaceService = {
   ): Promise<ApiResponse<MembershipSubscription>> {
     return await apiClient.patch<MembershipSubscription>(
       `/marketplace/organizations/${organizationId}/subscriptions/${subscriptionId}/cancel`,
+    );
+  },
+
+  /**
+   * Suspend a member (active or past due): access stops now and the days
+   * are not credited back. `reason` is shown to the member.
+   */
+  async suspendOrgSubscription(
+    organizationId: string,
+    subscriptionId: string,
+    reason?: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    const trimmed = reason?.trim();
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${encodeURIComponent(organizationId)}/subscriptions/${encodeURIComponent(subscriptionId)}/suspend`,
+      trimmed ? { reason: trimmed } : {},
+    );
+  },
+
+  /** Lift a suspension. end_date is unchanged: suspended days aren't returned. */
+  async unsuspendOrgSubscription(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${encodeURIComponent(organizationId)}/subscriptions/${encodeURIComponent(subscriptionId)}/unsuspend`,
     );
   },
 

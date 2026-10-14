@@ -73,6 +73,27 @@ export function useCancelSubscription() {
   });
 }
 
+/**
+ * Pause or resume the member's own membership. Both re-read the memberships
+ * (status, dates) and the saved cards (their "next charge" moves).
+ */
+export function useMembershipHold() {
+  const queryClient = useQueryClient();
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.subscriptions() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.paymentMethods() });
+  };
+  return useMutation({
+    mutationFn: ({ subscriptionId, action }: { subscriptionId: string; action: "pause" | "resume" }) =>
+      action === "pause"
+        ? marketplaceService.pauseMembershipSubscription(subscriptionId)
+        : marketplaceService.resumeMembershipSubscription(subscriptionId),
+    onSuccess: (res) => {
+      if (res.success) refresh();
+    },
+  });
+}
+
 export function useToggleAutoRenew() {
   const queryClient = useQueryClient();
   return useMutation({

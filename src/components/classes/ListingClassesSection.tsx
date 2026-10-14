@@ -8,6 +8,9 @@ import {
 } from "@/lib/api/classBookings";
 import { classTime, type GymClass } from "@/lib/api/classes";
 import SearchableSelect from "@/components/SearchableSelect";
+import { marketplaceService } from "@/lib/api/marketplace";
+import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
+import { formatDate } from "@/utils/format";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -72,7 +75,20 @@ function BookableClassRow({ listingId, gymClass: c }: { listingId: string; gymCl
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
   const book = useMutation({
-    mutationFn: () => classBookingsService.bookClass(listingId, c._id, date),
+    mutationFn: async () => {
+      const res = await classBookingsService.bookClass(listingId, c._id, date);
+      // Refused for want of an active membership: if it's because this
+      // member's membership here is paused or suspended, say so instead.
+      if (!res.success && res.status === 403 && /active membership/i.test(res.message ?? "")) {
+        const mine = await marketplaceService.getMyMembershipSubscriptions().catch(() => null);
+        const hold = mine?.success && mine.data ? holdAtGym(mine.data, { listingId }) : null;
+        if (hold) {
+          const copy = holdRefusalCopy(hold, formatDate, "book classes");
+          return { ...res, message: `${copy.title} ${copy.body}` };
+        }
+      }
+      return res;
+    },
     onSuccess: (res) => {
       if (res.success && res.data) {
         setMessage({
