@@ -24,8 +24,8 @@ For each changed file, check:
 - **Shadows** (`shadow-sm|md|lg|xl`, `boxShadow`) outside modals / check-in.
 
 ### 2. Serif italic
-Rule (owner, Oct 2026): product screens get at most ONE serif-italic word, only in the main title, via `TitleWithEmphasis` / `PageHeader title={{ emphasis }}`; marketing pages keep 1-2 per page. Product = the `protectedRoutes` in `src/middleware.ts` (today: `src/app/dashboard|member|admin|check-in|checkout|teams|onboarding/**`). Grep can't see what a page renders: check the components a changed product page imports, and count emphasis per screen, not per file.
-- Product file: any raw `serif` / `font-serif` / `--font-serif` / `<em` / italic styling is a violation (use the components; `src/components/ds/` itself is exempt). Flag more than one `TitleWithEmphasis`/`emphasis:` per screen, and any multi-word `emphasis`.
+Rule (owner, Oct 14 2026, reversing the Oct 6 one-word rule): product screens get NO serif italic and no decorative italic; marketing pages keep 1-2 per page. Product = the `protectedRoutes` in `src/middleware.ts` (today: `src/app/dashboard|member|admin|check-in|checkout|teams|onboarding/**`) plus auth, account-state pages and maintenance (see `src/tests/unit/no-product-italic.test.ts`). Grep can't see what a page renders: check the components a changed product page imports.
+- Product file: any `serif` / `font-serif` / `--font-serif` / `<em` / italic styling is a violation. Titles go through `TitleWithEmphasis` / `PageHeader`, which render plain.
 - Marketing file: count `font-serif` + `italic` instances; flag more than 2.
 
 ### 3. Region pricing

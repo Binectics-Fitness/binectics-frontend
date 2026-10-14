@@ -213,12 +213,11 @@ describe("member home page", () => {
     vi.restoreAllMocks();
   });
 
-  it("greets with one serif-italic word: the member's first name", async () => {
+  it("greets by first name in one plain title (no serif italic)", async () => {
     render(<MemberHomePage />);
     const h1 = screen.getByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("Hey, Yemi.");
-    expect(h1.querySelectorAll("em")).toHaveLength(1);
-    expect(h1.querySelector("em")?.textContent).toBe("Yemi");
+    expect(h1.querySelector("em")).toBeNull();
     await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
   });
 

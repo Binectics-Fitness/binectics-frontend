@@ -1,9 +1,10 @@
 /**
  * PageHeader — eyebrow + page H1 + optional subtitle and actions.
  *
- * `title` is either plain text or TitleParts (one serif-italic word, see
- * TitleWithEmphasis). It deliberately does not take arbitrary markup, so the
- * one-serif-word rule can't be bypassed with a hand-written <em>.
+ * `title` is either plain text or TitleParts (see TitleWithEmphasis; both
+ * render as one plain heading, no serif italic since Oct 14 2026). It
+ * deliberately does not take arbitrary markup, so a hand-written <em> can't
+ * bring the italic back.
  *
  * Spacing trap: globals.css has an unlayered `h1, h2, … { margin: 0 }`,
  * which beats Tailwind margin utilities (they live in a cascade layer), so

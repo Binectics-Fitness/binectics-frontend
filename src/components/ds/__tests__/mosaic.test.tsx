@@ -80,23 +80,19 @@ describe("DSStatCard", () => {
 describe("TitleWithEmphasis", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("renders one serif-italic word inside the heading", () => {
+  // Owner ruling, Oct 14 2026: no serif italic on product screens.
+  it("renders the parts as one plain heading, with no serif or italic", () => {
     render(<TitleWithEmphasis before="Hey, " emphasis="Tunde" after="." />);
-    // textContent, not the accessible name: jsdom's name computation pads
-    // inline <em> with spaces ("Hey, Tunde ."), which browsers don't.
-    const heading = screen.getByRole("heading", { level: 1 });
+    const heading = screen.getByRole("heading", { level: 1, name: "Hey, Tunde." });
     expect(heading.textContent).toBe("Hey, Tunde.");
-    const ems = heading.querySelectorAll("em");
-    expect(ems).toHaveLength(1);
-    expect(ems[0].textContent).toBe("Tunde");
-    expect(ems[0].className).toContain("serif");
-    expect(ems[0].className).toContain("italic");
+    expect(heading.children).toHaveLength(0);
+    expect(heading.querySelector("em")).toBeNull();
+    expect(heading.className).not.toMatch(/serif|italic/);
   });
 
-  it("reports a multi-word emphasis in development", () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    render(<TitleWithEmphasis emphasis="two words" />);
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining("must be one word"));
+  it("trims the key word and renders as h2 when asked", () => {
+    render(<TitleWithEmphasis as="h2" before="Your " emphasis=" clients " />);
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Your clients");
   });
 });
 
@@ -117,11 +113,10 @@ describe("PageHeader", () => {
     expect(screen.getByRole("button", { name: "Invite" })).toBeInTheDocument();
   });
 
-  it("takes title parts for the one emphasised word", () => {
+  it("takes title parts and renders them as one plain heading", () => {
     render(<PageHeader title={{ emphasis: "Workout", after: " log" }} />);
-    const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("Workout log");
-    expect(h1.querySelectorAll("em")).toHaveLength(1);
+    const h1 = screen.getByRole("heading", { level: 1, name: "Workout log" });
+    expect(h1.querySelector("em")).toBeNull();
   });
 });
 
@@ -381,7 +376,7 @@ describe("SuccessTakeover", () => {
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAccessibleDescription("Checked in · 14:42");
     expect(dialog.style.background).toBe("var(--ink)");
-    expect(dialog.querySelectorAll("em")).toHaveLength(1);
+    expect(dialog.querySelector("em")).toBeNull();
     expect(screen.getByText("Iron Lab · welcome back")).toBeInTheDocument();
     expect(screen.getByText("33")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Done" })).toHaveAttribute("href", "/dashboard/member");

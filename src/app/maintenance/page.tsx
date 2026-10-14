@@ -64,17 +64,7 @@ export default function MaintenancePage() {
             marginBottom: 14,
           }}
         >
-          We&apos;ll be{" "}
-          <em
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontStyle: "italic",
-              fontWeight: 400,
-            }}
-          >
-            right back
-          </em>
-          .
+          We&apos;ll be right back.
         </h1>
 
         {/* Description */}

@@ -24,7 +24,7 @@ export interface AccountStateRow {
 interface AccountStatePanelProps {
   tone: Tone;
   eyebrow: string;
-  /** The heading; pass an <em> for the one serif-italic word. */
+  /** The heading. Wrap its key word in <Accent> (plain since Oct 14 2026). */
   title: ReactNode;
   description: ReactNode;
   /** Facts the API actually gave us. Omitted rows are simply not shown. */
@@ -170,13 +170,15 @@ export default function AccountStatePanel({
   );
 }
 
-/** The serif-italic accent word used in each page's heading. */
+/**
+ * The key word in each page's heading ("Your account is suspended.").
+ *
+ * It used to be set in serif italic. Owner ruling, Oct 14 2026: no serif
+ * italic on product screens, so it now renders in the heading's own font.
+ * The wrapper stays so a future restyle is a change to this one place.
+ */
 export function Accent({ children }: { children: ReactNode }) {
-  return (
-    <em style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 400 }}>
-      {children}
-    </em>
-  );
+  return <>{children}</>;
 }
 
 /** Mono countdown shown under the description. */
