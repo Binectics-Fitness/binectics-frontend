@@ -8,6 +8,7 @@ import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
+import { useRegisterShellNav } from "@/hooks/useShellNav";
 
 /* ─── Icon helper ──────────────────────────────────────────── */
 
@@ -29,17 +30,21 @@ interface SideItem {
   alert?: boolean;
 }
 
-const SIDEBAR: { label: string; items: SideItem[] }[] = [
+/*
+ * Fraud, Tickets, Countries, Team & roles and Compliance are not in the nav
+ * while their pages are still "coming soon" placeholders: a nav item is a
+ * promise the page can keep. Their routes stay, so add each back here when
+ * its page is built.
+ */
+export const SIDEBAR: { label: string; items: SideItem[] }[] = [
   { label: "Moderate", items: [
     { name: "Overview", href: "/admin/dashboard", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Listings", href: "/admin/listings", icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
     { name: "Reviews", href: "/admin/reviews", icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
-    { name: "Fraud", href: "/admin/fraud", icon: <I><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></I> },
+    { name: "Refunds", href: "/admin/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
     { name: "Disputes", href: "/admin/disputes", icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
-    { name: "Tickets", href: "/admin/tickets", icon: <I><path d="M3 21l1.6-4.7A9 9 0 1 1 12 21z"/></I> },
   ]},
   { label: "Platform", items: [
-    { name: "Countries", href: "/admin/countries", icon: <I><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></I> },
     { name: "Payments", href: "/admin/payments", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
     { name: "Currencies", href: "/admin/currencies", icon: <I><circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5M12 6.5v1.5M12 16v1.5"/></I> },
     { name: "Plans", href: "/admin/plans", icon: <I><path d="M4 7h16M4 12h16M4 17h10"/><rect x="2" y="4" width="20" height="16" rx="2"/></I> },
@@ -50,8 +55,6 @@ const SIDEBAR: { label: string; items: SideItem[] }[] = [
     { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
     { name: "Feature flags", href: "/admin/feature-flags", icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
     { name: "Audit log", href: "/admin/audit-log", icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5" /> },
-    { name: "Team & roles", href: "/admin/team-roles", icon: <I><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M19 8v6M16 11h6"/></I> },
-    { name: "Compliance", href: "/admin/compliance", icon: <I><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></I> },
   ]},
 ];
 
@@ -237,6 +240,8 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
 
 export function AdminDashboardShell({ activeItem, crumb, actions, children }: AdminDashboardShellProps) {
   const { isAuthorized, isLoading } = useAdminGuard();
+  // The command bar offers exactly this sidebar while the shell is on screen.
+  useRegisterShellNav(SIDEBAR);
   if (!isLoading && !isAuthorized) return null;
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>

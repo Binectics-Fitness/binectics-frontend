@@ -208,9 +208,17 @@ export const providerBillingApi = {
     );
   },
 
-  listPlans(market?: string): Promise<ApiResponse<ProviderPlanOption[]>> {
-    const qs = market ? `?market=${encodeURIComponent(market)}` : "";
-    return apiClient.get<ProviderPlanOption[]>(`/provider-billing/plans${qs}`);
+  /**
+   * The plans this workspace can buy, priced the way checkout will charge
+   * them: the API resolves the org's market and its audience (gym, trainer
+   * or dietitian catalogue). Owner-only, like status and checkout. Upgrade
+   * screens must use this, not the public catalogue, whose audience
+   * defaults to the shared one and whose market defaults to GLOBAL.
+   */
+  listPlansForOrganization(organizationId: string): Promise<ApiResponse<ProviderPlanOption[]>> {
+    return apiClient.get<ProviderPlanOption[]>(
+      `/provider-billing/organizations/${organizationId}/plans`,
+    );
   },
 
   /**

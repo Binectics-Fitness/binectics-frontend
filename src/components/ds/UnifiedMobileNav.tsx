@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,13 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { NAV_ENTRIES, type DropdownEntry } from "@/lib/constants/navigation";
+import { accountMenuItems } from "./accountMenuItems";
 import {
   Menu,
   X,
   ChevronDown,
-  LayoutDashboard,
-  User as UserIcon,
-  Settings,
   LogIn,
   LogOut,
 } from "lucide-react";
@@ -117,23 +115,32 @@ function MobileDropdownSection({ entry, close }: { entry: DropdownEntry; close: 
   );
 }
 
+const noopSubscribe = () => () => {};
+
 export function UnifiedMobileNav() {
   const { user, logout } = useAuth();
   const pathname = usePathname() ?? "/";
-  const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+  // Open on the page it was opened on: navigating anywhere closes it,
+  // without an effect that resets state after every route change.
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const isOpen = openPath === pathname;
+  const setIsOpen = (next: boolean | ((open: boolean) => boolean)) => {
+    const value = typeof next === "function" ? next(isOpen) : next;
+    setOpenPath(value ? pathname : null);
+  };
+  // The drawer is portalled to <body>, which exists only in the browser.
+  const mounted = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     if (!isOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") setOpenPath(null);
     };
     document.addEventListener("keydown", onKey);
     return () => {
@@ -141,10 +148,6 @@ export function UnifiedMobileNav() {
       document.removeEventListener("keydown", onKey);
     };
   }, [isOpen]);
-
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
 
   const close = () => setIsOpen(false);
   // There is no /dashboard index page — logged-out users go to /login,
@@ -154,11 +157,8 @@ export function UnifiedMobileNav() {
     ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email
     : "";
 
-  const accountItems = [
-    { href: dashboardHref, label: "Dashboard", icon: LayoutDashboard },
-    { href: `${dashboardHref}/profile`, label: "Profile", icon: UserIcon },
-    { href: `${dashboardHref}/settings`, label: "Settings", icon: Settings },
-  ];
+  // The same account links as the desktop avatar menu.
+  const accountItems = user ? accountMenuItems(user) : [];
 
   const menuContent = (
     <>

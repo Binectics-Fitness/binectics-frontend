@@ -4,8 +4,9 @@ import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { useMessagingUnread } from "@/components/messaging/queries";
+import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 
-const SIDEBAR: NavSection[] = [
+export const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
     { name: "Overview", href: "/dashboard/gym-owner", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Members", href: "/dashboard/gym-owner/members", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
@@ -16,6 +17,7 @@ const SIDEBAR: NavSection[] = [
   { label: "Money", items: [
     { name: "Payouts", href: "/dashboard/gym-owner/payouts", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
     { name: "Revenue", href: "/dashboard/gym-owner/revenue", icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
+    { name: "Refunds", href: "/dashboard/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
     { name: "Plans & pricing", href: "/dashboard/gym-owner/plans", icon: <I d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /> },
   ]},
   { label: "Workspace", items: [
@@ -46,6 +48,7 @@ export interface GymDashboardShellProps {
 
 export function GymDashboardShell({ activeItem, crumb, actions, children }: GymDashboardShellProps) {
   const unreadMessages = useMessagingUnread();
+  const refundsWaiting = useRefundsAttentionCount();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -53,7 +56,7 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
       actions={actions}
       config={{
         role: UserRole.GYM_OWNER,
-        sections: withNavBadge(SIDEBAR, "Messages", unreadMessages),
+        sections: withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
         identity: "org",
         tone: { avatarBg: "var(--gym)", avatarColor: "oklch(0.98 0 0)", chipSquare: true },
         settingsHref: "/dashboard/settings",

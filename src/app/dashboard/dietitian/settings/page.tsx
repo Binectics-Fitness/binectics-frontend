@@ -3,6 +3,7 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 
@@ -18,6 +19,9 @@ export default function DietitianSettingsPage() {
           title="Payment account"
           description="Connect your own payment account to collect membership plan payments directly, and to price plans in the currencies it has enabled. Secret keys are encrypted and never shown again."
         />
+      </div>
+      <div className="mt-8">
+        <CancellationPolicyCard />
       </div>
       {canSeeActivityLog(currentOrg, true) && (
         <div className="mt-8">

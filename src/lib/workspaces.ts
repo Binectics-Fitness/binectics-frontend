@@ -50,6 +50,18 @@ export function ownedWorkspace<T extends WorkspaceLike>(
   );
 }
 
+/**
+ * Whether this person owns the workspace. Billing and refunds are owner-only
+ * on the API, so their screens and nav counts check this first.
+ */
+export function ownsWorkspace(
+  org: { owner_id?: string; is_owner?: boolean } | null | undefined,
+  userId: string | null | undefined,
+): boolean {
+  if (!org || !userId) return false;
+  return org.is_owner ?? org.owner_id === userId;
+}
+
 /** What choosing a team role does, where it does more than set permissions. */
 export function teamRoleHint(code: string | null | undefined): string | null {
   return code === STAFF_TRAINER_ROLE_CODE

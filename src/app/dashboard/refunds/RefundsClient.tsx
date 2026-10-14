@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 import { ActionModal } from "@/components/ds/ActionModal";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
@@ -18,6 +19,7 @@ import {
   type RefundPolicy,
 } from "@/lib/api/refunds";
 import { REFUND_STATUS, disputeTone, refundErrorMessage } from "@/lib/refunds/refundUi";
+import { queryKeys } from "@/lib/queries/keys";
 
 type Tab = "payments" | "refunds" | "disputes" | "policy";
 const TABS: { id: Tab; label: string }[] = [
@@ -56,6 +58,12 @@ export function RefundsClient() {
   const orgId = currentOrg?._id ?? null;
   // Bumped when a suggested refund is answered, so the lists below reload.
   const [rev, setRev] = useState(0);
+  const queryClient = useQueryClient();
+  const onSuggestionAnswered = () => {
+    setRev((n) => n + 1);
+    // The nav's Refunds count includes open suggestions.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.refunds.all });
+  };
 
   return (
     <WorkspaceShell activeItem="Refunds" crumb="Refunds and disputes">
@@ -86,7 +94,7 @@ export function RefundsClient() {
         ))}
       </div>
       {orgId && !orgLoading ? (
-        <SuggestedRefunds orgId={orgId} highlightId={params.get("suggested")} onChanged={() => setRev((n) => n + 1)} />
+        <SuggestedRefunds orgId={orgId} highlightId={params.get("suggested")} onChanged={onSuggestionAnswered} />
       ) : null}
       {orgLoading ? (
         <AsyncSpinner />

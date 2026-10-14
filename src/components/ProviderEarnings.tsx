@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/earnings";
 import { ConsultationBookingStatus } from "@/lib/api/consultations";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useCoachingGym } from "@/hooks/useTrainerAccess";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { minorToMajor, formatMinorMap, dominantCurrency } from "@/lib/money/minorMoney";
 
@@ -79,6 +80,7 @@ export interface ProviderEarningsProps {
 }
 
 export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarningsProps) {
+  const coachingGym = useCoachingGym();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { fmtMoney, fmtDateTime, fmtNumber } = useOrgFormat();
 
@@ -234,9 +236,13 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>
           Settled revenue from your organization&rsquo;s ledger, plus your {sessionNoun} activity
         </p>
-        <Link href="/dashboard/refunds" className="inline-block mt-2 text-[13px] underline" style={{ color: "var(--fg-2)" }}>
-          Refunds and disputes
-        </Link>
+        {/* A gym's staff trainer is paid through the gym, which handles
+            refunds; the refunds page would only refuse them. */}
+        {!coachingGym && (
+          <Link href="/dashboard/refunds" className="inline-block mt-2 text-[13px] underline" style={{ color: "var(--fg-2)" }}>
+            Refunds and disputes
+          </Link>
+        )}
       </div>
 
       {/* ── Settled revenue ─────────────────────────────────────────────── */}
