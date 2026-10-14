@@ -23,7 +23,9 @@ import {
 import { heatmapCells } from "@/lib/ui/activity";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { mayBeTruncated, workoutTotals } from "../_lib/logStats";
-import { LOG_LIMIT, activityTypeLabel, logDate } from "../_lib/logFormat";
+import { LOG_LIMIT, activityRowText, activityTypeLabel, logDate } from "../_lib/logFormat";
+import { trackerImport } from "@/lib/progress/importSource";
+import { ImportSourceBadges } from "@/components/activity/ImportSourceBadges";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
 
 const EMPTY_WORKOUT_FORM: WorkoutFormInput = {
@@ -191,6 +193,7 @@ export default function WorkoutLogPage() {
   const plus = capped ? "+" : "";
   const [openId, setOpenId] = useState<string | null>(null);
   const opened = activities?.find((a) => a._id === openId) ?? null;
+  const openedImport = opened ? trackerImport(opened) : null;
   // Blocks that summarise the list wait for it; on a failed load only the
   // error shows, never zeros.
   const showData = !loading && activities !== null;
@@ -466,22 +469,20 @@ export default function WorkoutLogPage() {
             <EmptySlate message="No workouts logged yet." mt="mt-0" />
           ) : (
             <ul className="flex flex-col gap-1.5">
-              {activities.slice(0, 20).map((activity) => (
-                <li key={activity._id}>
-                  <ListRow
-                    title={activity.title || activityTypeLabel(activity.activity_type)}
-                    meta={[
-                      logDate(activity.performed_at, now),
-                      activityTypeLabel(activity.activity_type),
-                      `${activity.duration_minutes} min`,
-                      activity.calories_burned ? `${activity.calories_burned} kcal` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                    onClick={() => setOpenId(activity._id)}
-                  />
-                </li>
-              ))}
+              {activities.slice(0, 20).map((activity) => {
+                const { title, meta } = activityRowText(activity, now);
+                const imported = trackerImport(activity);
+                return (
+                  <li key={activity._id}>
+                    <ListRow
+                      title={title}
+                      meta={meta}
+                      trailing={imported ? <ImportSourceBadges imported={imported} /> : null}
+                      onClick={() => setOpenId(activity._id)}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -496,6 +497,7 @@ export default function WorkoutLogPage() {
             ? [
                 { label: "Date", value: logDate(opened.performed_at, now) },
                 { label: "Type", value: activityTypeLabel(opened.activity_type) },
+                { label: "Source", value: openedImport ? <ImportSourceBadges imported={openedImport} /> : null },
                 { label: "Duration", value: `${opened.duration_minutes} min` },
                 { label: "Calories burned", value: opened.calories_burned ? `${opened.calories_burned} kcal` : null },
                 { label: "Intensity", value: opened.intensity != null ? `${opened.intensity} / 10` : null },
