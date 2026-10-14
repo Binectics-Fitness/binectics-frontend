@@ -7,8 +7,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner } from "@/components/ds";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { ownsWorkspace } from "@/lib/workspaces";
+import { seatReviewFor } from "./billingRole";
 import {
   providerBillingApi,
   ProviderInvoiceStatus,
@@ -48,9 +51,16 @@ const TIER_LABELS: Record<ProviderPlanTier, string> = {
 
 export default function ProviderBillingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { organizations, currentOrg, setCurrentOrg } = useOrganization();
   const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
-  const orgId = currentOrg?._id;
+  // Billing is the owner's (the API refuses anyone else). A gym's staff
+  // trainer works in the gym's workspace, so they are told who pays rather
+  // than shown a refusal.
+  const ownsCurrent = ownsWorkspace(currentOrg, user?.id);
+  const orgId = ownsCurrent ? currentOrg?._id : undefined;
+  const ownedOrgs = organizations.filter((org) => ownsWorkspace(org, user?.id));
+  const seatReview = seatReviewFor(user?.role);
 
   const [billingStatus, setBillingStatus] = useState<ProviderBillingStatus | null>(null);
   const [plans, setPlans] = useState<ProviderPlanOption[]>([]);
@@ -125,7 +135,9 @@ export default function ProviderBillingPage() {
       try {
         const [statusRes, plansRes, invoicesRes] = await Promise.all([
           providerBillingApi.getStatus(orgId),
-          providerBillingApi.listPlans(),
+          // Priced for this workspace (its market and provider type), so
+          // the amounts shown are the amounts checkout charges.
+          providerBillingApi.listPlansForOrganization(orgId),
           providerBillingApi.listInvoices(orgId, { limit: 10 }),
         ]);
 
@@ -218,14 +230,14 @@ export default function ProviderBillingPage() {
     plans.find((p) => p.code === currentTier)?.sort_order ?? null;
 
   return (
-    <GymDashboardShell activeItem="Billing" crumb="Billing">
+    <WorkspaceShell activeItem="Billing" crumb="Billing">
       <div className="flex flex-col gap-5">
         <div>
           <div
             className="font-mono text-[11px] uppercase tracking-[0.06em]"
             style={{ color: "var(--fg-3)" }}
           >
-            Organization
+            Binectics plan
           </div>
           <h1
             className="text-[30px] font-medium mt-1"
@@ -238,13 +250,17 @@ export default function ProviderBillingPage() {
           </p>
         </div>
 
-        <OrganizationContextBanner
-          label="Billing organization"
-          helperText="Switch organizations before reviewing plan usage or invoices."
-          organizations={organizations}
-          currentOrg={currentOrg}
-          onChange={setCurrentOrg}
-        />
+        {/* Only the workspaces this person owns can be billed, so only
+            those are offered, and only when there is a choice to make. */}
+        {(ownedOrgs.length > 1 || (!ownsCurrent && ownedOrgs.length > 0)) && (
+          <OrganizationContextBanner
+            label="Billing organization"
+            helperText="Switch organizations before reviewing plan usage or invoices."
+            organizations={ownedOrgs}
+            currentOrg={currentOrg}
+            onChange={setCurrentOrg}
+          />
+        )}
 
         {error && (
           <div
@@ -262,6 +278,15 @@ export default function ProviderBillingPage() {
           >
             <p className="text-sm" style={{ color: "var(--fg-2)" }}>
               Select an organization to view billing details.
+            </p>
+          </div>
+        ) : !ownsCurrent ? (
+          <div
+            className="rounded-(--r-3) p-4"
+            style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
+          >
+            <p className="text-sm" style={{ color: "var(--fg-2)" }}>
+              {currentOrg.name} pays for Binectics, so its owner manages the plan and invoices. There is nothing for you to pay.
             </p>
           </div>
         ) : isLoading ? (
@@ -287,13 +312,11 @@ export default function ProviderBillingPage() {
                     : `You're close to your seat limit, ${fmtNumber(billingStatus.seats.used)} of ${renderLimitValue(billingStatus.seats.limit)}.`}
                 </span>
                 <span style={{ color: "var(--fg-2)" }}>
-                  Archiving a member frees their seat. Paused and suspended
-                  members still occupy one, so review those first, or upgrade
-                  for more room.
+                  {seatReview.advice}
                 </span>
                 <div className="flex gap-3 mt-1">
-                  <Link href="/dashboard/gym-owner/members" className="underline" style={{ color: "var(--ink)" }}>
-                    Review members
+                  <Link href={seatReview.href} className="underline" style={{ color: "var(--ink)" }}>
+                    {seatReview.label}
                   </Link>
                   <button
                     type="button"
@@ -720,6 +743,6 @@ export default function ProviderBillingPage() {
           </>
         )}
       </div>
-    </GymDashboardShell>
+    </WorkspaceShell>
   );
 }

@@ -24,6 +24,7 @@ import type { UserRole } from "@/lib/types";
 import { ROLE_LABEL, fullName, nameInitials, personInitials, shortName } from "@/lib/identity";
 import { pickOrgForDashboard, type DashboardKind } from "@/lib/workspaces";
 import { toneColors, type Tone } from "@/lib/ui/tones";
+import { useRegisterShellNav } from "@/hooks/useShellNav";
 
 /** Shared 15px stroked icon used by every provider sidebar nav item. */
 export function SidebarIcon({ children, d }: { children?: ReactNode; d?: string }) {
@@ -82,6 +83,11 @@ export interface ProviderShellConfig {
   /** A second line under the identity chip, e.g. "Coaching at Iron Temple". */
   chipNote?: string;
   /**
+   * One plain sentence under the identity chip, e.g. why some items are not
+   * in this person's nav. Wraps; not truncated.
+   */
+  chipDetail?: string;
+  /**
    * The kind of workspace this dashboard works in. When set, the shell makes
    * that workspace current, so a dashboard only ever acts on its own kind of
    * workspace even when the person belongs to more than one.
@@ -115,6 +121,11 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
           {config.chipNote && <span className="block text-[11.5px] truncate" style={{ color: "var(--fg-3)" }}>{config.chipNote}</span>}
         </span>
       </div>
+      {config.chipDetail && (
+        <p className="-mt-3.5 px-2.5 text-[12px] leading-snug" style={{ color: "var(--fg-3)" }}>
+          {config.chipDetail}
+        </p>
+      )}
 
       {/* Nav sections */}
       {sections.map((s) => (
@@ -171,6 +182,8 @@ export function ProviderShell({ activeItem, crumb, actions, children, config }: 
   const { currentOrg } = useOrganization();
   const orgs = useOptionalOrganization();
   const selectOrgForDashboard = orgs?.selectOrgForDashboard;
+  // The command bar offers exactly this sidebar while the shell is on screen.
+  useRegisterShellNav(config.sections);
 
   // Make this dashboard's workspace current. Explicit, not whatever sat
   // first in the list: a gym owner who coaches owns a gym and a trainer

@@ -72,3 +72,6 @@ export function isAuthRoute(pathname: string): boolean {
 export function isDashboardRoute(pathname: string): boolean {
   return pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
 }
+
+/** Where notification preferences live, for every role. */
+export const NOTIFICATION_SETTINGS_HREF = "/dashboard/settings/notifications";

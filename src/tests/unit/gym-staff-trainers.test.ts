@@ -45,7 +45,7 @@ describe("the trainer dashboard's workspace for a gym trainer", () => {
 describe("sidebarFor", () => {
   const sections = [
     { label: "Work", items: [{ name: "Today", href: "/t", icon: null }, { name: "Requests", href: "/r", icon: null }] },
-    { label: "Practice", items: [{ name: "Packages", href: "/p", icon: null }, { name: "My profile", href: "/m", icon: null }, { name: "Forms", href: "/f", icon: null }, { name: "Earnings", href: "/e", icon: null }] },
+    { label: "Practice", items: [{ name: "Plans", href: "/p", icon: null }, { name: "My profile", href: "/m", icon: null }, { name: "Forms", href: "/f", icon: null }, { name: "Earnings", href: "/e", icon: null }] },
   ];
 
   it("hides what belongs to the gym from a gym trainer", () => {

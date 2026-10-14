@@ -89,7 +89,7 @@ export function AdminRefundsClient() {
   };
 
   return (
-    <AdminDashboardShell activeItem="Payments" crumb="Refunds">
+    <AdminDashboardShell activeItem="Refunds" crumb="Refunds">
       <div>
         <h1 className="text-[28px] font-medium" style={{ letterSpacing: "-0.022em", color: "var(--ink)" }}>Refunds</h1>
         <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-3)" }}>

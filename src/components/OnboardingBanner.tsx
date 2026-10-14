@@ -8,6 +8,7 @@ import { getOnboardingRoute } from "@/lib/constants/routes";
 import { useOnboardingStatus } from "@/lib/queries/onboarding";
 import { onboardingService } from "@/lib/api/onboarding";
 import { queryKeys } from "@/lib/queries/keys";
+import { useCoachingGym } from "@/hooks/useTrainerAccess";
 
 /**
  * Self-gating setup banner for first logins. Renders only when the signed-in
@@ -72,6 +73,8 @@ export default function OnboardingBanner() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: status, isLoading } = useOnboardingStatus(!!user);
+  // A gym's staff trainer doesn't buy a Binectics plan: the gym does.
+  const coachingGym = useCoachingGym();
 
   // Optimistic override so a click reacts instantly; the server flag (refetched
   // after each call) is the source of truth. null means "defer to the server".
@@ -188,7 +191,7 @@ export default function OnboardingBanner() {
         >
           Complete setup →
         </Link>
-        {config.plansHref && (
+        {config.plansHref && !coachingGym && (
           <Link
             href={config.plansHref}
             className="inline-flex items-center justify-center h-11 px-4.5 rounded-(--r-2) text-[14px] font-medium"

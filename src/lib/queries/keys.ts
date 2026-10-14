@@ -166,6 +166,12 @@ export const queryKeys = {
       [...queryKeys.loyalty.all, "adminUserBalance", userId] as const,
   },
 
+  refunds: {
+    all: ["refunds"] as const,
+    attentionCount: (orgId: string) =>
+      [...queryKeys.refunds.all, "attentionCount", orgId] as const,
+  },
+
   assignmentRules: {
     all: ["assignmentRules"] as const,
     list: (orgId: string) =>

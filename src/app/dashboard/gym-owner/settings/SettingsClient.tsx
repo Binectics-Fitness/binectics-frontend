@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection } from "./TeamAccessSections";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
@@ -57,7 +58,21 @@ const SECTIONS = [
 const BOOKING_TOGGLE_DEFS = [
   { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed." },
   { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
-  { key: "cancellation_fee" as const, t: "Charge cancellation fee within 24h", s: "50% of session price. Reasonable exceptions waived by support team." },
+  {
+    key: "cancellation_fee" as const,
+    t: "Charge cancellation fee within 24h",
+    // Classes only (the API applies it to class bookings). Refunds on paid
+    // 1:1 sessions follow the separate cancellation policy, so say where.
+    s: (
+      <>
+        Classes only: 50% of the class price. Refunds on paid sessions follow your{" "}
+        <Link href={CANCELLATION_POLICY_HREF} className="underline" style={{ color: "var(--fg-2)" }}>
+          cancellation policy
+        </Link>
+        .
+      </>
+    ),
+  },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
   { key: "public_reviews" as const, t: "Public reviews on listing", s: "Members see ratings and reviews on your listing page." },
 ];
@@ -581,7 +596,7 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle?: () => void
   );
 }
 
-function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; title: string; desc: string; items: { key: string; t: string; s: string; on: boolean; onToggle: () => void }[]; disabled?: boolean }) {
+function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void }[]; disabled?: boolean }) {
   return (
     <section id={id}>
       <SectionHeading title={title} desc={desc} />

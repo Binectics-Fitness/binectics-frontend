@@ -4,15 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserRole } from "@/lib/types";
-import { getDashboardRoute } from "@/lib/constants/routes";
-import {
-  LayoutDashboard,
-  User as UserIcon,
-  Settings,
-  LogOut,
-  ChevronDown,
-} from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
+import { accountMenuItems } from "./accountMenuItems";
 
 function getInitials(first?: string, last?: string) {
   const f = (first ?? "").trim();
@@ -44,22 +37,8 @@ export function NavAvatarMenu() {
 
   if (!user) return null;
 
-  const dashboardHref = getDashboardRoute(user.role);
   const fullName = `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email;
-
-  const menuItems = [
-    { href: dashboardHref, label: "Dashboard", icon: LayoutDashboard },
-    // Platform admins (is_admin flag — orthogonal to role) get a way into
-    // the admin panel without giving up their own role's dashboard.
-    ...(user?.is_admin && user.role !== UserRole.ADMIN
-      ? [{ href: "/admin/dashboard", label: "Admin panel", icon: LayoutDashboard }]
-      : []),
-    // The account-level settings hub is role-generic and real for every
-    // role; `${dashboardHref}/profile|settings` 404'd for USER, GYM_OWNER,
-    // and ADMIN (those role shells have no such child routes).
-    { href: "/dashboard/settings/profile", label: "Profile", icon: UserIcon },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  ];
+  const menuItems = accountMenuItems(user);
 
   return (
     <div className="relative" ref={ref}>

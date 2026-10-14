@@ -4,6 +4,7 @@ import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { DSCard } from "@/components/ds";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
@@ -41,6 +42,12 @@ export default function TrainerSettingsPage() {
           />
         )}
       </div>
+      {/* Refunds on a gym's sessions follow the gym's policy, not theirs. */}
+      {!gym && (
+        <div className="mt-8">
+          <CancellationPolicyCard />
+        </div>
+      )}
       {/* Their own workspace's log; a gym's staff trainer has none here. */}
       {!gym && canSeeActivityLog(currentOrg, true) && (
         <div className="mt-8">

@@ -5,8 +5,9 @@ import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
 import { useMessagingUnread } from "@/components/messaging/queries";
+import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 
-const SIDEBAR: NavSection[] = [
+export const SIDEBAR: NavSection[] = [
   { label: "Practice", items: [
     { name: "Today", href: "/dashboard/dietitian", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Consultations", href: "/dashboard/dietitian/consultations", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
@@ -25,7 +26,9 @@ const SIDEBAR: NavSection[] = [
     { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
     { name: "Loyalty", href: "/dashboard/loyalty", icon: <I d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z" /> },
     { name: "Earnings", href: "/dashboard/dietitian/earnings", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
+    { name: "Refunds", href: "/dashboard/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
     { name: "My profile", href: "/dashboard/dietitian/profile", icon: <I><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></I> },
+    { name: "Billing", href: "/dashboard/billing", icon: <I><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></I> },
     { name: "Settings", href: "/dashboard/dietitian/settings", icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
   ]},
 ];
@@ -40,6 +43,7 @@ export interface DietitianDashboardShellProps {
 export function DietitianDashboardShell({ activeItem, crumb, actions, children }: DietitianDashboardShellProps) {
   const pendingRequests = usePendingListingRequestCount();
   const unreadMessages = useMessagingUnread();
+  const refundsWaiting = useRefundsAttentionCount();
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -47,7 +51,12 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
       actions={actions}
       config={{
         role: UserRole.DIETITIAN,
-        sections: withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages),
+        sections: withNavBadge(
+          withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages),
+          "Refunds",
+          refundsWaiting,
+          "warn",
+        ),
         identity: "user",
         tone: { avatarBg: "var(--dietitian-soft)", avatarColor: "var(--dietitian)" },
         settingsHref: "/dashboard/dietitian/settings",
