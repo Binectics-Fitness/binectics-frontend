@@ -27,6 +27,14 @@ export function webhookReceivedLabel(iso: string | null | undefined): string | n
   });
 }
 
+/** "14 Aug 2026" in the viewer's locale, or null for a bad value. */
+export function webhookReceivedDay(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
 /** How long without a webhook before the panel stops saying "Receiving". */
 export const WEBHOOK_STALE_DAYS = 30;
 
@@ -34,6 +42,8 @@ export const WEBHOOK_STALE_DAYS = 30;
  * True when the last webhook is more than WEBHOOK_STALE_DAYS old. Display
  * only, from the field the API already sends: a quiet account may simply
  * have taken no payments, so the panel suggests a check, nothing more.
+ * The panel only knows the gap is past the threshold, so it says "30+ days"
+ * and gives the real date, never a made-up length.
  * Never true without a valid time ("Not received yet" covers that).
  */
 export function webhookIsStale(iso: string | null | undefined, now: Date = new Date()): boolean {
@@ -74,6 +84,7 @@ export function PaystackWebhookPanel({
   const field = mode ? `${mode} Webhook URL` : "Test or Live Webhook URL";
   const received = webhookReceivedLabel(lastReceivedAt);
   const stale = webhookIsStale(lastReceivedAt);
+  const receivedDay = webhookReceivedDay(lastReceivedAt);
 
   const onCopy = async () => {
     if (!webhookUrl) return;
@@ -108,7 +119,7 @@ export function PaystackWebhookPanel({
           </p>
         </div>
         {received && stale ? (
-          <StatusPill tone="neutral" label="Quiet for 30 days" />
+          <StatusPill tone="neutral" label={`No webhook in ${WEBHOOK_STALE_DAYS}+ days`} />
         ) : received ? (
           <StatusPill tone="success" label="Receiving" />
         ) : (
@@ -164,16 +175,21 @@ export function PaystackWebhookPanel({
           className="text-[12.5px] leading-relaxed px-3 py-2 rounded-(--r-2)"
           style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--fg-2)" }}
         >
-          No payment notifications from Paystack in 30 days. If you take payments, check the webhook is still set
-          in your Paystack dashboard.
+          No webhook received in the last {WEBHOOK_STALE_DAYS}+ days.
+          {receivedDay ? ` Last webhook received ${receivedDay}.` : ""} If you&rsquo;ve taken payments, renewals or
+          refunds since then, check the webhook is still set in your Paystack dashboard. If you haven&rsquo;t, a quiet
+          spell is expected.
         </p>
       )}
 
-      <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-        {received
-          ? `Last received ${received}.`
-          : "Not received yet. Paystack sends one with the next payment, renewal or refund on your account."}
-      </p>
+      {/* The stale note already gives the date. */}
+      {!stale && (
+        <p className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+          {received
+            ? `Last received ${received}.`
+            : "Not received yet. Paystack sends one with the next payment, renewal or refund on your account."}
+        </p>
+      )}
     </section>
   );
 }
