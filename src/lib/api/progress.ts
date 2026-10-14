@@ -143,6 +143,12 @@ export interface ActivityReport {
   performed_at: string;
   notes?: string;
   logged_by: string | { _id: string; first_name: string; last_name: string };
+  /** "health_connect" / "healthkit" for an import; absent or "manual" = typed in Binectics. */
+  source?: string;
+  /** An import's writing app (package name); shown as a badge, never in the title. */
+  origin_app?: string;
+  /** "manual" = typed in by hand in the writing app. */
+  recording_method?: string;
   created_at: string;
   updated_at: string;
 }
