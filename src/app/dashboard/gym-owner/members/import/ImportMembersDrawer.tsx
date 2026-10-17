@@ -66,7 +66,9 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
   const [preview, setPreview] = useState<MemberImportPreview | null>(null);
   const [choices, setChoices] = useState<MemberImportChoices>({});
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // `warn`: nothing went wrong with this import, it has to wait (409).
+  const [notice, setNotice] = useState<{ text: string; warn: boolean } | null>(null);
+  const setError = useCallback((text: string | null, warn = false) => setNotice(text ? { text, warn } : null), []);
   const [inviteMode, setInviteMode] = useState<ImportInviteMode>("later");
   const [status, setStatus] = useState<MemberImportStatus | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -81,7 +83,7 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
     setError(null);
     setInviteMode("later");
     setStatus(null);
-  }, []);
+  }, [setError]);
 
   const close = useCallback(() => {
     const imported = step === "done";
@@ -170,7 +172,14 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
     const res = await memberImportsApi.confirm(orgId, preview.import_id, inviteMode);
     finished = true;
     if (!res.success || !res.data) {
-      setError(res.message || "The import stopped part-way. Run it again: members already imported are not added twice.");
+      if (res.status === 409) {
+        // Another import for this gym (or this one, from another tab) holds
+        // the gym's import lock. Nothing of this one was written; it can run
+        // once that finishes.
+        setError(res.message || "Another member import for this gym is running. Try again when it finishes.", true);
+      } else {
+        setError(res.message || "The import stopped part-way. Run it again: members already imported are not added twice.");
+      }
       setStep("invites");
       return;
     }
@@ -189,6 +198,19 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
     }
     setStatus(res.data);
     toast.success("Invites are on their way");
+  };
+
+  const resendUnconfirmed = async () => {
+    if (!orgId || !preview) return;
+    setBusy(true);
+    const res = await memberImportsApi.resendUnconfirmed(orgId, preview.import_id);
+    setBusy(false);
+    if (!res.success || !res.data) {
+      toast.error(res.message || "Couldn't send those invites again");
+      return;
+    }
+    setStatus(res.data);
+    toast.success("Sending them once more. A member may get the email twice.");
   };
 
   const stepIndex = Math.max(0, STEPS.findIndex((s) => s.id === (step === "importing" ? "done" : step)));
@@ -213,13 +235,17 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
           <div aria-live="polite" className="sr-only">
             {busy ? "Checking your file…" : ""}
           </div>
-          {error && (
+          {notice && (
             <div
               role="alert"
               className="mb-4 rounded-(--r-2) p-3 text-[13px]"
-              style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}
+              style={
+                notice.warn
+                  ? { background: "var(--warn-soft)", color: "var(--warn-ink)", border: "1px solid var(--warn)" }
+                  : { background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }
+              }
             >
-              {error}
+              {notice.text}
             </div>
           )}
 
@@ -320,6 +346,7 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
               running={step === "importing"}
               busy={busy}
               onSendInvites={() => void sendInvites()}
+              onResendUnconfirmed={() => void resendUnconfirmed()}
             />
           )}
         </div>
@@ -991,6 +1018,7 @@ function ResultStep({
   running,
   busy,
   onSendInvites,
+  onResendUnconfirmed,
 }: {
   headingRef: HeadingRef;
   preview: MemberImportPreview;
@@ -998,6 +1026,7 @@ function ResultStep({
   running: boolean;
   busy: boolean;
   onSendInvites: () => void;
+  onResendUnconfirmed: () => void;
 }) {
   const { fmtNumber } = useOrgFormat();
   const total = status?.total ?? preview.summary.total;
@@ -1023,7 +1052,10 @@ function ResultStep({
     );
   }
   const r = status?.result ?? {};
-  const inv = status?.invites ?? { held: 0, queued: 0, sent: 0 };
+  const inv = status?.invites ?? { held: 0, queued: 0, sent: 0, unconfirmed: 0 };
+  // The result's own count: seats can be taken while the import runs, so
+  // it can be more than the preview's estimate.
+  const overCap = r.over_cap ?? 0;
   const lines: Array<[string, number | undefined]> = [
     ["Imported", r.imported],
     ["Already imported before", r.already_imported],
@@ -1051,6 +1083,23 @@ function ResultStep({
         Imported members appear under “Waiting to accept” on your Members page until they claim their membership. Their seat
         is taken when they do.
       </p>
+      {overCap > 0 && (
+        <div
+          role="status"
+          className="mt-3 rounded-(--r-2) p-3 text-[13px] leading-relaxed"
+          style={{ border: "1px solid var(--warn)", background: "var(--warn-soft)", color: "var(--ink)" }}
+        >
+          <strong>
+            {fmtNumber(overCap)} {overCap === 1 ? "member" : "members"} didn&apos;t fit your seat limit and{" "}
+            {overCap === 1 ? "wasn't" : "weren't"} imported.
+          </strong>{" "}
+          {overCap > preview.seats.over_by ? "Seats were taken while the import ran, so that's more than the preview showed. " : ""}
+          Free up seats or upgrade, then upload the same file again: members already imported are skipped.{" "}
+          <Link href="/dashboard/billing" className="underline">
+            See plans
+          </Link>
+        </div>
+      )}
       <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--bg-2)", color: "var(--ink)" }}>
         {inv.held > 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1065,6 +1114,20 @@ function ResultStep({
           </span>
         ) : (
           <span>{fmtNumber(inv.sent)} invites sent.</span>
+        )}
+        {inv.unconfirmed > 0 && (
+          <div
+            className="mt-2 flex flex-wrap items-center justify-between gap-2 pt-2"
+            style={{ borderTop: "1px solid var(--border)" }}
+          >
+            <span>
+              {fmtNumber(inv.unconfirmed)} {inv.unconfirmed === 1 ? "invite" : "invites"} may not have arrived. Sending again
+              may give some members a second copy.
+            </span>
+            <button type="button" className="btn-ghost-v2 sm" disabled={busy} onClick={onResendUnconfirmed}>
+              Send {fmtNumber(inv.unconfirmed)} again
+            </button>
+          </div>
         )}
       </div>
     </section>
