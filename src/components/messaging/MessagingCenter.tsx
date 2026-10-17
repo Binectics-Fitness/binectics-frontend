@@ -20,6 +20,11 @@ export interface MessagingCenterProps {
   emptyHint: string;
   /** When set, the owner can post an announcement to this gym. */
   broadcastOrg?: { id: string; name: string } | null;
+  /**
+   * When set, list only this gym's inbox: the member conversations a gym's
+   * staff answer as the gym. Their own conversations stay in Messages.
+   */
+  gymInboxOf?: string | null;
 }
 
 /**
@@ -29,7 +34,7 @@ export interface MessagingCenterProps {
  * deep links and notification links all land on the same conversation.
  * Under the md breakpoint one pane shows at a time.
  */
-export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProps) {
+export function MessagingCenter({ emptyHint, broadcastOrg, gymInboxOf }: MessagingCenterProps) {
   const { user } = useAuth();
   const userId = user?.id ?? "";
   const router = useRouter();
@@ -52,7 +57,10 @@ export function MessagingCenter({ emptyHint, broadcastOrg }: MessagingCenterProp
   const summaryError = summary.error as MessagingRequestError | null;
   const summaryMissing = summaryError ? [400, 403, 404].includes(summaryError.status ?? 0) : false;
 
-  const threads = inbox.data?.threads ?? [];
+  const allThreads = inbox.data?.threads ?? [];
+  const threads = gymInboxOf
+    ? allThreads.filter((t) => t.as_gym?.organization_id === gymInboxOf)
+    : allThreads;
   const listStatus = inbox.isLoading ? "loading" : inbox.isError ? "error" : "ready";
 
   const open = useCallback(

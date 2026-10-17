@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { GYM_NAV_ACCESS, allows } from "@/lib/gymStaffNav";
 import { format } from "date-fns";
 import {
   AsyncSpinner,
@@ -20,7 +21,7 @@ import { earningsService, type RevenueTimeseriesPoint } from "@/lib/api/earnings
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useProviderAccess } from "@/hooks/useTrainerAccess";
 import { UserRole } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
@@ -80,7 +81,8 @@ function initials(name: string): string {
 
 export default function GymOverviewClient() {
   // Role guard: wrong-role accounts get redirected to their own dashboard.
-  const { isAuthorized } = useRoleGuard(UserRole.GYM_OWNER);
+  // A gym's staff are let in too; the shell shows them their role's part.
+  const { isAuthorized } = useProviderAccess(UserRole.GYM_OWNER);
   if (!isAuthorized) return null;
   return <GymOverviewContent />;
 }
@@ -88,6 +90,11 @@ export default function GymOverviewClient() {
 function GymOverviewContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
+  const viewer = useGymViewer();
+  const { staff } = viewer;
+  // A role without the Overview (an assistant) is sent to its first page;
+  // load nothing here meanwhile, or every request is refused.
+  const canView = allows(viewer, GYM_NAV_ACCESS.Overview);
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
@@ -99,7 +106,7 @@ function GymOverviewContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orgLoading || !currentOrg) return;
+    if (orgLoading || !currentOrg || !canView) return;
     let active = true;
 
     const run = async () => {
@@ -108,8 +115,11 @@ function GymOverviewContent() {
         checkinsService.getOrgDashboardStats(currentOrg._id),
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
         // Owner-only ledger. It drives the revenue card's figure AND its
-        // sparkline, so the two always share a window and a currency.
-        earningsService.getOrgTimeseries(currentOrg._id, 30),
+        // sparkline, so the two always share a window and a currency. Not
+        // asked for by a gym's staff: the API refuses them.
+        staff
+          ? Promise.resolve(null)
+          : earningsService.getOrgTimeseries(currentOrg._id, 30),
       ]);
       if (!active) return;
 
@@ -123,7 +133,7 @@ function GymOverviewContent() {
       }
       // Cleared on failure so another org's series never lingers.
       setSeries(
-        seriesRes.status === "fulfilled" && seriesRes.value.success && seriesRes.value.data ? seriesRes.value.data : null,
+        seriesRes.status === "fulfilled" && seriesRes.value?.success && seriesRes.value.data ? seriesRes.value.data : null,
       );
       setError(statsOk ? null : "We couldn't load your dashboard. Try again shortly.");
       setLoading(false);
@@ -134,7 +144,7 @@ function GymOverviewContent() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading]);
+  }, [currentOrg, orgLoading, canView, staff]);
 
   const recentMembers = useMemo(
     () =>
@@ -224,7 +234,8 @@ function GymOverviewContent() {
   const place = stats?.city && stats?.country_code ? ` · ${stats.city}, ${stats.country_code}` : "";
   return (
     <GymDashboardShell activeItem="Overview" crumb="Overview" actions={<NewPlanButton />}>
-      <OnboardingBanner />
+      {/* The owner's own setup steps; not a staff member's. */}
+      {!staff && <OnboardingBanner />}
 
       {/* The shell's <main> already spaces its children (gap-5). */}
       <PageHeader

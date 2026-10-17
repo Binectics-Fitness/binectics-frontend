@@ -18,6 +18,7 @@ import { ProviderDashboardShell } from "./ProviderDashboardShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOrganization, useOrganization } from "@/contexts/OrganizationContext";
 import { useProviderAccess } from "@/hooks/useTrainerAccess";
+import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import type { UserRole } from "@/lib/types";
@@ -103,6 +104,8 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
   const userName = shortName(user) || "Your account";
   const userInitials = personInitials(user) || "··";
   const roleLabel = user ? (ROLE_LABEL[user.role] ?? user.role) : "";
+  // A gym's staff move between the gym's dashboard and their own home.
+  const workspaceLink = useWorkspaceSwitch(config.workspace === "gym");
 
   const chipLabel = identity === "org" ? (currentOrg?.name ?? fallbackLabel) : (fullName(user) || "Your account");
   const chipInitials = identity === "org" ? (nameInitials(currentOrg?.name) || "··") : userInitials;
@@ -154,6 +157,7 @@ function ProviderSidebar({ activeItem, config }: { activeItem: string; config: P
       <div className="mt-auto pt-3.5" style={{ borderTop: "1px solid var(--border)" }}>
         <ShellAccountMenu
           direction="up"
+          workspaceLink={workspaceLink}
           trigger={
             <span className="flex items-center gap-2.5">
               <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style={{ background: tone.avatarBg, color: tone.avatarColor }}>{userInitials}</span>

@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, covers, holds } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, StatusPill } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
@@ -164,12 +165,23 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
   const assigned: AssignedState =
     assignedResult && assignedResult.userId === uid ? assignedResult : { kind: "loading" };
 
-  // Same authority the Team page uses for role changes and removals.
-  const canManage = !!currentOrg && (currentOrg.is_owner === true || currentOrg.can_manage_organization === true);
+  // What the API allows (TeamsController + assertCanManageMember): your own
+  // permission for the change, never on yourself, and only for someone
+  // whose role holds nothing you don't.
+  const viewer = useGymViewer();
   const isSelf = !!uid && uid === user?.id;
-  const canEdit = canManage && !isSelf;
+  const theirRole = member ? roles.find((r) => r._id === roleId(member)) : undefined;
+  // Only the owner changes the owner's membership.
+  const ownersRow = !!uid && uid === currentOrg?.owner_id && !viewer.isOwner;
+  const withinYours = !ownersRow && covers(viewer, theirRole?.permissions);
+  const canEdit = !isSelf && withinYours && holds(viewer, TeamPermission.UPDATE_MEMBER_ROLE);
+  const canRemove = !isSelf && withinYours && holds(viewer, TeamPermission.REMOVE_MEMBER);
 
-  const roleOptions = useMemo(() => roles.map((r) => ({ label: r.name, value: r._id })), [roles]);
+  // Only roles you could give (assertCanGrant).
+  const roleOptions = useMemo(
+    () => roles.filter((r) => covers(viewer, r.permissions)).map((r) => ({ label: r.name, value: r._id })),
+    [roles, viewer],
+  );
 
   async function changeRole(nextRoleId: string) {
     if (!member || !orgId || nextRoleId === roleId(member)) return;
@@ -367,7 +379,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
       )}
 
       {/* Remove */}
-      {canEdit && (
+      {canRemove && (
         <DSCard className="p-5.5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <div>
             <h3 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Remove from team</h3>

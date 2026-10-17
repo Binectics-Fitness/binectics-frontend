@@ -133,6 +133,11 @@ export interface Organization {
   /** May open the workspace's Activity log (owner, or a role holding team:view_audit_log). */
   can_view_audit_log?: boolean;
   my_role_code?: string | null;
+  /**
+   * Every team permission the signed-in person holds here (all of them for
+   * the owner). Decides what a gym's staff see; the API checks every call.
+   */
+  my_permissions?: string[];
   /** Optional white-label custom domain (gated by `custom_domain_enabled`). */
   custom_domain?: string | null;
   /** Optional white-label "From" sender (gated by `branded_email_enabled`). */

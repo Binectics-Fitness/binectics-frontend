@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import { AddLocationButton } from "./_actions";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type { MarketplaceListing } from "@/lib/types";
 
@@ -20,6 +22,8 @@ function formatBadge(type: string) {
 }
 
 export default function GymLocationsPage() {
+  // Adding a location changes the organization (manage_organization).
+  const canAddLocation = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const [locations, setLocations] = useState<ListingWithItems[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +68,7 @@ export default function GymLocationsPage() {
     <GymDashboardShell
       activeItem="Locations"
       crumb="Locations"
-      actions={<AddLocationButton />}
+      actions={canAddLocation ? <AddLocationButton /> : undefined}
     >
       {/* The shell's <main> already spaces its children (gap-5). */}
       <PageHeader

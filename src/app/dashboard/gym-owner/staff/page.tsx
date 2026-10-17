@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader, StatusPill } from "@/components/ds";
 import { AddStaffModal } from "@/components/ds/modals/AddStaffModal";
 import { teamsService, MemberStatus, InvitationStatus, type OrganizationMember, type TeamInvitation } from "@/lib/api/teams";
@@ -53,6 +54,8 @@ export default function GymStaffPage() {
   const { user } = useAuth();
   const { fmtDate } = useOrgFormat();
   const [addStaffOpen, setAddStaffOpen] = useState(false);
+  // Adding staff is team:invite_member (the API also caps it by plan).
+  const canInvite = holds(useGymViewer(), TeamPermission.INVITE_MEMBER);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [pendingInvites, setPendingInvites] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,10 +113,12 @@ export default function GymStaffPage() {
       activeItem="Staff"
       crumb="Staff"
       actions={
-        <>
-          <button className="btn-ghost-v2 sm">Invite link</button>
-          <button className="btn-primary-v2 sm" onClick={() => setAddStaffOpen(true)}>+ Add staff</button>
-        </>
+        canInvite ? (
+          <>
+            <button className="btn-ghost-v2 sm">Invite link</button>
+            <button className="btn-primary-v2 sm" onClick={() => setAddStaffOpen(true)}>+ Add staff</button>
+          </>
+        ) : undefined
       }
     >
       {/* The shell's <main> already spaces its children (gap-5). */}

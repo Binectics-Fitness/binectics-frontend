@@ -11,6 +11,8 @@ import { queryKeys } from "@/lib/queries/keys";
 import { reviewsService, ReviewTargetType, type Review } from "@/lib/api/reviews";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import SearchableSelect from "@/components/SearchableSelect";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 
 type Sort = "newest" | "oldest" | "rating_high" | "rating_low";
 
@@ -118,6 +120,9 @@ export function GymReviewsClient() {
 
 function ReviewCard({ review, listingId }: { review: Review; listingId: string }) {
   const { fmtDate } = useOrgFormat();
+  // Replying in public is marketplace:manage_reviews; a Manager can read
+  // the reviews but not answer them.
+  const canRespond = holds(useGymViewer(), TeamPermission.MARKETPLACE_MANAGE_REVIEWS);
   const queryClient = useQueryClient();
   const [replying, setReplying] = useState(false);
   const [draft, setDraft] = useState("");
@@ -168,9 +173,9 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
             <button className="btn-ghost-v2 sm" disabled={respond.isPending} onClick={() => setReplying(false)}>Cancel</button>
           </div>
         </div>
-      ) : (
+      ) : canRespond ? (
         <button className="btn-ghost-v2 sm mt-3" onClick={() => { setReplying(true); setError(null); }}>Respond</button>
-      )}
+      ) : null}
     </DSCard>
   );
 }

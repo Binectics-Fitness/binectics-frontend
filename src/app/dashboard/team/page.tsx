@@ -6,7 +6,9 @@ import Link from "next/link";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { useAuth } from "@/contexts/AuthContext";
+import { TeamPermission, covers, holds } from "@/lib/gymStaffNav";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgManagement } from "@/hooks/useTeams";
 import {
@@ -104,39 +106,38 @@ export default function TeamWorkspacePage() {
     void loadOrgData();
   }, [orgId, loadOrgData]);
 
-  const roleOptions = useMemo(
-    () => roles.map((role) => ({ label: role.name, value: role._id })),
-    [roles],
-  );
+  // What the signed-in person may do here: the owner everything, staff
+  // their role's permissions (my_permissions from the API, the same rule
+  // its routes enforce). Controls the API would refuse aren't shown.
+  const viewer = useGymViewer();
+  const { user } = useAuth();
+  const canInvite = holds(viewer, TeamPermission.INVITE_MEMBER);
+  const canRemove = holds(viewer, TeamPermission.REMOVE_MEMBER);
+  const canUpdateRole = holds(viewer, TeamPermission.UPDATE_MEMBER_ROLE);
+  // A status change is a member update that also needs deactivate.
+  const canChangeStatus = canUpdateRole && holds(viewer, TeamPermission.DEACTIVATE_MEMBER);
+  const canCancelInvite = holds(viewer, TeamPermission.CANCEL_INVITATION);
+  // Nobody changes their own row, only the owner touches the owner's, and
+  // nobody touches someone whose role holds permissions they don't
+  // (assertCanManageMember).
+  const manageable = (member: OrganizationMember): boolean => {
+    const uid = typeof member.user_id === "string" ? member.user_id : member.user_id?._id;
+    if (uid && uid === user?.id) return false;
+    if (uid && uid === currentOrg?.owner_id && !viewer.isOwner) return false;
+    return covers(viewer, roles.find((r) => r._id === roleIdFromMember(member))?.permissions);
+  };
+  // Only roles this person could give (assertCanGrant).
+  const grantableRoleOptions = roles
+    .filter((role) => covers(viewer, role.permissions))
+    .map((role) => ({ label: role.name, value: role._id }));
 
-
-
-  // Get current user's permissions from their role in the active organization
-  const userPermissions = useMemo(() => {
-    if (!currentOrg) return [];
-    const isOwner = currentOrg.is_owner ?? false;
-    const canManage = currentOrg.can_manage_organization ?? false;
-    if (isOwner || canManage) {
-      return [
-        "team:view_members",
-        "team:invite_member",
-        "team:remove_member",
-        "team:update_member_role",
-        "team:manage_organization",
-        "team:cancel_invitation",
-        "team:view_invitations",
-      ];
-    }
-    return ["team:view_members", "team:view_invitations"];
-  }, [currentOrg]);
-
-  // Check if current user can perform actions
-  const canInvite = userPermissions.includes("team:invite_member");
-  const canRemove = userPermissions.includes("team:remove_member");
-  const canUpdateRole = userPermissions.includes("team:update_member_role");
-  const canManageOrg = userPermissions.includes("team:manage_organization");
-
-  const selectedInviteRoleId = inviteRoleId || roles[0]?._id || "";
+  const selectedInviteRoleId = inviteRoleId || grantableRoleOptions[0]?.value || "";
+  const canSeeInvitations = holds(viewer, TeamPermission.VIEW_INVITATIONS);
+  /** Cancelling needs the permission and a role you could have given. */
+  const cancellable = (invitation: TeamInvitation): boolean => {
+    const id = typeof invitation.team_role_id === "string" ? invitation.team_role_id : invitation.team_role_id?._id;
+    return canCancelInvite && covers(viewer, roles.find((r) => r._id === id)?.permissions);
+  };
 
   const statusOptions = [
     { label: "Pending", value: MemberStatus.PENDING },
@@ -200,7 +201,7 @@ export default function TeamWorkspacePage() {
     memberId: string,
     newStatus: MemberStatus,
   ) {
-    if (!canManageOrg) {
+    if (!canChangeStatus) {
       setGlobalMessage("You don&apos;t have permission to update member status.");
       return;
     }
@@ -224,7 +225,7 @@ export default function TeamWorkspacePage() {
   }
 
   async function handleCancelInvite(invitationId: string) {
-    if (!canManageOrg) {
+    if (!canCancelInvite) {
       setGlobalMessage("You don&apos;t have permission to cancel invitations.");
       return;
     }
@@ -364,30 +365,39 @@ export default function TeamWorkspacePage() {
                           <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                             {userEmail(member)}
                           </td>
-                          <td className="py-3 pr-4 w-[220px]">
-                            <SearchableSelect
-                              value={roleIdFromMember(member)}
-                              onChange={(value) => {
-                                void handleRoleChange(member._id, value);
-                              }}
-                              options={roleOptions}
-                              placeholder={roleNameFromMember(member)}
-                            />
+                          <td className="py-3 pr-4 w-[220px]" style={{ color: "var(--fg-2)" }}>
+                            {canUpdateRole && manageable(member) ? (
+                              <SearchableSelect
+                                value={roleIdFromMember(member)}
+                                onChange={(value) => {
+                                  void handleRoleChange(member._id, value);
+                                }}
+                                options={grantableRoleOptions}
+                                placeholder={roleNameFromMember(member)}
+                              />
+                            ) : (
+                              roleNameFromMember(member)
+                            )}
                           </td>
-                          <td className="py-3 pr-4 w-[180px]">
-                            <SearchableSelect
-                              value={member.status}
-                              onChange={(value) => {
-                                void handleStatusChange(member._id, value as MemberStatus);
-                              }}
-                              options={statusOptions}
-                              placeholder="Status"
-                            />
+                          <td className="py-3 pr-4 w-[180px]" style={{ color: "var(--fg-2)" }}>
+                            {canChangeStatus && manageable(member) ? (
+                              <SearchableSelect
+                                value={member.status}
+                                onChange={(value) => {
+                                  void handleStatusChange(member._id, value as MemberStatus);
+                                }}
+                                options={statusOptions}
+                                placeholder="Status"
+                              />
+                            ) : (
+                              statusOptions.find((o) => o.value === member.status)?.label ?? member.status
+                            )}
                           </td>
                           <td className="py-3 pr-4" style={{ color: "var(--fg-2)" }}>
                             {fmtDate(member.joined_at ?? member.created_at)}
                           </td>
                           <td className="py-3">
+                            {canRemove && manageable(member) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -398,6 +408,7 @@ export default function TeamWorkspacePage() {
                             >
                               Remove
                             </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -449,7 +460,7 @@ export default function TeamWorkspacePage() {
                       <SearchableSelect
                         value={selectedInviteRoleId}
                         onChange={setInviteRoleId}
-                        options={roleOptions}
+                        options={grantableRoleOptions}
                         placeholder="Select role"
                       />
                     </div>
@@ -475,6 +486,7 @@ export default function TeamWorkspacePage() {
                 )}
               </div>
 
+              {canSeeInvitations && (
               <div
                 className="rounded-(--r-3) p-4"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
@@ -502,24 +514,18 @@ export default function TeamWorkspacePage() {
                             {roleNameFromInvitation(invitation)} · expires {fmtDate(invitation.expires_at)}
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleCancelInvite(invitation._id);
-                          }}
-                          className="rounded-(--r-2) border px-3 py-1.5 text-sm"
-                          style={{
-                            borderColor: canManageOrg
-                              ? "var(--border-2)"
-                              : "var(--border)",
-                            color: canManageOrg ? "var(--fg-2)" : "var(--fg-4)",
-                            background: "var(--bg)",
-                            opacity: canManageOrg ? 1 : 0.5,
-                            cursor: canManageOrg ? "pointer" : "not-allowed",
-                          }}
-                        >
-                          Cancel
-                        </button>
+                        {cancellable(invitation) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void handleCancelInvite(invitation._id);
+                            }}
+                            className="rounded-(--r-2) border px-3 py-1.5 text-sm"
+                            style={{ borderColor: "var(--border-2)", color: "var(--fg-2)", background: "var(--bg)", cursor: "pointer" }}
+                          >
+                            Cancel
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -533,6 +539,7 @@ export default function TeamWorkspacePage() {
                   .
                 </div>
               </div>
+              )}
             </section>
           </>
         )}

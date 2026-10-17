@@ -1,11 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
 import { useTeamInviteAccept } from "@/hooks/useTeams";
+import { getDashboardRoute } from "@/lib/constants/routes";
 import { UserRole } from "@/lib/types";
+import { inviteDestination, type InviteDestination } from "@/lib/workspaces";
 
 type PageState = "loading" | "success" | "error" | "requires_login";
 
@@ -16,46 +19,62 @@ function AcceptInvitationContent() {
 
   const token = searchParams.get("token");
 
-  const { status: acceptStatus, error: acceptError, acceptInvite } = useTeamInviteAccept();
-  const [state, setState] = useState<PageState>("loading");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  // Joining as a gym's trainer makes the account a trainer: take the fresh
-  // role before offering where to go.
-  const [joinedAsTrainer, setJoinedAsTrainer] = useState(false);
+  const { status: acceptStatus, error: acceptError, organizationId: joinedOrgId, acceptInvite } = useTeamInviteAccept();
+  const orgs = useOptionalOrganization();
+  const refreshOrganizations = orgs?.refreshOrganizations;
+  // Joining as a gym's trainer makes the account a trainer, and joining a
+  // gym's team adds its workspace: take the fresh role and workspaces
+  // before offering where to go.
+  const [joinedAs, setJoinedAs] = useState<{ id: string; role: string } | null>(null);
 
+  // Once per token. Refreshing the user after a success replaces the user
+  // object (and refreshUser is a new function each render); keyed on those,
+  // the accept ran again, the API refused the spent token, and the page
+  // turned a success into "Unable to accept".
+  const acceptedToken = useRef<string | null>(null);
+  const userId = user?.id ?? null;
   useEffect(() => {
-    if (authLoading) return;
-
-    if (!token) {
-      setState("error");
-      setErrorMessage(
-        "No invitation token found. Please use the link from your email.",
-      );
-      return;
-    }
-
-    if (!user) {
-      // Not logged in — redirect to login with return URL
-      setState("requires_login");
-      return;
-    }
-
+    if (authLoading || !token || !userId || acceptedToken.current === token) return;
+    acceptedToken.current = token;
     acceptInvite(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user, token]);
+  }, [authLoading, userId, token]);
 
+  // Once per success: take the fresh role and workspaces, then say where to go.
+  const refreshed = useRef(false);
   useEffect(() => {
-    if (acceptStatus === "success") {
-      void refreshUser().then((fresh) => {
-        setJoinedAsTrainer(fresh?.role === UserRole.TRAINER);
-        setState("success");
-      });
-    }
-    if (acceptStatus === "error") {
-      setState("error");
-      setErrorMessage(acceptError ?? "Failed to accept invitation.");
-    }
-  }, [acceptStatus, acceptError, refreshUser]);
+    if (acceptStatus !== "success" || refreshed.current) return;
+    refreshed.current = true;
+    void Promise.all([refreshUser(), refreshOrganizations?.()]).then(([fresh]) => {
+      setJoinedAs(fresh ?? user);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acceptStatus]);
+
+  // Where the page is, from what it knows: no token or a refused accept is an
+  // error, no session asks to sign in, and success waits for the refresh.
+  const state: PageState = authLoading
+    ? "loading"
+    : !token || acceptStatus === "error"
+      ? "error"
+      : !user
+        ? "requires_login"
+        : joinedAs
+          ? "success"
+          : "loading";
+  const errorMessage = !token
+    ? "No invitation token found. Please use the link from your email."
+    : (acceptError ?? "Failed to accept invitation.");
+
+  // Read at render, after the workspaces were refreshed above.
+  const destination: InviteDestination | null = joinedAs
+    ? inviteDestination(
+        joinedAs,
+        orgs?.organizations,
+        joinedOrgId,
+        getDashboardRoute((joinedAs.role as UserRole) ?? UserRole.USER),
+      )
+    : null;
 
   function handleLoginRedirect() {
     const returnUrl = encodeURIComponent(`/teams/invite/accept?token=${token}`);
@@ -144,17 +163,21 @@ function AcceptInvitationContent() {
             Invitation accepted
           </h2>
           <p className="mt-2 text-sm text-fg-2">
-            {joinedAsTrainer
-              ? "You've joined the team as a trainer. Your trainer dashboard shows the members assigned to you, and the Binectics app opens as your coach app."
-              : "You've successfully joined the organization. Head to your Team dashboard to get started."}
+            {destination?.body}
           </p>
         </div>
-        <Link
-          href={joinedAsTrainer ? "/dashboard/trainer" : "/dashboard/team"}
-          className="rounded-(--r-2) bg-signal px-6 py-3 text-sm font-bold text-bg hover:bg-signal/90 transition-colors"
-        >
-          {joinedAsTrainer ? "Go to your trainer dashboard" : "Go to Team Dashboard"}
-        </Link>
+        {destination && (
+          <Link
+            href={destination.href}
+            onClick={() => {
+              const org = orgs?.organizations.find((o) => o._id === destination.organizationId);
+              if (org) orgs?.setCurrentOrg(org);
+            }}
+            className="rounded-(--r-2) bg-signal px-6 py-3 text-sm font-bold text-bg hover:bg-signal/90 transition-colors"
+          >
+            {destination.label}
+          </Link>
+        )}
       </div>
     );
   }

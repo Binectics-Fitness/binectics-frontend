@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
@@ -13,6 +14,8 @@ export default function LocationDetailClient() {
   const params = useParams<{ locationId: string }>();
   const router = useRouter();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  // Changing a location is team:manage_organization; others read it.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
 
   const [location, setLocation] = useState<OrganizationLocation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,7 +160,7 @@ export default function LocationDetailClient() {
         <>
           <DSCard className="p-4.5">
             <h2 className="text-[16px] font-medium mb-4" style={{ color: "var(--ink)" }}>Details</h2>
-            <div className="flex flex-col gap-4 max-w-[520px]">
+            <fieldset disabled={!canManage} className="flex flex-col gap-4 max-w-[520px] border-0 p-0 m-0 min-w-0">
               <div>
                 <Eyebrow as="label" className="mb-1.5 block">Location name</Eyebrow>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
@@ -180,14 +183,17 @@ export default function LocationDetailClient() {
                 <Eyebrow as="label" className="mb-1.5 block">Country</Eyebrow>
                 <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} />
               </div>
-              <div>
-                <button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim()} className="btn-primary-v2 sm disabled:opacity-40">
-                  {saving ? "Saving…" : "Save changes"}
-                </button>
-              </div>
-            </div>
+              {canManage && (
+                <div>
+                  <button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim()} className="btn-primary-v2 sm disabled:opacity-40">
+                    {saving ? "Saving…" : "Save changes"}
+                  </button>
+                </div>
+              )}
+            </fieldset>
           </DSCard>
 
+          {canManage && (
           <DSCard className="p-4.5">
             <h2 className="text-[16px] font-medium mb-1" style={{ color: "var(--ink)" }}>Manage</h2>
             <p className="text-[12.5px] mb-4" style={{ color: "var(--fg-3)" }}>
@@ -210,6 +216,7 @@ export default function LocationDetailClient() {
               </button>
             </div>
           </DSCard>
+          )}
         </>
       ) : null}
     </GymDashboardShell>

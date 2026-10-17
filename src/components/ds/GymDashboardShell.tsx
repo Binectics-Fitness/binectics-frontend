@@ -1,10 +1,23 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import {
+  GYM_NAV_ACCESS,
+  allows,
+  gymPageDeniedNote,
+  gymPageRule,
+  gymLandingHref,
+  gymSidebarFor,
+  gymStaffNote,
+} from "@/lib/gymStaffNav";
+
+export { useGymViewer };
 
 export const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
@@ -46,26 +59,60 @@ export interface GymDashboardShellProps {
   children: ReactNode;
 }
 
+/** The role label under a staff member's gym chip. */
+const STAFF_ROLE_LABEL: Record<string, string> = { admin: "Admin", manager: "Manager", assistant: "Assistant" };
+
 export function GymDashboardShell({ activeItem, crumb, actions, children }: GymDashboardShellProps) {
+  const viewer = useGymViewer();
+  const pathname = usePathname();
+  const router = useRouter();
   const unreadMessages = useMessagingUnread();
-  const refundsWaiting = useRefundsAttentionCount();
+  // Billing and refunds are the owner's: staff don't ask for the count.
+  const refundsWaiting = useRefundsAttentionCount(viewer.isOwner);
+  const sections = gymSidebarFor(
+    withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+    viewer,
+  );
+  const { staff } = viewer;
+  const gymName = viewer.orgName ?? "the gym";
+  // A deep link to a gym page the role doesn't cover gets one line, not a
+  // page of 403s. Known gym paths go by path; shared pages (Forms, Billing,
+  // Refunds) by their nav item.
+  const rule = gymPageRule(pathname) ?? GYM_NAV_ACCESS[activeItem];
+  const denied = staff && !allows(viewer, rule);
+  // The workspace's front door: staff whose role doesn't cover the Overview
+  // (an assistant) start on the first page it does cover instead.
+  const landing = staff ? gymLandingHref(SIDEBAR, viewer) : "/dashboard/gym-owner";
+  const atRoot = (pathname ?? "").replace(/\/+$/, "") === "/dashboard/gym-owner";
+  const redirectHome = denied && atRoot && landing !== "/dashboard/gym-owner";
+  useEffect(() => {
+    if (redirectHome) router.replace(landing);
+  }, [redirectHome, landing, router]);
   return (
     <ProviderShell
       activeItem={activeItem}
       crumb={crumb}
-      actions={actions}
+      actions={denied ? undefined : actions}
       config={{
         role: UserRole.GYM_OWNER,
-        sections: withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+        sections,
         identity: "org",
         tone: { avatarBg: "var(--gym)", avatarColor: "oklch(0.98 0 0)", chipSquare: true },
+        chipNote: staff ? (STAFF_ROLE_LABEL[viewer.roleCode ?? ""] ?? "Team member") : undefined,
+        chipDetail: staff ? gymStaffNote(gymName) : undefined,
         settingsHref: "/dashboard/settings",
-        homeHref: "/dashboard/gym-owner",
+        homeHref: landing,
         fallbackLabel: "Workspace",
         workspace: "gym",
       }}
     >
-      {children}
+      {redirectHome ? null : denied ? (
+        <p role="status" className="text-[14px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
+          {gymPageDeniedNote(gymName)}
+        </p>
+      ) : (
+        children
+      )}
     </ProviderShell>
   );
 }

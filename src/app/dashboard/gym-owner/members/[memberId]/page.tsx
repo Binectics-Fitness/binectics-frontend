@@ -12,6 +12,8 @@ import { membershipStatusMeta } from "@/lib/constants/membershipStatus";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
 import { canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
 import { LiftSuspensionModal, SuspendMemberModal, holdDetailLine } from "../HoldActions";
@@ -53,6 +55,8 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const { memberId } = React.use(params);
   const router = useRouter();
   const { currentOrg } = useOrganization();
+  // What this person's role lets them do here (the owner: everything).
+  const viewer = useGymViewer();
   const { fmtDate, fmtMoney } = useOrgFormat();
   const [subscription, setSubscription] = useState<MembershipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,7 +130,9 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   // exactly — messaging.service.ts matches `status: ACTIVE`, not the door
   // check — so this stays ACTIVE-only even though `past_due` still has access.
   const canMessage =
-    subscription.status === MembershipSubscriptionStatus.ACTIVE && !!memberUserId;
+    subscription.status === MembershipSubscriptionStatus.ACTIVE &&
+    !!memberUserId &&
+    holds(viewer, TeamPermission.MESSAGING_ANSWER_MEMBERS);
 
   const holdLine = holdDetailLine(subscription, fmtDate);
 
@@ -253,17 +259,21 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </div>
         </DSCard>
 
-        {/* Who coaches this member */}
+        {/* Who coaches this member: listing the staff needs view_members,
+            assigning one needs progress:manage_clients. */}
+        {holds(viewer, TeamPermission.VIEW_MEMBERS) && (
         <TrainerCard
           organizationId={currentOrg!._id}
           subscriptionId={subscription._id}
           assignedUserId={subscription.assigned_staff_user_id ?? null}
           canAssign={
+            holds(viewer, TeamPermission.PROGRESS_MANAGE_CLIENTS) &&
             subscription.status !== MembershipSubscriptionStatus.CANCELLED &&
             subscription.status !== MembershipSubscriptionStatus.EXPIRED
           }
           onAssigned={(userId) => setSubscription((s) => (s ? { ...s, assigned_staff_user_id: userId } : s))}
         />
+        )}
       </div>
 
       {currentOrg && (
