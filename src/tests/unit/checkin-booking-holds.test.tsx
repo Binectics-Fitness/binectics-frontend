@@ -99,6 +99,8 @@ describe("class booking refused while on hold", () => {
   };
 
   beforeEach(() => {
+    // Signed in: the section reads the member's own waitlist entries.
+    vi.spyOn(classBookingsService, "getMyClassBookings").mockResolvedValue({ success: true, data: [] });
     vi.spyOn(classBookingsService, "getListingClasses").mockResolvedValue({
       success: true,
       data: [

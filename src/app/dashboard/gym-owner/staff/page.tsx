@@ -54,8 +54,12 @@ export default function GymStaffPage() {
   const { user } = useAuth();
   const { fmtDate } = useOrgFormat();
   const [addStaffOpen, setAddStaffOpen] = useState(false);
+  const viewer = useGymViewer();
   // Adding staff is team:invite_member (the API also caps it by plan).
-  const canInvite = holds(useGymViewer(), TeamPermission.INVITE_MEMBER);
+  const canInvite = holds(viewer, TeamPermission.INVITE_MEMBER);
+  // Reading them is team:view_invitations: without it the API refuses, so
+  // the page doesn't ask.
+  const canSeeInvites = holds(viewer, TeamPermission.VIEW_INVITATIONS);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [pendingInvites, setPendingInvites] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +77,7 @@ export default function GymStaffPage() {
         // Invitations are additive UI — a failure there shouldn't blank the staff list.
         const [res, invitesRes] = await Promise.all([
           teamsService.getMembers(currentOrg._id),
-          teamsService.getInvitations(currentOrg._id).catch(() => null),
+          canSeeInvites ? teamsService.getInvitations(currentOrg._id).catch(() => null) : Promise.resolve(null),
         ]);
         if (!active) return;
         if (res.success && res.data) {
@@ -84,6 +88,8 @@ export default function GymStaffPage() {
         }
         if (invitesRes?.success && invitesRes.data) {
           setPendingInvites(invitesRes.data.filter((i) => i.status === InvitationStatus.PENDING));
+        } else if (!canSeeInvites) {
+          setPendingInvites([]);
         }
       } catch {
         if (active) setError("We couldn't load your staff. Try again shortly.");
@@ -96,7 +102,7 @@ export default function GymStaffPage() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading, reloadKey]);
+  }, [currentOrg, orgLoading, reloadKey, canSeeInvites]);
 
   const activeCount = useMemo(() => members.filter((m) => m.status === MemberStatus.ACTIVE).length, [members]);
   // Counts stay over the whole roster so the chips don't collapse to the

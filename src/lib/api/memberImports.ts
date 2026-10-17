@@ -135,6 +135,12 @@ export interface ImportInviteCounts {
   held: number;
   queued: number;
   sent: number;
+  /**
+   * Handed to the mail server by sender runs that each stopped before
+   * recording it: probably delivered, not known to be. Never sent again
+   * on its own; the gym can ask once more (resendUnconfirmed).
+   */
+  unconfirmed: number;
 }
 
 export interface MemberImportStatus {
@@ -192,5 +198,9 @@ export const memberImportsApi = {
   },
   sendInvites(orgId: string, importId: string): Promise<ApiResponse<MemberImportStatus>> {
     return apiClient.post<MemberImportStatus>(`${base(orgId)}/${importId}/invites`, {});
+  },
+  /** Try once more to send the invites that may not have arrived. */
+  resendUnconfirmed(orgId: string, importId: string): Promise<ApiResponse<MemberImportStatus>> {
+    return apiClient.post<MemberImportStatus>(`${base(orgId)}/${importId}/invites/resend-unconfirmed`, {});
   },
 };

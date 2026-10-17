@@ -23,10 +23,30 @@ export interface ClassBooking {
   /** "YYYY-MM-DD" — occurrence day in the gym's time zone. */
   booking_date: string;
   status: ClassBookingStatus;
+  /** The listing it was booked through; booking again goes through it. Absent on old bookings. */
+  listing_id?: string | null;
+  /**
+   * The member's own waitlisted bookings only: the occurrence has a free
+   * spot and can still be booked. Booking again takes it, in waitlist
+   * order (a member ahead of them may get it first). A hint, not a hold.
+   */
+  spot_open?: boolean;
   cancelled_at: string | null;
   cancellation_fee_applied: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Refusals that leave a waitlisted member's place as it was: the open spot
+ * went to someone ahead of them, or no spot is open. Said plainly, not as
+ * an error. Matched on the API's code, and on its words for the first,
+ * which an API without the code already sends.
+ */
+export function keepsWaitlistPlace(res: ApiResponse<unknown>): boolean {
+  if (res.success) return false;
+  if (res.code === "CLASS_WAITLIST_SPOT_TAKEN" || res.code === "CLASS_ALREADY_WAITLISTED") return true;
+  return /ahead of you on the waitlist/i.test(res.message ?? "");
 }
 
 export const classBookingsService = {

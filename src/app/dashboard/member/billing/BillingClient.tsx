@@ -116,6 +116,9 @@ export function BillingClient() {
   const hold = useMembershipHold();
   const [holding, setHolding] = useState<{ sub: MembershipSubscription; action: "pause" | "resume" } | null>(null);
   const [holdError, setHoldError] = useState<string | null>(null);
+  // A pause refused because a card renewal is with Paystack right now
+  // (409 RENEWAL_CHARGE_IN_PROGRESS): nothing is wrong, it has to wait.
+  const [holdWait, setHoldWait] = useState(false);
 
   // A notification can open this page at one membership (?subscriptionId=).
   // Read once from the address bar; no Suspense boundary needed.
@@ -228,11 +231,13 @@ export function BillingClient() {
     if (hold.isPending) return;
     setHolding(null);
     setHoldError(null);
+    setHoldWait(false);
   };
 
   const onConfirmHold = async () => {
     if (!holding || hold.isPending) return;
     setHoldError(null);
+    setHoldWait(false);
     const { sub: target, action } = holding;
     try {
       const res = await hold.mutateAsync({ subscriptionId: target._id, action });
@@ -245,6 +250,9 @@ export function BillingClient() {
               : "Welcome back. Your membership is active again.",
         );
         setHolding(null);
+      } else if (res.code === "RENEWAL_CHARGE_IN_PROGRESS") {
+        setHoldWait(true);
+        setHoldError(res.message || "A renewal payment is being processed. Try again in a few minutes.");
       } else {
         setHoldError(
           res.message ??
@@ -578,7 +586,11 @@ export function BillingClient() {
               </>
             )}
             {holdError && (
-              <p role="alert" className="text-danger-ink">
+              <p
+                role="alert"
+                className={holdWait ? "rounded-(--r-2) p-2.5" : "text-danger-ink"}
+                style={holdWait ? { background: "var(--warn-soft)", color: "var(--warn-ink)" } : undefined}
+              >
                 {holdError}
               </p>
             )}

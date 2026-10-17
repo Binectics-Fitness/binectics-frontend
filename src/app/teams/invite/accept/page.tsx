@@ -19,13 +19,19 @@ function AcceptInvitationContent() {
 
   const token = searchParams.get("token");
 
-  const { status: acceptStatus, error: acceptError, organizationId: joinedOrgId, acceptInvite } = useTeamInviteAccept();
+  const {
+    status: acceptStatus,
+    error: acceptError,
+    organizationId: joinedOrgId,
+    token: acceptedFor,
+    acceptInvite,
+  } = useTeamInviteAccept();
   const orgs = useOptionalOrganization();
   const refreshOrganizations = orgs?.refreshOrganizations;
   // Joining as a gym's trainer makes the account a trainer, and joining a
   // gym's team adds its workspace: take the fresh role and workspaces
   // before offering where to go.
-  const [joinedAs, setJoinedAs] = useState<{ id: string; role: string } | null>(null);
+  const [joined, setJoined] = useState<{ token: string; as: { id: string; role: string } | null } | null>(null);
 
   // Once per token. Refreshing the user after a success replaces the user
   // object (and refreshUser is a new function each render); keyed on those,
@@ -40,16 +46,20 @@ function AcceptInvitationContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, userId, token]);
 
-  // Once per success: take the fresh role and workspaces, then say where to go.
-  const refreshed = useRef(false);
+  // Once per accepted token, as the accept above is: take the fresh role and
+  // workspaces, then say where to go. Keyed on the token the success is for,
+  // so a second link opened in the same page is refreshed for too, and the
+  // first link's success never stands in for it while it is accepted.
+  const refreshedToken = useRef<string | null>(null);
   useEffect(() => {
-    if (acceptStatus !== "success" || refreshed.current) return;
-    refreshed.current = true;
+    if (acceptStatus !== "success" || !token || acceptedFor !== token || refreshedToken.current === token) return;
+    refreshedToken.current = token;
     void Promise.all([refreshUser(), refreshOrganizations?.()]).then(([fresh]) => {
-      setJoinedAs(fresh ?? user);
+      setJoined({ token, as: fresh ?? user });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [acceptStatus]);
+  }, [acceptStatus, acceptedFor, token]);
+  const joinedAs = joined && joined.token === token ? joined.as : null;
 
   // Where the page is, from what it knows: no token or a refused accept is an
   // error, no session asks to sign in, and success waits for the refresh.

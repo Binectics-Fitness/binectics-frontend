@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { InviteClientModal } from "@/components/ds/modals/InviteClientModal";
 import { ImportMembersDrawer } from "./import/ImportMembersDrawer";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { holds, TeamPermission } from "@/lib/gymStaffNav";
 
 export function AddMemberButton({ onEnrolled }: { onEnrolled?: () => void }) {
   const [open, setOpen] = useState(false);
@@ -27,6 +29,9 @@ export function ImportMembersButton({
   label?: string;
 }) {
   const [open, setOpen] = useState(false);
+  // The import routes are member management (marketplace:manage_listing).
+  const canImport = holds(useGymViewer(), TeamPermission.MARKETPLACE_MANAGE_LISTING);
+  if (!canImport) return null;
   return (
     <>
       <button

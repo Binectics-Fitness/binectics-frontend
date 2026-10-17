@@ -377,7 +377,7 @@ describe("ImportMembersDrawer", () => {
           processed: 3,
           total: 3,
           result: { imported: 2, errors: 1 },
-          invites: { held: 2, queued: 0, sent: 0 },
+          invites: { held: 2, queued: 0, sent: 0, unconfirmed: 0 },
           invites_per_day: 200,
         },
       });
@@ -397,7 +397,7 @@ describe("ImportMembersDrawer", () => {
           processed: 3,
           total: 3,
           result: { imported: 2 },
-          invites: { held: 0, queued: 2, sent: 0 },
+          invites: { held: 0, queued: 2, sent: 0, unconfirmed: 0 },
           invites_per_day: 200,
         },
       });
@@ -431,7 +431,7 @@ describe("ImportMembersDrawer", () => {
           processed: 450,
           total: 450,
           result: { imported: 450 },
-          invites: { held: 0, queued: 450, sent: 0 },
+          invites: { held: 0, queued: 450, sent: 0, unconfirmed: 0 },
           invites_per_day: 200,
         },
       });
@@ -446,6 +446,131 @@ describe("ImportMembersDrawer", () => {
       await user.click(screen.getByRole("button", { name: "Import 2 members" }));
       expect(await screen.findByRole("alert")).toHaveTextContent("This import is already running.");
       expect(screen.getByRole("heading", { name: "Tell your members?" })).toBeInTheDocument();
+    });
+
+    it("says another import is running (409) as a wait, not as a failure, and lets the gym retry", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+      await toInvites(user);
+      const confirm = vi.spyOn(memberImportsApi, "confirm").mockResolvedValueOnce({
+        success: false,
+        status: 409,
+        message: "Another member import for this gym is running. Try again when it finishes.",
+      });
+      vi.spyOn(memberImportsApi, "status").mockResolvedValue({ success: false });
+      await user.click(screen.getByRole("button", { name: "Import 2 members" }));
+      const notice = await screen.findByRole("alert");
+      expect(notice).toHaveTextContent("Another member import for this gym is running. Try again when it finishes.");
+      expect(notice).not.toHaveTextContent(/stopped part-way/);
+      expect(notice.getAttribute("style")).toContain("var(--warn-soft)");
+      expect(screen.getByRole("heading", { name: "Tell your members?" })).toBeInTheDocument();
+
+      // The retry runs it.
+      confirm.mockResolvedValueOnce({
+        success: true,
+        data: {
+          import_id: "imp-1",
+          status: "done",
+          invite_mode: "later",
+          processed: 3,
+          total: 3,
+          result: { imported: 2 },
+          invites: { held: 2, queued: 0, sent: 0, unconfirmed: 0 },
+          invites_per_day: 200,
+        },
+      });
+      await user.click(screen.getByRole("button", { name: "Import 2 members" }));
+      expect(await screen.findByRole("heading", { name: "Import finished" })).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it("reads who didn't fit from the import's result, not the preview's estimate", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+      // The preview said everyone fits (over_by 0)...
+      await toInvites(user);
+      vi.spyOn(memberImportsApi, "confirm").mockResolvedValue({
+        success: true,
+        data: {
+          import_id: "imp-1",
+          status: "done",
+          invite_mode: "later",
+          processed: 3,
+          total: 3,
+          // ...but seats were taken while it ran.
+          result: { imported: 1, over_cap: 1, errors: 1 },
+          invites: { held: 1, queued: 0, sent: 0, unconfirmed: 0 },
+          invites_per_day: 200,
+        },
+      });
+      vi.spyOn(memberImportsApi, "status").mockResolvedValue({ success: false });
+      await user.click(screen.getByRole("button", { name: "Import 2 members" }));
+      await screen.findByRole("heading", { name: "Import finished" });
+      expect(screen.getByText("Imported").nextSibling).toHaveTextContent("1");
+      expect(screen.getByText("Not imported: no seat left").nextSibling).toHaveTextContent("1");
+      const note = screen.getByRole("status");
+      expect(note).toHaveTextContent("1 member didn't fit your seat limit and wasn't imported.");
+      expect(note).toHaveTextContent("Seats were taken while the import ran");
+      expect(within(note).getByRole("link", { name: "See plans" })).toHaveAttribute("href", "/dashboard/billing");
+    });
+
+    it("shows no seat note when everyone fit", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+      await toInvites(user);
+      vi.spyOn(memberImportsApi, "confirm").mockResolvedValue({
+        success: true,
+        data: {
+          import_id: "imp-1",
+          status: "done",
+          invite_mode: "now",
+          processed: 2,
+          total: 2,
+          result: { imported: 2 },
+          invites: { held: 0, queued: 0, sent: 2, unconfirmed: 0 },
+          invites_per_day: 200,
+        },
+      });
+      vi.spyOn(memberImportsApi, "status").mockResolvedValue({ success: false });
+      await user.click(screen.getByRole("button", { name: "Import 2 members" }));
+      await screen.findByRole("heading", { name: "Import finished" });
+      expect(screen.queryByText("Not imported: no seat left")).toBeNull();
+      expect(screen.queryByRole("status")).toBeNull();
+      expect(screen.queryByText(/may not have arrived/)).toBeNull();
+      expect(screen.getByText("2 invites sent.")).toBeInTheDocument();
+    });
+
+    it("says honestly how many invites may not have arrived, and sends them once more on request", async () => {
+      const user = userEvent.setup();
+      renderDrawer();
+      await toInvites(user);
+      const done = (invites: { held: number; queued: number; sent: number; unconfirmed: number }) => ({
+        success: true as const,
+        data: {
+          import_id: "imp-1",
+          status: "done" as const,
+          invite_mode: "now" as const,
+          processed: 2,
+          total: 2,
+          result: { imported: 2 },
+          invites,
+          invites_per_day: 200,
+        },
+      });
+      vi.spyOn(memberImportsApi, "confirm").mockResolvedValue(done({ held: 0, queued: 0, sent: 0, unconfirmed: 2 }));
+      vi.spyOn(memberImportsApi, "status").mockResolvedValue({ success: false });
+      await user.click(screen.getByRole("button", { name: "Import 2 members" }));
+      await screen.findByRole("heading", { name: "Import finished" });
+      expect(screen.getByText(/2 invites may not have arrived/)).toBeInTheDocument();
+
+      const resend = vi
+        .spyOn(memberImportsApi, "resendUnconfirmed")
+        .mockResolvedValue(done({ held: 0, queued: 2, sent: 0, unconfirmed: 0 }));
+      await user.click(screen.getByRole("button", { name: "Send 2 again" }));
+      expect(resend).toHaveBeenCalledWith("org-1", "imp-1");
+      expect(await screen.findByText(/2 on their way/)).toBeInTheDocument();
+      expect(screen.queryByText(/may not have arrived/)).toBeNull();
+      expect(toast.success).toHaveBeenCalledWith(expect.stringMatching(/may get the email twice/));
     });
   });
 

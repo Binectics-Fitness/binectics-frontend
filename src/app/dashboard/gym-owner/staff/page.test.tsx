@@ -8,14 +8,16 @@ import * as teamsService from "@/lib/api/teams";
 
 // Mock the services
 vi.mock("@/lib/api/teams");
+const OWNED = { _id: "org-123", owner_id: "owner-1", is_owner: true };
+const org = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({
-    currentOrg: { _id: "org-123", owner_id: "owner-1", is_owner: true },
+    currentOrg: org.current,
     isLoading: false,
   }),
   // The shared shell reads the optional variant of the same context.
   useOptionalOrganization: () => ({
-    currentOrg: { _id: "org-123", owner_id: "owner-1", is_owner: true },
+    currentOrg: org.current,
     organizations: [],
     isLoading: false,
   }),
@@ -48,6 +50,50 @@ vi.mock("next/navigation", () => ({
 describe("Staff List Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    org.current = OWNED;
+  });
+
+  describe("pending invitations are read only by who may read them", () => {
+    const john = {
+      _id: "member-1",
+      status: "active",
+      user_id: { first_name: "John", last_name: "Doe", email: "john@example.com" },
+      team_role_id: { _id: "role-1", name: "Trainer" },
+      created_at: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
+    };
+    const pending = {
+      _id: "inv-1",
+      email: "invited@example.com",
+      status: "pending",
+      sent_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+    };
+    beforeEach(() => {
+      vi.mocked(teamsService.teamsService.getMembers).mockResolvedValue({ success: true, data: [john] } as never);
+      vi.mocked(teamsService.teamsService.getInvitations).mockResolvedValue({ success: true, data: [pending] } as never);
+    });
+
+    it("staff without team:view_invitations: the staff list, and no invitations asked for", async () => {
+      org.current = { ...OWNED, is_owner: false, my_permissions: ["team:view_members"] };
+      renderWithProviders(<StaffPage />);
+      expect((await screen.findAllByText("John Doe")).length).toBeGreaterThan(0);
+      expect(teamsService.teamsService.getInvitations).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Pending invitations/)).toBeNull();
+    });
+
+    it("staff with team:view_invitations see them", async () => {
+      org.current = { ...OWNED, is_owner: false, my_permissions: ["team:view_members", "team:view_invitations"] };
+      renderWithProviders(<StaffPage />);
+      expect((await screen.findAllByText("invited@example.com")).length).toBeGreaterThan(0);
+      expect(teamsService.teamsService.getInvitations).toHaveBeenCalledWith("org-123");
+    });
+
+    it("the owner sees them", async () => {
+      renderWithProviders(<StaffPage />);
+      expect((await screen.findAllByText("invited@example.com")).length).toBeGreaterThan(0);
+      expect(teamsService.teamsService.getInvitations).toHaveBeenCalledWith("org-123");
+    });
   });
 
   it("should load and display team members", async () => {
