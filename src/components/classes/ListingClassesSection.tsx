@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   classBookingsService,
+  keepsWaitlistPlace,
   nextOccurrences,
+  type ClassBooking,
 } from "@/lib/api/classBookings";
+import { useAuth } from "@/contexts/AuthContext";
 import { classTime, type GymClass } from "@/lib/api/classes";
 import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -26,6 +29,11 @@ function occurrenceLabel(dateStr: string): string {
  * Public weekly class timetable on a gym's listing page, with booking.
  * Booking requires login + an active membership — the API's error messages
  * (lead time, class full, no membership) surface inline per class.
+ *
+ * A signed-in member waitlisted on the chosen date sees that, and "Take the
+ * spot" when one is open: booking again fills open spots in waitlist order.
+ * "Someone ahead of you got it" and "no spot yet" leave their place as it
+ * was, so they read as information, not as errors.
  */
 export function ListingClassesSection({
   listingId,
@@ -35,6 +43,17 @@ export function ListingClassesSection({
   /** The gym's id. A membership the gym enrolled directly has no listing, so a hold on it is found by the gym. */
   organizationId?: string | null;
 }) {
+  const { user } = useAuth();
+  // The member's own waitlist entries, to say "you're on the waitlist" and
+  // offer an open spot. Shared with MyClassBookingsCard's cache.
+  const { data: mine = [] } = useQuery<ClassBooking[]>({
+    queryKey: ["myClassBookings"],
+    queryFn: async () => {
+      const res = await classBookingsService.getMyClassBookings();
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!user,
+  });
   const { data: classes = [], isLoading } = useQuery<GymClass[]>({
     queryKey: ["listingClasses", listingId],
     queryFn: async () => {
@@ -64,7 +83,15 @@ export function ListingClassesSection({
               <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-2" style={{ color: "var(--fg-3)" }}>{WEEKDAYS[day]}</div>
               <div className="flex flex-col gap-2">
                 {dayClasses.map((c) => (
-                  <BookableClassRow key={c._id} listingId={listingId} organizationId={organizationId} gymClass={c} />
+                  <BookableClassRow
+                    key={c._id}
+                    listingId={listingId}
+                    organizationId={organizationId}
+                    gymClass={c}
+                    waitlisted={mine.filter(
+                      (b) => b.status === "waitlisted" && (typeof b.class_id === "object" ? b.class_id._id : b.class_id) === c._id,
+                    )}
+                  />
                 ))}
               </div>
             </div>
@@ -75,19 +102,31 @@ export function ListingClassesSection({
   );
 }
 
+type RowMessage = { text: string; tone: "ok" | "info" | "error" };
+const MESSAGE_COLOR: Record<RowMessage["tone"], string> = {
+  ok: "var(--signal-ink)",
+  info: "var(--fg-2)",
+  error: "var(--danger, #b00020)",
+};
+
 function BookableClassRow({
   listingId,
   organizationId,
   gymClass: c,
+  waitlisted,
 }: {
   listingId: string;
   organizationId: string | null;
   gymClass: GymClass;
+  /** The member's waitlist entries for this class, any date. */
+  waitlisted: ClassBooking[];
 }) {
   const queryClient = useQueryClient();
   const dates = nextOccurrences(c.day_of_week, 4);
   const [date, setDate] = useState(dates[0]);
-  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [message, setMessage] = useState<RowMessage | null>(null);
+  const onWaitlist = waitlisted.find((b) => b.booking_date === date);
+  const spotOpen = onWaitlist?.spot_open === true;
 
   const book = useMutation({
     mutationFn: async () => {
@@ -111,11 +150,14 @@ function BookableClassRow({
             res.data.status === "waitlisted"
               ? `Class full, you're on the waitlist for ${occurrenceLabel(date)}.`
               : `Booked for ${occurrenceLabel(date)} ✓`,
-          ok: true,
+          tone: "ok",
         });
         void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
+      } else if (keepsWaitlistPlace(res)) {
+        setMessage({ text: res.message || "You keep your place on the waitlist.", tone: "info" });
+        void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
       } else {
-        setMessage({ text: res.message || "Couldn't book, log in and check your membership.", ok: false });
+        setMessage({ text: res.message || "Couldn't book, log in and check your membership.", tone: "error" });
       }
     },
   });
@@ -130,6 +172,13 @@ function BookableClassRow({
             {c.instructor_name ? ` · ${c.instructor_name}` : ""} · cap {c.capacity}
             {c.waitlist_enabled ? " · waitlist" : ""}
           </div>
+          {onWaitlist && !message && (
+            <div className="text-[12px] mt-1" style={{ color: spotOpen ? "var(--signal-ink)" : "var(--fg-2)" }}>
+              {spotOpen
+                ? `You're on the waitlist for ${occurrenceLabel(date)}, and a spot is open.`
+                : `You're on the waitlist for ${occurrenceLabel(date)}.`}
+            </div>
+          )}
         </div>
         <SearchableSelect
           value={date}
@@ -137,11 +186,11 @@ function BookableClassRow({
           options={dates.map((d) => ({ label: occurrenceLabel(d), value: d }))}
         />
         <button className="btn-primary-v2 sm shrink-0" disabled={book.isPending} onClick={() => book.mutate()}>
-          {book.isPending ? "Booking…" : "Book"}
+          {book.isPending ? (spotOpen ? "Taking…" : "Booking…") : spotOpen ? "Take the spot" : "Book"}
         </button>
       </div>
       {message && (
-        <p className="text-[12px] mt-2" style={{ color: message.ok ? "var(--signal-ink)" : "var(--danger, #b00020)" }}>{message.text}</p>
+        <p role="status" className="text-[12px] mt-2" style={{ color: MESSAGE_COLOR[message.tone] }}>{message.text}</p>
       )}
     </div>
   );
