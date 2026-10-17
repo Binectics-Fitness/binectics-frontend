@@ -23,6 +23,13 @@ export interface WorkspaceLike {
   is_active?: boolean;
   /** The person's team role code here ('owner' for their own). */
   my_role_code?: string | null;
+  /** Whether the person owns it (the API says so on the org list). */
+  is_owner?: boolean;
+  /**
+   * The team permissions the person holds here (every one for the owner),
+   * from the org list. For deciding what to show; every route still checks.
+   */
+  my_permissions?: readonly string[];
 }
 
 /**
@@ -106,6 +113,46 @@ export function trainerAccess(
 }
 
 /**
+ * The gym this person works at as non-trainer staff (a manager, assistant,
+ * admin or custom role): a live gym someone else owns, where their role is
+ * not the trainer role and holds at least one permission. Trainers get the
+ * trainer dashboard instead (coachingGym). The first such gym, unless
+ * `preferId` names another one.
+ */
+export function staffGym<T extends WorkspaceLike>(
+  organizations: readonly T[] | null | undefined,
+  userId: string | null | undefined,
+  preferId?: string | null,
+): T | null {
+  if (!userId) return null;
+  const gyms = (organizations ?? []).filter(
+    (org) =>
+      isLive(org) &&
+      org.account_type === AccountType.GYM_OWNER &&
+      org.owner_id !== userId &&
+      org.is_owner !== true &&
+      org.my_role_code !== STAFF_TRAINER_ROLE_CODE &&
+      (org.my_permissions?.length ?? 0) > 0,
+  );
+  return gyms.find((org) => org._id === preferId) ?? gyms[0] ?? null;
+}
+
+/**
+ * Who may use the gym dashboard besides a gym owner: a gym's non-trainer
+ * staff. The dashboard then shows them only what their role allows
+ * (lib/gymStaffNav). `pending` is true while workspaces are still loading.
+ */
+export function gymStaffAccess(
+  user: { id: string; role: string } | null | undefined,
+  organizations: readonly WorkspaceLike[] | null | undefined,
+  organizationsLoading: boolean,
+): { allowed: boolean; pending: boolean } {
+  if (!user) return { allowed: false, pending: false };
+  if (staffGym(organizations, user.id)) return { allowed: true, pending: false };
+  return { allowed: false, pending: organizationsLoading };
+}
+
+/**
  * The workspace a dashboard should work in. It keeps the current one when it
  * is already the right kind, else prefers one the person owns, else any of
  * that kind they belong to (staff). A gym's staff trainer, who has no
@@ -122,7 +169,13 @@ export function pickOrgForDashboard<T extends WorkspaceLike>(
 ): T | null {
   const orgs = (organizations ?? []).filter(isLive);
   const type = DASHBOARD_ACCOUNT_TYPE[kind];
-  const ofKind = orgs.filter((org) => org.account_type === type);
+  // A gym's staff trainer works in the gym from the trainer dashboard, never
+  // the gym dashboard.
+  const ofKind = orgs.filter(
+    (org) =>
+      org.account_type === type &&
+      !(kind === "gym" && org.owner_id !== opts.userId && org.my_role_code === STAFF_TRAINER_ROLE_CODE),
+  );
   // A gym's staff trainer has no trainer workspace: they coach in the gym's.
   const staffGym = kind === "trainer" && ofKind.length === 0 ? coachingGym(orgs, opts.userId) : null;
   const candidates = staffGym
@@ -143,4 +196,52 @@ export function dashboardKindForPath(pathname: string | null | undefined): Dashb
   if (pathname === "/dashboard/gym-owner" || pathname.startsWith("/dashboard/gym-owner/")) return "gym";
   if (pathname === "/dashboard/dietitian" || pathname.startsWith("/dashboard/dietitian/")) return "dietitian";
   return null;
+}
+
+/** Where the invite-accept page sends someone who just joined a team. */
+export interface InviteDestination {
+  href: string;
+  label: string;
+  body: string;
+  /** The workspace to make current before going there. */
+  organizationId?: string;
+}
+
+/**
+ * Where someone lands after accepting a team invitation: a gym's trainer on
+ * the trainer dashboard; a gym's other staff in that gym's dashboard (which
+ * shows what their role allows); anyone else on their own home. Never a page
+ * that would bounce them, as /dashboard/team used to for non-owners.
+ */
+export function inviteDestination(
+  user: { id: string; role: string } | null | undefined,
+  organizations: readonly WorkspaceLike[] | null | undefined,
+  joinedOrganizationId: string | null | undefined,
+  homeHref: string,
+): InviteDestination {
+  if (user?.role === "TRAINER") {
+    return {
+      href: "/dashboard/trainer",
+      label: "Go to your trainer dashboard",
+      body: "You've joined the team as a trainer. Your trainer dashboard shows the members assigned to you, and the Binectics app opens as your coach app.",
+    };
+  }
+  const joined = joinedOrganizationId
+    ? (organizations ?? []).filter((org) => org._id === joinedOrganizationId)
+    : organizations;
+  const gym = staffGym(joined, user?.id) as (WorkspaceLike & { name?: string }) | null;
+  if (gym) {
+    const name = gym.name || "the gym";
+    return {
+      href: "/dashboard/gym-owner",
+      label: `Open ${name}'s dashboard`,
+      body: `You've joined ${name}'s team. Its dashboard shows the parts your role lets you work on.`,
+      organizationId: gym._id,
+    };
+  }
+  return {
+    href: homeHref,
+    label: "Go to your dashboard",
+    body: "You've joined the team.",
+  };
 }

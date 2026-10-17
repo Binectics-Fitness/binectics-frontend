@@ -10,12 +10,12 @@ import * as teamsService from "@/lib/api/teams";
 vi.mock("@/lib/api/teams");
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({
-    currentOrg: { _id: "org-123" },
+    currentOrg: { _id: "org-123", owner_id: "owner-1", is_owner: true },
     isLoading: false,
   }),
   // The shared shell reads the optional variant of the same context.
   useOptionalOrganization: () => ({
-    currentOrg: { _id: "org-123" },
+    currentOrg: { _id: "org-123", owner_id: "owner-1", is_owner: true },
     organizations: [],
     isLoading: false,
   }),

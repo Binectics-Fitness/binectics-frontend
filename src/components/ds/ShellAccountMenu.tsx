@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/lib/types";
+import type { WorkspaceLink } from "@/hooks/useWorkspaceSwitch";
 
 /**
  * Account popover for the dashboard shells — the shells had NO logout at
@@ -14,10 +15,13 @@ import { UserRole } from "@/lib/types";
 export function ShellAccountMenu({
   trigger,
   direction = "up",
+  workspaceLink,
 }: {
   trigger: ReactNode;
   /** Popover opens above (sidebar footers) or below (topbar chips). */
   direction?: "up" | "down";
+  /** Another place the person works (a gym's staff: the gym, or home). */
+  workspaceLink?: WorkspaceLink | null;
 }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -39,7 +43,8 @@ export function ShellAccountMenu({
     };
   }, [open]);
 
-  const items: { href: string; label: string }[] = [
+  const items: { href: string; label: string; onSelect?: () => void }[] = [
+    ...(workspaceLink ? [workspaceLink] : []),
     { href: "/dashboard/settings/profile", label: "Profile" },
     { href: "/dashboard/settings", label: "Settings" },
     ...(user?.is_admin && user.role !== UserRole.ADMIN
@@ -77,7 +82,10 @@ export function ShellAccountMenu({
               key={item.href}
               href={item.href}
               role="menuitem"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                item.onSelect?.();
+                setOpen(false);
+              }}
               className="block px-3.5 py-2 text-[13.5px] hover:bg-bg-2"
               style={{ color: "var(--fg-2)", textDecoration: "none" }}
             >

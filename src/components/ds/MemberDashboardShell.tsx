@@ -8,6 +8,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
+import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -56,6 +57,8 @@ interface MemberDashboardShellProps {
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
   const unreadMessages = useMessagingUnread();
+  // A gym's staff reach the gym's dashboard from here (F1).
+  const workspaceLink = useWorkspaceSwitch(false);
   const memberInitials =
     `${user?.first_name?.[0] ?? ""}${user?.last_name?.[0] ?? ""}`.toUpperCase() || "··";
   // Phone menu: a modal dialog (focus trap, Escape, inert page, scroll lock),
@@ -160,6 +163,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             {/* Avatar — opens the account menu (profile / settings / log out) */}
             <ShellAccountMenu
               direction="down"
+              workspaceLink={workspaceLink}
               trigger={
                 <span
                   className="flex items-center justify-center shrink-0"
@@ -314,6 +318,19 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
             {/* Bottom utility links */}
             <div className="mt-auto px-5 pb-8 flex flex-col" style={{ gap: 4, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+              {workspaceLink && (
+                <Link
+                  href={workspaceLink.href}
+                  onClick={() => {
+                    workspaceLink.onSelect?.();
+                    setMobileOpen(false);
+                  }}
+                  className="flex items-center rounded-(--r-2) text-[16px]"
+                  style={{ height: 48, padding: "0 12px", color: "var(--fg-2)" }}
+                >
+                  {workspaceLink.label}
+                </Link>
+              )}
               <Link
                 href="/dashboard/notifications"
                 onClick={() => setMobileOpen(false)}

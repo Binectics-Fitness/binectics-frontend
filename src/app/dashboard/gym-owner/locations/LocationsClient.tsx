@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { AddLocationModal } from "@/components/ds/modals/AddLocationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
@@ -20,6 +21,8 @@ export default function LocationsClient() {
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // Adding, editing and closing locations is team:manage_organization.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
 
   const orgId = currentOrg?._id;
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function LocationsClient() {
       activeItem="Locations"
       crumb="Locations"
       actions={
-        <button className="btn-primary-v2 sm" onClick={() => setAddOpen(true)}>+ Add location</button>
+        canManage ? <button className="btn-primary-v2 sm" onClick={() => setAddOpen(true)}>+ Add location</button> : undefined
       }
     >
       {/* The shell's <main> already spaces its children (gap-5). */}

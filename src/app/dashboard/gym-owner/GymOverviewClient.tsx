@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { format } from "date-fns";
 import {
   AsyncSpinner,
@@ -20,7 +20,7 @@ import { earningsService, type RevenueTimeseriesPoint } from "@/lib/api/earnings
 import { marketplaceService } from "@/lib/api/marketplace";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRoleGuard } from "@/hooks/useRequireAuth";
+import { useProviderAccess } from "@/hooks/useTrainerAccess";
 import { UserRole } from "@/lib/types";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
@@ -80,7 +80,8 @@ function initials(name: string): string {
 
 export default function GymOverviewClient() {
   // Role guard: wrong-role accounts get redirected to their own dashboard.
-  const { isAuthorized } = useRoleGuard(UserRole.GYM_OWNER);
+  // A gym's staff are let in too; the shell shows them their role's part.
+  const { isAuthorized } = useProviderAccess(UserRole.GYM_OWNER);
   if (!isAuthorized) return null;
   return <GymOverviewContent />;
 }
@@ -88,6 +89,7 @@ export default function GymOverviewClient() {
 function GymOverviewContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
+  const { staff } = useGymViewer();
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
@@ -224,7 +226,8 @@ function GymOverviewContent() {
   const place = stats?.city && stats?.country_code ? ` · ${stats.city}, ${stats.country_code}` : "";
   return (
     <GymDashboardShell activeItem="Overview" crumb="Overview" actions={<NewPlanButton />}>
-      <OnboardingBanner />
+      {/* The owner's own setup steps; not a staff member's. */}
+      {!staff && <OnboardingBanner />}
 
       {/* The shell's <main> already spaces its children (gap-5). */}
       <PageHeader

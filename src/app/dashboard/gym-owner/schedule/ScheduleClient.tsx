@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymClasses, useCreateGymClass } from "@/lib/queries/classes";
@@ -24,6 +25,8 @@ export function ScheduleClient() {
   const twelveHour = prefs.timeFormat === "12h";
 
   const [adding, setAdding] = useState(false);
+  // Adding classes is team:manage_organization; the timetable is for all staff.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const [error, setError] = useState<string | null>(null);
 
   // Rotate day columns to the org's week start.
@@ -41,7 +44,7 @@ export function ScheduleClient() {
       activeItem="Schedule"
       crumb="Schedule"
       actions={
-        <button className="btn-primary-v2 sm" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button>
+        canManage ? <button className="btn-primary-v2 sm" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button> : undefined
       }
     >
       {/* The shell's <main> already spaces its children (gap-5). */}
@@ -69,9 +72,11 @@ export function ScheduleClient() {
         <DSCard className="flex flex-col items-center text-center px-6 py-14">
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No classes yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
-            Build your weekly timetable, recurring classes members will see on your listing.
+            {canManage
+              ? "Build your weekly timetable, recurring classes members will see on your listing."
+              : "The gym's weekly classes appear here once they're added."}
           </p>
-          <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button>
+          {canManage && <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button>}
         </DSCard>
       )}
 

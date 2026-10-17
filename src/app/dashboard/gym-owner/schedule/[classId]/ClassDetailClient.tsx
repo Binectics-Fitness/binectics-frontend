@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { localeForDateFormat } from "@/lib/format/orgFormat";
@@ -93,6 +94,8 @@ export function ClassDetailClient() {
   const update = useUpdateGymClass(orgId);
   const remove = useDeleteGymClass(orgId);
   const [error, setError] = useState<string | null>(null);
+  // Changing classes is team:manage_organization; others see the roster.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
 
   const onSave = async (data: Parameters<typeof update.mutateAsync>[0]["data"]) => {
     setError(null);
@@ -124,7 +127,7 @@ export function ClassDetailClient() {
       activeItem="Schedule"
       crumb={gymClass?.name ?? "Class"}
       actions={
-        gymClass && (
+        gymClass && canManage && (
           <div className="flex items-center gap-2">
             <button className="btn-ghost-v2 sm" disabled={update.isPending} onClick={() => void onToggleActive()}>
               {gymClass.is_active ? "Deactivate" : "Reactivate"}
@@ -153,7 +156,7 @@ export function ClassDetailClient() {
         <OccurrenceRoster orgId={orgId} classId={classId} dayOfWeek={gymClass.day_of_week} />
       )}
 
-      {gymClass && (
+      {gymClass && canManage && (
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 max-w-[720px] overflow-visible!">
           <ClassForm

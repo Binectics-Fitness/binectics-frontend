@@ -225,12 +225,22 @@ export function useTeamInviteAccept() {
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [error, setError] = useState<string | null>(null);
+  /** The workspace the invitation was for, once accepted. */
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const acceptInvite = useCallback(async (token: string) => {
     setStatus("loading");
     setError(null);
     const response = await teamsService.acceptInvitation({ token });
     if (response.success) {
+      const org = (response.data as { organization_id?: unknown } | undefined)?.organization_id;
+      setOrganizationId(
+        typeof org === "string"
+          ? org
+          : org && typeof org === "object" && "_id" in org
+            ? String((org as { _id: unknown })._id)
+            : null,
+      );
       setStatus("success");
       return true;
     }
@@ -239,5 +249,5 @@ export function useTeamInviteAccept() {
     return false;
   }, []);
 
-  return { status, error, acceptInvite };
+  return { status, error, organizationId, acceptInvite };
 }

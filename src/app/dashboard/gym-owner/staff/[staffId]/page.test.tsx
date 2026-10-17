@@ -209,10 +209,24 @@ describe("Gym staff detail page", () => {
   });
 
   it("hides role and remove controls from staff without manage rights", async () => {
-    orgState.currentOrg = { _id: "org-1", is_owner: false, can_manage_organization: false };
+    // An assistant: may see the roster, may not change it.
+    orgState.currentOrg = { _id: "org-1", is_owner: false, can_manage_organization: false, my_permissions: ["team:view_members"] };
     renderPage();
     await screen.findAllByRole("heading", { name: "Thandi Nkosi" });
     expect(screen.queryAllByRole("button", { name: "Remove from team" })).toHaveLength(0);
     expect(screen.queryAllByRole("button", { name: /Trainer/ })).toHaveLength(0);
+  });
+
+  it("gives a manager the role and remove controls their permissions cover", async () => {
+    orgState.currentOrg = {
+      _id: "org-1",
+      is_owner: false,
+      can_manage_organization: false,
+      my_permissions: ["team:view_members", "team:update_member_role", "team:remove_member"],
+    };
+    renderPage();
+    await screen.findAllByRole("heading", { name: "Thandi Nkosi" });
+    expect(screen.getAllByRole("button", { name: "Remove from team" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /Trainer/ }).length).toBeGreaterThan(0);
   });
 });

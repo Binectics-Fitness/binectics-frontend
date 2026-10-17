@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
@@ -170,14 +170,15 @@ export function SettingsClient() {
   const orgId = currentOrg?._id;
   // The Activity log entry only for those the API will show it to.
   const showActivity = canSeeActivityLog(currentOrg);
+  // Payment keys and payout settings are the owner's alone on the API
+  // (OrgOwnerGuard, owner-only payout fields): staff admins don't see them.
+  const { isOwner } = useGymViewer();
   const sections = useMemo(
     () =>
-      showActivity
-        ? SECTIONS.map((g) =>
-            g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
-          )
-        : SECTIONS,
-    [showActivity],
+      SECTIONS.filter((g) => isOwner || g.group !== "Money").map((g) =>
+        showActivity && g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
+      ),
+    [showActivity, isOwner],
   );
   const { data: org, isLoading } = useOrganizationDetails(orgId);
   const updateOrg = useUpdateOrganization();
@@ -436,9 +437,10 @@ export function SettingsClient() {
           <NotificationsSection />
 
           {/* Payment gateways — live CRUD against the payment-config API */}
-          <GatewaysSection />
+          {isOwner && <GatewaysSection />}
 
           {/* Payout schedule */}
+          {isOwner && (
           <section id="payouts">
             <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
@@ -461,6 +463,7 @@ export function SettingsClient() {
               <span className="text-[11px]" style={{ color: "var(--fg-3)" }}>Earnings below the minimum roll over to the next run. The hold period applies before earnings become payable.</span>
             </DSCard>
           </section>
+          )}
 
           {/* Roles & scopes — read-only summary, managed at /dashboard/team */}
           <RolesSection />
