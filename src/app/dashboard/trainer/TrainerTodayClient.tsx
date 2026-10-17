@@ -25,6 +25,7 @@ function TrainerTodayContent() {
         calendarHref="/dashboard/trainer/sessions"
         clientsHref="/dashboard/trainer/clients"
         clientHref={(id) => `/dashboard/trainer/clients/${id}`}
+        setupKind="trainer"
       />
     </TrainerDashboardShell>
   );

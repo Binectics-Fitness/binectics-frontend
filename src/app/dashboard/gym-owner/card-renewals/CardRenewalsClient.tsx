@@ -10,7 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { formatMinor } from "@/lib/currencies/helpers";
-import { marketplaceService } from "@/lib/api/marketplace";
+import { marketplaceService, type OrgPaymentConfig } from "@/lib/api/marketplace";
+import { useOrgPaymentConfigs } from "@/lib/queries/marketplace";
 import {
   memberBillingService,
   type ChargeStatus,
@@ -28,6 +29,33 @@ const FILTERS: Array<{ value: ChargeStatus | ""; label: string }> = [
 ];
 
 class ForbiddenError extends Error {}
+
+/** Where the gym's payment keys and Paystack webhook are set. */
+export const GATEWAYS_HREF = "/dashboard/gym-owner/settings#gateways";
+
+/**
+ * What stands between this gym and working card renewals (F24), or null
+ * when nothing does: renewals charge on the gym's OWN Paystack account, and
+ * a renewal only confirms when Paystack's webhook reaches Binectics.
+ */
+export function renewalsPrerequisite(configs: OrgPaymentConfig[]): { text: string; action: string } | null {
+  const paystack = configs.find((c) => c.gateway === "paystack" && c.is_active);
+  if (!paystack) {
+    return {
+      text: "Card renewals charge on your own Paystack account. Add your Paystack keys so members can renew by card.",
+      action: "Add Paystack keys",
+    };
+  }
+  // Null: no webhook yet. Absent (an older API): not held against anyone.
+  if (paystack.webhook_last_received_at === null) {
+    return {
+      // Null until Paystack's first payment notice, so this can't say "wrong".
+      text: "No webhook from Paystack yet. Renewals confirm through it: add the webhook URL in your Paystack dashboard. If you already have, this clears after the first payment.",
+      action: "Get the webhook URL",
+    };
+  }
+  return null;
+}
 
 function memberName(sub: MembershipSubscription | undefined): string {
   const m = sub?.member_user_id;
@@ -79,6 +107,11 @@ export default function CardRenewalsClient() {
     enabled: !orgLoading && isOwner,
     retry: false,
   });
+  // Renewals need the owner's own Paystack keys and its webhook; say so here,
+  // where the owner looks when renewals don't happen (F24).
+  const gateways = useOrgPaymentConfigs(!orgLoading && isOwner ? orgId : undefined);
+  const prerequisite = gateways.isSuccess ? renewalsPrerequisite(gateways.data ?? []) : null;
+
   const subById = useMemo(
     () => new Map((subs.data ?? []).map((s) => [s._id, s])),
     [subs.data],
@@ -106,6 +139,20 @@ export default function CardRenewalsClient() {
           </Link>
         }
       />
+
+      {!forbidden && prerequisite && (
+        <div
+          role="status"
+          data-testid="renewals-prerequisite"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-(--r-2) px-4 py-3"
+          style={{ background: "var(--warn-soft)", border: "1px solid var(--border)" }}
+        >
+          <p className="flex-1 min-w-[200px] text-[13.5px] leading-normal text-ink">{prerequisite.text}</p>
+          <Link href={GATEWAYS_HREF} className="btn-ghost-v2 sm shrink-0" style={{ textDecoration: "none" }}>
+            {prerequisite.action}
+          </Link>
+        </div>
+      )}
 
       {forbidden ? (
         <DSCard className="p-5.5">

@@ -83,6 +83,10 @@ export function billingResourceLabel(key: string | null): string {
       white_label_enabled: "white-label branding",
       custom_domain_enabled: "custom domains",
       branded_email_enabled: "branded email",
+      forms_enabled: "forms",
+      classes_enabled: "class schedules",
+      api_access_enabled: "API access",
+      health_auto_tasks_enabled: "tasks that tick themselves from health apps",
     }[key] ?? key.replace(/_/g, " ")
   );
 }

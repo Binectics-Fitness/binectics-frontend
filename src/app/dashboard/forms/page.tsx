@@ -15,6 +15,8 @@ import {
   type CreateQuestionRequest,
 } from "@/lib/api/forms";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { PlanGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 const QUESTION_TYPE_OPTIONS = [
   { label: "Short text", value: QuestionType.TEXT },
@@ -40,6 +42,8 @@ export default function FormsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [view, setView] = useState<"list" | "builder">("list");
+  // A plan that leaves forms out: one line and the way to Billing (F4).
+  const [planGate, setPlanGate] = useState<BillingError | null>(null);
 
   // Create form state
   const [newTitle, setNewTitle] = useState("");
@@ -105,14 +109,16 @@ export default function FormsPage() {
     };
 
     const res = await formsService.createForm(payload);
+    const billing = parseBillingError(res);
+    setPlanGate(billing);
     if (res.success && res.data) {
       setForms((prev) => [...prev, res.data as Form]);
       setNewTitle("");
       setNewDescription("");
       setShowCreateForm(false);
       showMessage("Form created. Add questions to get started.");
-    } else {
-      showMessage("Failed to create form.", "error");
+    } else if (!billing) {
+      showMessage(res.message || "Failed to create form.", "error");
     }
     setCreatingForm(false);
   }
@@ -370,6 +376,8 @@ export default function FormsPage() {
             {message}
           </div>
         )}
+
+        {planGate && view === "list" && <PlanGate gate={planGate} />}
 
         {view === "list" && (
           <>

@@ -11,6 +11,10 @@ import { HELP_COMMANDS, accountCommands, actionCommandsFor, defaultNavigationCom
 import { NOTIFICATION_SETTINGS_HREF } from "@/lib/constants/routes";
 import { seatReviewFor } from "@/app/dashboard/billing/billingRole";
 import { UserRole } from "@/lib/types";
+import { SETUP_HREFS } from "@/lib/provider/setupSteps";
+import { PLAN_GATE_HREF } from "@/components/ds/PlanGate";
+import { GATEWAYS_HREF } from "@/app/dashboard/gym-owner/card-renewals/CardRenewalsClient";
+import { PENDING_INVITES_HREF } from "@/app/dashboard/dietitian/DietitianTodayClient";
 import { isAppRoute } from "./appRoutes";
 
 type Section = { label: string; items: { name: string; href: string }[] };
@@ -33,6 +37,16 @@ describe("every nav and command link goes to a real page", () => {
     ...ROLES.map((role): [string, string] => [`${role} seat review`, seatReviewFor(role).href]),
     ["cancellation policy", CANCELLATION_POLICY_HREF],
     ["notification settings", NOTIFICATION_SETTINGS_HREF],
+    // Provider first run (discoverability W2): the setup checklist's steps,
+    // the plan gate's Billing link, the renewals banner and Today's tiles.
+    ...Object.entries(SETUP_HREFS).flatMap(([kind, steps]) =>
+      Object.values(steps).map((h): [string, string] => [`${kind} setup checklist`, h]),
+    ),
+    ["plan gate", PLAN_GATE_HREF],
+    ["card renewals prerequisite", GATEWAYS_HREF],
+    ["dietitian pending invitations tile", PENDING_INVITES_HREF],
+    ["gym rating tile", "/dashboard/gym-owner/reviews"],
+    ["dietitian availability empty state", "/dashboard/dietitian/settings"],
   ];
 
   it.each(all)("%s: %s", (_where, href) => {
@@ -69,6 +83,11 @@ describe("trainer nav", () => {
 describe("dietitian and gym nav", () => {
   it("gives a dietitian Billing and Refunds", () => {
     expect(names(DIETITIAN_SIDEBAR)).toEqual(expect.arrayContaining(["Billing", "Refunds"]));
+  });
+
+  it("puts meal feedback with the dietitian's plans and food (F23)", () => {
+    const food = DIETITIAN_SIDEBAR.find((s) => s.label === "Plans & food");
+    expect(food?.items.find((i) => i.name === "Meal feedback")?.href).toBe("/dashboard/dietitian/feedback");
   });
 
   it("puts Refunds with the gym's money", () => {

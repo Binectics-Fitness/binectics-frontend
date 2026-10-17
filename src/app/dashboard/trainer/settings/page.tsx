@@ -8,12 +8,15 @@ import { CancellationPolicyCard } from "@/components/provider/CancellationPolicy
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
+import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
 
 export default function TrainerSettingsPage() {
   const gym = useCoachingGym();
   const { currentOrg } = useOrganization();
   return (
     <TrainerDashboardShell activeItem="Settings" crumb="Settings">
+      {/* Only while the Today setup checklist is hidden: the way back. */}
+      <ShowSetupChecklist where="Today" className="mb-8" />
       <ConsultationAvailabilityManager
         description={
           gym

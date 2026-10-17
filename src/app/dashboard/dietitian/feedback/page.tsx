@@ -98,7 +98,7 @@ export default function DietitianFeedbackPage() {
   };
 
   return (
-    <DietitianDashboardShell activeItem="Settings" crumb="Meal feedback">
+    <DietitianDashboardShell activeItem="Meal feedback" crumb="Meal feedback">
       <PageHeader
         className="mb-0!"
         title={{ before: "Meal ", emphasis: "feedback", after: ` · ${loading ? "loading..." : `${awaitingReview} awaiting review`}` }}

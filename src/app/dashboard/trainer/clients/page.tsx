@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, PageHeader, StatusPill } from "@/components/ds";
@@ -8,6 +9,8 @@ import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { ClientGoalsCell } from "@/components/clients/ClientGoalsCell";
+import { PendingInvites } from "@/components/clients/PendingInvites";
+import { queryKeys } from "@/lib/queries/keys";
 import {
   InviteClientModal,
   type InviteClientResult,
@@ -45,6 +48,13 @@ export default function TrainerClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invited, setInvited] = useState<InviteClientResult | null>(null);
+  const queryClient = useQueryClient();
+  const onInvited = (result: InviteClientResult) => {
+    setInvited(result);
+    // The new invite joins the "Waiting on an answer" list.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.progress.invitations() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.progress.sentRequests() });
+  };
 
   useEffect(() => {
     progressService
@@ -87,7 +97,7 @@ export default function TrainerClientsPage() {
       <InviteClientModal
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        onInvited={setInvited}
+        onInvited={onInvited}
       />
     <TrainerDashboardShell activeItem="Clients" crumb="Clients">
       {/* Heading. Actions live here rather than in the shell header, whose
@@ -140,6 +150,8 @@ export default function TrainerClientsPage() {
           <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
       </div>
+
+      <PendingInvites />
 
       {/* Toolbar */}
       <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">

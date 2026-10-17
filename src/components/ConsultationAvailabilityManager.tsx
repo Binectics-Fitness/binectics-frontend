@@ -748,7 +748,7 @@ export default function ConsultationAvailabilityManager({
         {activeTab === "availability" && (
           <>
             {/* Weekly Schedule */}
-            <section className="mb-8 rounded-(--r-3) bg-bg shadow-(--shadow-card)">
+            <section id="hours" className="mb-8 scroll-mt-20 rounded-(--r-3) bg-bg shadow-(--shadow-card)">
               <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-fg">
@@ -908,8 +908,8 @@ export default function ConsultationAvailabilityManager({
               </div>
             </section>
 
-            {/* Session Settings */}
-            <section className="rounded-(--r-3) bg-bg shadow-(--shadow-card)">
+            {/* Session Settings. #hours and #session: the setup checklist's steps. */}
+            <section id="session" className="scroll-mt-20 rounded-(--r-3) bg-bg shadow-(--shadow-card)">
               <div className="flex items-center justify-between gap-3 border-b border-border p-5">
                 <div>
                   <h2 className="text-lg font-bold text-fg">

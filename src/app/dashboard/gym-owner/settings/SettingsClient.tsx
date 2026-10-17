@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
 import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection } from "./TeamAccessSections";
@@ -325,6 +326,9 @@ export function SettingsClient() {
         title="Settings"
         subtitle={<span className="block max-w-[60ch]">Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</span>}
       />
+
+      {/* Only while the Overview setup checklist is hidden: the way back. */}
+      <ShowSetupChecklist where="Overview" />
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
         {/* Section nav */}

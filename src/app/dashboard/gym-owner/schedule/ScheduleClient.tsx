@@ -11,6 +11,8 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { ClassForm, WEEKDAYS } from "./ClassForm";
 import { TeamSessionsCard } from "./TeamSessionsCard";
 import { classTime, type GymClass } from "@/lib/api/classes";
+import { PlanGate, useFeatureGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 /**
  * Weekly class timetable backed by the classes API. Week columns start on
@@ -28,15 +30,25 @@ export function ScheduleClient() {
   // Adding classes is team:manage_organization; the timetable is for all staff.
   const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const [error, setError] = useState<string | null>(null);
+  // A plan without classes: the owner is told when they reach for "+ New
+  // class" (their plan is readable); staff learn it from the API's refusal.
+  const planGate = useFeatureGate("classes_enabled");
+  const [refusal, setRefusal] = useState<BillingError | null>(null);
+  const gate = refusal ?? (adding ? planGate : null);
 
   // Rotate day columns to the org's week start.
   const dayOrder = Array.from({ length: 7 }, (_, i) => (weekStartsOn + i) % 7);
 
   const onCreate = async (data: Parameters<typeof create.mutateAsync>[0]) => {
     setError(null);
+    setRefusal(null);
     const res = await create.mutateAsync(data);
     if (res.success) setAdding(false);
-    else setError(res.message || "Couldn't create the class.");
+    else {
+      const billing = parseBillingError(res);
+      if (billing) setRefusal(billing);
+      else setError(res.message || "Couldn't create the class.");
+    }
   };
 
   return (
@@ -58,7 +70,9 @@ export function ScheduleClient() {
         }
       />
 
-      {adding && (
+      {gate && <PlanGate gate={gate} />}
+
+      {adding && !gate && (
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 overflow-visible!">
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New class</h2>
@@ -68,7 +82,7 @@ export function ScheduleClient() {
 
       {isLoading && <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading timetable…</p>}
 
-      {!isLoading && classes.length === 0 && !adding && (
+      {!isLoading && classes.length === 0 && !adding && !gate && (
         <DSCard className="flex flex-col items-center text-center px-6 py-14">
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No classes yet</h2>
           <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
