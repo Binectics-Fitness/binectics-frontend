@@ -140,6 +140,40 @@ describe("pausing a membership", () => {
     expect(within(dialog).getByRole("button", { name: "Pause membership" })).toBeEnabled();
   });
 
+  it("while a renewal payment is being processed (409), says to try again shortly, as a wait, not an error", async () => {
+    pause.mockResolvedValueOnce({
+      success: false,
+      status: 409,
+      code: "RENEWAL_CHARGE_IN_PROGRESS",
+      message: "A renewal payment is being processed. Try again in a few minutes.",
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Pause Monthly" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause this membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    const notice = await within(dialog).findByRole("alert");
+    expect(notice).toHaveTextContent("A renewal payment is being processed. Try again in a few minutes.");
+    expect(notice.getAttribute("style")).toContain("var(--warn-soft)");
+    expect(notice).not.toHaveClass("text-danger-ink");
+
+    // Trying again once it has gone through pauses it.
+    pause.mockResolvedValueOnce({ success: true, data: sub({ status: MembershipSubscriptionStatus.PAUSED }) });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(pause).toHaveBeenCalledTimes(2);
+  });
+
+  it("a 409 without the API's words still says what is happening", async () => {
+    pause.mockResolvedValue({ success: false, status: 409, code: "RENEWAL_CHARGE_IN_PROGRESS" });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Pause Monthly" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause this membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "A renewal payment is being processed. Try again in a few minutes.",
+    );
+  });
+
   it("is not offered once the term has ended, or for a membership that isn't active", async () => {
     getSubs.mockResolvedValue({
       success: true,
