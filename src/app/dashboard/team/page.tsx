@@ -88,6 +88,12 @@ export default function TeamWorkspacePage() {
   const [submittingInvite, setSubmittingInvite] = useState(false);
 
   const orgId = currentOrg?._id;
+  // What the signed-in person may do here: the owner everything, staff
+  // their role's permissions (my_permissions from the API, the same rule
+  // its routes enforce). Controls the API would refuse aren't shown, and
+  // reads it would refuse aren't made.
+  const viewer = useGymViewer();
+  const canSeeInvitations = holds(viewer, TeamPermission.VIEW_INVITATIONS);
   const {
     members,
     roles,
@@ -99,17 +105,13 @@ export default function TeamWorkspacePage() {
     updateMember,
     removeMember,
     cancelInvitation,
-  } = useOrgManagement(orgId ?? "");
+  } = useOrgManagement(orgId ?? "", { invitations: canSeeInvitations });
 
   useEffect(() => {
     if (!orgId) return;
     void loadOrgData();
   }, [orgId, loadOrgData]);
 
-  // What the signed-in person may do here: the owner everything, staff
-  // their role's permissions (my_permissions from the API, the same rule
-  // its routes enforce). Controls the API would refuse aren't shown.
-  const viewer = useGymViewer();
   const { user } = useAuth();
   const canInvite = holds(viewer, TeamPermission.INVITE_MEMBER);
   const canRemove = holds(viewer, TeamPermission.REMOVE_MEMBER);
@@ -132,7 +134,6 @@ export default function TeamWorkspacePage() {
     .map((role) => ({ label: role.name, value: role._id }));
 
   const selectedInviteRoleId = inviteRoleId || grantableRoleOptions[0]?.value || "";
-  const canSeeInvitations = holds(viewer, TeamPermission.VIEW_INVITATIONS);
   /** Cancelling needs the permission and a role you could have given. */
   const cancellable = (invitation: TeamInvitation): boolean => {
     const id = typeof invitation.team_role_id === "string" ? invitation.team_role_id : invitation.team_role_id?._id;

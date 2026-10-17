@@ -283,6 +283,41 @@ describe("the members list for a gym's staff", () => {
     await screen.findByText("Ngozi Okafor");
     expect(billingStatus).toHaveBeenCalledWith("o1");
   });
+
+  // The owner rule is the gym dashboard's one (useGymViewer), not a string
+  // compare of owner_id: a populated owner_id, or the API's is_owner flag.
+  it.each([
+    ["owner_id arrives populated", { owner_id: { _id: "owner1" } }],
+    ["the API says is_owner", { owner_id: undefined, is_owner: true }],
+  ])("knows the owner when %s: billing status and Card renewals", async (_label, over) => {
+    const owned = orgState.currentOrg;
+    orgState.currentOrg = { ...owned, ...over };
+    try {
+      list.mockResolvedValue({ success: true, data: [ngozi()] });
+      billingStatus.mockClear();
+      wrap(<GymMembersClient />);
+      await screen.findByText("Ngozi Okafor");
+      expect(billingStatus).toHaveBeenCalledWith("o1");
+      expect(screen.getByRole("link", { name: "Card renewals" })).toHaveAttribute("href", "/dashboard/gym-owner/card-renewals");
+    } finally {
+      orgState.currentOrg = owned;
+    }
+  });
+
+  it("a member of staff the API says isn't the owner gets neither, even with a matching owner_id", async () => {
+    const owned = orgState.currentOrg;
+    orgState.currentOrg = { ...owned, is_owner: false, my_permissions: ["marketplace:manage_listing"] };
+    try {
+      list.mockResolvedValue({ success: true, data: [ngozi()] });
+      billingStatus.mockClear();
+      wrap(<GymMembersClient />);
+      await screen.findByText("Ngozi Okafor");
+      expect(billingStatus).not.toHaveBeenCalled();
+      expect(screen.queryByRole("link", { name: "Card renewals" })).toBeNull();
+    } finally {
+      orgState.currentOrg = owned;
+    }
+  });
 });
 
 describe("messaging a member from the list", () => {

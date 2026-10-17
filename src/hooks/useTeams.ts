@@ -59,8 +59,12 @@ export function useMyOrganizations() {
 /**
  * Hook for managing a single organization.
  * Encapsulates all member, role, and invitation management operations.
+ *
+ * `invitations: false` skips reading the pending invitations, for a viewer
+ * without team:view_invitations: the API would refuse the read.
  */
-export function useOrgManagement(orgId: string) {
+export function useOrgManagement(orgId: string, options: { invitations?: boolean } = {}) {
+  const readInvitations = options.invitations ?? true;
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [roles, setRoles] = useState<TeamRole[]>([]);
@@ -76,7 +80,7 @@ export function useOrgManagement(orgId: string) {
         teamsService.getOrganization(orgId),
         teamsService.getMembers(orgId),
         teamsService.getRoles(orgId),
-        teamsService.getInvitations(orgId),
+        readInvitations ? teamsService.getInvitations(orgId) : Promise.resolve(null),
       ]);
 
     if (orgRes.status === "fulfilled" && orgRes.value.success && orgRes.value.data) {
@@ -97,12 +101,14 @@ export function useOrgManagement(orgId: string) {
       setRoles(rolesRes.value.data);
     }
 
-    if (invitationsRes.status === "fulfilled" && invitationsRes.value.success && invitationsRes.value.data) {
+    if (invitationsRes.status === "fulfilled" && invitationsRes.value?.success && invitationsRes.value.data) {
       setInvitations(invitationsRes.value.data);
+    } else if (!readInvitations) {
+      setInvitations([]);
     }
 
     setIsLoading(false);
-  }, [orgId]);
+  }, [orgId, readInvitations]);
 
   // Invite/direct-add return the full response so callers can surface the
   // real API error (e.g. a billing 403) instead of a generic message.
@@ -227,10 +233,13 @@ export function useTeamInviteAccept() {
   const [error, setError] = useState<string | null>(null);
   /** The workspace the invitation was for, once accepted. */
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  /** The token `status` is about: a success for one link is not one for the next. */
+  const [token, setToken] = useState<string | null>(null);
 
   const acceptInvite = useCallback(async (token: string) => {
     setStatus("loading");
     setError(null);
+    setToken(token);
     const response = await teamsService.acceptInvitation({ token });
     if (response.success) {
       const org = (response.data as { organization_id?: unknown } | undefined)?.organization_id;
@@ -249,5 +258,5 @@ export function useTeamInviteAccept() {
     return false;
   }, []);
 
-  return { status, error, organizationId, acceptInvite };
+  return { status, error, organizationId, token, acceptInvite };
 }

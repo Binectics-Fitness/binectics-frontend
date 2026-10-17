@@ -5,7 +5,6 @@ import { StatusPill } from "@/components/ds/StatusPill";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { PendingOffers } from "./PendingOffers";
 import { AddMemberButton, ImportMembersButton } from "./_actions";
@@ -611,11 +610,10 @@ function ChangePlanModal({
 
 export default function GymMembersClient() {
   const { currentOrg } = useOrganization();
-  const { user } = useAuth();
-  // Card renewals are owner-only in the API; fail closed without an owner_id.
-  const isOwner = Boolean(
-    currentOrg?._id && user?.id && currentOrg.owner_id != null && String(currentOrg.owner_id) === user.id,
-  );
+  // Card renewals are owner-only in the API. The one owner rule the gym
+  // dashboard uses (gymViewer): the API's is_owner, else owner_id however
+  // it arrives (an id, or populated); false without a gym or a user.
+  const { isOwner } = useGymViewer();
   const { fmtDate, fmtMoney, fmtNumber } = useOrgFormat();
   const router = useRouter();
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);

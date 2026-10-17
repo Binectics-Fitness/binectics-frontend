@@ -25,7 +25,7 @@ let freshUser: { id: string; role: string } = { id: "u1", role: "USER" };
 let mockOrgs: Record<string, unknown>[] = [];
 let mockSignedIn = true;
 let mockSearch = "token=abc";
-let mockAccept: { status: string; error: string | null } = { status: "success", error: null };
+let mockAccept: { status: string; error: string | null; token?: string | null } = { status: "success", error: null, token: "abc" };
 const acceptInvite = vi.fn();
 const setCurrentOrg = vi.fn();
 const refreshOrganizations = vi.fn(async () => undefined);
@@ -77,7 +77,7 @@ beforeEach(() => {
   mockOrgs = [managerGym];
   mockSignedIn = true;
   mockSearch = "token=abc";
-  mockAccept = { status: "success", error: null };
+  mockAccept = { status: "success", error: null, token: "abc" };
   acceptInvite.mockReset();
   setCurrentOrg.mockReset();
 });
@@ -116,6 +116,30 @@ describe("the invite-accept page accepts once", () => {
     expect(await screen.findByRole("link", { name: "Open Iron Temple's dashboard" })).toBeInTheDocument();
     expect(acceptInvite).toHaveBeenCalledTimes(1);
     expect(acceptInvite).toHaveBeenCalledWith("abc");
+  });
+
+  it("refreshes once per accepted link, and a first link's success never stands in for a second", async () => {
+    refreshOrganizations.mockClear();
+    const { rerender } = render(<AcceptInvitationPage />);
+    expect(await screen.findByRole("link", { name: "Open Iron Temple's dashboard" })).toBeInTheDocument();
+    expect(refreshOrganizations).toHaveBeenCalledTimes(1);
+
+    // A second invitation link in the same page: the hook still reports the
+    // first link's success while the second is being accepted.
+    mockSearch = "token=def";
+    rerender(<AcceptInvitationPage />);
+    expect(acceptInvite).toHaveBeenLastCalledWith("def");
+    expect(screen.queryByRole("link", { name: "Open Iron Temple's dashboard" })).not.toBeInTheDocument();
+    expect(refreshOrganizations).toHaveBeenCalledTimes(1);
+
+    // The second succeeds: refreshed for it, once.
+    mockAccept = { status: "success", error: null, token: "def" };
+    rerender(<AcceptInvitationPage />);
+    expect(await screen.findByRole("link", { name: "Open Iron Temple's dashboard" })).toBeInTheDocument();
+    expect(refreshOrganizations).toHaveBeenCalledTimes(2);
+    rerender(<AcceptInvitationPage />);
+    expect(refreshOrganizations).toHaveBeenCalledTimes(2);
+    expect(acceptInvite).toHaveBeenCalledTimes(2);
   });
 });
 
