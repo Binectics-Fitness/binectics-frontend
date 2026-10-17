@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { teamsService } from "@/lib/api/teams";
 import type { ApiResponse } from "@/lib/types";
 import type {
@@ -235,12 +235,17 @@ export function useTeamInviteAccept() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   /** The token `status` is about: a success for one link is not one for the next. */
   const [token, setToken] = useState<string | null>(null);
+  // The latest request. A slower answer for an earlier link must not land
+  // as this one's: it would show a success the latest link hasn't had.
+  const latest = useRef<string | null>(null);
 
   const acceptInvite = useCallback(async (token: string) => {
+    latest.current = token;
     setStatus("loading");
     setError(null);
     setToken(token);
     const response = await teamsService.acceptInvitation({ token });
+    if (latest.current !== token) return response.success;
     if (response.success) {
       const org = (response.data as { organization_id?: unknown } | undefined)?.organization_id;
       setOrganizationId(

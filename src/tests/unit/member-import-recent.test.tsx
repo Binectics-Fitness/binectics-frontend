@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RecentImports } from "@/app/dashboard/gym-owner/members/import/RecentImports";
+import { ImportMembersButton } from "@/app/dashboard/gym-owner/members/_actions";
 import { memberImportsApi, type MemberImportListItem } from "@/lib/api/memberImports";
 import { toast } from "@/components/Toast";
 
@@ -114,6 +115,21 @@ describe("RecentImports", () => {
     renderList();
     expect(await screen.findByRole("button", { name: "Send 3 again" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send 2 invites" })).toBeInTheDocument();
+  });
+
+  it("Import members is offered to the owner and to staff who manage members", () => {
+    render(<ImportMembersButton orgId="org-1" />);
+    expect(screen.getByRole("button", { name: "Import members" })).toBeInTheDocument();
+    cleanup();
+    asStaff(["marketplace:manage_listing"]);
+    render(<ImportMembersButton orgId="org-1" />);
+    expect(screen.getByRole("button", { name: "Import members" })).toBeInTheDocument();
+  });
+
+  it("Import members is not offered to staff without member management (the API would refuse)", () => {
+    asStaff(["bookings:manage"]);
+    render(<ImportMembersButton orgId="org-1" />);
+    expect(screen.queryByRole("button", { name: "Import members" })).toBeNull();
   });
 
   it("shows staff without member management the counts, not the actions (the API would refuse)", async () => {

@@ -54,6 +54,10 @@ export function ListingClassesSection({
     },
     enabled: !!user,
   });
+  // The cache key isn't per user (MyClassBookingsCard shares it): after a
+  // sign-out the last member's entries could still be cached, so nothing
+  // is read from it without a signed-in user.
+  const myWaitlist = user ? mine : [];
   const { data: classes = [], isLoading } = useQuery<GymClass[]>({
     queryKey: ["listingClasses", listingId],
     queryFn: async () => {
@@ -88,7 +92,7 @@ export function ListingClassesSection({
                     listingId={listingId}
                     organizationId={organizationId}
                     gymClass={c}
-                    waitlisted={mine.filter(
+                    waitlisted={myWaitlist.filter(
                       (b) => b.status === "waitlisted" && (typeof b.class_id === "object" ? b.class_id._id : b.class_id) === c._id,
                     )}
                   />

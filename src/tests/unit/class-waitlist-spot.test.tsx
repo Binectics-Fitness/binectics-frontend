@@ -158,6 +158,22 @@ describe("ListingClassesSection: a waitlisted member", () => {
     expect(screen.queryByRole("button", { name: "Take the spot" })).toBeNull();
   });
 
+  it("signed out: a previous member's cached bookings are not shown", async () => {
+    // The cache key is shared, not per user: a sign-out can leave the last
+    // member's entries behind in the same client.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    client.setQueryData(["myClassBookings"], [booking({ booking_date: first })]);
+    auth.user = null;
+    render(
+      <QueryClientProvider client={client}>
+        <ListingClassesSection listingId="l1" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Book" })).toBeInTheDocument();
+    expect(screen.queryByText(/You're on the waitlist/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Take the spot" })).toBeNull();
+  });
+
   it("signed out: the timetable doesn't ask for anyone's bookings", async () => {
     auth.user = null;
     wrap(<ListingClassesSection listingId="l1" />);
