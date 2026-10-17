@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { GYM_NAV_ACCESS, allows } from "@/lib/gymStaffNav";
 import { format } from "date-fns";
 import {
   AsyncSpinner,
@@ -89,7 +90,11 @@ export default function GymOverviewClient() {
 function GymOverviewContent() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { user } = useAuth();
-  const { staff } = useGymViewer();
+  const viewer = useGymViewer();
+  const { staff } = viewer;
+  // A role without the Overview (an assistant) is sent to its first page;
+  // load nothing here meanwhile, or every request is refused.
+  const canView = allows(viewer, GYM_NAV_ACCESS.Overview);
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
@@ -101,7 +106,7 @@ function GymOverviewContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orgLoading || !currentOrg) return;
+    if (orgLoading || !currentOrg || !canView) return;
     let active = true;
 
     const run = async () => {
@@ -110,8 +115,11 @@ function GymOverviewContent() {
         checkinsService.getOrgDashboardStats(currentOrg._id),
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
         // Owner-only ledger. It drives the revenue card's figure AND its
-        // sparkline, so the two always share a window and a currency.
-        earningsService.getOrgTimeseries(currentOrg._id, 30),
+        // sparkline, so the two always share a window and a currency. Not
+        // asked for by a gym's staff: the API refuses them.
+        staff
+          ? Promise.resolve(null)
+          : earningsService.getOrgTimeseries(currentOrg._id, 30),
       ]);
       if (!active) return;
 
@@ -125,7 +133,7 @@ function GymOverviewContent() {
       }
       // Cleared on failure so another org's series never lingers.
       setSeries(
-        seriesRes.status === "fulfilled" && seriesRes.value.success && seriesRes.value.data ? seriesRes.value.data : null,
+        seriesRes.status === "fulfilled" && seriesRes.value?.success && seriesRes.value.data ? seriesRes.value.data : null,
       );
       setError(statsOk ? null : "We couldn't load your dashboard. Try again shortly.");
       setLoading(false);
@@ -136,7 +144,7 @@ function GymOverviewContent() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading]);
+  }, [currentOrg, orgLoading, canView, staff]);
 
   const recentMembers = useMemo(
     () =>

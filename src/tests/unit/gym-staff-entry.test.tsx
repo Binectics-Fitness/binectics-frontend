@@ -35,9 +35,26 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/teams/invite/accept",
   useSearchParams: () => new URLSearchParams(mockSearch),
 }));
-vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: mockSignedIn ? mockUser : null, isLoading: false, refreshUser: async () => freshUser, logout: vi.fn() }),
-}));
+// Like the real AuthContext: refreshUser is a new function each render, and
+// it replaces the user object.
+vi.mock("@/contexts/AuthContext", async () => {
+  const { useState } = await import("react");
+  return {
+    useAuth: () => {
+      const [user, setUser] = useState(mockUser);
+      return {
+        user: mockSignedIn ? user : null,
+        isLoading: false,
+        refreshUser: async () => {
+          const fresh = { ...user, ...freshUser };
+          setUser(fresh);
+          return fresh;
+        },
+        logout: vi.fn(),
+      };
+    },
+  };
+});
 vi.mock("@/contexts/OrganizationContext", () => {
   const value = () => ({
     organizations: mockOrgs,
@@ -90,6 +107,15 @@ describe("the invite-accept button", () => {
     mockOrgs = [{ ...managerGym, my_permissions: [] }];
     render(<AcceptInvitationPage />);
     expect(await screen.findByRole("link", { name: "Go to your dashboard" })).toHaveAttribute("href", "/dashboard/member");
+  });
+});
+
+describe("the invite-accept page accepts once", () => {
+  it("doesn't accept again when refreshing the user replaces it, and shows where to go", async () => {
+    render(<AcceptInvitationPage />);
+    expect(await screen.findByRole("link", { name: "Open Iron Temple's dashboard" })).toBeInTheDocument();
+    expect(acceptInvite).toHaveBeenCalledTimes(1);
+    expect(acceptInvite).toHaveBeenCalledWith("abc");
   });
 });
 

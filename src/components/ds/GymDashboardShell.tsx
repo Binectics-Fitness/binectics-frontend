@@ -6,8 +6,7 @@ import { UserRole } from "@/lib/types";
 import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
-import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
+import { useGymViewer } from "@/hooks/useGymViewer";
 import {
   GYM_NAV_ACCESS,
   allows,
@@ -16,9 +15,9 @@ import {
   gymLandingHref,
   gymSidebarFor,
   gymStaffNote,
-  gymViewer,
-  type GymViewer,
 } from "@/lib/gymStaffNav";
+
+export { useGymViewer };
 
 export const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
@@ -62,24 +61,6 @@ export interface GymDashboardShellProps {
 
 /** The role label under a staff member's gym chip. */
 const STAFF_ROLE_LABEL: Record<string, string> = { admin: "Admin", manager: "Manager", assistant: "Assistant" };
-
-/**
- * Who is looking at the gym dashboard. The owner sees everything; a gym's
- * staff (managers, assistants, admins, custom roles) see what their role's
- * permissions allow (lib/gymStaffNav).
- */
-export function useGymViewer(): GymViewer & { staff: boolean; orgName: string | null; roleCode: string | null } {
-  const { user } = useAuth();
-  const { currentOrg: org } = useOrganization();
-  const viewer = gymViewer(org, user?.id);
-  return {
-    ...viewer,
-    // Someone in this gym's dashboard who doesn't own the gym.
-    staff: !!org && !viewer.isOwner,
-    orgName: org?.name ?? null,
-    roleCode: org?.my_role_code ?? null,
-  };
-}
 
 export function GymDashboardShell({ activeItem, crumb, actions, children }: GymDashboardShellProps) {
   const viewer = useGymViewer();

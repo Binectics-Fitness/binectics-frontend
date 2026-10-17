@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,20 +27,29 @@ function AcceptInvitationContent() {
   // before offering where to go.
   const [joinedAs, setJoinedAs] = useState<{ id: string; role: string } | null>(null);
 
+  // Once per token. Refreshing the user after a success replaces the user
+  // object (and refreshUser is a new function each render); keyed on those,
+  // the accept ran again, the API refused the spent token, and the page
+  // turned a success into "Unable to accept".
+  const acceptedToken = useRef<string | null>(null);
+  const userId = user?.id ?? null;
   useEffect(() => {
-    if (authLoading || !token || !user) return;
+    if (authLoading || !token || !userId || acceptedToken.current === token) return;
+    acceptedToken.current = token;
     acceptInvite(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user, token]);
+  }, [authLoading, userId, token]);
 
+  // Once per success: take the fresh role and workspaces, then say where to go.
+  const refreshed = useRef(false);
   useEffect(() => {
-    if (acceptStatus !== "success") return;
+    if (acceptStatus !== "success" || refreshed.current) return;
+    refreshed.current = true;
     void Promise.all([refreshUser(), refreshOrganizations?.()]).then(([fresh]) => {
       setJoinedAs(fresh ?? user);
     });
-    // Runs once per accept outcome; the workspaces it reads are refreshed first.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [acceptStatus, refreshUser]);
+  }, [acceptStatus]);
 
   // Where the page is, from what it knows: no token or a refused accept is an
   // error, no session asks to sign in, and success waits for the refresh.

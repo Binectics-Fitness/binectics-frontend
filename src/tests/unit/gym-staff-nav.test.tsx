@@ -81,6 +81,13 @@ describe("the gym nav for each role", () => {
     expect(Object.keys(GYM_NAV_ACCESS).sort()).toEqual(items);
   });
 
+  it("asks for everything a page loads: Settings reads the gym (view_members) and its currencies (manage_listing)", () => {
+    expect(gymPageRule("/dashboard/gym-owner/settings")).toEqual({
+      all: [P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS, P.MARKETPLACE_MANAGE_LISTING],
+    });
+    expect(gymPageRule("/dashboard/gym-owner/tax")).toEqual({ all: [P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS] });
+  });
+
   it("maps only real pages", () => {
     for (const [path] of GYM_PAGE_ACCESS) expect(isAppRoute(path)).toBe(true);
   });

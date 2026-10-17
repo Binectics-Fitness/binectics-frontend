@@ -66,6 +66,13 @@ describe("pickOrgForDashboard for staff", () => {
     expect(pickOrgForDashboard([manager], "gym", { userId: "u1" })?._id).toBe("gym");
   });
 
+  it("on two teams, starts in the gym where the role holds something", () => {
+    const empty = gym("front_desk", [], { _id: "bare", name: "Bare Gym" });
+    expect(pickOrgForDashboard([empty, manager], "gym", { userId: "u1" })?._id).toBe("gym");
+    // A gym they chose stays chosen.
+    expect(pickOrgForDashboard([empty, manager], "gym", { userId: "u1", currentId: "bare" })?._id).toBe("bare");
+  });
+
   it("never puts the gym dashboard in a gym where the person is only a trainer", () => {
     const own = { _id: "mine", owner_id: "u1", account_type: "gym_owner", is_active: true };
     expect(pickOrgForDashboard([trainer, own], "gym", { userId: "u1", currentId: "gym" })?._id).toBe("mine");

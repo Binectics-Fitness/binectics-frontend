@@ -98,9 +98,11 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Staff: needs(P.VIEW_MEMBERS),
   // Gym inbox threads (MessagingService: owner or messaging:answer_members)
   Messages: needs(P.MESSAGING_ANSWER_MEMBERS),
-  // Every section saves through manage_organization; payment keys and
-  // payouts inside it are owner-only and hidden from staff there.
-  Settings: needs(P.MANAGE_ORGANIZATION),
+  // Every section saves through manage_organization; the form loads from
+  // GET /teams/organizations/:id (view_members) and the currency list from
+  // price-currencies (manage_listing). Payment keys and payouts inside it are
+  // owner-only and hidden from staff there.
+  Settings: needs(P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS, P.MARKETPLACE_MANAGE_LISTING),
 };
 
 const NAV = GYM_NAV_ACCESS;
@@ -122,8 +124,8 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/gym-owner/devices", NAV["Check-in kiosk"]],
   ["/dashboard/gym-owner/payouts", NAV.Payouts],
   ["/dashboard/gym-owner/revenue", NAV.Revenue],
-  // GET .../revenue-stats
-  ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING)],
+  // GET .../revenue-stats, and the tax settings from GET /teams/organizations/:id
+  ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS)],
   ["/dashboard/gym-owner/plans", NAV["Plans & pricing"]],
   ["/dashboard/gym-owner/locations", NAV.Locations],
   // GET /marketplace/my-listings + facility items (manage_listing)

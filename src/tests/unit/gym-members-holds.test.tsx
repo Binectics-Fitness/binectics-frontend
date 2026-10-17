@@ -25,10 +25,15 @@ vi.mock("@/app/dashboard/gym-owner/members/PendingOffers", () => ({ PendingOffer
 vi.mock("@/app/dashboard/gym-owner/members/_actions", () => ({ AddMemberButton: () => null, ImportMembersButton: () => null }));
 vi.mock("@/app/dashboard/gym-owner/members/import/RecentImports", () => ({ RecentImports: () => null }));
 vi.mock("@/app/dashboard/gym-owner/members/[memberId]/TrainerCard", () => ({ TrainerCard: () => null }));
-vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
+vi.mock("@/components/messaging/StartConversationButton", () => ({
+  StartConversationButton: ({ label }: { label?: string }) => <span data-testid="message-member">{label}</span>,
+}));
 const authState = { user: { id: "owner1" }, isLoading: false };
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => authState }));
-const orgState = { currentOrg: { _id: "o1", name: "Iron Temple", owner_id: "owner1" }, isLoading: false };
+const orgState: { currentOrg: Record<string, unknown>; isLoading: boolean } = {
+  currentOrg: { _id: "o1", name: "Iron Temple", owner_id: "owner1" },
+  isLoading: false,
+};
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => orgState,
   useOptionalOrganization: () => orgState,
@@ -77,7 +82,7 @@ const one = vi.spyOn(marketplaceService, "getOrgMembershipSubscriptionById");
 const suspend = vi.spyOn(marketplaceService, "suspendOrgSubscription");
 const unsuspend = vi.spyOn(marketplaceService, "unsuspendOrgSubscription");
 vi.spyOn(marketplaceService, "getOrgMembershipPlans").mockResolvedValue({ success: true, data: [] });
-vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue({ success: false } as never);
+const billingStatus = vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue({ success: false } as never);
 
 function wrap(node: ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -254,5 +259,68 @@ describe("single member page: holds", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: "Suspend membership" }));
     expect(suspend).toHaveBeenCalledWith("o1", "s1", "");
     await waitFor(() => expect(screen.getByRole("button", { name: "Lift suspension" })).toBeInTheDocument());
+  });
+});
+
+describe("the members list for a gym's staff", () => {
+  it("doesn't ask for the owner's billing status, and still lists the members", async () => {
+    list.mockResolvedValue({ success: true, data: [ngozi()] });
+    billingStatus.mockClear();
+    authState.user = { id: "staff1" };
+    try {
+      wrap(<GymMembersClient />);
+      expect(await screen.findByText("Ngozi Okafor")).toBeInTheDocument();
+      expect(billingStatus).not.toHaveBeenCalled();
+    } finally {
+      authState.user = { id: "owner1" };
+    }
+  });
+
+  it("asks for it for the owner (the seat line)", async () => {
+    list.mockResolvedValue({ success: true, data: [ngozi()] });
+    billingStatus.mockClear();
+    wrap(<GymMembersClient />);
+    await screen.findByText("Ngozi Okafor");
+    expect(billingStatus).toHaveBeenCalledWith("o1");
+  });
+});
+
+describe("messaging a member from the list", () => {
+  const owned = orgState.currentOrg;
+  const asStaff = (permissions: string[]) => {
+    authState.user = { id: "staff1" };
+    orgState.currentOrg = { ...owned, my_permissions: permissions };
+  };
+  const restore = () => {
+    authState.user = { id: "owner1" };
+    orgState.currentOrg = owned;
+  };
+
+  it("is offered to the owner and to staff who answer the gym's inbox", async () => {
+    list.mockResolvedValue({ success: true, data: [ngozi()] });
+    for (const setup of [() => undefined, () => asStaff(["marketplace:manage_listing", "messaging:answer_members"])]) {
+      setup();
+      try {
+        const { unmount } = wrap(<GymMembersClient />);
+        await openMenu("Ngozi Okafor");
+        expect(screen.getByTestId("message-member")).toBeInTheDocument();
+        unmount();
+      } finally {
+        restore();
+      }
+    }
+  });
+
+  it("is not offered to staff whose role can't answer members (the API would refuse)", async () => {
+    list.mockResolvedValue({ success: true, data: [ngozi()] });
+    asStaff(["marketplace:manage_listing"]);
+    try {
+      wrap(<GymMembersClient />);
+      await openMenu("Ngozi Okafor");
+      expect(screen.getByRole("button", { name: "View details" })).toBeInTheDocument();
+      expect(screen.queryByTestId("message-member")).toBeNull();
+    } finally {
+      restore();
+    }
   });
 });

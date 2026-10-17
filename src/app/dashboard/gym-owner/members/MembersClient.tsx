@@ -34,6 +34,8 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import SearchableSelect from "@/components/SearchableSelect";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import Modal from "@/components/Modal";
 import {
   memberBillingService,
@@ -125,6 +127,8 @@ function RowActions({
   onRosterChange: () => void;
 }) {
   const router = useRouter();
+  // The gym's inbox answers members: the owner, or staff whose role may.
+  const canMessageAsGym = holds(useGymViewer(), TeamPermission.MESSAGING_ANSWER_MEMBERS);
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
@@ -289,7 +293,7 @@ function RowActions({
               paused member would render a button that 403s. Chasing a
               past-due member by message is a real need — it wants the API
               gate widened to isEntitlingStatus() first. */}
-          {isActive && getMemberUserId(sub) && (
+          {isActive && canMessageAsGym && getMemberUserId(sub) && (
             <StartConversationButton
               recipientUserId={getMemberUserId(sub)!}
               messagesHref="/dashboard/gym-owner/messages"
@@ -637,9 +641,11 @@ export default function GymMembersClient() {
       // the client, which double-counted a member holding two plans. Loaded
       // alongside the members, and non-fatal: a members list that renders
       // without the seat line beats one that fails because billing hiccuped.
+      // Billing status is the owner's (the API refuses staff): a gym's
+      // staff see the members without the seat line.
       const [res, statusRes] = await Promise.all([
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
-        providerBillingApi.getStatus(currentOrg._id),
+        isOwner ? providerBillingApi.getStatus(currentOrg._id) : Promise.resolve(null),
       ]);
       if (!mounted) return;
       if (res.success && res.data) {
@@ -650,13 +656,13 @@ export default function GymMembersClient() {
         // "No members yet" while the API was 500ing (2026-07-10 regression).
         setLoadError(res.message || "Couldn't load members.");
       }
-      setSeats(statusRes.success && statusRes.data ? statusRes.data.seats : null);
+      setSeats(statusRes?.success && statusRes.data ? statusRes.data.seats : null);
       setLoading(false);
     };
 
     void load();
     return () => { mounted = false; };
-  }, [currentOrg, refreshKey]);
+  }, [currentOrg, refreshKey, isOwner]);
 
   const filtered = subscriptions.filter((sub) => {
     if (filter !== "all" && sub.status !== filter) return false;

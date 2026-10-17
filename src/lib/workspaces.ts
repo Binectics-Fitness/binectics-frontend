@@ -186,7 +186,13 @@ export function pickOrgForDashboard<T extends WorkspaceLike>(
   if (candidates.length === 0) return null;
   const current = candidates.find((org) => org._id === opts.currentId);
   if (current) return current;
-  return candidates.find((org) => org.owner_id === opts.userId) ?? candidates[0];
+  return (
+    candidates.find((org) => org.owner_id === opts.userId) ??
+    // A gym's staff on two teams: start in one where their role holds
+    // something, not one that would show an empty nav.
+    (kind === "gym" ? candidates.find((org) => (org.my_permissions?.length ?? 0) > 0) : undefined) ??
+    candidates[0]
+  );
 }
 
 /** Which dashboard a path belongs to, when it belongs to one. */

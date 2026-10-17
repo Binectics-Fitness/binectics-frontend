@@ -3,14 +3,16 @@ import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@/tests/setup/test-utils";
 import GymOverviewClient from "./GymOverviewClient";
 
-const org = { _id: "org-1", name: "Dapo Fitness Hub", currency: "NGN", owner_id: "u-1" };
+const org: Record<string, unknown> = { _id: "org-1", name: "Dapo Fitness Hub", currency: "NGN", owner_id: "u-1" };
+// Who is signed in: the owner, unless a test signs in a member of staff.
+let mockUserId = "u-1";
 
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({ currentOrg: org, isLoading: false }),
   useOptionalOrganization: () => ({ currentOrg: org, organizations: [org], isLoading: false }),
 }));
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ user: { id: "u-1", role: "GYM_OWNER", first_name: "Dapo" } }),
+  useAuth: () => ({ user: { id: mockUserId, role: "GYM_OWNER", first_name: "Dapo" } }),
 }));
 vi.mock("@/hooks/useRequireAuth", () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
@@ -38,10 +40,11 @@ vi.mock("@/lib/api/marketplace", () => ({
   marketplaceService: { getOrgMembershipSubscriptions: async () => ({ success: true, data: [] }) },
 }));
 let seriesCurrency = "NGN";
+const seriesCalls = vi.fn();
 let seriesRows: Array<{ date: string; revenue_minor: number; currency: string }> | null = null;
 vi.mock("@/lib/api/earnings", () => ({
   earningsService: {
-    getOrgTimeseries: async () => ({
+    getOrgTimeseries: async () => (seriesCalls(), {
       success: true,
       data: seriesRows ?? [{ date: new Date().toISOString().slice(0, 10), revenue_minor: 9_005_000, currency: seriesCurrency }],
     }),
@@ -52,6 +55,23 @@ describe("Gym overview", () => {
   beforeEach(() => {
     statsData = legacyStats;
     seriesRows = null;
+    mockUserId = "u-1";
+    delete org.my_permissions;
+    seriesCalls.mockClear();
+  });
+
+  it("doesn't ask a gym's staff for the owner-only revenue ledger", async () => {
+    mockUserId = "staff-1";
+    org.my_permissions = ["marketplace:manage_listing", "team:view_members"];
+    renderWithProviders(<GymOverviewClient />);
+    await screen.findAllByText("Here's how Dapo Fitness Hub is doing · Lagos, NG", {}, { timeout: 5000 });
+    expect(seriesCalls).not.toHaveBeenCalled();
+  });
+
+  it("still reads it for the owner", async () => {
+    renderWithProviders(<GymOverviewClient />);
+    await screen.findAllByText("Here's how Dapo Fitness Hub is doing · Lagos, NG", {}, { timeout: 5000 });
+    expect(seriesCalls).toHaveBeenCalled();
   });
 
   it("has a plain title and the gym's own place in the subtitle", async () => {
