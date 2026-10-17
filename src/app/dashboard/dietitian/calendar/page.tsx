@@ -488,7 +488,16 @@ export default function DietitianCalendarPage() {
               <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger)" }}>{scheduleError}</div>
             ) : rules.length === 0 ? (
               <div className="px-3.5 py-3">
-                <EmptySlate message="No weekly availability set yet." hint="Set your bookable hours in Settings." mt="mt-0" />
+                <EmptySlate
+                  message="No weekly availability set yet."
+                  hint="Members can only book the hours you set."
+                  mt="mt-0"
+                  action={
+                    <Link href="/dashboard/dietitian/settings" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>
+                      Set your bookable hours
+                    </Link>
+                  }
+                />
               </div>
             ) : (
               orderedDows.map((dow) => {
@@ -515,11 +524,14 @@ export default function DietitianCalendarPage() {
                 );
               })
             )}
-            <div className="px-3.5 py-2.5">
-              <Link href="/dashboard/dietitian/settings" className="font-mono text-[11px] uppercase tracking-[0.04em] underline" style={{ color: "var(--fg-2)" }}>
-                Edit availability in Settings
-              </Link>
-            </div>
+            {/* With no hours yet, the empty state above carries this link. */}
+            {(rules.length > 0 || scheduleError) && (
+              <div className="px-3.5 py-2.5">
+                <Link href="/dashboard/dietitian/settings" className="font-mono text-[11px] uppercase tracking-[0.04em] underline" style={{ color: "var(--fg-2)" }}>
+                  Edit availability in Settings
+                </Link>
+              </div>
+            )}
           </DSCard>
         </div>
 

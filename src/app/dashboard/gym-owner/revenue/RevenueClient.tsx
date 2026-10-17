@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 import { useEffect, useMemo, useState } from "react";
-import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
+import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { GYM_NAV_ACCESS, allows } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, EmptySlate, PageHeader } from "@/components/ds";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -16,6 +17,8 @@ import {
   type OrgCheckInDashboardStats,
 } from "@/lib/types";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { PlanGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 const MIX_COLORS = ["var(--ink)", "var(--signal)", "var(--gym)", "var(--trainer)", "var(--dietitian)", "var(--fg-3)"];
 
@@ -33,7 +36,11 @@ export default function RevenueClient() {
   const revenueCurrency = revenueStats?.currency ?? currentOrg?.currency ?? "";
   const formatAmount = (n: number) => fmtMoney(n, revenueCurrency);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
+  // The daily series is plan-gated (analytics); the tiles are not.
+  const [analyticsGate, setAnalyticsGate] = useState<BillingError | null>(null);
   const [loading, setLoading] = useState(true);
+  // Refunds and disputes are the owner's; a manager on Revenue doesn't get the link.
+  const canSeeRefunds = allows(useGymViewer(), GYM_NAV_ACCESS.Refunds);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,6 +65,7 @@ export default function RevenueClient() {
       if (revRes.status === "fulfilled" && revRes.value.success && revRes.value.data) {
         setRevenueStats(revRes.value.data);
       }
+      setAnalyticsGate(revRes.status === "fulfilled" ? parseBillingError(revRes.value) : null);
       setError(ok ? null : "We couldn't load revenue. Try again shortly.");
       setLoading(false);
     };
@@ -116,7 +124,7 @@ export default function RevenueClient() {
         className="mb-0!"
         title="Revenue"
         subtitle={currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
-        actions={<Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link>}
+        actions={canSeeRefunds ? <Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link> : undefined}
       />
 
       {!currentOrg && !orgLoading ? (
@@ -140,7 +148,8 @@ export default function RevenueClient() {
             ))}
           </div>
 
-          {/* Revenue timeseries */}
+          {/* Revenue timeseries: on a plan without analytics, say so where it would be. */}
+          {analyticsGate && <PlanGate gate={analyticsGate} />}
           {timeseries.length > 0 && (
             <DSCard>
               <DSCardHead title="Daily revenue · 30d" subtitle={`Settled transactions in ${revenueStats?.currency ?? ""}`} />

@@ -10,7 +10,7 @@
  * Left out of the mock for want of data: slot utilisation, the 30-day
  * rating, the "forecast" and the per-row Check-in / Join buttons.
  */
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -28,6 +28,9 @@ import {
 } from "@/components/ds";
 import type { TitleParts } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
+import { SetupChecklist } from "@/components/provider/SetupChecklist";
+import { InviteClientModal, type InviteClientResult } from "@/components/clients/InviteClientModal";
+import { toast } from "@/components/Toast";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import type { ClientProfile } from "@/lib/api/progress";
 import type { ConsultationBooking } from "@/lib/api/consultations";
@@ -60,6 +63,15 @@ export interface CoachTodayProps {
   clientHref: (profileId: string) => string;
   /** Extra real KPI cards after the standard ones (the dietitian's practice stats). */
   extraStats?: ReactNode[];
+  /** Whose setup checklist to show (SetupChecklist). */
+  setupKind: "trainer" | "dietitian";
+}
+
+/** What the coach is told once an invite is on its way. */
+export function invitedMessage(result: InviteClientResult): string {
+  return result.action === "request_sent"
+    ? `${result.email} already has a Binectics account. We've asked them to approve you.`
+    : `We've emailed ${result.email} an invite to join Binectics.`;
 }
 
 function clientName(c: ClientProfile): string {
@@ -93,6 +105,7 @@ export function CoachToday({
   clientsHref,
   clientHref,
   extraStats = [],
+  setupKind,
 }: CoachTodayProps) {
   const { user } = useAuth();
   const { fmtTime, prefs } = useOrgFormat();
@@ -117,6 +130,7 @@ export function CoachToday({
     return `${formatInTz(iso, "EEE d MMM", timeZone)} · ${fmtTime(iso)}`;
   };
   const activeClients = useMemo(() => clients.filter((c) => c.is_active), [clients]);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const first = user?.first_name?.trim().split(/\s+/)[0];
   const title: TitleParts = first ? { before: "Today, ", emphasis: first } : { emphasis: "Today" };
@@ -172,6 +186,8 @@ export function CoachToday({
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
       ) : null}
+
+      <SetupChecklist kind={setupKind} people={loading ? null : clients.length} />
 
       {loading || !schedule ? (
         <AsyncSpinner size="page" label="Loading your dashboard" />
@@ -263,7 +279,15 @@ export function CoachToday({
               {activeClients.length === 0 ? (
                 <DSCard>
                   <div className="px-4.5 py-4">
-                    <EmptySlate message="No active clients yet." mt="mt-0" />
+                    <EmptySlate
+                      message="No active clients yet."
+                      mt="mt-0"
+                      action={
+                        <button type="button" className="btn-ghost-v2 sm" onClick={() => setInviteOpen(true)}>
+                          Invite a client
+                        </button>
+                      }
+                    />
                   </div>
                 </DSCard>
               ) : (
@@ -284,6 +308,12 @@ export function CoachToday({
           </div>
         </>
       )}
+
+      <InviteClientModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onInvited={(result) => toast(invitedMessage(result), "success")}
+      />
     </>
   );
 }

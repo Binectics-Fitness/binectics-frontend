@@ -8,6 +8,8 @@ import { instanceStatusTone, templateStatusTone } from "@/lib/ui/statusTones";
 import SearchableSelect from "@/components/SearchableSelect";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { toast } from "@/components/Toast";
+import { PlanGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
@@ -115,12 +117,15 @@ function ProgramFormModal({
   loading,
   onClose,
   onSave,
+  gate,
 }: {
   mode: ModalMode;
   initial: ProgramFormState;
   loading: boolean;
   onClose: () => void;
   onSave: (form: ProgramFormState) => Promise<void>;
+  /** The plan refused the save (e.g. health-app tasks): said beside Save. */
+  gate?: BillingError | null;
 }) {
   const [form, setForm] = useState<ProgramFormState>(initial);
   const [saving, setSaving] = useState(false);
@@ -682,6 +687,8 @@ function ProgramFormModal({
               </div>
             </div>
 
+            {gate && <PlanGate gate={gate} />}
+
             <div className="flex justify-end gap-2 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
               <button
                 type="button"
@@ -1021,6 +1028,15 @@ export default function ProgramsManager({
         : null,
   );
   const [assignTemplate, setAssignTemplate] = useState<ProgramTemplate | null>(null);
+  // A save or publish the plan refused (F4): shown in the open builder, or
+  // above the list for a publish.
+  const [gate, setGate] = useState<BillingError | null>(null);
+  /** Takes a failed response: true when it was the plan, now on screen. */
+  const planRefused = (res: Parameters<typeof parseBillingError>[0]): boolean => {
+    const billing = parseBillingError(res);
+    setGate(billing);
+    return billing != null;
+  };
   const [clientsTemplate, setClientsTemplate] = useState<ProgramTemplate | null>(null);
 
   useEffect(() => {
@@ -1114,7 +1130,7 @@ export default function ProgramsManager({
       setTemplates((t) => [res.data!.template, ...t]);
       setModal(null);
       toast.success("Program draft created.");
-    } else {
+    } else if (!planRefused(res)) {
       toast.error(res.message ?? "Failed to create program.");
     }
   };
@@ -1127,7 +1143,7 @@ export default function ProgramsManager({
       setTemplates((list) => list.map((t) => (t._id === id ? res.data!.template : t)));
       setModal(null);
       toast.success("Program updated.");
-    } else {
+    } else if (!planRefused(res)) {
       toast.error(res.message ?? "Failed to update program.");
     }
   };
@@ -1138,7 +1154,7 @@ export default function ProgramsManager({
     if (res.success && res.data) {
       setTemplates((list) => list.map((x) => (x._id === t._id ? res.data!.template : x)));
       toast.success("Program published.");
-    } else {
+    } else if (!planRefused(res)) {
       toast.error(res.message ?? "Failed to publish program.");
     }
   };
@@ -1184,6 +1200,8 @@ export default function ProgramsManager({
           </Link>
         </div>
       )}
+
+      {gate && !modal && <PlanGate gate={gate} />}
 
       {error && (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
@@ -1250,8 +1268,12 @@ export default function ProgramsManager({
           mode={modal.mode}
           initial={modal.initial}
           loading={modal.loading}
-          onClose={() => setModal(null)}
+          onClose={() => {
+            setModal(null);
+            setGate(null);
+          }}
           onSave={modal.mode === "create" ? handleCreate : handleEdit}
+          gate={gate}
         />
       )}
 

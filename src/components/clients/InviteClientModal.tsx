@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import Modal from "@/components/Modal";
+import { PlanGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 import {
   progressService,
   type AddClientResponse,
@@ -41,12 +43,15 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Every client is a seat: a full plan is said once, with the way to Billing.
+  const [gate, setGate] = useState<BillingError | null>(null);
 
   const reset = () => {
     setEmail("");
     setFirstName("");
     setMessage("");
     setError(null);
+    setGate(null);
   };
 
   const handleClose = () => {
@@ -63,6 +68,7 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
     }
     setSubmitting(true);
     setError(null);
+    setGate(null);
     const res = await progressService.addClient({
       email: trimmed,
       ...(firstName.trim() ? { first_name: firstName.trim() } : {}),
@@ -70,7 +76,9 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
     });
     setSubmitting(false);
     if (!res.success || !res.data) {
-      setError(res.message ?? "We couldn't send that invite. Try again.");
+      const billing = parseBillingError(res);
+      if (billing) setGate(billing);
+      else setError(res.message ?? "We couldn't send that invite. Try again.");
       return;
     }
     const result = { email: trimmed, action: res.data.action };
@@ -162,6 +170,7 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
             {error}
           </p>
         )}
+        {gate && <PlanGate gate={gate} />}
       </form>
     </Modal>
   );

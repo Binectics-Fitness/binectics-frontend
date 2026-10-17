@@ -20,6 +20,7 @@ export const SIDEBAR: NavSection[] = [
     { name: "Plans", href: "/dashboard/dietitian/plans", icon: <I><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 11v6M9 14h6"/></I> },
     { name: "Meal plans", href: "/dashboard/dietitian/meal-plans", icon: <I><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></I> },
     { name: "Food database", href: "/dashboard/dietitian/foods", icon: <I d="M3 7h18M3 12h18M3 17h12" /> },
+    { name: "Meal feedback", href: "/dashboard/dietitian/feedback", icon: <I><path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></I> },
     { name: "Programs", href: "/dashboard/dietitian/programs", icon: <I><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></I> },
   ]},
   { label: "Practice ops", items: [

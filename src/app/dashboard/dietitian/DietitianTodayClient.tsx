@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { DSStatCard } from "@/components/ds";
 import { NewPlanButton } from "./_actions";
@@ -9,6 +10,9 @@ import { useCoachTodayData } from "../trainer/_components/useCoachTodayData";
 import { progressService, type DashboardStats } from "@/lib/api/progress";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
 import { UserRole } from "@/lib/types";
+
+/** The Clients page's "Waiting on an answer" list (PendingInvites). */
+export const PENDING_INVITES_HREF = "/dashboard/dietitian/clients#pending";
 
 export default function DietitianTodayClient() {
   // Role guard: wrong-role accounts get redirected to their own dashboard.
@@ -44,7 +48,20 @@ function DietitianTodayContent() {
   const extraStats = stats
     ? [
         <DSStatCard key="requests" label="Pending requests" value={stats.pending_requests} delta="Client requests to answer" />,
-        <DSStatCard key="invites" label="Pending invitations" value={stats.pending_invitations} delta="Invites not yet accepted" />,
+        // Opens the list on the Clients page, where each can be withdrawn.
+        stats.pending_invitations > 0 ? (
+          <Link
+            key="invites"
+            href={PENDING_INVITES_HREF}
+            aria-label={`Pending invitations: ${stats.pending_invitations}. See them`}
+            className="block rounded-(--r-3) transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{ textDecoration: "none" }}
+          >
+            <DSStatCard className="h-full" label="Pending invitations" value={stats.pending_invitations} delta="Invites not yet accepted" />
+          </Link>
+        ) : (
+          <DSStatCard key="invites" label="Pending invitations" value={0} delta="Invites not yet accepted" />
+        ),
       ]
     : [];
 
@@ -56,6 +73,7 @@ function DietitianTodayContent() {
         calendarHref="/dashboard/dietitian/calendar"
         clientsHref="/dashboard/dietitian/clients"
         clientHref={(id) => `/dashboard/dietitian/clients/${id}`}
+        setupKind="dietitian"
         extraStats={extraStats}
       />
     </DietitianDashboardShell>

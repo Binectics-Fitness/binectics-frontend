@@ -45,6 +45,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/components/OnboardingBanner", () => ({ default: () => null }));
+vi.mock("@/components/provider/SetupChecklist", () => ({ SetupChecklist: () => null }));
 
 // Lagos wall clock (UTC+1) on 6 Oct 2026.
 const lagos = (h: number, dayOffset = 0) => new Date(Date.UTC(2026, 9, 6 + dayOffset, h - 1));
@@ -91,6 +92,7 @@ const props = {
   calendarHref: "/dashboard/trainer/sessions",
   clientsHref: "/dashboard/trainer/clients",
   clientHref: (id: string) => `/dashboard/trainer/clients/${id}`,
+  setupKind: "trainer" as const,
 };
 
 describe("CoachToday", () => {
@@ -133,6 +135,13 @@ describe("CoachToday", () => {
   it("says Tomorrow for a next session on the org's next day", () => {
     render(<CoachToday {...props} data={data({ bookings: [booking("t", 9, S.CONFIRMED, "Mike", 1)] })} />);
     expect(screen.getByText(/^Tomorrow /)).toBeTruthy();
+  });
+
+  it("offers the one next step when there are no active clients: invite one", async () => {
+    render(<CoachToday {...props} data={data({ clients: [] })} />);
+    expect(screen.getByText("No active clients yet.")).toBeTruthy();
+    screen.getByRole("button", { name: "Invite a client" }).click();
+    expect(await screen.findByRole("dialog", { name: "Invite a client" })).toBeTruthy();
   });
 
   it("leaves earnings out when the page has none to show", () => {

@@ -6,9 +6,12 @@
  *
  *  <EmptySlate message="…" />   — muted empty-state paragraph
  *  <EmptySlate message="…" hint="…" />  — with secondary help text
+ *  <EmptySlate message="…" action={<Link …>…</Link>} />  — with the one next step (K15)
  *
  * Both are unstyled wrt background — they inherit the parent container's bg.
  */
+
+import type { ReactNode } from "react";
 
 export interface AsyncSpinnerProps {
   /** "inline" (default): 20px spinner in a flex row. "page": 48px centred full area. */
@@ -71,15 +74,21 @@ export interface EmptySlateProps {
   hint?: string;
   /** Extra top margin class. Defaults to "mt-4". */
   mt?: string;
+  /**
+   * The one thing to do next (design-system K15: one sentence, one action),
+   * e.g. a small link or button. Leave it out where silence is earned.
+   */
+  action?: ReactNode;
 }
 
-export function EmptySlate({ message, hint, mt = "mt-4" }: EmptySlateProps) {
+export function EmptySlate({ message, hint, mt = "mt-4", action }: EmptySlateProps) {
   return (
     <div className={mt}>
       <p className="text-sm" style={{ color: "var(--fg-3)" }}>{message}</p>
       {hint && (
         <p className="text-[13px] mt-1" style={{ color: "var(--fg-4)" }}>{hint}</p>
       )}
+      {action != null && action !== false && <div className="mt-3 flex flex-wrap gap-2">{action}</div>}
     </div>
   );
 }

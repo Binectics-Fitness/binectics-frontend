@@ -9,6 +9,9 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { minorToMajor } from "@/lib/money/minorMoney";
+import { PlanGate } from "@/components/ds/PlanGate";
+import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 /**
  * Tax overview: the org's configured tax settings plus an estimate computed
@@ -20,16 +23,19 @@ export function GymTaxClient() {
   const orgId = currentOrg?._id;
   const { data: org } = useOrganizationDetails(orgId);
   const { fmtMoney } = useOrgFormat();
-  const { data: revenue = null, isLoading: loading } =
-    useQuery<OrgRevenueStats | null>({
-      queryKey: ["checkins", "orgRevenueStats", orgId ?? ""],
-      queryFn: async () => {
-        if (!orgId) return null;
-        const res = await checkinsService.getOrgRevenueStats(orgId);
-        return res.success && res.data ? res.data : null;
-      },
-      enabled: !!orgId,
-    });
+  const { data, isLoading: loading } = useQuery<{ revenue: OrgRevenueStats | null; gate: BillingError | null }>({
+    queryKey: ["checkins", "orgRevenueStats", orgId ?? ""],
+    queryFn: async () => {
+      if (!orgId) return { revenue: null, gate: null };
+      const res = await checkinsService.getOrgRevenueStats(orgId);
+      // A plan without analytics refuses the series: say so rather than
+      // show an estimate of 0 (F4).
+      return { revenue: res.success && res.data ? res.data : null, gate: parseBillingError(res) };
+    },
+    enabled: !!orgId,
+  });
+  const revenue = data?.revenue ?? null;
+  const gate = data?.gate ?? null;
 
   const taxRate = org?.tax_rate;
   const taxLabel = org?.tax_label || "VAT";
@@ -38,10 +44,12 @@ export function GymTaxClient() {
   // 30-day gross from the recorded timeseries (minor units → major).
   const gross = useMemo(() => {
     if (!revenue?.currency) return 0;
-    return (
+    // Minor units to major by the currency's own exponent, not a fixed 100.
+    return minorToMajor(
       revenue.timeseries
         .filter((r) => r.currency === revenue.currency)
-        .reduce((sum, r) => sum + r.revenue_minor, 0) / 100
+        .reduce((sum, r) => sum + r.revenue_minor, 0),
+      revenue.currency,
     );
   }, [revenue]);
 
@@ -108,6 +116,10 @@ export function GymTaxClient() {
         </div>
         {loading ? (
           <div className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading revenue…</div>
+        ) : gate ? (
+          <div className="p-4">
+            <PlanGate gate={gate} />
+          </div>
         ) : (
           <table className="w-full text-[13.5px]">
             <tbody>

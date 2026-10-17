@@ -168,4 +168,16 @@ describe("Gym overview", () => {
     expect(screen.getAllByText("$99").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("USD").length).toBeGreaterThan(0);
   });
+
+  it("opens Reviews from the rating tile (F23)", async () => {
+    renderWithProviders(<GymOverviewClient />);
+    const tile = await screen.findByRole("link", { name: /Avg rating .*see reviews/ }, { timeout: 5000 });
+    expect(tile.getAttribute("href")).toBe("/dashboard/gym-owner/reviews");
+  });
+
+  it("points an empty member list at the members page", async () => {
+    renderWithProviders(<GymOverviewClient />);
+    const add = await screen.findByRole("link", { name: "Add members" }, { timeout: 5000 });
+    expect(add.getAttribute("href")).toBe("/dashboard/gym-owner/members");
+  });
 });

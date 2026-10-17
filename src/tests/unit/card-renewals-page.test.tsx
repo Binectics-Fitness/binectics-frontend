@@ -3,9 +3,9 @@ import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import CardRenewalsClient from "@/app/dashboard/gym-owner/card-renewals/CardRenewalsClient";
+import CardRenewalsClient, { GATEWAYS_HREF } from "@/app/dashboard/gym-owner/card-renewals/CardRenewalsClient";
 import { memberBillingService, type OrgChargeView } from "@/lib/api/memberBilling";
-import { marketplaceService } from "@/lib/api/marketplace";
+import { marketplaceService, type OrgPaymentConfig } from "@/lib/api/marketplace";
 import { MembershipPlanType, MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 
 vi.mock("@/components/ds/GymDashboardShell", () => ({
@@ -57,6 +57,16 @@ const sub = {
 
 const list = vi.spyOn(memberBillingService, "listOrgCharges");
 const subs = vi.spyOn(marketplaceService, "getOrgMembershipSubscriptions");
+const gateways = vi.spyOn(marketplaceService, "getPaymentConfigs");
+const paystack = (over: Partial<OrgPaymentConfig> = {}): OrgPaymentConfig => ({
+  gateway: "paystack",
+  public_key: "pk_test_x",
+  is_active: true,
+  currencies: [],
+  webhook_url: "https://api.example.com/webhooks/paystack",
+  webhook_last_received_at: "2026-10-12T09:00:00Z",
+  ...over,
+});
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -73,6 +83,7 @@ beforeEach(() => {
   orgState.currentOrg.owner_id = "owner1";
   list.mockResolvedValue({ success: true, data: [charge(), charge({ id: "c2", status: "retry_scheduled", closed_reason: null, next_attempt_at: "2026-10-15T09:00:00Z", attempts: [{ n: 1, started_at: "2026-10-13T09:00:00Z", finished_at: null, outcome: "failed", failure_class: "soft", gateway_status: "failed" }] })] });
   subs.mockResolvedValue({ success: true, data: [sub] });
+  gateways.mockResolvedValue({ success: true, data: [paystack()] });
 });
 
 describe("Card renewals (gym owner)", () => {
@@ -125,5 +136,38 @@ describe("Card renewals (gym owner)", () => {
     list.mockResolvedValue({ success: true, data: [] });
     renderPage();
     expect(await screen.findByText(/Nothing here/)).toBeInTheDocument();
+  });
+});
+
+describe("Card renewals: what they need (F24)", () => {
+  it("says nothing when the gym's Paystack keys and webhook are working", async () => {
+    renderPage();
+    await screen.findByRole("table");
+    await waitFor(() => expect(gateways).toHaveBeenCalledWith("o1"));
+    expect(screen.queryByTestId("renewals-prerequisite")).toBeNull();
+  });
+
+  it("says renewals need the gym's own Paystack keys, with the way to add them", async () => {
+    gateways.mockResolvedValue({ success: true, data: [] });
+    renderPage();
+    const banner = await screen.findByTestId("renewals-prerequisite");
+    expect(banner).toHaveTextContent("Card renewals charge on your own Paystack account.");
+    expect(within(banner).getByRole("link", { name: "Add Paystack keys" })).toHaveAttribute("href", GATEWAYS_HREF);
+  });
+
+  it("says when Paystack's webhook hasn't arrived yet", async () => {
+    gateways.mockResolvedValue({ success: true, data: [paystack({ webhook_last_received_at: null })] });
+    renderPage();
+    const banner = await screen.findByTestId("renewals-prerequisite");
+    expect(banner).toHaveTextContent("Paystack hasn't sent Binectics a webhook yet");
+    expect(within(banner).getByRole("link", { name: "Get the webhook URL" })).toHaveAttribute("href", "/dashboard/gym-owner/settings#gateways");
+  });
+
+  it("never reads the owner's payment keys for staff", async () => {
+    authState.user.id = "staff1";
+    renderPage();
+    await screen.findByText(/Only the owner/);
+    expect(gateways).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("renewals-prerequisite")).toBeNull();
   });
 });

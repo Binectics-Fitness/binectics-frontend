@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
-import { GYM_NAV_ACCESS, allows } from "@/lib/gymStaffNav";
+import { GYM_NAV_ACCESS, allows, gymPageRule } from "@/lib/gymStaffNav";
 import { format } from "date-fns";
 import {
   AsyncSpinner,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ds";
 import type { TitleParts } from "@/components/ds";
 import OnboardingBanner from "@/components/OnboardingBanner";
+import { SetupChecklist } from "@/components/provider/SetupChecklist";
 import { NewPlanButton } from "./_actions";
 import { checkinsService } from "@/lib/api/checkins";
 import { earningsService, type RevenueTimeseriesPoint } from "@/lib/api/earnings";
@@ -41,6 +43,8 @@ import {
 } from "./revenueSpark";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const REVIEWS_HREF = "/dashboard/gym-owner/reviews";
 
 function checkInName(c: CheckIn): string {
   if (typeof c.member_user_id === "object" && c.member_user_id !== null) {
@@ -95,6 +99,10 @@ function GymOverviewContent() {
   // A role without the Overview (an assistant) is sent to its first page;
   // load nothing here meanwhile, or every request is refused.
   const canView = allows(viewer, GYM_NAV_ACCESS.Overview);
+  // Reviews and replies live on their own page; the rating tile opens it
+  // for anyone whose role does (F23).
+  const canSeeReviews = allows(viewer, gymPageRule(REVIEWS_HREF));
+  const canSeeMembers = allows(viewer, GYM_NAV_ACCESS.Members);
   const { fmtDate, fmtTime, fmtMoney } = useOrgFormat();
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
@@ -220,12 +228,29 @@ function GymOverviewContent() {
           value={stats.today_check_ins}
           delta={attendance != null ? `${attendance}% attendance` : "No active members"}
         />,
-        <DSStatCard
-          key="rating"
-          label="Avg rating"
-          value={stats.review_count > 0 ? stats.average_rating.toFixed(1) : "–"}
-          delta={stats.review_count > 0 ? `${stats.review_count} review${stats.review_count === 1 ? "" : "s"}` : "No reviews yet"}
-        />,
+        canSeeReviews ? (
+          <Link
+            key="rating"
+            href={REVIEWS_HREF}
+            className="block rounded-(--r-3) transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2"
+            aria-label={`Avg rating ${stats.review_count > 0 ? stats.average_rating.toFixed(1) : "none yet"}, see reviews`}
+            style={{ textDecoration: "none" }}
+          >
+            <DSStatCard
+              className="h-full"
+              label="Avg rating"
+              value={stats.review_count > 0 ? stats.average_rating.toFixed(1) : "–"}
+              delta={stats.review_count > 0 ? `${stats.review_count} review${stats.review_count === 1 ? "" : "s"}` : "No reviews yet"}
+            />
+          </Link>
+        ) : (
+          <DSStatCard
+            key="rating"
+            label="Avg rating"
+            value={stats.review_count > 0 ? stats.average_rating.toFixed(1) : "–"}
+            delta={stats.review_count > 0 ? `${stats.review_count} review${stats.review_count === 1 ? "" : "s"}` : "No reviews yet"}
+          />
+        ),
       ]
     : [];
 
@@ -255,6 +280,8 @@ function GymOverviewContent() {
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
       ) : null}
+
+      {canView && <SetupChecklist kind="gym" people={loading ? null : subs.length} />}
 
       {loading && !stats ? (
         <AsyncSpinner size="page" label="Loading your dashboard" />
@@ -319,7 +346,20 @@ function GymOverviewContent() {
           <DSCard>
             <DSCardHead title="Recent members" subtitle="Latest subscriptions" />
             {recentMembers.length === 0 ? (
-              <div className="px-4.5 py-4"><EmptySlate message="No members yet." hint="New subscriptions will appear here." mt="mt-0" /></div>
+              <div className="px-4.5 py-4">
+                <EmptySlate
+                  message="No members yet."
+                  hint="New subscriptions will appear here."
+                  mt="mt-0"
+                  action={
+                    canSeeMembers ? (
+                      <Link href="/dashboard/gym-owner/members" className="btn-ghost-v2 sm" style={{ textDecoration: "none" }}>
+                        Add members
+                      </Link>
+                    ) : undefined
+                  }
+                />
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-[13.5px] min-w-[600px]">

@@ -2,13 +2,19 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, PageHeader, StatusPill } from "@/components/ds";
 import { progressService } from "@/lib/api/progress";
 import type { ClientProfile } from "@/lib/api/progress";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { ClientGoalsCell } from "@/components/clients/ClientGoalsCell";
+import { PendingInvites } from "@/components/clients/PendingInvites";
+import { queryKeys } from "@/lib/queries/keys";
+import {
+  InviteClientModal,
+  type InviteClientResult,
+} from "@/components/clients/InviteClientModal";
 
 type Filter = "All" | "Active" | "Paused";
 
@@ -37,6 +43,11 @@ export default function DietitianClientsPage() {
   const { fmtDate } = useOrgFormat();
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
+  // Dietitians work on the web only, so this is where they invite (F5): the
+  // same invite-by-email flow as the trainer's Clients page.
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invited, setInvited] = useState<InviteClientResult | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading: loading, isError } = useQuery<ClientProfile[]>({
     queryKey: ["progress", "myClientProfiles"],
@@ -67,13 +78,45 @@ export default function DietitianClientsPage() {
 
   const FILTERS: { label: Filter }[] = [{ label: "All" }, { label: "Active" }, { label: "Paused" }];
 
+  const onInvited = (result: InviteClientResult) => {
+    setInvited(result);
+    // The new invite joins the "Waiting on an answer" list.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.progress.invitations() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.progress.sentRequests() });
+  };
+
   return (
+    <>
+      {/* Beside the shell, not in its body: an overlay, not page content. */}
+      <InviteClientModal open={inviteOpen} onClose={() => setInviteOpen(false)} onInvited={onInvited} />
     <DietitianDashboardShell activeItem="Clients" crumb="Clients">
       <PageHeader
         className="mb-0!"
         title={{ emphasis: "Clients" }}
         subtitle={loading ? "Loading…" : `${clients.length} total clients`}
+        actions={
+          <button type="button" className="btn-primary-v2 md" onClick={() => setInviteOpen(true)}>
+            Invite client
+          </button>
+        }
       />
+
+      {invited && (
+        <div
+          role="status"
+          className="rounded-(--r-2) px-4 py-3 text-[13px] flex items-start justify-between gap-3"
+          style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}
+        >
+          <span>
+            {invited.action === "request_sent"
+              ? `${invited.email} already has a Binectics account. We've asked them to approve you as their dietitian, and they'll appear here once they do.`
+              : `${invited.email} isn't on Binectics yet. We've emailed them an invite to sign up, and they'll appear here once they join.`}
+          </span>
+          <button type="button" onClick={() => setInvited(null)} className="shrink-0 underline">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -85,6 +128,8 @@ export default function DietitianClientsPage() {
           <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
       </div>
+
+      <PendingInvites />
 
       {/* Toolbar */}
       <DSCard className="p-[10px_14px] flex gap-3.5 items-center flex-wrap">
@@ -138,8 +183,26 @@ export default function DietitianClientsPage() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={4} className="px-4.5 py-6"><AsyncSpinner label="Loading clients" /></td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message="No clients found." mt="mt-0" /></td></tr>
+              ) : clients.length === 0 && !isError ? (
+                <tr>
+                  <td colSpan={4} className="px-4.5 py-8">
+                    <p className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>No clients yet</p>
+                    <p className="text-[13px] mt-1 max-w-prose" style={{ color: "var(--fg-3)" }}>
+                      Invite someone you already work with by email, or accept a connection request from members who
+                      found you on the marketplace.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <button type="button" className="btn-primary-v2 sm" onClick={() => setInviteOpen(true)}>
+                        Invite client
+                      </button>
+                      <Link href="/dashboard/marketplace/requests" className="btn-ghost-v2 sm">
+                        See requests
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : isError ? null : filtered.length === 0 ? (
+                <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message={search.trim() ? "No clients match your search." : "No clients in this view."} mt="mt-0" /></td></tr>
               ) : (
                 filtered.map((c) => (
                   <tr key={c._id} className="hover:bg-[var(--bg-2)] cursor-pointer">
@@ -170,5 +233,6 @@ export default function DietitianClientsPage() {
         </div>
       </DSCard>
     </DietitianDashboardShell>
+    </>
   );
 }
