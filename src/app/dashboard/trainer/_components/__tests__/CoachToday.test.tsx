@@ -45,7 +45,10 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/components/OnboardingBanner", () => ({ default: () => null }));
-vi.mock("@/components/provider/SetupChecklist", () => ({ SetupChecklist: () => null }));
+const checklistPeople = vi.fn();
+vi.mock("@/components/provider/SetupChecklist", () => ({
+  SetupChecklist: ({ people }: { people: number | null }) => (checklistPeople(people), null),
+}));
 
 // Lagos wall clock (UTC+1) on 6 Oct 2026.
 const lagos = (h: number, dayOffset = 0) => new Date(Date.UTC(2026, 9, 6 + dayOffset, h - 1));
@@ -142,6 +145,14 @@ describe("CoachToday", () => {
     expect(screen.getByText("No active clients yet.")).toBeTruthy();
     screen.getByRole("button", { name: "Invite a client" }).click();
     expect(await screen.findByRole("dialog", { name: "Invite a client" })).toBeTruthy();
+  });
+
+  it("gives the setup checklist the client count, or null when the list couldn't be read", () => {
+    const { unmount } = render(<CoachToday {...props} data={data({ clients: [] })} />);
+    expect(checklistPeople).toHaveBeenLastCalledWith(0);
+    unmount();
+    render(<CoachToday {...props} data={data({ clients: [], clientsFailed: true })} />);
+    expect(checklistPeople).toHaveBeenLastCalledWith(null);
   });
 
   it("leaves earnings out when the page has none to show", () => {

@@ -1111,9 +1111,15 @@ export default function ProgramsManager({
     return templates;
   }, [templates, filter]);
 
-  const openCreate = () => setModal({ mode: "create", initial: EMPTY_PROGRAM_FORM, loading: false });
+  // Each open and each attempt starts without the last refusal: a gate is
+  // about the thing just tried, never a stale one (a publish's in the builder).
+  const openCreate = () => {
+    setGate(null);
+    setModal({ mode: "create", initial: EMPTY_PROGRAM_FORM, loading: false });
+  };
 
   const openEdit = async (t: ProgramTemplate) => {
+    setGate(null);
     setModal({ mode: "edit", initial: EMPTY_PROGRAM_FORM, loading: true, id: t._id });
     const res = await programsService.getTemplate(t._id);
     if (res.success && res.data) {
@@ -1125,6 +1131,7 @@ export default function ProgramsManager({
   };
 
   const handleCreate = async (form: ProgramFormState) => {
+    setGate(null);
     const res = await programsService.createTemplate(formToPayload(form));
     if (res.success && res.data) {
       setTemplates((t) => [res.data!.template, ...t]);
@@ -1136,6 +1143,7 @@ export default function ProgramsManager({
   };
 
   const handleEdit = async (form: ProgramFormState) => {
+    setGate(null);
     const id = modal?.id;
     if (!id) return;
     const res = await programsService.updateTemplate(id, formToPayload(form));
@@ -1149,6 +1157,7 @@ export default function ProgramsManager({
   };
 
   const handlePublish = async (t: ProgramTemplate) => {
+    setGate(null);
     if (!confirm(`Publish "${t.name}"? This freezes the current version so you can assign it. Later edits start a new draft.`)) return;
     const res = await programsService.publishTemplate(t._id);
     if (res.success && res.data) {
@@ -1160,6 +1169,7 @@ export default function ProgramsManager({
   };
 
   const handleArchive = async (t: ProgramTemplate) => {
+    setGate(null);
     if (!confirm(`Archive "${t.name}"? It will disappear from this list. Assigned clients keep their programs.`)) return;
     const res = await programsService.archiveTemplate(t._id);
     if (res.success) {

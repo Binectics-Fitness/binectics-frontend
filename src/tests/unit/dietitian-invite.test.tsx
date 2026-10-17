@@ -114,6 +114,20 @@ describe("Invites waiting on an answer (F20)", () => {
     expect(cancelRequest).toHaveBeenCalledWith("req1");
   });
 
+  it("says an invite past its date lapsed, rather than 'lapses' in the past", async () => {
+    vi.spyOn(progressService, "getMyClientInvitations").mockResolvedValue({
+      success: true,
+      data: [
+        invitation({ expires_at: "2020-01-01T00:00:00Z" }),
+        invitation({ _id: "inv3", id: "inv3", email: "new@example.com", expires_at: "2099-01-01T00:00:00Z" }),
+      ],
+    });
+    renderPage();
+    const list = (await screen.findByText("Waiting on an answer")).closest("section")!;
+    expect(within(list).getByText(/^Invite lapsed .* withdraw it and invite again$/)).toBeInTheDocument();
+    expect(within(list).getByText(/^Invited to sign up · lapses /)).toBeInTheDocument();
+  });
+
   it("is where the Today page's pending-invitations tile goes", () => {
     expect(PENDING_INVITES_HREF).toBe(`/dashboard/dietitian/clients#${PENDING_INVITES_ID}`);
   });

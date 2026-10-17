@@ -159,7 +159,8 @@ describe("Card renewals: what they need (F24)", () => {
     gateways.mockResolvedValue({ success: true, data: [paystack({ webhook_last_received_at: null })] });
     renderPage();
     const banner = await screen.findByTestId("renewals-prerequisite");
-    expect(banner).toHaveTextContent("Paystack hasn't sent Binectics a webhook yet");
+    expect(banner).toHaveTextContent("No webhook from Paystack yet.");
+    expect(banner).toHaveTextContent("this clears after the first payment");
     expect(within(banner).getByRole("link", { name: "Get the webhook URL" })).toHaveAttribute("href", "/dashboard/gym-owner/settings#gateways");
   });
 

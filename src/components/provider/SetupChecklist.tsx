@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
 import { allows, gymPageRule, gymViewer } from "@/lib/gymStaffNav";
+import { consultationsService } from "@/lib/api/consultations";
 import { onboardingService } from "@/lib/api/onboarding";
 import { useOnboardingStatus } from "@/lib/queries/onboarding";
 import { queryKeys } from "@/lib/queries/keys";
@@ -17,87 +18,54 @@ import {
   useOrgMembershipPlans,
   useOrgPaymentConfigs,
 } from "@/lib/queries/marketplace";
-import { setupSteps, type SetupKind, type SetupStep } from "@/lib/provider/setupSteps";
+import {
+  SETUP_HREFS,
+  coachSetupSteps,
+  gymSetupSteps,
+  type CoachKind,
+  type SetupKind,
+  type SetupStep,
+} from "@/lib/provider/setupSteps";
 
 export interface SetupChecklistProps {
   kind: SetupKind;
   /**
    * Clients (trainer, dietitian) or members (gym), from the page, which
-   * loads them anyway. Null while they load: the card waits rather than
-   * flash "Add your first client" at someone who has fifty.
+   * loads them anyway. Null while they load, or when they couldn't be read:
+   * the card waits rather than tell someone with fifty clients to add one.
    */
   people: number | null;
 }
 
 /**
  * A new provider's live setup checklist (discoverability F9): what's left
- * before members can find, join and pay them, read from the API. Shown on
- * the trainer and dietitian Today and the gym Overview, once the setup
- * wizard is done (OnboardingBanner covers the time before that).
+ * before members can find, book, join and pay them, read from the API
+ * (lib/provider/setupSteps). Shown on the trainer and dietitian Today and
+ * the gym Overview, once the setup wizard is done (OnboardingBanner covers
+ * the time before that).
  *
  * It hides itself when every step is done, or when the provider hides it.
  * Hiding uses the onboarding walkthrough flag, the same per-user,
- * cross-device flag OnboardingBanner's "Later" sets, so a provider who put
- * the setup guide away isn't shown it again under another name.
+ * cross-device flag the coach app's checklist and OnboardingBanner use;
+ * ShowSetupChecklist (in each provider's Settings) brings it back.
  *
  * Who sees what:
- * - A gym's trainer (useCoachingGym) sees none of it: the gym sets up.
+ * - A gym's trainer gets the coach steps without the listing (as on mobile).
  * - A gym's staff see only the steps whose page their role opens
  *   (lib/gymStaffNav), never the payment keys, which are the owner's.
  */
 export function SetupChecklist({ kind, people }: SetupChecklistProps) {
+  return kind === "gym" ? <GymChecklist people={people} /> : <CoachChecklist kind={kind} people={people} />;
+}
+
+/** Whether the checklist is for this person at all, and the Hide state they share. */
+function useChecklistVisibility() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const org = useOptionalOrganization()?.currentOrg ?? null;
-  const orgId = org?._id;
-  const coachingGym = useCoachingGym();
-  const viewer = gymViewer(org, user?.id);
-  // No workspace yet means nobody else owns it either.
-  const isOwner = !org || viewer.isOwner;
-  const gym = kind === "gym";
-
-  // Coaches set up their own practice; a gym's trainer has nothing to set.
-  const applies = !!user?.is_onboarding_complete && (gym || (!coachingGym && isOwner));
-  const visible = (href: string) => !gym || allows(viewer, gymPageRule(href.split("#")[0]));
-  // Steps whose data this viewer may read, so nothing is asked for that the
-  // API would refuse (staff without the listing page, payment keys).
-  const wantsListing = applies && (gym ? visible("/dashboard/profile-edit") : true);
-  const wantsPlans = applies && !!orgId && visible(gym ? "/dashboard/gym-owner/plans" : "/");
-  const wantsPayments = applies && !!orgId && isOwner;
-
+  const applies = !!user?.is_onboarding_complete;
   const status = useOnboardingStatus(applies);
-  const orgListing = useOrgListing(orgId, wantsListing && gym);
-  const myListing = useMyListing(wantsListing && !gym);
-  const plans = useOrgMembershipPlans(orgId, wantsPlans);
-  const payments = useOrgPaymentConfigs(wantsPayments ? orgId : undefined);
-
   // Optimistic hide; the server flag (refetched) is the truth.
   const [hidden, setHidden] = useState(false);
-
-  if (!applies || hidden) return null;
-  const listingQuery = gym ? orgListing : myListing;
-  const loading =
-    status.isLoading ||
-    people == null ||
-    (wantsListing && listingQuery.isLoading) ||
-    (wantsPlans && plans.isLoading) ||
-    (wantsPayments && payments.isLoading);
-  if (loading || status.data?.is_dismissed) return null;
-
-  const steps = setupSteps(kind, {
-    listing: listingQuery.data ?? null,
-    activePlans: (plans.data ?? []).filter((p) => p.is_active).length,
-    payments: wantsPayments ? (payments.data ?? []) : null,
-    people,
-  }).filter((s) => {
-    if (s.key === "listing") return wantsListing;
-    if (s.key === "plans") return wantsPlans || (!gym && !orgId);
-    return visible(s.href);
-  });
-
-  const done = steps.filter((s) => s.done).length;
-  if (steps.length === 0 || done === steps.length) return null;
-
   const hide = async () => {
     setHidden(true);
     try {
@@ -109,7 +77,92 @@ export function SetupChecklist({ kind, people }: SetupChecklistProps) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.onboarding.status() });
     }
   };
+  return {
+    applies,
+    loading: status.isLoading,
+    hidden: hidden || !!status.data?.is_dismissed,
+    hide,
+  };
+}
 
+function CoachChecklist({ kind, people }: { kind: CoachKind; people: number | null }) {
+  const vis = useChecklistVisibility();
+  const staffTrainer = !!useCoachingGym();
+  const listing = useMyListing(vis.applies && !staffTrainer);
+  const rules = useQuery({
+    queryKey: ["consultations", "myAvailability"],
+    queryFn: async () => {
+      const res = await consultationsService.getMyAvailability();
+      return res.success && Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: vis.applies,
+  });
+  const ownTypes = useQuery({
+    queryKey: ["consultations", "ownTypes"],
+    queryFn: async () => {
+      const res = await consultationsService.getOwnTypes();
+      return res.success && Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: vis.applies,
+  });
+
+  if (!vis.applies || vis.hidden) return null;
+  if (vis.loading || people == null || (!staffTrainer && listing.isLoading) || rules.isLoading || ownTypes.isLoading) {
+    return null;
+  }
+  const steps = coachSetupSteps(kind, {
+    listing: staffTrainer ? null : (listing.data ?? null),
+    rules: rules.data ?? [],
+    ownTypes: ownTypes.data ?? [],
+    people,
+    staffTrainer,
+  });
+  return <ChecklistCard steps={steps} onHide={vis.hide} />;
+}
+
+function GymChecklist({ people }: { people: number | null }) {
+  const { user } = useAuth();
+  const vis = useChecklistVisibility();
+  const org = useOptionalOrganization()?.currentOrg ?? null;
+  const orgId = org?._id;
+  const viewer = gymViewer(org, user?.id);
+  const opens = (href: string) => allows(viewer, gymPageRule(href.split("#")[0]));
+  // Only what this viewer may read, so nothing is asked for that the API
+  // would refuse (staff without the listing page; the owner's keys).
+  const wantsListing = vis.applies && !!orgId && opens(SETUP_HREFS.gym.listing);
+  const wantsPlans = vis.applies && !!orgId && opens(SETUP_HREFS.gym.plans);
+  const wantsPayments = vis.applies && !!orgId && viewer.isOwner;
+
+  const listing = useOrgListing(orgId, wantsListing);
+  const plans = useOrgMembershipPlans(orgId, wantsPlans);
+  const payments = useOrgPaymentConfigs(wantsPayments ? orgId : undefined);
+
+  if (!vis.applies || vis.hidden || !orgId) return null;
+  if (
+    vis.loading ||
+    people == null ||
+    (wantsListing && listing.isLoading) ||
+    (wantsPlans && plans.isLoading) ||
+    (wantsPayments && payments.isLoading)
+  ) {
+    return null;
+  }
+  const steps = gymSetupSteps({
+    listing: listing.data ?? null,
+    activePlans: (plans.data ?? []).filter((p) => p.is_active).length,
+    payments: wantsPayments ? (payments.data ?? []) : null,
+    people,
+  }).filter((s) => {
+    if (s.key === "listing") return wantsListing;
+    if (s.key === "plans") return wantsPlans;
+    return opens(s.href);
+  });
+  return <ChecklistCard steps={steps} onHide={vis.hide} />;
+}
+
+function ChecklistCard({ steps, onHide }: { steps: SetupStep[]; onHide: () => Promise<void> }) {
+  const done = steps.filter((s) => s.done).length;
+  if (steps.length === 0 || done === steps.length) return null;
   return (
     <section
       aria-labelledby="setup-checklist-title"
@@ -128,7 +181,7 @@ export function SetupChecklist({ kind, people }: SetupChecklistProps) {
         </div>
         <button
           type="button"
-          onClick={() => void hide()}
+          onClick={() => void onHide()}
           aria-label="Hide the setup checklist"
           className="min-h-11 -my-2 px-2 text-[13px] underline underline-offset-2 shrink-0"
           style={{ color: "var(--fg-2)" }}
@@ -172,5 +225,56 @@ function StepRow({ step }: { step: SetupStep }) {
       </span>
       <ChevronRight aria-hidden size={16} style={{ color: "var(--fg-3)" }} className="shrink-0" />
     </Link>
+  );
+}
+
+/**
+ * The way back after Hide, in each provider's Settings (like the coach
+ * app's "Show setup checklist" on Me). Only there while the checklist is
+ * hidden; it clears the same walkthrough flag Hide set.
+ */
+export function ShowSetupChecklist({ where, className = "" }: { where: "Today" | "Overview"; className?: string }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const applies = !!user?.is_onboarding_complete;
+  const status = useOnboardingStatus(applies);
+  const [state, setState] = useState<"idle" | "busy" | "shown" | "failed">("idle");
+
+  if (!applies || (!status.data?.is_dismissed && state !== "shown")) return null;
+
+  const reopen = async () => {
+    setState("busy");
+    try {
+      const res = await onboardingService.walkthroughReopen();
+      setState(res.success ? "shown" : "failed");
+    } catch {
+      setState("failed");
+    } finally {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.onboarding.status() });
+    }
+  };
+
+  return (
+    <div
+      data-testid="show-setup-checklist"
+      className={`${className} flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-(--r-3) px-4.5 py-3.5`}
+      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+    >
+      <div className="min-w-0">
+        <h2 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Setup checklist</h2>
+        <p role="status" className="text-[12.5px] mt-0.5" style={{ color: state === "failed" ? "var(--danger)" : "var(--fg-3)" }}>
+          {state === "shown"
+            ? `Back on your ${where}.`
+            : state === "failed"
+              ? "We couldn't bring it back. Try again."
+              : `Hidden from your ${where}.`}
+        </p>
+      </div>
+      {state !== "shown" && (
+        <button type="button" className="btn-ghost-v2 sm shrink-0" disabled={state === "busy"} onClick={() => void reopen()}>
+          Show setup checklist
+        </button>
+      )}
+    </div>
   );
 }

@@ -49,7 +49,8 @@ export function renewalsPrerequisite(configs: OrgPaymentConfig[]): { text: strin
   // Null: no webhook yet. Absent (an older API): not held against anyone.
   if (paystack.webhook_last_received_at === null) {
     return {
-      text: "Paystack hasn't sent Binectics a webhook yet, so renewals can't confirm. Add the webhook URL in your Paystack dashboard.",
+      // Null until Paystack's first payment notice, so this can't say "wrong".
+      text: "No webhook from Paystack yet. Renewals confirm through it: add the webhook URL in your Paystack dashboard. If you already have, this clears after the first payment.",
       action: "Get the webhook URL",
     };
   }

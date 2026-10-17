@@ -107,6 +107,8 @@ function GymOverviewContent() {
 
   const [stats, setStats] = useState<OrgCheckInDashboardStats | null>(null);
   const [subs, setSubs] = useState<MembershipSubscription[]>([]);
+  // Unread members are unknown, not "no members yet" (the setup checklist).
+  const [subsFailed, setSubsFailed] = useState(false);
   // null: the ledger series couldn't be read (it is owner-only).
   const [series, setSeries] = useState<RevenueTimeseriesPoint[] | null>(null);
   const now = useClientNow();
@@ -136,9 +138,9 @@ function GymOverviewContent() {
         setStats(statsRes.value.data);
         statsOk = true;
       }
-      if (subsRes.status === "fulfilled" && subsRes.value.success && subsRes.value.data) {
-        setSubs(subsRes.value.data);
-      }
+      const subsOk = subsRes.status === "fulfilled" && subsRes.value.success && !!subsRes.value.data;
+      if (subsOk) setSubs(subsRes.value.data!);
+      setSubsFailed(!subsOk);
       // Cleared on failure so another org's series never lingers.
       setSeries(
         seriesRes.status === "fulfilled" && seriesRes.value?.success && seriesRes.value.data ? seriesRes.value.data : null,
@@ -281,7 +283,7 @@ function GymOverviewContent() {
         </div>
       ) : null}
 
-      {canView && <SetupChecklist kind="gym" people={loading ? null : subs.length} />}
+      {canView && <SetupChecklist kind="gym" people={loading || subsFailed ? null : subs.length} />}
 
       {loading && !stats ? (
         <AsyncSpinner size="page" label="Loading your dashboard" />

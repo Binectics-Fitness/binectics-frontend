@@ -249,4 +249,67 @@ describe("Programs when the plan refuses a publish", () => {
     );
     expect(screen.getByRole("link", { name: "See plans" })).toBeInTheDocument();
   });
+
+  it("never carries a publish refusal into the builder", async () => {
+    const draft = {
+      _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
+      latest_version_no: 1, latest_published_version_no: 0, created_at: "", updated_at: "",
+    };
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [draft as never] });
+    vi.spyOn(programsService, "publishTemplate").mockResolvedValue(featureRefusal("health_auto_tasks_enabled"));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithQuery(<ProgramsManager config={config} />);
+    await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /New program/ }));
+    expect(await screen.findByRole("button", { name: "Create draft" })).toBeInTheDocument();
+    expect(screen.queryByTestId("plan-gate")).toBeNull();
+  });
+});
+
+describe("Programs: refused, then successful", () => {
+  const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+
+  it("shows no stale gate after the next publish works", async () => {
+    const draft = {
+      _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
+      latest_version_no: 2, latest_published_version_no: 1, created_at: "", updated_at: "",
+    };
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [draft as never] });
+    vi.spyOn(programsService, "publishTemplate")
+      .mockResolvedValueOnce(featureRefusal("health_auto_tasks_enabled"))
+      .mockResolvedValueOnce({ success: true, data: { template: draft } as never });
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithQuery(<ProgramsManager config={config} />);
+    await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+    await waitFor(() => expect(screen.queryByTestId("plan-gate")).toBeNull());
+  });
+});
+
+describe("Seat cap wording", () => {
+  const seatCap: BillingError = {
+    kind: "limit",
+    message: "",
+    resource: "max_active_members",
+    planTier: "free",
+    limit: 10,
+    currentUsage: 10,
+  };
+
+  it("calls a trainer's or dietitian's seats clients", () => {
+    org.account_type = "personal_trainer";
+    renderWithQuery(<PlanGate gate={seatCap} />);
+    expect(screen.getByTestId("plan-gate")).toHaveTextContent("Your Free plan includes 10 active clients, and you're using all of them.");
+    delete org.account_type;
+  });
+
+  it("keeps a gym's seats members", () => {
+    org.account_type = "gym_owner";
+    renderWithQuery(<PlanGate gate={seatCap} />);
+    expect(screen.getByTestId("plan-gate")).toHaveTextContent("10 active members");
+    delete org.account_type;
+  });
 });

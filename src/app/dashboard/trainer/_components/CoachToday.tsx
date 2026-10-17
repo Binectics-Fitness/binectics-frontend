@@ -187,7 +187,8 @@ export function CoachToday({
         </div>
       ) : null}
 
-      <SetupChecklist kind={setupKind} people={loading ? null : clients.length} />
+      {/* Unknown (loading, or the list failed) is not "no clients yet". */}
+      <SetupChecklist kind={setupKind} people={loading || data.clientsFailed ? null : clients.length} />
 
       {loading || !schedule ? (
         <AsyncSpinner size="page" label="Loading your dashboard" />

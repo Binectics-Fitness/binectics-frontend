@@ -14,6 +14,8 @@ export interface CoachTodayData {
   error: string | null;
   /** This month's settled earnings, formatted; null when not shown. */
   settled: string | null;
+  /** The client list couldn't be read: an empty `clients` means unknown, not none. */
+  clientsFailed?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export function useCoachTodayData(): CoachTodayData {
   const [loadedAt, setLoadedAt] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [clientsFailed, setClientsFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -39,10 +42,12 @@ export function useCoachTodayData(): CoachTodayData {
       if (!active) return;
 
       let anyOk = false;
-      if (clientsRes.status === "fulfilled" && clientsRes.value.success && clientsRes.value.data) {
-        setClients(clientsRes.value.data);
+      const clientsOk = clientsRes.status === "fulfilled" && clientsRes.value.success && !!clientsRes.value.data;
+      if (clientsOk) {
+        setClients(clientsRes.value.data!);
         anyOk = true;
       }
+      setClientsFailed(!clientsOk);
       if (bookingsRes.status === "fulfilled" && bookingsRes.value.success && bookingsRes.value.data) {
         setBookings(bookingsRes.value.data);
         anyOk = true;
@@ -58,5 +63,5 @@ export function useCoachTodayData(): CoachTodayData {
     };
   }, []);
 
-  return { clients, bookings, loadedAt, loading, error, settled };
+  return { clients, bookings, loadedAt, loading, error, settled, clientsFailed };
 }

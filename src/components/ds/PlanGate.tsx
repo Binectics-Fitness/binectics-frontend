@@ -7,6 +7,7 @@ import { useOptionalOrganization } from "@/contexts/OrganizationContext";
 import { gymViewer } from "@/lib/gymStaffNav";
 import { providerBillingApi, type ProviderBillingFeatures } from "@/lib/api/providerBilling";
 import { billingResourceLabel, type BillingError } from "@/lib/utils/billingErrors";
+import { AccountType, UserRole } from "@/lib/types";
 
 /** Where an owner sees and changes their Binectics plan. */
 export const PLAN_GATE_HREF = "/dashboard/billing";
@@ -20,9 +21,12 @@ function tierLabel(tier: string | null): string {
 /**
  * One sentence saying what the plan includes, from a billing refusal
  * (parseBillingError): "Your Free plan doesn't include class schedules."
+ * A coach's seats are their clients, so `people: "clients"` names them so
+ * (the API counts both against max_active_members).
  */
-export function planGateSentence(gate: BillingError): string {
-  const label = billingResourceLabel(gate.resource);
+export function planGateSentence(gate: BillingError, people: "members" | "clients" = "members"): string {
+  const label =
+    gate.resource === "max_active_members" && people === "clients" ? "active clients" : billingResourceLabel(gate.resource);
   const tier = tierLabel(gate.planTier);
   if (gate.kind === "limit" && gate.limit != null && gate.limit > 0) {
     return `Your ${tier} plan includes ${gate.limit} ${label}, and you're using all of them.`;
@@ -91,8 +95,17 @@ export interface PlanGateProps {
  * who can't buy a plan, are told to ask the gym's owner. Never shown
  * pre-emptively: only where the user reached for the gated thing.
  */
+/** Whose seats the workspace counts: a gym's members, or a coach's clients. */
+function usePeopleNoun(): "members" | "clients" {
+  const { user } = useAuth();
+  const org = useOptionalOrganization()?.currentOrg ?? null;
+  if (org?.account_type) return org.account_type === AccountType.GYM_OWNER ? "members" : "clients";
+  return user?.role === UserRole.TRAINER || user?.role === UserRole.DIETITIAN ? "clients" : "members";
+}
+
 export function PlanGate({ gate, canUpgrade, className = "" }: PlanGateProps) {
   const owner = usePlanOwner();
+  const people = usePeopleNoun();
   const upgrade = canUpgrade ?? owner;
   return (
     <div
@@ -102,7 +115,7 @@ export function PlanGate({ gate, canUpgrade, className = "" }: PlanGateProps) {
       style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
     >
       <p className="flex-1 min-w-[200px] text-[13.5px] leading-normal" style={{ color: "var(--ink)" }}>
-        {planGateSentence(gate)}
+        {planGateSentence(gate, people)}
       </p>
       {upgrade ? (
         <Link href={PLAN_GATE_HREF} className="btn-ghost-v2 sm shrink-0" style={{ textDecoration: "none" }}>

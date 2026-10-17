@@ -8,6 +8,7 @@ import { progressService, type ClientInvitation, type ClientRequestItem } from "
 import { useClientInvitations, useSentClientRequests } from "@/lib/queries/progress";
 import { queryKeys } from "@/lib/queries/keys";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { useClientNow } from "@/lib/ui/useClientNow";
 
 /** The anchor the Today page's "Pending invitations" tile opens. */
 export const PENDING_INVITES_ID = "pending";
@@ -40,6 +41,9 @@ export function PendingInvites() {
   const invitations = useClientInvitations();
   const requests = useSentClientRequests();
   const [busy, setBusy] = useState<string | null>(null);
+  const now = useClientNow();
+  // A sign-up link past its date no longer works: say it lapsed, not "lapses".
+  const lapsed = (iso: string) => !!now && new Date(iso).getTime() < now.getTime();
 
   const rows: Row[] = [
     ...(invitations.data ?? [])
@@ -48,7 +52,9 @@ export function PendingInvites() {
         id: i._id ?? i.id,
         kind: "invitation",
         who: i.first_name ? `${i.first_name} · ${i.email}` : i.email,
-        what: `Invited to sign up · lapses ${fmtDate(i.expires_at)}`,
+        what: lapsed(i.expires_at)
+          ? `Invite lapsed ${fmtDate(i.expires_at)} · withdraw it and invite again`
+          : `Invited to sign up · lapses ${fmtDate(i.expires_at)}`,
       })),
     ...(requests.data ?? [])
       .filter((r: ClientRequestItem) => r.status === "pending")

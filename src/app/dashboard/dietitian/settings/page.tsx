@@ -6,11 +6,14 @@ import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
 
 export default function DietitianSettingsPage() {
   const { currentOrg } = useOrganization();
   return (
     <DietitianDashboardShell activeItem="Settings" crumb="Settings">
+      {/* Only while the Today setup checklist is hidden: the way back. */}
+      <ShowSetupChecklist where="Today" className="mb-8" />
       <ConsultationAvailabilityManager description="Set the weekly hours members can book consultations with you, plus any blocked dates. Members book from your marketplace listing." />
       {/* Membership plans charge on the org's own keys when connected, and
           can then use currencies that account has enabled. */}
