@@ -492,8 +492,22 @@ export interface MyProviders {
     /** Role name, e.g. "Personal Trainer" or "Dietitian". */
     role: string | null;
     since: string | null;
+    /** Their listing, when one is published and opens; null otherwise. */
+    listing?: MyProviderListing | null;
   }[];
-  gyms: { organization_id: string; name: string | null }[];
+  gyms: {
+    organization_id: string;
+    name: string | null;
+    /** The branch the member joined, else the gym's newest open listing. */
+    listing?: MyProviderListing | null;
+  }[];
+}
+
+/** The listing summary /marketplace/my-providers attaches (api #154). */
+export interface MyProviderListing {
+  _id: string;
+  headline?: string;
+  account_type?: string;
 }
 
 export const marketplaceService = {

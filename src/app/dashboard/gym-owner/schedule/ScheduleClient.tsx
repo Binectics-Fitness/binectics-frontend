@@ -114,7 +114,7 @@ function ClassCard({ gymClass: c, twelveHour }: { gymClass: GymClass; twelveHour
       </div>
       <div className="text-[13px] font-medium mt-1 leading-snug" style={{ color: "var(--ink)" }}>{c.name}</div>
       <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>
-        {c.instructor_name ? `${c.instructor_name} · ` : ""}cap {c.capacity}{c.waitlist_enabled ? " · WL" : ""}
+        {c.instructor_name ? `${c.instructor_name} · ` : ""}cap {c.capacity}{c.waitlist_enabled ? " · waitlist" : ""}
       </div>
     </Link>
   );

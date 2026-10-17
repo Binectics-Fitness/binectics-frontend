@@ -11,6 +11,7 @@ import { checkinsService } from "@/lib/api/checkins";
 import { dayUnit, isPersonalBest, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
+import { useCheckInPoints } from "@/lib/loyalty/checkInPoints";
 import { formatDate } from "@/utils/format";
 
 type Outcome =
@@ -23,6 +24,8 @@ type Outcome =
       checkedInAt: string | null;
       /** Read after the scan; null if that read failed. */
       stats: StreakStats | null;
+      /** The gym the API checked the member in at (its points ledger). */
+      organizationId: string | null;
     }
   | { state: "already"; gymName: string }
   | {
@@ -102,7 +105,13 @@ function CheckInScanContent() {
         } catch {
           stats = null;
         }
-        setOutcome({ state: "success", gymName, checkedInAt: res.data?.checked_in_at ?? null, stats });
+        setOutcome({
+          state: "success",
+          gymName,
+          checkedInAt: res.data?.checked_in_at ?? null,
+          stats,
+          organizationId: res.data?.organization_id ?? null,
+        });
         return;
       }
 
@@ -136,7 +145,6 @@ function CheckInScanContent() {
     };
 
     void run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gymId, qrToken]);
 
   return (
@@ -186,6 +194,7 @@ function CheckInScanContent() {
             gymName={outcome.gymName}
             checkedInAt={outcome.checkedInAt}
             stats={outcome.stats}
+            organizationId={outcome.organizationId}
             firstName={user?.first_name?.trim() || null}
             onDone={() => router.push("/dashboard/member")}
           />
@@ -308,23 +317,29 @@ function clockOf(iso: string | null): string | null {
  * figure is real: the time is the API's checked_in_at, the streak comes
  * from dashboard-stats after the scan, and "Personal best" appears only
  * when the API sends a longest streak (API #191) that this one has reached.
+ * Where the gym runs its own loyalty program, one line says what this
+ * check-in earned there (F14); everywhere else, nothing.
  */
 function CheckInSuccess({
   gymName,
   checkedInAt,
   stats,
+  organizationId,
   firstName,
   onDone,
 }: {
   gymName: string;
   checkedInAt: string | null;
   stats: StreakStats | null;
+  organizationId: string | null;
   firstName: string | null;
   onDone: () => void;
 }) {
   const time = clockOf(checkedInAt);
   const streak = stats?.current_streak_days ?? 0;
   const best = stats ? isPersonalBest(stats) : false;
+  const pointsLine = useCheckInPoints(organizationId, checkedInAt);
+  const showStreak = !!stats && streak > 0;
   return (
     <SuccessTakeover
       status={time ? `Checked in · ${time}` : "Checked in"}
@@ -334,16 +349,30 @@ function CheckInSuccess({
       primaryAction={{ label: "Done", onClick: onDone }}
       onDismiss={onDone}
     >
-      {stats && streak > 0 && (
-        <HeroStatCard
-          surface="raised"
-          align="center"
-          eyebrow="Streak"
-          value={streak}
-          unit={dayUnit(streak)}
-          footnote={best ? <span style={{ color: "var(--signal)" }}>Personal best</span> : (longestStreakLine(stats) ?? undefined)}
-        />
-      )}
+      {showStreak || pointsLine ? (
+        <>
+          {showStreak && (
+            <HeroStatCard
+              surface="raised"
+              align="center"
+              eyebrow="Streak"
+              value={streak}
+              unit={dayUnit(streak)}
+              footnote={best ? <span style={{ color: "var(--signal)" }}>Personal best</span> : (longestStreakLine(stats) ?? undefined)}
+            />
+          )}
+          {pointsLine && (
+            <p
+              className={`${showStreak ? "mt-3" : ""} text-[13.5px]`}
+              style={{ color: "var(--on-ink-2)" }}
+              aria-live="polite"
+              data-testid="checkin-points"
+            >
+              {pointsLine}
+            </p>
+          )}
+        </>
+      ) : null}
     </SuccessTakeover>
   );
 }

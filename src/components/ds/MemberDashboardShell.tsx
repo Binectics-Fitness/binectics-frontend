@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
@@ -19,8 +20,10 @@ function I({ children, d }: { children?: React.ReactNode; d?: string }) {
   );
 }
 
-/* ── Nav items ── */
-const NAV_LINKS = [
+/* ── Nav items ──
+ * Billing is here so a member can find auto-renew, cards and Renew without
+ * going through Settings (discoverability F8). */
+export const MEMBER_NAV_LINKS = [
   { label: "Home",        href: "/dashboard/member" },
   { label: "Marketplace", href: "/marketplace" },
   { label: "Saved",       href: "/dashboard/saved-providers" },
@@ -30,7 +33,21 @@ const NAV_LINKS = [
   { label: "Activity",    href: "/dashboard/member/streaks" },
   { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
+  { label: "Billing",     href: "/dashboard/member/billing" },
 ];
+
+/**
+ * Whether a nav link is the current page: the page names its label, and a
+ * page that names none (activeLabel "") is matched by its address.
+ */
+export function isMemberNavActive(
+  link: { label: string; href: string },
+  activeLabel: string,
+  pathname: string | null,
+): boolean {
+  if (activeLabel) return link.label === activeLabel;
+  return !!pathname && pathname.replace(/\/$/, "") === link.href;
+}
 
 /* ── Unread count on the Messages link ── */
 function NavCount({ count }: { count: number }) {
@@ -56,6 +73,7 @@ interface MemberDashboardShellProps {
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
@@ -98,15 +116,17 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.label === activeLabel;
+            {MEMBER_NAV_LINKS.map((link) => {
+              const isActive = isMemberNavActive(link, activeLabel, pathname);
               return (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`rounded-(--r-2) text-[13.5px] ${isActive ? "font-medium" : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                  // Ten links share the row from 1024px: no wrapping, and a
+                  // little less padding until xl.
+                  className={`whitespace-nowrap rounded-(--r-2) px-2 py-1.5 text-[13.5px] xl:px-2.5 ${isActive ? "font-medium" : ""}`}
                   style={{
-                    padding: "6px 10px",
                     color: isActive ? "var(--ink)" : "var(--fg-2)",
                     background: isActive ? "var(--bg-3)" : undefined,
                     letterSpacing: "-0.005em",
@@ -294,12 +314,13 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
-              {NAV_LINKS.map((link) => {
-                const isActive = link.label === activeLabel;
+              {MEMBER_NAV_LINKS.map((link) => {
+                const isActive = isMemberNavActive(link, activeLabel, pathname);
                 return (
                   <Link
                     key={link.label}
                     href={link.href}
+                    aria-current={isActive ? "page" : undefined}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center rounded-(--r-2) text-[16px] ${isActive ? "font-medium" : ""}`}
                     style={{

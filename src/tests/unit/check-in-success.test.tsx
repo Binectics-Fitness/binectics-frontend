@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CheckInScanPage from "@/app/check-in/[gymId]/page";
 import { checkinsService } from "@/lib/api/checkins";
+import { loyaltyService } from "@/lib/api/loyalty";
+import { checkInPoints } from "@/lib/loyalty/checkInPoints";
+import { LoyaltyEventType, type LoyaltyPointsTransaction } from "@/lib/types";
 
 const push = vi.fn();
 let token: string | null = "fresh";
@@ -31,6 +34,8 @@ describe("check-in success takeover", () => {
       success: true,
       data: { _id: "x", organization_id: "g1", member_user_id: "u", checked_in_at: CHECKED_IN_AT, created_at: "", updated_at: "" },
     });
+    // No loyalty program at this gym unless a test says so.
+    vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({ success: true, data: [] });
   });
   afterEach(() => vi.restoreAllMocks());
 
@@ -88,5 +93,66 @@ describe("check-in success takeover", () => {
     expect(screen.getByText("Dapo Fitness Hub · your first check-in")).toBeInTheDocument();
     // 1 day, longest 1: no footnote that only repeats the streak.
     expect(dialog.textContent).not.toMatch(/Longest|Personal best/);
+  });
+});
+
+const award = (over: Partial<LoyaltyPointsTransaction> = {}): LoyaltyPointsTransaction => ({
+  _id: "t1",
+  user_id: "u",
+  organization_id: "g1",
+  points: 10,
+  balance_after: 130,
+  event_type: LoyaltyEventType.GYM_CHECK_IN,
+  created_at: new Date(new Date(CHECKED_IN_AT).getTime() + 2_000).toISOString(),
+  updated_at: "",
+  ...over,
+});
+
+describe("points on check-in (F14)", () => {
+  beforeEach(() => {
+    token = "fresh";
+    vi.spyOn(checkinsService, "getGymInfo").mockResolvedValue({ success: true, data: { name: "Dapo Fitness Hub", listing_id: null } });
+    vi.spyOn(checkinsService, "scan").mockResolvedValue({
+      success: true,
+      data: { _id: "x", organization_id: "g1", member_user_id: "u", checked_in_at: CHECKED_IN_AT, created_at: "", updated_at: "" },
+    });
+    vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
+      success: true,
+      data: { has_checked_in_today: true, current_streak_days: 3, total_check_ins: 15 },
+    });
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("takes this visit's check-in award from the ledger, nothing older or of another kind", () => {
+    const since = new Date(CHECKED_IN_AT).getTime();
+    expect(checkInPoints([award()], since)).toBe(10);
+    expect(checkInPoints([award({ created_at: new Date(since - 3_600_000).toISOString() })], since)).toBeNull();
+    expect(checkInPoints([award({ event_type: LoyaltyEventType.JOURNAL_LOGGED })], since)).toBeNull();
+    expect(checkInPoints([], since)).toBeNull();
+  });
+
+  it("says what this check-in earned where the gym runs its own program", async () => {
+    vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({
+      success: true,
+      data: [{ organization_id: "g1", organization_name: "Dapo Fitness Hub", account_type: "gym_owner", balance: 130, is_member: true }],
+    });
+    const history = vi.spyOn(loyaltyService, "getHistory").mockResolvedValue({ success: true, data: [award()] });
+    render(<CheckInScanPage />);
+    expect(await screen.findByTestId("checkin-points")).toHaveTextContent("+10 points at Dapo Fitness Hub");
+    expect(history).toHaveBeenCalledWith(10, 0, "g1");
+  });
+
+  it("says nothing about points at a gym without a program", async () => {
+    // The member's programs are elsewhere; none at this gym.
+    vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({
+      success: true,
+      data: [{ organization_id: "other", organization_name: "Coach Ada", account_type: "personal_trainer", balance: 40, is_member: true }],
+    });
+    const history = vi.spyOn(loyaltyService, "getHistory");
+    render(<CheckInScanPage />);
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(loyaltyService.getPrograms).toHaveBeenCalled());
+    expect(history).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("checkin-points")).toBeNull();
   });
 });

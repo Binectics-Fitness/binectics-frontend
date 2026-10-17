@@ -35,6 +35,7 @@ describe("redirects for removed pages", () => {
     ["/booking/confirmed", "/dashboard/bookings"],
     [`/booking/${id}`, `/dashboard/bookings?booking=${id}`],
     ["/dashboard/member/help", "/help"],
+    ["/dashboard/member/health-metrics", "/dashboard/member/weight-log"],
     ["/unsubscribe/some-token", "/dashboard/settings/notifications"],
   ])("%s goes to %s", async (path, target) => {
     expect(await redirectFor(path)).toBe(target);

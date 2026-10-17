@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
-import { marketplaceService } from "@/lib/api/marketplace";
-import { EmptySlate } from "@/components/ds";
 import { formatMinor, isSelectable } from "@/lib/currencies/helpers";
 import { useCurrencies } from "@/lib/queries/currencies";
 import { planPerLabel } from "@/lib/marketplace/planDisplay";
@@ -16,15 +14,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
+import { ConnectRequestButton } from "@/components/marketplace/ConnectRequestButton";
+import { ListingReviews, useListingRating } from "@/components/marketplace/ListingReviews";
 import type { MarketplaceMembershipPlan, MembershipPlanType } from "@/lib/types";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
 function Star({ size = 14 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3 7 7 .8-5.3 4.7L18 22l-6-4-6 4 1.3-7.5L2 9.8 9 9z" /></svg>;
-}
-function StarOutline({ size = 12 }: { size?: number }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m12 2 3 7 7 .8-5.3 4.7L18 22l-6-4-6 4 1.3-7.5L2 9.8 9 9z" /></svg>;
 }
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -87,20 +84,12 @@ interface Plan {
   is_active?: boolean;
 }
 
-interface Review {
-  _id: string;
-  rating: number;
-  comment?: string;
-  user_id?: { first_name: string; last_name: string };
-  created_at?: string;
-}
-
 /* ═══ PROFILE ════════════════════════════════════════════════ */
 
 /**
  * The profile body. The listing and its plans arrive from the server render
  * (page.tsx), so the HTML already carries them; reviews and everything
- * interactive load and run here.
+ * interactive load and run here (reviews in ListingReviews).
  */
 export function ListingProfile({
   listing: publicListing,
@@ -119,24 +108,13 @@ export function ListingProfile({
   const { all: currencyList } = useCurrencies();
 
   const [chosenPlanId, setChosenPlanId] = useState<string | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-
-  // Reviews are not part of the server render: the profile stands without
-  // them, and a failed read just shows none.
-  useEffect(() => {
-    let isMounted = true;
-    marketplaceService
-      .getListingReviews(listingId)
-      .then((revRes) => {
-        if (!isMounted || !revRes.success || !revRes.data) return;
-        const rd = revRes.data as unknown as { reviews?: Review[] };
-        setReviews(rd.reviews || []);
-      })
-      .catch(() => {});
-    return () => {
-      isMounted = false;
-    };
-  }, [listingId]);
+  // The rating the Reviews section shows, so a new review counts everywhere
+  // on the page; the listing's own figures until it loads.
+  const rating = useListingRating(listingId, listing.account_type, {
+    average: listing.average_rating,
+    count: listing.review_count,
+  });
+  const ratingShown = rating.average ? String(Math.round(rating.average * 10) / 10) : "–";
 
   const name = listing.organization_id?.name || listing.organization?.name || (listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : listing.headline);
   const ownerName = listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : "Provider";
@@ -233,8 +211,8 @@ export function ListingProfile({
             <div className="flex flex-wrap items-center gap-3 sm:gap-4.5 text-[13px] sm:text-[14px]" style={{ color: "var(--fg-2)" }}>
               <span className="flex items-center gap-2">
                 <span className="flex gap-px" style={{ color: "var(--ink)" }}>{Array.from({ length: 5 }, (_, i) => <Star key={i} />)}</span>
-                <span style={{ color: "var(--ink)", fontWeight: 500 }}>{listing.average_rating || "–"}</span>
-                <span>· {listing.review_count} reviews</span>
+                <span style={{ color: "var(--ink)", fontWeight: 500 }}>{ratingShown}</span>
+                <span>· {rating.count} reviews</span>
               </span>
               {listing.city && <>
                 <span className="w-[3px] h-[3px] rounded-full bg-border-2" />
@@ -247,8 +225,16 @@ export function ListingProfile({
                 <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{priceFrom}</span>
               </>}
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <SaveListingButton listingId={listing._id} listingName={name} variant="button" />
+              {listing.account_type !== "gym_owner" && (
+                <ConnectRequestButton
+                  listingId={listing._id}
+                  professionalId={listing.professional_id?._id ?? listing.professional?._id ?? null}
+                  providerName={ownerName.split(" ")[0] || ownerName}
+                  acceptingClients={listing.accepting_clients}
+                />
+              )}
               <button className="btn-ghost-v2 sm">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8" /><path d="m17 8-5-5-5 5M12 3v12" /></svg>
                 Share
@@ -262,7 +248,7 @@ export function ListingProfile({
 
           {/* Tabs */}
           <nav className="flex gap-1 mt-6 border-b border-border overflow-x-auto">
-            {["About", plans.length > 0 ? `Plans · ${plans.length}` : "Plans", allAmenities.length > 0 ? `Amenities · ${allAmenities.length}` : "Amenities", "Schedule", `Reviews · ${listing.review_count}`, "Location"].map((t, i) => (
+            {["About", plans.length > 0 ? `Plans · ${plans.length}` : "Plans", allAmenities.length > 0 ? `Amenities · ${allAmenities.length}` : "Amenities", "Schedule", `Reviews · ${rating.count}`, "Location"].map((t, i) => (
               <span key={t} className={`px-4 py-3 text-[14px] -mb-px cursor-pointer shrink-0 ${i === 0 ? "border-b-[1.5px] border-ink font-medium" : ""}`} style={{ color: i === 0 ? "var(--ink)" : "var(--fg-2)" }}>{t}</span>
             ))}
           </nav>
@@ -288,8 +274,8 @@ export function ListingProfile({
                 ["Prices in", [...new Set(plans.map((p) => p.currency).filter(Boolean))].join(" · ") || "–"],
                 ["Languages", listing.languages?.join(" · ") || "–"],
                 ["Active clients", String(listing.active_client_count ?? "–")],
-                ["Rating", listing.average_rating ? `${listing.average_rating} / 5` : "–"],
-                ["Reviews", String(listing.review_count)],
+                ["Rating", rating.average ? `${ratingShown} / 5` : "–"],
+                ["Reviews", String(rating.count)],
               ].map(([l, v]) => (
                 <div key={l} className="px-5 py-4 border-r border-b border-border">
                   <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-1.5" style={{ color: "var(--fg-3)" }}>{l}</div>
@@ -378,43 +364,9 @@ export function ListingProfile({
             </section>
           )}
 
-          {/* Reviews */}
-          <section className="py-8 border-b border-border">
-            <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Reviews</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 sm:gap-8 py-5">
-              <div>
-                <div className="text-[64px] font-medium leading-none" style={{ letterSpacing: "-0.03em", color: "var(--ink)" }}>{listing.average_rating || "–"}</div>
-                <div className="flex gap-px mt-2" style={{ color: "var(--ink)" }}>{Array.from({ length: 5 }, (_, i) => <Star key={i} />)}</div>
-                <div className="font-mono text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>{listing.review_count} reviews</div>
-              </div>
-            </div>
-            {reviews.length > 0 ? (
-              <div className="flex flex-col">
-                {reviews.map((rev) => {
-                  const rName = rev.user_id ? `${rev.user_id.first_name} ${rev.user_id.last_name}` : "Anonymous";
-                  const rInit = rName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-                  const rDate = rev.created_at ? new Date(rev.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
-                  return (
-                    <div key={rev._id} className="flex gap-4 py-4.5 border-t border-border">
-                      <div className="w-9 h-9 rounded-full bg-bg-3 flex items-center justify-center text-[13px] font-semibold shrink-0" style={{ color: "var(--fg-2)" }}>{rInit}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{rName}</span>
-                          <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>{rDate}</span>
-                        </div>
-                        <div className="flex gap-px mt-1" style={{ color: "var(--ink)" }}>
-                          {Array.from({ length: 5 }, (_, i) => i < rev.rating ? <Star key={i} size={12} /> : <StarOutline key={i} />)}
-                        </div>
-                        {rev.comment && <p className="text-[14px] leading-relaxed mt-2" style={{ color: "var(--fg-2)" }}>{rev.comment}</p>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <EmptySlate message="No reviews yet." mt="mt-2" />
-            )}
-          </section>
+          {/* Reviews: the rating, the reviews, and "Write a review" for a
+              member the API says may review this provider (F10). */}
+          <ListingReviews listingId={listingId} accountType={listing.account_type} providerName={name} />
         </div>
 
         {/* ─── RIGHT: BOOKING CARD ─── */}
@@ -434,8 +386,8 @@ export function ListingProfile({
                 )}
                 <div className="flex items-center gap-1 text-[12.5px] mt-1" style={{ color: "var(--fg-2)" }}>
                   <span style={{ color: "var(--ink)" }}><Star size={11} /></span>
-                  <span style={{ color: "var(--ink)", fontWeight: 500 }}>{listing.average_rating || "–"}</span>
-                  <span>· {listing.review_count} reviews</span>
+                  <span style={{ color: "var(--ink)", fontWeight: 500 }}>{ratingShown}</span>
+                  <span>· {rating.count} reviews</span>
                 </div>
               </div>
               {isVerified && (

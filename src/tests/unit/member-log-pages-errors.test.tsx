@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import WorkoutLogPage from "@/app/dashboard/member/workout-log/page";
 import MealLogPage from "@/app/dashboard/member/meal-log/page";
 import WeightLogPage from "@/app/dashboard/member/weight-log/page";
-import { HealthMetricsClient } from "@/app/dashboard/member/health-metrics/HealthMetricsClient";
 import { progressService, type ClientProfile } from "@/lib/api/progress";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -61,27 +60,7 @@ describe("member log pages on a failed load", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("health metrics shows the error, not 'No entries yet'", async () => {
-    vi.spyOn(progressService, "getWeightLogs").mockResolvedValue(fail as never);
-    render(withQuery(<HealthMetricsClient />));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/couldn.t load your weight entries/);
-    expect(screen.queryByText("No entries yet")).not.toBeInTheDocument();
-    expect(screen.queryByText("Latest weight")).not.toBeInTheDocument();
-  });
-
-  it("health metrics' 30-day change matches the weight log's (latest minus earliest in the 30 days to today)", async () => {
-    const day = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString(); };
-    const logs = [
-      { _id: "a", weight_kg: 73.4, recorded_at: day(1) },
-      { _id: "b", weight_kg: 75.2, recorded_at: day(29) },
-      { _id: "c", weight_kg: 82.2, recorded_at: day(45) }, // outside the window
-    ];
-    vi.spyOn(progressService, "getWeightLogs").mockResolvedValue({ success: true, data: logs } as never);
-    render(withQuery(<HealthMetricsClient />));
-    expect(await screen.findByText("−1.8")).toBeInTheDocument();
-  });
-
-  it("a saved weight invalidates the cached weight queries (health metrics)", async () => {
+  it("a saved weight invalidates the cached weight queries", async () => {
     vi.spyOn(progressService, "getWeightLogs").mockResolvedValue({ success: true, data: [] } as never);
     vi.spyOn(progressService, "createWeightLog").mockResolvedValue({
       success: true,

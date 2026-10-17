@@ -40,6 +40,9 @@ export const REMOVED_PAGE_REDIRECTS: RemovedPageRedirect[] = [
   },
   // The fake member help desk; the help centre is the real one.
   { source: "/dashboard/member/help", destination: "/help", permanent: false },
+  // An unlinked duplicate of the weight log (its heart-rate chart had no
+  // data behind it); the weight log is the page that does the job.
+  { source: "/dashboard/member/health-metrics", destination: "/dashboard/member/weight-log", permanent: false },
   // The fake unsubscribe page (it pretended to save). No email carries an
   // unsubscribe token; email choices are made in notification settings.
   {
