@@ -36,11 +36,16 @@ import { dayUnit, longestStreakLine, type StreakStats } from "@/lib/checkins/str
 import {
   activeGyms,
   lastCheckInLabel,
+  membershipNotice,
   nextUp,
   weightSummary,
+  type MembershipNotice,
   type NextUpItem,
 } from "./memberHome";
 import { EnrollmentOffersCard } from "./_components/EnrollmentOffersCard";
+import { GymClassesLink } from "./_components/GymClassesLink";
+import { MembershipNoticeCard } from "./_components/MembershipNoticeCard";
+import { formatDate } from "@/utils/format";
 
 interface MemberSnapshot {
   checkins: StreakStats | null;
@@ -57,6 +62,8 @@ interface MemberSnapshot {
   weights: WeightLog[] | null;
   gyms: { orgId: string; name: string }[];
   program: ProgramDay | null;
+  /** A membership that is overdue or ends this week with nothing renewing it. */
+  notice: MembershipNotice | null;
 }
 
 const EMPTY: MemberSnapshot = {
@@ -67,7 +74,11 @@ const EMPTY: MemberSnapshot = {
   weights: [],
   gyms: [],
   program: null,
+  notice: null,
 };
+
+/** "Sat, Oct 17": the day a term ends or a payment is due. */
+const noticeDate = (iso: string) => formatDate(iso, { weekday: "short", month: "short", day: "numeric" });
 
 const CARD_PAD = "p-5.5";
 
@@ -139,6 +150,7 @@ function MemberHomeContent() {
           weights,
           gyms: activeGyms(settled(subsRes) ?? [], at),
           program: currentProgramDay(settled(programsRes) ?? []),
+          notice: membershipNotice(settled(subsRes) ?? [], new Date(at), noticeDate),
         });
       } catch (err) {
         if (!isMounted) return;
@@ -190,12 +202,28 @@ function MemberHomeContent() {
         </div>
       )}
 
+      {/* The one status card: money that keeps the member's access (F8). */}
+      {!loading && snapshot.notice && (
+        <div className="mb-3.5">
+          <MembershipNoticeCard notice={snapshot.notice} />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3.5">
         <div className="flex min-w-0 flex-col gap-3.5">
           {loading ? (
             <div aria-hidden="true" className="h-36 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
           ) : (
-            <MemberHero program={snapshot.program} stats={checksIn ? stats : null} />
+            <div>
+              <MemberHero program={snapshot.program} stats={checksIn ? stats : null} />
+              {/* Program tasks are ticked in the app; the web has no task
+                  list (owner decision, F17), so say where they are. */}
+              {snapshot.program && (
+                <p className="mt-2 text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="tasks-in-app">
+                  Your daily tasks are in the Binectics app on your phone.
+                </p>
+              )}
+            </div>
           )}
 
           <EnrollmentOffersCard onAccepted={() => setReloadKey((k) => k + 1)} />
@@ -312,12 +340,13 @@ function MemberHomeContent() {
                         Active membership · scan the front-desk QR to check in
                       </div>
                     </div>
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex shrink-0 flex-wrap gap-2">
                       <StartConversationButton
                         organizationId={gym.orgId}
                         messagesHref="/dashboard/messages"
                         label="Message"
                       />
+                      <GymClassesLink organizationId={gym.orgId} gymName={gym.name} />
                       <Link href="/check-in" className="btn-primary-v2 sm" style={{ whiteSpace: "nowrap" }}>
                         Check in
                       </Link>

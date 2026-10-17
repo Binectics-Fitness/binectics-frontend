@@ -1,0 +1,44 @@
+"use client";
+
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { useMyProviders } from "@/components/messaging/MyCoachesCard";
+import { classBookingsService } from "@/lib/api/classBookings";
+import type { GymClass } from "@/lib/api/classes";
+
+/** Where a gym's timetable is booked: its listing's schedule section. */
+export function gymClassesHref(listingId: string): string {
+  return `/marketplace/${encodeURIComponent(listingId)}#schedule`;
+}
+
+/**
+ * "Classes" on the My gym card (discoverability F15): classes are booked on
+ * the gym's listing, which nothing on home led to. Shown only when the gym
+ * has a listing that opens (from my-providers, which already picks the
+ * branch the member joined) and that listing has classes; a gym without a
+ * timetable gets no button that leads to nothing. The classes read shares
+ * its cache key with the listing's own schedule section.
+ */
+export function GymClassesLink({ organizationId, gymName }: { organizationId: string; gymName: string }) {
+  const { data: providers } = useMyProviders();
+  const listingId = providers?.gyms.find((g) => g.organization_id === organizationId)?.listing?._id ?? null;
+  const { data: classes = [] } = useQuery<GymClass[]>({
+    queryKey: ["listingClasses", listingId],
+    queryFn: async () => {
+      const res = await classBookingsService.getListingClasses(listingId as string);
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: !!listingId,
+  });
+  if (!listingId || classes.length === 0) return null;
+  return (
+    <Link
+      href={gymClassesHref(listingId)}
+      className="btn-ghost-v2 sm"
+      style={{ whiteSpace: "nowrap" }}
+      aria-label={`Book a class at ${gymName}`}
+    >
+      Classes
+    </Link>
+  );
+}

@@ -8,6 +8,7 @@ import { ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/c
 import type { ClassBooking } from "@/lib/api/classBookings";
 import type { WeightLog } from "@/lib/api/progress";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
+import { RENEW_AHEAD_DAYS, cardRetryFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
 
 const DAY_MS = 86_400_000;
 
@@ -166,4 +167,91 @@ export function lastCheckInLabel(iso: string | undefined, now: Date): string {
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days} days ago`;
   return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}
+
+// ─── Membership notice (discoverability F8) ─────────────────────────────────
+
+export interface MembershipNotice {
+  subscriptionId: string;
+  kind: "past_due" | "ending";
+  title: string;
+  body: string;
+  /** The checkout that renews it in place; null when paying again isn't the next step. */
+  renewHref: string | null;
+  /** Billing, opened at this membership. */
+  billingHref: string;
+}
+
+/** Who the membership is with: the listing it was bought from, else the gym or provider. */
+function providerOf(sub: MembershipSubscription): string | null {
+  const listing = typeof sub.listing_id === "object" ? sub.listing_id : null;
+  if (listing?.headline?.trim()) return listing.headline.trim();
+  const org = typeof sub.organization_id === "object" ? sub.organization_id : null;
+  return org?.name?.trim() || null;
+}
+
+const billingHrefFor = (sub: MembershipSubscription) =>
+  `/dashboard/member/billing?subscriptionId=${encodeURIComponent(sub._id)}`;
+
+/**
+ * A membership that needs the member soon, for the one status card on home:
+ * a payment that is overdue, or a term ending within RENEW_AHEAD_DAYS that
+ * nothing will renew. Overdue first, then the soonest end. Never one the
+ * member cancelled (they chose to leave), one a saved card renews, or one
+ * that can't be renewed in the app. The same rules as mobile's Today card.
+ */
+export function membershipNotice(
+  subs: readonly MembershipSubscription[],
+  now: Date,
+  fmt: (iso: string) => string,
+): MembershipNotice | null {
+  const t = now.getTime();
+
+  const due = subs.find((s) => s.status === MembershipSubscriptionStatus.PAST_DUE);
+  if (due) {
+    const retry = cardRetryFor(due);
+    const name = providerOf(due);
+    let body: string;
+    if (retry.pending) {
+      body = retry.nextAttemptAt
+        ? `We'll try your card again on ${fmt(retry.nextAttemptAt)}. You don't need to do anything yet.`
+        : "We'll try your card again soon. You don't need to do anything yet.";
+    } else {
+      body = due.grace_expires_at
+        ? `Pay by ${fmt(due.grace_expires_at)} to keep your access.`
+        : "Renew to keep your access.";
+    }
+    return {
+      subscriptionId: due._id,
+      kind: "past_due",
+      title: name ? `Your ${name} payment is overdue` : "A membership payment is overdue",
+      body,
+      // Never while the card will be tried again: paying now could charge twice.
+      renewHref: retry.pending ? null : renewHrefForMembership(due, now),
+      billingHref: billingHrefFor(due),
+    };
+  }
+
+  const endOf = (s: MembershipSubscription) => (s.end_date ? new Date(s.end_date).getTime() : NaN);
+  const ending = subs
+    .filter((s) => {
+      if (s.status !== MembershipSubscriptionStatus.ACTIVE || s.cancel_requested_at) return false;
+      const end = endOf(s);
+      return Number.isFinite(end) && end > t && end - t <= RENEW_AHEAD_DAYS * DAY_MS;
+    })
+    .map((s) => ({ sub: s, href: renewHrefForMembership(s, now) }))
+    .filter((x): x is { sub: MembershipSubscription; href: string } => x.href !== null)
+    .sort((a, b) => endOf(a.sub) - endOf(b.sub))[0];
+  if (!ending) return null;
+
+  const name = providerOf(ending.sub);
+  const when = fmt(ending.sub.end_date as string);
+  return {
+    subscriptionId: ending.sub._id,
+    kind: "ending",
+    title: name ? `Your ${name} membership ends ${when}` : `A membership ends ${when}`,
+    body: "It won't renew on its own. Renew now to keep your access.",
+    renewHref: ending.href,
+    billingHref: billingHrefFor(ending.sub),
+  };
 }

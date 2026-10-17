@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ListingProfile } from "@/app/marketplace/[listingId]/ListingProfile";
-import { marketplaceService } from "@/lib/api/marketplace";
 import { MembershipPlanType, type MarketplaceMembershipPlan } from "@/lib/types";
 import type { PlatformCurrency } from "@/lib/api/currencies";
 
@@ -21,6 +20,14 @@ vi.mock("@/components/MarketplaceAuthCluster", () => ({
 // The save toggle has its own tests (save-listing-button.test.tsx).
 vi.mock("@/components/marketplace/SaveListingButton", () => ({
   SaveListingButton: () => null,
+}));
+// Reviews and Request to connect have their own tests (listing-reviews.test.tsx).
+vi.mock("@/components/marketplace/ListingReviews", () => ({
+  ListingReviews: () => null,
+  useListingRating: (_id: string, _type: string, fallback: unknown) => fallback,
+}));
+vi.mock("@/components/marketplace/ConnectRequestButton", () => ({
+  ConnectRequestButton: () => null,
 }));
 
 const NGN: PlatformCurrency = {
@@ -67,10 +74,8 @@ const reset = plan({ _id: "p-reset", name: "Nourish and Reset", plan_type: Membe
 const eightWeek = plan({ _id: "p-8w", name: "8 WEEK PLAN", duration_days: 56, price_minor: 24_000_000 });
 const usdMonthly = plan({ _id: "p-usd", name: "Remote monthly", price_minor: 4_500, currency: "USD" });
 
-// The listing and its plans come from the server render (page.tsx); only
-// the reviews are fetched in the browser.
+// The listing and its plans come from the server render (page.tsx).
 function renderWithPlans(plans: MarketplaceMembershipPlan[]) {
-  vi.spyOn(marketplaceService, "getListingReviews").mockResolvedValue({ success: true, data: { reviews: [] } as never });
   render(<ListingProfile listing={listing as never} initialPlans={plans} />);
 }
 

@@ -6,6 +6,9 @@ import { SIDEBAR as DIETITIAN_SIDEBAR } from "@/components/ds/DietitianDashboard
 import { SIDEBAR as GYM_SIDEBAR } from "@/components/ds/GymDashboardShell";
 import { SIDEBAR as ADMIN_SIDEBAR } from "@/components/ds/AdminDashboardShell";
 import { accountMenuItems } from "@/components/ds/accountMenuItems";
+import { MEMBER_NAV_LINKS } from "@/components/ds/MemberDashboardShell";
+import { gymClassesHref } from "@/app/dashboard/member/_components/GymClassesLink";
+import { HEALTH_PRIVACY_HREF } from "@/app/dashboard/settings/privacy/HealthAppsCard";
 import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
 import { HELP_COMMANDS, accountCommands, actionCommandsFor, defaultNavigationCommands } from "@/lib/constants/commands";
 import { NOTIFICATION_SETTINGS_HREF } from "@/lib/constants/routes";
@@ -29,6 +32,11 @@ describe("every nav and command link goes to a real page", () => {
     ...hrefs(GYM_SIDEBAR).map((h): [string, string] => ["gym sidebar", h]),
     ...hrefs(ADMIN_SIDEBAR).map((h): [string, string] => ["admin sidebar", h]),
     ...ROLES.flatMap((role) => accountMenuItems({ role, is_admin: true }).map((i): [string, string] => [`${role} account menu`, i.href])),
+    // Member surfaces (discoverability W3): the member nav, My gym's
+    // Classes and the health apps card's policy link.
+    ...MEMBER_NAV_LINKS.map((l): [string, string] => ["member nav", l.href]),
+    ["my gym classes", gymClassesHref("6abe5a17882f018fcdb21c61")],
+    ["health apps policy", HEALTH_PRIVACY_HREF],
     ...[null, ...ROLES].flatMap((role) => defaultNavigationCommands(role).map((c): [string, string] => [`${role} commands`, c.href])),
     ...ROLES.flatMap((role) =>
       [...actionCommandsFor(role), ...actionCommandsFor(role, { gymTrainer: true })].map((c): [string, string] => [`${role} actions`, c.href]),
