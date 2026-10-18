@@ -407,11 +407,18 @@ export const teamsService = {
     );
   },
 
+  /**
+   * The organization's locations. The API lists active ones only; with
+   * `includeInactive` it is asked for deactivated ones too, which the API
+   * does not return yet (callers filter on `is_active` either way).
+   */
   async getLocations(
     organizationId: string,
+    options: { includeInactive?: boolean } = {},
   ): Promise<ApiResponse<OrganizationLocation[]>> {
+    const query = options.includeInactive ? "?include_inactive=true" : "";
     return await apiClient.get<OrganizationLocation[]>(
-      `/teams/organizations/${organizationId}/locations`,
+      `/teams/organizations/${organizationId}/locations${query}`,
     );
   },
 
@@ -426,13 +433,30 @@ export const teamsService = {
     );
   },
 
-  /** Deactivate a location */
+  /**
+   * Deactivate a location. 409 LOCATION_PRIMARY for the primary location,
+   * 409 LOCATION_LAST_ACTIVE for the only active one.
+   */
   async deleteLocation(
     organizationId: string,
     locationId: string,
   ): Promise<ApiResponse<void>> {
     return await apiClient.delete<void>(
       `/teams/organizations/${organizationId}/locations/${locationId}`,
+    );
+  },
+
+  /**
+   * Bring a deactivated location back. It returns as a branch, or as primary
+   * when no active location is primary. 409 LOCATION_NAME_IN_USE when an
+   * active location has taken its name.
+   */
+  async reactivateLocation(
+    organizationId: string,
+    locationId: string,
+  ): Promise<ApiResponse<OrganizationLocation>> {
+    return await apiClient.post<OrganizationLocation>(
+      `/teams/organizations/${organizationId}/locations/${locationId}/reactivate`,
     );
   },
 
