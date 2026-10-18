@@ -111,6 +111,8 @@ export function uncancelCheckoutLine(
 
 const CHECKOUT_PATH = /\/marketplace\/listings\/([A-Za-z0-9_-]+)\/plans\/([A-Za-z0-9_-]+)\/checkout\/?$/;
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+/** binectics-api RENEWAL_PAYMENT_DUE: a lapsed term's renewal notice. */
+const RENEWAL_PAYMENT_DUE = "renewal_payment_due";
 
 function checkoutHref(listingId: string, planId: string): string {
   return `/checkout?listing=${encodeURIComponent(listingId)}&plan=${encodeURIComponent(planId)}`;
@@ -120,7 +122,12 @@ function checkoutHref(listingId: string, planId: string): string {
  * The web checkout that renews a membership in place, from a notification's
  * metadata. The API's `checkoutPath` is its own POST route
  * (/marketplace/listings/:l/plans/:p/checkout); the page that opens it is
- * /checkout?listing=&plan=. Falls back to `listingId` + `planId`. Null when
+ * /checkout?listing=&plan=. Falls back to `listingId` + `planId`, except on
+ * a renewal-due notice (`reason: "renewal_payment_due"`), which counts only
+ * with `checkoutPath`: the API sends one only when the listing sells the
+ * renewal plan (api #267), and notices stored before that carry a pair the
+ * listing may refuse. Such a notice opens Billing instead
+ * (billingNotificationTarget). Mobile's `resolveRenewalCheckout`. Null when
  * the notice names no plan to pay for.
  */
 export function renewHrefFromMetadata(
@@ -132,6 +139,7 @@ export function renewHrefFromMetadata(
     const m = CHECKOUT_PATH.exec(path.split("?")[0]);
     if (m) return checkoutHref(m[1], m[2]);
   }
+  if (metadata.reason === RENEWAL_PAYMENT_DUE) return null;
   const listingId = metadata.listingId;
   const planId = metadata.planId;
   if (
@@ -156,7 +164,7 @@ export function isRenewalNotice(input: {
   metadata?: Record<string, unknown> | null;
 }): boolean {
   if (input.type === "SUBSCRIPTION_PAYMENT_FAILED") return input.metadata?.final !== false;
-  return input.metadata?.reason === "renewal_payment_due";
+  return input.metadata?.reason === RENEWAL_PAYMENT_DUE;
 }
 
 /** The "Renew" link for a notification, or null when it isn't a renewal notice. */
@@ -415,7 +423,13 @@ export function billingNotificationTarget(
   role?: UserRole | string | null,
 ): string | null {
   const type = input.type ?? "";
-  if ((MEMBER_BILLING_NOTIFICATION_TYPES as readonly string[]).includes(type)) {
+  // A renewal-due notice (a SUBSCRIPTION_EXPIRED with no action URL) opens
+  // the membership on Billing, as mobile's opens the membership list; its
+  // Renew button is the checkout, when it names one.
+  if (
+    (MEMBER_BILLING_NOTIFICATION_TYPES as readonly string[]).includes(type) ||
+    input.metadata?.reason === RENEWAL_PAYMENT_DUE
+  ) {
     const id = input.metadata?.subscriptionId;
     return typeof id === "string" && SAFE_ID.test(id)
       ? `${MEMBER_BILLING}?subscriptionId=${id}`

@@ -76,6 +76,18 @@ describe("notifications drawer: billing", () => {
     );
   });
 
+  it("no Renew on a renewal-due notice without checkoutPath (stored before api #267); a tap opens Billing", async () => {
+    items = [
+      note({
+        metadata: { reason: "renewal_payment_due", subscriptionId: "s1", listingId: "l1", planId: "p1" },
+      }),
+    ];
+    render(<NotificationsDrawer open onClose={vi.fn()} />);
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+    await userEvent.click(screen.getByText("Your membership is due for renewal"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/member/billing?subscriptionId=s1"));
+  });
+
   it("puts a Renew button on a failed renewal payment", () => {
     items = [
       note({

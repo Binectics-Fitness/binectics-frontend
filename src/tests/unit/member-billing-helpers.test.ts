@@ -118,6 +118,42 @@ describe("Renew links from notification metadata", () => {
     ).toBeNull();
     expect(renewHrefForNotification({ type: "SUBSCRIPTION_PAYMENT_FAILED", metadata: {} })).toBeNull();
   });
+
+  it("a renewal-due notice renews only from checkoutPath, never from listingId + planId (stored before api #267)", () => {
+    const stale = { reason: "renewal_payment_due", subscriptionId: "s1", listingId: "l1", planId: "p1" };
+    expect(renewHrefFromMetadata(stale)).toBeNull();
+    expect(renewHrefForNotification({ type: "SUBSCRIPTION_EXPIRED", metadata: stale })).toBeNull();
+    // A malformed checkoutPath doesn't fall back to the pair either.
+    expect(renewHrefFromMetadata({ ...stale, checkoutPath: "https://evil.example/x" })).toBeNull();
+    // With checkoutPath: Renew opens it.
+    expect(
+      renewHrefForNotification({
+        type: "SUBSCRIPTION_EXPIRED",
+        metadata: { ...stale, checkoutPath: "/marketplace/listings/l2/plans/p2/checkout" },
+      }),
+    ).toBe("/checkout?listing=l2&plan=p2");
+    // Other notices still use the pair.
+    expect(
+      renewHrefForNotification({ type: "SUBSCRIPTION_PAYMENT_FAILED", metadata: { listingId: "l1", planId: "p1" } }),
+    ).toBe("/checkout?listing=l1&plan=p1");
+  });
+
+  it("tapping a renewal-due notice opens the membership on Billing, with or without a checkout", () => {
+    const stale = { reason: "renewal_payment_due", subscriptionId: "s1", listingId: "l1", planId: "p1" };
+    expect(resolveNotificationTarget({ type: "SUBSCRIPTION_EXPIRED", metadata: stale }, UserRole.USER)).toBe(
+      "/dashboard/member/billing?subscriptionId=s1",
+    );
+    expect(
+      resolveNotificationTarget(
+        { type: "SUBSCRIPTION_EXPIRED", metadata: { ...stale, checkoutPath: "/marketplace/listings/l1/plans/p1/checkout" } },
+        UserRole.USER,
+      ),
+    ).toBe("/dashboard/member/billing?subscriptionId=s1");
+    // A plain expiry notice keeps its action URL.
+    expect(
+      resolveNotificationTarget({ type: "SUBSCRIPTION_EXPIRED", metadata: {}, actionUrl: "/dashboard/bookings" }),
+    ).toBe("/dashboard/bookings");
+  });
 });
 
 describe("Renew on a membership row", () => {
