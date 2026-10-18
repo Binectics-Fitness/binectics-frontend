@@ -16,11 +16,8 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
 import { formatDate } from "@/utils/format";
-import type { ClassCancellationPolicy } from "@/lib/classes/cancellationPolicy";
+import { NO_TIMETABLE, useListingTimetable } from "@/lib/queries/classes";
 import { ClassCancellationPolicyNotice } from "./ClassCancellationPolicyNotice";
-
-type Timetable = { classes: GymClass[]; policy: ClassCancellationPolicy | null };
-const NO_TIMETABLE: Timetable = { classes: [], policy: null };
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -65,15 +62,7 @@ export function ListingClassesSection({
   // sign-out the last member's entries could still be cached, so nothing
   // is read from it without a signed-in user.
   const myWaitlist = user ? mine : [];
-  const { data: { classes, policy } = NO_TIMETABLE, isLoading } = useQuery<Timetable>({
-    queryKey: ["listingClasses", listingId],
-    queryFn: async () => {
-      const res = await classBookingsService.getListingClasses(listingId);
-      if (!res.success) return NO_TIMETABLE;
-      return { classes: res.data ?? [], policy: res.cancellation_policy ?? null };
-    },
-    enabled: !!listingId,
-  });
+  const { data: { classes, policy } = NO_TIMETABLE, isLoading } = useListingTimetable(listingId);
 
   if (!isLoading && classes.length === 0) return null; // gyms without classes skip the section
 

@@ -15,6 +15,8 @@ import {
   type ClassCancellationPolicy,
 } from "@/lib/classes/cancellationPolicy";
 import type { BookingRules } from "@/lib/api/teams";
+import { GymClassesLink } from "@/app/dashboard/member/_components/GymClassesLink";
+import { marketplaceService } from "@/lib/api/marketplace";
 
 /**
  * The class late-cancellation fee is a policy the gym sets and members see,
@@ -23,6 +25,11 @@ import type { BookingRules } from "@/lib/api/teams";
  */
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...rest }: { children: ReactNode; href: string } & Record<string, unknown>) => (
+    <a href={href} {...rest}>{children}</a>
+  ),
+}));
 
 const POLICY: ClassCancellationPolicy = {
   provider_name: "Iron Temple",
@@ -211,5 +218,113 @@ describe("provider settings: the policy editor", () => {
   it("previews exactly what the API will send members", () => {
     expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 50, cancellation_window_hours: 24 })).toEqual(POLICY);
     expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 0, cancellation_window_hours: 24 })).toBeNull();
+  });
+});
+
+describe("the timetable read", () => {
+  it("reads cancellation_policy from beside data in the API's envelope", async () => {
+    const body = {
+      success: true,
+      data: [{ ...spin, organization_id: "o1", capacity: 12, waitlist_enabled: false }],
+      cancellation_policy: { ...POLICY, note: "  Front desk.  " },
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const res = await classBookingsService.getListingClasses("l1");
+      expect(String(fetchMock.mock.calls[0][0])).toContain("/marketplace/listings/l1/classes");
+      expect(res.success).toBe(true);
+      expect(res.data).toHaveLength(1);
+      expect(res.cancellation_policy).toEqual({ ...POLICY, note: "Front desk." });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("an API without the policy reads as none", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ success: true, data: [] }), { status: 200, headers: { "Content-Type": "application/json" } }),
+      ),
+    );
+    try {
+      const res = await classBookingsService.getListingClasses("l1");
+      expect(res.cancellation_policy).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("one cache entry for a listing's timetable", () => {
+  // The home "Classes" link and the listing's schedule section read the
+  // same entry. It once held a bare class list from one and an object from
+  // the other, and the listing page crashed after the home page had run.
+  const yoga = { ...spin, organization_id: "o1", capacity: 12, waitlist_enabled: false };
+
+  function sharedClient() {
+    return new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+  }
+
+  it("the listing page opens after the home Classes link filled the cache", async () => {
+    vi.spyOn(marketplaceService, "getMyProviders").mockResolvedValue({
+      success: true,
+      data: { professionals: [], gyms: [{ organization_id: "o1", name: "Iron Temple", listing: { _id: "l1" } }] },
+    } as never);
+    vi.spyOn(classBookingsService, "getMyClassBookings").mockResolvedValue({ success: true, data: [] });
+    const timetable = vi
+      .spyOn(classBookingsService, "getListingClasses")
+      .mockResolvedValue({ success: true, data: [yoga as never], cancellation_policy: POLICY });
+    const client = sharedClient();
+
+    const home = render(
+      <QueryClientProvider client={client}>
+        <GymClassesLink organizationId="o1" gymName="Iron Temple" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("link", { name: "Book a class at Iron Temple" })).toBeInTheDocument();
+    home.unmount();
+
+    render(
+      <QueryClientProvider client={client}>
+        <ListingClassesSection listingId="l1" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Book" })).toBeInTheDocument();
+    expect(screen.getByTestId("class-cancellation-policy")).toHaveTextContent(SENTENCE);
+    // Served from the one entry the link left, not read again.
+    expect(timetable).toHaveBeenCalledTimes(1);
+  });
+
+  it("and the home link still works after the listing page filled it", async () => {
+    vi.spyOn(marketplaceService, "getMyProviders").mockResolvedValue({
+      success: true,
+      data: { professionals: [], gyms: [{ organization_id: "o1", name: "Iron Temple", listing: { _id: "l1" } }] },
+    } as never);
+    vi.spyOn(classBookingsService, "getMyClassBookings").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(classBookingsService, "getListingClasses").mockResolvedValue({
+      success: true,
+      data: [yoga as never],
+      cancellation_policy: null,
+    });
+    const client = sharedClient();
+
+    const listing = render(
+      <QueryClientProvider client={client}>
+        <ListingClassesSection listingId="l1" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: "Book" })).toBeInTheDocument();
+    listing.unmount();
+
+    render(
+      <QueryClientProvider client={client}>
+        <GymClassesLink organizationId="o1" gymName="Iron Temple" />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("link", { name: "Book a class at Iron Temple" })).toBeInTheDocument();
   });
 });
