@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { FOCUSABLE } from "@/lib/ui/useDialogFocus";
 import { Button } from "./Button";
 
 interface ConfirmationModalProps {
@@ -14,9 +15,6 @@ interface ConfirmationModalProps {
   isConfirming?: boolean;
   confirmVariant?: "primary" | "danger";
 }
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])';
 
 /**
  * Confirm / cancel dialog. Behaves like the shared Modal: role="dialog" with
@@ -73,6 +71,15 @@ export default function ConfirmationModal({
       const panel = panelRef.current;
       if (!panel) return;
 
+      // Keys aimed at another layer (an alert raised on top of this dialog,
+      // say) are left alone: only keys from inside the panel, or from focus
+      // that has fallen to <body>, belong here. Same rule as useDialogFocus.
+      const target = e.target as Node | null;
+      const inside = !!target && panel.contains(target);
+      const loose =
+        !target || target === document.body || target === document.documentElement;
+      if (!inside && !loose) return;
+
       if (e.key === "Escape") {
         // Claim the key so a Modal underneath (this dialog is its discard
         // guard) does not treat the same press as its own close request.
@@ -93,11 +100,13 @@ export default function ConfirmationModal({
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
-      const outside = !panel.contains(active);
-      if (e.shiftKey && (active === first || outside)) {
+      if (!inside || active === panel) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (e.shiftKey && active === first) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (active === last || outside)) {
+      } else if (!e.shiftKey && active === last) {
         e.preventDefault();
         first.focus();
       }

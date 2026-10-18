@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import ConfirmationModal from "../ConfirmationModal";
 import Modal from "../Modal";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 
 function Harness({
   isConfirming = false,
@@ -126,6 +127,52 @@ describe("ConfirmationModal", () => {
     openFromTrigger();
     fireEvent.click(screen.getByTestId("confirmation-backdrop"));
     expect(onCancelSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves keys aimed at an alert raised over a pending confirm alone (no keyboard trap)", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    function HookHarness() {
+      const { requestConfirmation, confirmationModal } = useConfirmationModal();
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() =>
+              requestConfirmation({
+                title: "Remove this member?",
+                description: "They lose access straight away.",
+                confirmLabel: "Remove",
+                onConfirm: () => Promise.reject(new Error("boom")),
+              })
+            }
+          >
+            Remove member
+          </button>
+          {confirmationModal}
+        </>
+      );
+    }
+    render(<HookHarness />);
+    openFromTrigger();
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+
+    // The failure alert opens on top while the confirm is still pending.
+    const ok = await screen.findByRole("button", { name: "OK" });
+    expect(document.activeElement).toBe(ok);
+    const panel = screen.getByRole("dialog", { name: "Remove this member?" });
+
+    // Tab and Escape from OK are not claimed by the confirm underneath.
+    expect(fireEvent.keyDown(ok, { key: "Tab" })).toBe(true);
+    expect(document.activeElement).toBe(ok);
+    expect(panel).not.toContainElement(document.activeElement as HTMLElement);
+    expect(fireEvent.keyDown(ok, { key: "Escape" })).toBe(true);
+
+    fireEvent.click(ok);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Cancel" })).not.toBeDisabled(),
+    );
+    expect(screen.getByRole("dialog", { name: "Remove this member?" })).toBeInTheDocument();
+    consoleErrorSpy.mockRestore();
   });
 
   it("as a Modal's discard guard, Escape cancels only the guard", () => {

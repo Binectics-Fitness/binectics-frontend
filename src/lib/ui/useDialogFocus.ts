@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 
-const FOCUSABLE =
+/** What a dialog's focus trap cycles through. Shared with ConfirmationModal. */
+export const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**

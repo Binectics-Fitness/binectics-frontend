@@ -62,6 +62,7 @@ function AlertDialog({
         <div className="flex justify-end">
           <button
             type="button"
+            autoFocus
             onClick={onClose}
             className="rounded-(--r-2) bg-signal px-5 py-2.5 text-sm font-semibold text-bg hover:bg-signal/90"
           >
