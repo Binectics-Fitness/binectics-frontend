@@ -179,7 +179,7 @@ describe("a client's program: complete and cancel", () => {
     await user.click(await screen.findByRole("button", { name: "Cancel" }));
     let dialog = await findConfirmDialog('Cancel "Couch to 5k" for Bola Ade?');
     expect(dialog).toHaveTextContent("This can't be undone.");
-    expect(dialog).toHaveTextContent("their Today screen shows the program has ended");
+    expect(dialog).toHaveTextContent("their Today screen in the app shows the program has ended");
     await user.click(within(dialog).getByRole("button", { name: "Keep program" }));
     expect(cancel).not.toHaveBeenCalled();
 

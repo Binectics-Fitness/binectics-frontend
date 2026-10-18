@@ -9,6 +9,7 @@ import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
+import { locationErrorMessage } from "@/lib/locationErrors";
 import { useOrganization } from "@/contexts/OrganizationContext";
 
 export default function LocationDetailClient() {
@@ -22,6 +23,9 @@ export default function LocationDetailClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Active locations other than this one. Deactivate is offered only while
+  // another one stays open (the API refuses the last one with a 409).
+  const [otherActive, setOtherActive] = useState(0);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Editable fields
@@ -44,6 +48,7 @@ export default function LocationDetailClient() {
         if (res.success && res.data) {
           const found = res.data.find((l) => l._id === params.locationId) ?? null;
           setLocation(found);
+          setOtherActive(res.data.filter((l) => l.is_active && l._id !== params.locationId).length);
           if (found) {
             setName(found.name);
             setStreet(found.street ?? "");
@@ -85,7 +90,7 @@ export default function LocationDetailClient() {
         setLocation(res.data);
         toast.success("Location saved");
       } else {
-        toast.error(res.message || "Couldn't save the location");
+        toast.error(locationErrorMessage(res, "save", name.trim(), "Couldn't save the location"));
       }
     } catch {
       toast.error("Couldn't save the location");
@@ -119,7 +124,7 @@ export default function LocationDetailClient() {
     requestConfirmation({
       title: `Deactivate "${target.name}"?`,
       description:
-        "It comes off your locations list. It can't be reactivated, so you'd have to add it again. Classes set to this location aren't changed.",
+        "It comes off your locations list, and you can reactivate it later. Classes set to this location aren't changed.",
       confirmLabel: "Deactivate location",
       confirmVariant: "danger",
       onConfirm: async () => {
@@ -130,7 +135,7 @@ export default function LocationDetailClient() {
             toast.success("Location deactivated");
             router.push("/dashboard/gym-owner/locations");
           } else {
-            toast.error(res.message || "Couldn't deactivate the location");
+            toast.error(locationErrorMessage(res, "deactivate", target.name, "Couldn't deactivate the location"));
             setSaving(false);
           }
         } catch {
@@ -140,6 +145,14 @@ export default function LocationDetailClient() {
       },
     });
   }
+
+  // The primary location and the only active one can't be deactivated.
+  const canDeactivate = !!location && !location.is_primary && otherActive > 0;
+  const deactivateNote = !location || canDeactivate
+    ? null
+    : location.is_primary
+      ? "This is your primary location. To deactivate it, make another location primary first."
+      : "This is your only active location, so it can't be deactivated.";
 
   const inputClass = "h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none";
 
@@ -217,16 +230,23 @@ export default function LocationDetailClient() {
                   Make primary
                 </button>
               )}
-              <button
-                type="button"
-                onClick={handleDeactivate}
-                disabled={saving}
-                className="rounded-(--r-2) border px-3 py-1.5 text-[12.5px] disabled:opacity-40"
-                style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
-              >
-                Deactivate location
-              </button>
+              {canDeactivate && (
+                <button
+                  type="button"
+                  onClick={handleDeactivate}
+                  disabled={saving}
+                  className="rounded-(--r-2) border px-3 py-1.5 text-[12.5px] disabled:opacity-40"
+                  style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+                >
+                  Deactivate location
+                </button>
+              )}
             </div>
+            {deactivateNote && (
+              <p className="text-[12.5px] mt-3" style={{ color: "var(--fg-3)" }}>
+                {deactivateNote}
+              </p>
+            )}
           </DSCard>
           )}
         </>

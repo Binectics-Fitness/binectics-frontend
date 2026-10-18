@@ -44,6 +44,9 @@ const spin = {
 const annex = {
   _id: "l2", organization_id: "o1", name: "Lekki annex", is_primary: false, is_active: true, created_at: "", updated_at: "",
 };
+const main = {
+  _id: "l1", organization_id: "o1", name: "Ikoyi main", is_primary: true, is_active: true, created_at: "", updated_at: "",
+};
 
 function wrap(node: ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -57,7 +60,7 @@ beforeEach(() => {
   nativeConfirm = vi.spyOn(window, "confirm");
   vi.spyOn(classesService, "getClass").mockResolvedValue({ success: true, data: spin } as never);
   vi.spyOn(classBookingsService, "getRoster").mockResolvedValue({ success: true, data: [] } as never);
-  vi.spyOn(teamsService, "getLocations").mockResolvedValue({ success: true, data: [annex] } as never);
+  vi.spyOn(teamsService, "getLocations").mockResolvedValue({ success: true, data: [main, annex] } as never);
 });
 
 describe("class detail: delete", () => {
@@ -95,13 +98,13 @@ describe("class detail: delete", () => {
 });
 
 describe("location detail: deactivate", () => {
-  it("deactivates only after the dialog, which says it can't be brought back", async () => {
+  it("deactivates only after the dialog, which says it can be brought back", async () => {
     const del = vi.spyOn(teamsService, "deleteLocation").mockResolvedValue({ success: true } as never);
     const user = userEvent.setup();
     wrap(<LocationDetailClient />);
     await user.click(await screen.findByRole("button", { name: "Deactivate location" }));
     const dialog = await findConfirmDialog('Deactivate "Lekki annex"?');
-    expect(dialog).toHaveTextContent("It can't be reactivated");
+    expect(dialog).toHaveTextContent("you can reactivate it later");
     expect(del).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Deactivate location" }));
     await waitFor(() => expect(del).toHaveBeenCalledWith("o1", "l2"));
@@ -117,5 +120,43 @@ describe("location detail: deactivate", () => {
     const dialog = await findConfirmDialog('Deactivate "Lekki annex"?');
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(del).not.toHaveBeenCalled();
+  });
+
+  it("isn't offered on the primary location", async () => {
+    vi.spyOn(teamsService, "getLocations").mockResolvedValue({
+      success: true,
+      data: [{ ...main, is_primary: false }, { ...annex, is_primary: true }],
+    } as never);
+    wrap(<LocationDetailClient />);
+    expect(await screen.findByText(/This is your primary location/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deactivate location" })).toBeNull();
+  });
+
+  it("isn't offered on the only active location", async () => {
+    vi.spyOn(teamsService, "getLocations").mockResolvedValue({
+      success: true,
+      data: [{ ...main, is_active: false }, annex],
+    } as never);
+    wrap(<LocationDetailClient />);
+    expect(await screen.findByText(/only active location/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Deactivate location" })).toBeNull();
+  });
+
+  it("explains a 409 from the API in words", async () => {
+    const { toast } = await import("@/components/Toast");
+    vi.spyOn(teamsService, "deleteLocation").mockResolvedValue({
+      success: false, status: 409, code: "LOCATION_LAST_ACTIVE", message: "raw",
+    } as never);
+    const user = userEvent.setup();
+    wrap(<LocationDetailClient />);
+    await user.click(await screen.findByRole("button", { name: "Deactivate location" }));
+    const dialog = await findConfirmDialog('Deactivate "Lekki annex"?');
+    await user.click(within(dialog).getByRole("button", { name: "Deactivate location" }));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        '"Lekki annex" is your only active location. Add or reactivate another one before you deactivate it.',
+      ),
+    );
+    expect(push).not.toHaveBeenCalled();
   });
 });
