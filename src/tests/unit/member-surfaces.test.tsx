@@ -42,7 +42,13 @@ vi.mock("@/contexts/OrganizationContext", () => {
 vi.mock("@/hooks/useRequireAuth", () => ({ useRoleGuard: () => ({ isAuthorized: true }) }));
 vi.mock("@/components/messaging/queries", () => ({ useMessagingUnread: () => 0 }));
 vi.mock("@/components/ds/ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
-vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
+vi.mock("@/components/messaging/StartConversationButton", () => ({
+  StartConversationButton: ({ label, ariaLabel, organizationId }: { label?: string; ariaLabel?: string; organizationId?: string }) => (
+    <button type="button" aria-label={ariaLabel} data-org={organizationId}>
+      {label}
+    </button>
+  ),
+}));
 vi.mock("@/components/messaging/MyCoachesCard", async (orig) => ({
   ...(await orig<typeof import("@/components/messaging/MyCoachesCard")>()),
   MyCoachesCard: () => null,
@@ -90,6 +96,7 @@ describe("membershipNotice (F8)", () => {
       title: `Your Iron Temple Ikeja membership ends ${inDays(3).slice(0, 10)}`,
       body: "It won't renew on its own. Renew now to keep your access.",
       renewHref: "/checkout?listing=l1&plan=p1",
+      ask: null,
       billingHref: "/dashboard/member/billing?subscriptionId=s1",
     });
   });
@@ -158,6 +165,99 @@ describe("membershipNotice (F8)", () => {
     expect(n?.title).toBe("Your Iron Temple payment is overdue");
     // No listing, no checkout: Billing is the way.
     expect(n?.renewHref).toBeNull();
+    // An API that sends no renewal_listing_id: whether the gym has a listing
+    // isn't known, so nobody is told to ask the gym.
+    expect(n?.ask).toBeNull();
+  });
+
+  it("renews a gym-enrolled membership through the listing the API names", () => {
+    const enrolled = sub({ listing_id: undefined, renewal_listing_id: "gl1" });
+    expect(membershipNotice([enrolled], NOW, fmt)).toMatchObject({
+      kind: "ending",
+      renewHref: "/checkout?listing=gl1&plan=p1",
+      ask: null,
+    });
+    const due = sub({ listing_id: undefined, renewal_listing_id: "gl1", status: MembershipSubscriptionStatus.PAST_DUE });
+    expect(membershipNotice([due], NOW, fmt)?.renewHref).toBe("/checkout?listing=gl1&plan=p1");
+  });
+
+  it("prefers renewal_listing_id (the listing that sells the plan) over the membership's own", () => {
+    expect(membershipNotice([sub({ renewal_listing_id: "l2" })], NOW, fmt)?.renewHref).toBe("/checkout?listing=l2&plan=p1");
+    // Explicit null with an own listing: the API found it can't be opened,
+    // so no Renew (its checkout would 404); the member asks the gym.
+    expect(membershipNotice([sub({ renewal_listing_id: null })], NOW, fmt)).toMatchObject({
+      renewHref: null,
+      ask: { gymName: "Iron Temple", organizationId: "g1", canMessage: true },
+      body: "It won't renew on its own. Ask Iron Temple to renew it.",
+    });
+  });
+
+  it("asks the gym to renew when the API says it has no listing", () => {
+    const due = sub({
+      listing_id: undefined,
+      renewal_listing_id: null,
+      status: MembershipSubscriptionStatus.PAST_DUE,
+      grace_expires_at: inDays(5),
+    });
+    expect(membershipNotice([due], NOW, fmt)).toMatchObject({
+      kind: "past_due",
+      renewHref: null,
+      ask: { gymName: "Iron Temple", organizationId: "g1", canMessage: true },
+      body: `You keep access until ${inDays(5).slice(0, 10)}. Ask Iron Temple to renew it.`,
+    });
+    const ending = sub({ listing_id: undefined, renewal_listing_id: null });
+    expect(membershipNotice([ending], NOW, fmt)).toMatchObject({
+      kind: "ending",
+      renewHref: null,
+      ask: { gymName: "Iron Temple", organizationId: "g1", canMessage: true },
+      body: "It won't renew on its own. Ask Iron Temple to renew it.",
+    });
+  });
+
+  it("never offers Renew or ask for a past-due membership whose card will be retried, even with a listing named", () => {
+    const retrying = sub({
+      status: MembershipSubscriptionStatus.PAST_DUE,
+      collection_method: "card_auto",
+      auto_renew: false,
+      renewal_listing_id: null,
+      listing_id: undefined,
+    });
+    // No renewal_retry from the API: card_auto + past due is still retried.
+    const n = membershipNotice([retrying], NOW, fmt);
+    expect(n).toMatchObject({ renewHref: null, ask: null, body: "We'll try your card again soon. You don't need to do anything yet." });
+  });
+});
+
+describe("membership card on home: ask the gym", () => {
+  it("shows Message (not Renew) when the gym has no listing and its inbox takes the member", async () => {
+    const { MembershipNoticeCard } = await import("@/app/dashboard/member/_components/MembershipNoticeCard");
+    const due = sub({ listing_id: undefined, renewal_listing_id: null, status: MembershipSubscriptionStatus.PAST_DUE });
+    render(<MembershipNoticeCard notice={membershipNotice([due], NOW, fmt)!} />);
+    const card = screen.getByTestId("membership-notice");
+    expect(within(card).queryByRole("link", { name: "Renew" })).toBeNull();
+    const message = within(card).getByRole("button", { name: "Message Iron Temple about renewing" });
+    expect(message).toHaveAttribute("data-org", "g1");
+    expect(within(card).getByRole("link", { name: "Billing" })).toBeInTheDocument();
+  });
+
+  it("shows no Message when the member can't message the gym", async () => {
+    const { MembershipNoticeCard } = await import("@/app/dashboard/member/_components/MembershipNoticeCard");
+    render(
+      <MembershipNoticeCard
+        notice={{
+          subscriptionId: "s1",
+          kind: "ending",
+          title: "t",
+          body: "It won't renew on its own. Ask Iron Temple to renew it.",
+          renewHref: null,
+          ask: { gymName: "Iron Temple", organizationId: "g1", canMessage: false },
+          billingHref: "/dashboard/member/billing?subscriptionId=s1",
+        }}
+      />,
+    );
+    const card = screen.getByTestId("membership-notice");
+    expect(within(card).queryByRole("button")).toBeNull();
+    expect(within(card).getByRole("link", { name: "Billing" })).toHaveClass("btn-primary-v2");
   });
 });
 

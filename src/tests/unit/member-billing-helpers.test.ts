@@ -15,6 +15,9 @@ import {
   consentFromError,
   groupCardsByProvider,
   reasonFromError,
+  renewActionFor,
+  renewalListingFor,
+  renewDue,
   renewHrefForMembership,
   renewHrefForNotification,
   renewHrefFromMetadata,
@@ -317,6 +320,133 @@ describe("why a card wasn't saved, or a renewal stopped", () => {
     expect(chargeFailureCopy({ closed_reason: null, attempts: [{ failure_class: "hard" }, { failure_class: "soft" }] })).toMatch(/retried/);
     expect(chargeFailureCopy({ closed_reason: null, attempts: [] })).toBeNull();
     expect(chargeFailureCopy({ closed_reason: "odd_new_reason", attempts: [] })).toBe("The renewal was stopped.");
+  });
+});
+
+describe("parity with mobile's memberBilling (#246 review)", () => {
+  const due = { status: MembershipSubscriptionStatus.PAST_DUE };
+
+  it("cardRetryFor without renewal_retry: past due on card_auto is pending, auto-renew on or off (mobile)", () => {
+    expect(cardRetryFor(sub({ ...due, collection_method: "card_auto", auto_renew: true })).pending).toBe(true);
+    expect(cardRetryFor(sub({ ...due, collection_method: "card_auto", auto_renew: false })).pending).toBe(true);
+    expect(cardRetryFor(sub({ ...due, collection_method: "pay_link", auto_renew: false })).pending).toBe(false);
+    expect(cardRetryFor(sub({ ...due, collection_method: undefined })).pending).toBe(false);
+    // Only past due: an active card_auto membership isn't being retried.
+    expect(cardRetryFor(sub({ collection_method: "card_auto", auto_renew: false })).pending).toBe(false);
+    // renewal_retry, when sent, is the answer.
+    expect(
+      cardRetryFor(sub({ ...due, collection_method: "card_auto", renewal_retry: { pending: false, next_attempt_at: null } })).pending,
+    ).toBe(false);
+  });
+
+  it("no Renew for a past-due card_auto membership with auto-renew off while the old API says nothing", () => {
+    const s = sub({ ...due, collection_method: "card_auto", auto_renew: false });
+    expect(renewDue(s, NOW)).toBe(false);
+    expect(renewHrefForMembership(s, NOW)).toBeNull();
+    expect(renewActionFor(s, NOW)).toBeNull();
+  });
+
+  it("past due needs a valid end date, as every other status does (mobile renewDue)", () => {
+    expect(renewDue(sub({ ...due }), NOW)).toBe(true);
+    expect(renewDue(sub({ ...due, end_date: undefined }), NOW)).toBe(false);
+    expect(renewDue(sub({ ...due, end_date: "not a date" }), NOW)).toBe(false);
+    expect(renewHrefForMembership(sub({ ...due, end_date: undefined }), NOW)).toBeNull();
+    expect(renewDue(sub({ status: MembershipSubscriptionStatus.EXPIRED, end_date: undefined }), NOW)).toBe(false);
+    expect(renewDue(sub({ end_date: undefined }), NOW)).toBe(false);
+  });
+
+  it("never due for paused, suspended, cancelled or pending memberships", () => {
+    for (const status of [
+      MembershipSubscriptionStatus.PAUSED,
+      MembershipSubscriptionStatus.SUSPENDED,
+      MembershipSubscriptionStatus.CANCELLED,
+      MembershipSubscriptionStatus.PENDING_PAYMENT,
+    ]) {
+      const s = sub({ status, renewal_listing_id: "l1" });
+      expect(renewDue(s, NOW)).toBe(false);
+      expect(renewActionFor(s, NOW)).toBeNull();
+      // Not even "ask the gym": nothing is due.
+      expect(renewActionFor(sub({ status, listing_id: undefined, renewal_listing_id: null }), NOW)).toBeNull();
+    }
+  });
+
+  it("never anything while a card retry is pending, whatever listing is named", () => {
+    const retrying = { renewal_retry: { pending: true, next_attempt_at: "2026-10-12T00:00:00Z" } };
+    expect(renewActionFor(sub({ ...due, ...retrying, renewal_listing_id: "l2" }), NOW)).toBeNull();
+    expect(renewActionFor(sub({ ...due, ...retrying, listing_id: undefined, renewal_listing_id: null }), NOW)).toBeNull();
+    expect(renewActionFor(sub({ ...retrying, renewal_listing_id: "l2" }), NOW)).toBeNull();
+  });
+});
+
+describe("where Renew points (renewal_listing_id, api #258/#263/#265)", () => {
+  it("renewal_listing_id when the API sends it; the own listing only on an older API", () => {
+    expect(renewalListingFor(sub({ renewal_listing_id: "l2" }))).toBe("l2");
+    expect(renewHrefForMembership(sub({ renewal_listing_id: "l2" }), NOW)).toBe("/checkout?listing=l2&plan=p1");
+    // No field (older API): the membership's own listing.
+    expect(renewalListingFor(sub())).toBe("l1");
+    expect(renewalListingFor(sub({ listing_id: "l3" }))).toBe("l3");
+    // A malformed id is never put in a URL, and isn't replaced by the own one.
+    expect(renewalListingFor(sub({ renewal_listing_id: "a/b?c" }))).toBeNull();
+  });
+
+  it("explicit null is final, even with an own listing: the API found it can't be opened, so ask the gym", () => {
+    const s = sub({ renewal_listing_id: null });
+    expect(renewalListingFor(s)).toBeNull();
+    expect(renewHrefForMembership(s, NOW)).toBeNull();
+    expect(renewActionFor(s, NOW)).toEqual({ kind: "ask_gym", gymName: "Iron Temple", organizationId: "o1", canMessage: true });
+  });
+
+  it("pays for renewal_plan_id when the API names one, else the current plan", () => {
+    expect(renewHrefForMembership(sub({ renewal_plan_id: "p2" }), NOW)).toBe("/checkout?listing=l1&plan=p2");
+    expect(renewHrefForMembership(sub({ renewal_plan_id: null }), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(sub({ renewal_plan_id: "x y" }), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(sub({ renewal_listing_id: "gl1", renewal_plan_id: "p2" }), NOW)).toBe(
+      "/checkout?listing=gl1&plan=p2",
+    );
+  });
+
+  it("a gym-enrolled membership renews through the gym's listing the API names", () => {
+    const enrolled = sub({ listing_id: undefined, renewal_listing_id: "gl1" });
+    expect(renewActionFor(enrolled, NOW)).toEqual({ kind: "checkout", href: "/checkout?listing=gl1&plan=p1" });
+  });
+
+  it("null (the API says there is none) vs absent (an older API: not known)", () => {
+    expect(renewalListingFor(sub({ listing_id: undefined, renewal_listing_id: null }))).toBeNull();
+    expect(renewalListingFor(sub({ listing_id: undefined }))).toBeUndefined();
+    // Not known: no Renew, and nobody is told to ask the gym.
+    expect(renewActionFor(sub({ listing_id: undefined }), NOW)).toBeNull();
+  });
+
+  it("asks the gym when the API says it has no listing, with Message while a membership there opens its inbox", () => {
+    const none = { listing_id: undefined, renewal_listing_id: null };
+    expect(renewActionFor(sub({ ...none }), NOW)).toEqual({
+      kind: "ask_gym",
+      gymName: "Iron Temple",
+      organizationId: "o1",
+      canMessage: true,
+    });
+    // Expired: the gym's inbox doesn't take an ex-member...
+    const lapsed = sub({ ...none, status: MembershipSubscriptionStatus.EXPIRED, end_date: new Date(NOW.getTime() - 3 * DAY).toISOString() });
+    expect(renewActionFor(lapsed, NOW)).toMatchObject({ kind: "ask_gym", canMessage: false });
+    // ...unless another live membership at the same gym does (per organization).
+    const other = sub({ _id: "s2", status: MembershipSubscriptionStatus.PAUSED, organization_id: "o1" });
+    expect(renewActionFor(lapsed, NOW, [lapsed, other])).toMatchObject({ kind: "ask_gym", canMessage: true });
+    // A live membership at another gym doesn't count.
+    const elsewhere = sub({ _id: "s3", organization_id: { _id: "o2", name: "Elsewhere" } });
+    expect(renewActionFor(lapsed, NOW, [lapsed, elsewhere])).toMatchObject({ kind: "ask_gym", canMessage: false });
+  });
+
+  it("no gym to ask: nothing", () => {
+    expect(renewActionFor(sub({ listing_id: undefined, renewal_listing_id: null, organization_id: undefined }), NOW)).toBeNull();
+  });
+
+  it("no ask for a plan that isn't due: one-time, free, negotiated, or weeks from its end", () => {
+    const none = { listing_id: undefined, renewal_listing_id: null };
+    const plan = sub().plan_id as Exclude<MembershipSubscription["plan_id"], string>;
+    expect(renewActionFor(sub({ ...none, plan_id: { ...plan, plan_type: MembershipPlanType.ONE_TIME } }), NOW)).toBeNull();
+    expect(renewActionFor(sub({ ...none, plan_id: { ...plan, price_minor: 0 } }), NOW)).toBeNull();
+    expect(renewActionFor(sub({ ...none, plan_id: { ...plan, is_self_serve: false } }), NOW)).toBeNull();
+    expect(renewActionFor(sub({ ...none, end_date: new Date(NOW.getTime() + 20 * DAY).toISOString() }), NOW)).toBeNull();
   });
 });
 

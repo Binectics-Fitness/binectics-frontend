@@ -703,6 +703,18 @@ export interface MembershipSubscription {
    */
   renewal_retry?: { pending: boolean; next_attempt_at: string | null } | null;
   /**
+   * The listing whose checkout renews this membership (my-subscriptions,
+   * api #258, refined in #263 and #265): the openable listing that sells the
+   * plan, else the membership's own, else its gym's newest. Null when there
+   * is none; absent on an older API.
+   */
+  renewal_listing_id?: string | null;
+  /**
+   * The plan the renewal checkout pays for, when the API names one (a
+   * separate API change adds it). Absent: the current `plan_id`.
+   */
+  renewal_plan_id?: string | null;
+  /**
    * Set on the subscribe response when "Renew automatically" was ticked but
    * the card wasn't saved: why, as a code (api #206).
    */

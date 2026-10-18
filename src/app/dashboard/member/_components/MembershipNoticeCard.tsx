@@ -1,14 +1,19 @@
 import Link from "next/link";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import type { MembershipNotice } from "../memberHome";
 
 /**
  * Home's one status card for a membership that needs the member (F8): an
  * overdue payment (danger) or a term ending this week that nothing renews
  * (warn). An inline banner with one primary action (K14): Renew when paying
- * is the fix, and Billing, opened at the membership, either way.
+ * is the fix; Message the gym when the gym has no listing to pay through
+ * and its inbox takes the member (as on mobile); and Billing, opened at the
+ * membership, either way.
  */
 export function MembershipNoticeCard({ notice }: { notice: MembershipNotice }) {
   const overdue = notice.kind === "past_due";
+  const message = !notice.renewHref && notice.ask?.canMessage ? notice.ask : null;
+  const hasPrimary = !!notice.renewHref || !!message;
   return (
     <section
       aria-labelledby="membership-notice-title"
@@ -30,7 +35,7 @@ export function MembershipNoticeCard({ notice }: { notice: MembershipNotice }) {
       <div className="flex shrink-0 gap-2">
         <Link
           href={notice.billingHref}
-          className={notice.renewHref ? "btn-ghost-v2 sm" : "btn-primary-v2 sm"}
+          className={hasPrimary ? "btn-ghost-v2 sm" : "btn-primary-v2 sm"}
           style={{ whiteSpace: "nowrap" }}
         >
           Billing
@@ -39,6 +44,16 @@ export function MembershipNoticeCard({ notice }: { notice: MembershipNotice }) {
           <Link href={notice.renewHref} className="btn-primary-v2 sm" style={{ whiteSpace: "nowrap" }}>
             Renew
           </Link>
+        )}
+        {message && (
+          // No listing to renew through: ask the gym itself.
+          <StartConversationButton
+            organizationId={message.organizationId}
+            messagesHref="/dashboard/messages"
+            label="Message"
+            ariaLabel={`Message ${message.gymName} about renewing`}
+            className="btn-primary-v2 sm"
+          />
         )}
       </div>
     </section>

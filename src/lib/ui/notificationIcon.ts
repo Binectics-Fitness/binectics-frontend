@@ -68,6 +68,15 @@ const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   PAYMENT_METHOD_UNUSABLE: { icon: "payment", tone: "danger" },
   SUBSCRIPTION_PAYMENT_FAILED: { icon: "payment", tone: "danger" },
   MEMBER_PAYMENT_FAILED_FINAL: { icon: "payment", tone: "danger" },
+  // Refunds and disputes, as on mobile.
+  REFUND_ISSUED: { icon: "payment", tone: "success" },
+  REFUND_FAILED: { icon: "payment", tone: "danger" },
+  REFUND_REQUEST_DECIDED: { icon: "payment" },
+  // Binectics asks the provider to refund a cancelled session: waiting on
+  // their answer. Mobile has no entry yet (providers handle refunds on web).
+  REFUND_SUGGESTED: { icon: "payment", tone: "warn" },
+  DISPUTE_OPENED: { icon: "payment", tone: "warn" },
+  DISPUTE_UPDATED: { icon: "payment" },
 
   CLIENT_INVITATION: { icon: "client", tone: "warn" },
   CLIENT_REQUEST: { icon: "client", tone: "warn" },

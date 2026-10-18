@@ -46,3 +46,19 @@ describe("a gym ending a connection", () => {
     expect(notificationIcon({ type: "CONNECTION_ENDED", category: "mention" })).toEqual({ icon: "client", tone: "neutral" });
   });
 });
+
+describe("refunds and disputes", () => {
+  it("match the mobile table: issued is success, failed is danger, a new dispute waits on the provider", () => {
+    expect(notificationIcon({ type: "REFUND_ISSUED", category: "payment" })).toEqual({ icon: "payment", tone: "success" });
+    expect(notificationIcon({ type: "REFUND_FAILED", category: "payment" })).toEqual({ icon: "payment", tone: "danger" });
+    expect(notificationIcon({ type: "REFUND_REQUEST_DECIDED", category: "payment" })).toEqual({ icon: "payment", tone: "neutral" });
+    expect(notificationIcon({ type: "DISPUTE_OPENED", category: "payment" })).toEqual({ icon: "payment", tone: "warn" });
+    expect(notificationIcon({ type: "DISPUTE_UPDATED", category: "payment" })).toEqual({ icon: "payment", tone: "neutral" });
+  });
+
+  it("asks the provider to refund: waiting on their answer, so warn", () => {
+    expect(notificationIcon({ type: "REFUND_SUGGESTED", category: "payment" })).toEqual({ icon: "payment", tone: "warn" });
+    // Keyed on the type, whatever the category says.
+    expect(notificationIcon({ type: "REFUND_SUGGESTED", category: "system" })).toEqual({ icon: "payment", tone: "warn" });
+  });
+});

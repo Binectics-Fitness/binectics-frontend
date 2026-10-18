@@ -8,7 +8,7 @@ import { ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/c
 import type { ClassBooking } from "@/lib/api/classBookings";
 import type { WeightLog } from "@/lib/api/progress";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
-import { RENEW_AHEAD_DAYS, cardRetryFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
+import { RENEW_AHEAD_DAYS, cardRetryFor, renewActionFor, type RenewAction } from "@/lib/billing/autoRenew";
 
 const DAY_MS = 86_400_000;
 
@@ -178,6 +178,11 @@ export interface MembershipNotice {
   body: string;
   /** The checkout that renews it in place; null when paying again isn't the next step. */
   renewHref: string | null;
+  /**
+   * The API says the gym has no listing to pay through: the member asks the
+   * gym to renew. `canMessage` when the gym's inbox takes them.
+   */
+  ask: { gymName: string; organizationId: string; canMessage: boolean } | null;
   /** Billing, opened at this membership. */
   billingHref: string;
 }
@@ -193,14 +198,24 @@ function providerOf(sub: MembershipSubscription): string | null {
 const billingHrefFor = (sub: MembershipSubscription) =>
   `/dashboard/member/billing?subscriptionId=${encodeURIComponent(sub._id)}`;
 
+const askOf = (a: RenewAction | null): MembershipNotice["ask"] =>
+  a?.kind === "ask_gym"
+    ? { gymName: a.gymName, organizationId: a.organizationId, canMessage: a.canMessage }
+    : null;
+
 /**
  * A membership that needs the member soon, for the one status card on home:
  * a payment that is overdue, or a term ending within RENEW_AHEAD_DAYS that
  * nothing will renew. Overdue first, then the soonest end. Never one the
  * member cancelled (they chose to leave), one a saved card renews, or one
- * that can't be renewed in the app. Renew follows renewHrefForMembership,
- * the same rule as mobile's renewDue (a past-due membership still on the
- * saved card gets Billing only).
+ * that can't be renewed in the app.
+ *
+ * When to renew is mobile's renewDue rule; where follows renewActionFor
+ * (see its note on how it differs from mobile's): Renew opens the listing
+ * the API names (`renewal_listing_id`), or on an older API the membership's
+ * own; when the API says there is none, the card says to ask the gym (with Message when
+ * its inbox takes the member). A past-due membership still on the saved
+ * card, or one whose card will be tried again, gets Billing only.
  */
 export function membershipNotice(
   subs: readonly MembershipSubscription[],
@@ -213,15 +228,23 @@ export function membershipNotice(
   if (due) {
     const retry = cardRetryFor(due);
     const name = providerOf(due);
+    // Null while the card will be tried again: paying now could charge twice.
+    const action = renewActionFor(due, now, subs);
+    const ask = askOf(action);
+    const askLine = ask ? `Ask ${ask.gymName} to renew it.` : null;
     let body: string;
     if (retry.pending) {
       body = retry.nextAttemptAt
         ? `We'll try your card again on ${fmt(retry.nextAttemptAt)}. You don't need to do anything yet.`
         : "We'll try your card again soon. You don't need to do anything yet.";
     } else if (due.auto_renew && due.collection_method === "card_auto") {
-      // Still on the saved card: no Renew (renewHrefForMembership), so the
-      // card points to the membership on Billing, where auto-renew goes off.
+      // Still on the saved card: no Renew (renewDue), so the card points to
+      // the membership on Billing, where auto-renew goes off.
       body = "Your saved card is still set to pay for it. Open Billing to see your options.";
+    } else if (askLine) {
+      body = due.grace_expires_at
+        ? `You keep access until ${fmt(due.grace_expires_at)}. ${askLine}`
+        : askLine;
     } else {
       body = due.grace_expires_at
         ? `Pay by ${fmt(due.grace_expires_at)} to keep your access.`
@@ -232,8 +255,8 @@ export function membershipNotice(
       kind: "past_due",
       title: name ? `Your ${name} payment is overdue` : "A membership payment is overdue",
       body,
-      // Never while the card will be tried again: paying now could charge twice.
-      renewHref: retry.pending ? null : renewHrefForMembership(due, now),
+      renewHref: action?.kind === "checkout" ? action.href : null,
+      ask,
       billingHref: billingHrefFor(due),
     };
   }
@@ -245,19 +268,23 @@ export function membershipNotice(
       const end = endOf(s);
       return Number.isFinite(end) && end > t && end - t <= RENEW_AHEAD_DAYS * DAY_MS;
     })
-    .map((s) => ({ sub: s, href: renewHrefForMembership(s, now) }))
-    .filter((x): x is { sub: MembershipSubscription; href: string } => x.href !== null)
+    .map((s) => ({ sub: s, action: renewActionFor(s, now, subs) }))
+    .filter((x): x is { sub: MembershipSubscription; action: RenewAction } => x.action !== null)
     .sort((a, b) => endOf(a.sub) - endOf(b.sub))[0];
   if (!ending) return null;
 
   const name = providerOf(ending.sub);
   const when = fmt(ending.sub.end_date as string);
+  const ask = askOf(ending.action);
   return {
     subscriptionId: ending.sub._id,
     kind: "ending",
     title: name ? `Your ${name} membership ends ${when}` : `A membership ends ${when}`,
-    body: "It won't renew on its own. Renew now to keep your access.",
-    renewHref: ending.href,
+    body: ask
+      ? `It won't renew on its own. Ask ${ask.gymName} to renew it.`
+      : "It won't renew on its own. Renew now to keep your access.",
+    renewHref: ending.action.kind === "checkout" ? ending.action.href : null,
+    ask,
     billingHref: billingHrefFor(ending.sub),
   };
 }

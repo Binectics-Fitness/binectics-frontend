@@ -259,6 +259,105 @@ describe("Renew", () => {
   });
 });
 
+describe("Renew through the listing the API names, or ask the gym", () => {
+  it("renews a gym-enrolled membership through renewal_listing_id", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ end_date: soon, listing_id: undefined, renewal_listing_id: "gl1" })],
+    });
+    renderPage();
+    expect(await screen.findByRole("link", { name: "Renew Monthly" })).toHaveAttribute(
+      "href",
+      "/checkout?listing=gl1&plan=p1",
+    );
+  });
+
+  it("past due with no listing anywhere: asks the gym, with Message, and no Renew", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({
+          status: MembershipSubscriptionStatus.PAST_DUE,
+          grace_expires_at: soon,
+          listing_id: undefined,
+          renewal_listing_id: null,
+        }),
+      ],
+    });
+    renderPage();
+    const banner = await screen.findByRole("alert");
+    expect(banner).toHaveTextContent(`You keep access until ${formatDate(soon)}. Ask Iron Temple to renew it.`);
+    expect(within(banner).getByRole("button", { name: "Message Iron Temple about renewing" })).toBeInTheDocument();
+    expect(screen.getByTestId("ask-gym-line")).toHaveTextContent("Ask Iron Temple to renew this membership.");
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+    expect(screen.getByText("Auto-renew is off.")).toBeInTheDocument();
+  });
+
+  it("expired with no listing and no live membership at the gym: the ask line, but no Message", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({
+          status: MembershipSubscriptionStatus.EXPIRED,
+          end_date: new Date(Date.now() - 3 * DAY).toISOString(),
+          listing_id: undefined,
+          renewal_listing_id: null,
+        }),
+      ],
+    });
+    renderPage();
+    expect(await screen.findByTestId("ask-gym-line")).toHaveTextContent("Ask Iron Temple to renew this membership.");
+    expect(screen.queryByRole("button", { name: /about renewing/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("past due on card_auto with auto-renew off (still retried): never tells the member to press a Renew that isn't there", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: false, collection_method: "card_auto" })],
+    });
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/try your card again soon/);
+    expect(screen.getByText("Auto-renew is off.")).toBeInTheDocument();
+    expect(screen.queryByText(/Renew to keep your access/)).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("past due off the card with a listing: the line still points to Renew", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: false, collection_method: "pay_link" })],
+    });
+    renderPage();
+    expect(await screen.findByText("Auto-renew is off. Renew to keep your access.")).toBeInTheDocument();
+  });
+
+  it("an older API (no renewal_listing_id) and no listing: neither Renew nor ask", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, listing_id: undefined })],
+    });
+    renderPage();
+    await screen.findByRole("alert");
+    expect(screen.queryByTestId("ask-gym-line")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("no Renew and no ask on paused or suspended memberships", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({ _id: "s1", status: MembershipSubscriptionStatus.PAUSED, end_date: soon, renewal_listing_id: "l1" }),
+        sub({ _id: "s2", status: MembershipSubscriptionStatus.SUSPENDED, end_date: soon, listing_id: undefined, renewal_listing_id: null }),
+      ],
+    });
+    renderPage();
+    await screen.findByTestId("paused-line");
+    expect(screen.queryByTestId("ask-gym-line")).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+});
+
 describe("past due, card retries (no second payment)", () => {
   it("says when the card will be tried again, and offers no Renew, while retries remain", async () => {
     getSubs.mockResolvedValue({

@@ -25,7 +25,8 @@ import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { queryKeys } from "@/lib/queries/keys";
 import { useMyPaymentMethods } from "@/lib/queries/memberBilling";
-import { cardLabel, cardRetryFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
+import { cardLabel, cardRetryFor, renewActionFor, renewHrefForMembership } from "@/lib/billing/autoRenew";
+import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { MembershipPlanType } from "@/lib/types";
 import {
   canPause,
@@ -289,8 +290,10 @@ export function BillingClient() {
       {/* Payment problems first: a past-due membership loses access when its
           grace runs out, so the way to pay sits at the top. */}
       {pastDue.map((s) => {
-        const href = renewHrefForMembership(s);
-        // While the card will be tried again, don't invite a second payment.
+        // Null while the card will be tried again: no second payment.
+        const action = renewActionFor(s, undefined, subs);
+        const href = action?.kind === "checkout" ? action.href : null;
+        const ask = action?.kind === "ask_gym" ? action : null;
         const retry = cardRetryFor(s);
         const name = planOf(s)?.name ?? "membership";
         return (
@@ -307,17 +310,29 @@ export function BillingClient() {
                     ? `We'll try your card again on ${formatDate(retry.nextAttemptAt)}. You don't need to do anything yet.`
                     : "We'll try your card again soon. You don't need to do anything yet."
                   : s.auto_renew && s.collection_method === "card_auto"
-                    ? // No Renew here (renewHrefForMembership): auto-renew goes off first.
+                    ? // No Renew here (renewDue): auto-renew goes off first.
                       "Your saved card is still set to pay for it. To pay another way, turn auto-renew off on the membership below first."
-                    : s.grace_expires_at
-                    ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
-                    : "Pay now to keep your access."}
+                    : ask
+                      ? // The gym has no listing to pay through: the gym renews it.
+                        `${s.grace_expires_at ? `You keep access until ${formatDate(s.grace_expires_at)}. ` : ""}Ask ${ask.gymName} to renew it.`
+                      : s.grace_expires_at
+                        ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
+                        : "Pay now to keep your access."}
               </p>
             </div>
-            {href && !retry.pending && (
+            {href && (
               <Link href={href} className="btn-primary-v2 md shrink-0" aria-label={`Renew ${name} now`}>
                 Renew now
               </Link>
+            )}
+            {ask?.canMessage && (
+              <StartConversationButton
+                organizationId={ask.organizationId}
+                messagesHref="/dashboard/messages"
+                label="Message"
+                ariaLabel={`Message ${ask.gymName} about renewing`}
+                className="btn-primary-v2 md shrink-0"
+              />
             )}
           </div>
         );
@@ -342,7 +357,9 @@ export function BillingClient() {
             !TERMINAL_MEMBERSHIP_STATUSES.includes(s.status) &&
             s.status !== MembershipSubscriptionStatus.PENDING_PAYMENT;
           const recurring = plan?.plan_type === MembershipPlanType.SUBSCRIPTION;
-          const renewHref = renewHrefForMembership(s);
+          const renewAction = renewActionFor(s, undefined, subs);
+          const renewHref = renewAction?.kind === "checkout" ? renewAction.href : null;
+          const ask = renewAction?.kind === "ask_gym" ? renewAction : null;
           const card = s.payment_method_id ? cardById.get(String(s.payment_method_id)) : undefined;
           const byCard = s.auto_renew && s.collection_method === "card_auto";
           return (
@@ -393,6 +410,12 @@ export function BillingClient() {
                     Access continues until {formatDate(s.grace_expires_at)}, settle the renewal to keep it.
                   </div>
                 )}
+                {ask && (
+                  // The gym publishes no listing to pay through: the gym renews it.
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-2)" }} data-testid="ask-gym-line">
+                    Ask {ask.gymName} to renew this membership.
+                  </div>
+                )}
               </div>
               <span className="font-mono text-[13.5px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(minorToMajor(s.amount_paid_minor, s.currency), s.currency)}
@@ -408,6 +431,15 @@ export function BillingClient() {
                 >
                   Renew
                 </Link>
+              )}
+              {ask?.canMessage && (
+                <StartConversationButton
+                  organizationId={ask.organizationId}
+                  messagesHref="/dashboard/messages"
+                  label="Message"
+                  ariaLabel={`Message ${ask.gymName} about renewing`}
+                  className="btn-ghost-v2 md shrink-0"
+                />
               )}
               {canResume(s) && (
                 <button
@@ -460,11 +492,15 @@ export function BillingClient() {
                 ) : s.status === MembershipSubscriptionStatus.PAST_DUE ? (
                   // Past due: only OFF (the API turns it on for active or
                   // paused memberships only), behind a confirmation. Once
-                  // it's off the row offers Renew instead.
+                  // it's off the row offers Renew instead, when there is a
+                  // Renew to press (not while the card is still retried, nor
+                  // when the gym has to be asked).
                   s.auto_renew ? (
                     <AutoRenewControl sub={s} renewHref={null} onChanged={onAutoRenewChanged} offOnly />
                   ) : (
-                    <p className="text-[12.5px] text-fg-2">Auto-renew is off. Renew to keep your access.</p>
+                    <p className="text-[12.5px] text-fg-2">
+                      {renewHref ? "Auto-renew is off. Renew to keep your access." : "Auto-renew is off."}
+                    </p>
                   )
                 ) : (
                   <AutoRenewControl sub={s} renewHref={renewHref ?? renewHrefForMembership(s, dayBeforeTermEnd(s))} onChanged={onAutoRenewChanged} />
