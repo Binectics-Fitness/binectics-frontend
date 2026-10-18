@@ -61,9 +61,15 @@ export type NoShowPolicy = "none" | "fee" | "block_after_3";
 export interface BookingRules {
   auto_confirm: boolean;
   require_parq: boolean;
-  /** 0–100; 0 disables the cancellation fee. */
+  /**
+   * Class late-cancellation fee, 0–100; 0 = none. A policy members are
+   * shown: recorded on a late cancellation, never charged by Binectics.
+   */
   cancellation_fee_percent: number;
+  /** Hours before a class inside which cancelling incurs the fee; 0 = none. */
   cancellation_window_hours: number;
+  /** The gym's own words on the policy, shown to members (at most 500 characters). */
+  cancellation_policy_note?: string;
   allow_video_recording: boolean;
   public_reviews: boolean;
   booking_lead_time_hours: number;

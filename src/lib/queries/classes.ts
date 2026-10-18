@@ -5,6 +5,8 @@ import {
   type CreateGymClassRequest,
   type UpdateGymClassRequest,
 } from "@/lib/api/classes";
+import { classBookingsService } from "@/lib/api/classBookings";
+import type { ClassCancellationPolicy } from "@/lib/classes/cancellationPolicy";
 
 const classesKey = (orgId: string) => ["classes", "list", orgId] as const;
 const classKey = (orgId: string, classId: string) =>
@@ -72,5 +74,28 @@ export function useDeleteGymClass(orgId: string | undefined) {
       return classesService.deleteClass(orgId, classId);
     },
     onSuccess: invalidate,
+  });
+}
+
+/** A listing's public weekly timetable and the gym's class cancellation policy. */
+export type ListingTimetable = { classes: GymClass[]; policy: ClassCancellationPolicy | null };
+export const NO_TIMETABLE: ListingTimetable = { classes: [], policy: null };
+
+/**
+ * The public timetable of a listing, one cache entry per listing. Every
+ * reader goes through here so the entry always has this one shape: the home
+ * "Classes" link and the listing's schedule section share it, and a second
+ * shape under the same key crashed the listing page.
+ */
+export function useListingTimetable(listingId: string | null | undefined) {
+  return useQuery<ListingTimetable>({
+    queryKey: ["listingClasses", listingId ?? ""],
+    queryFn: async () => {
+      if (!listingId) return NO_TIMETABLE;
+      const res = await classBookingsService.getListingClasses(listingId);
+      if (!res.success) return NO_TIMETABLE;
+      return { classes: res.data ?? [], policy: res.cancellation_policy ?? null };
+    },
+    enabled: !!listingId,
   });
 }
