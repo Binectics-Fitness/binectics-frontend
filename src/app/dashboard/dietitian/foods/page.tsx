@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/nutrition";
 import { toast } from "@/components/Toast";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { buildFoodsCsv } from "./foods-csv";
 
 /* ─── New-food modal ────────────────────────────────────────────────────── */
@@ -289,6 +290,7 @@ export default function DietitianFoodsPage() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
@@ -378,17 +380,25 @@ export default function DietitianFoodsPage() {
     }
   };
 
-  const handleArchive = async (food: FoodItem) => {
-    if (!confirm(`Archive "${food.name}"? It will be hidden from your library.`)) return;
-    setBusyId(food._id);
-    const res = await nutritionService.archiveFood(food._id);
-    setBusyId(null);
-    if (res.success) {
-      toast.success(`Archived "${food.name}".`);
-      refetch();
-    } else {
-      toast.error(res.message ?? "Failed to archive food.");
-    }
+  const handleArchive = (food: FoodItem) => {
+    requestConfirmation({
+      title: `Archive "${food.name}"?`,
+      description:
+        "It's hidden from your library, so you can't add it to new meal plans. Meal plans that already use it don't change. You can't bring it back from here.",
+      confirmLabel: "Archive food",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setBusyId(food._id);
+        const res = await nutritionService.archiveFood(food._id);
+        setBusyId(null);
+        if (res.success) {
+          toast.success(`Archived "${food.name}".`);
+          refetch();
+        } else {
+          toast.error(res.message ?? "Failed to archive food.");
+        }
+      },
+    });
   };
 
   const handleExport = () => {
@@ -551,6 +561,7 @@ export default function DietitianFoodsPage() {
       </DSCard>
 
       {modalOpen && <NewFoodModal onClose={() => setModalOpen(false)} onSave={handleCreate} />}
+      {confirmationModal}
     </DietitianDashboardShell>
   );
 }

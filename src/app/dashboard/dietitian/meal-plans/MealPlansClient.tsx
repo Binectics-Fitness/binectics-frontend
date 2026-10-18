@@ -8,6 +8,7 @@ import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/compone
 import SearchableSelect from "@/components/SearchableSelect";
 import Modal from "@/components/Modal";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useDialogFocus } from "@/lib/ui/useDialogFocus";
 import { FoodPicker } from "./FoodPicker";
 import { toast } from "@/components/Toast";
@@ -627,6 +628,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     initialCreateOpen ? { mode: "create" } : null,
   );
   const [assignPlan, setAssignPlan] = useState<DietPlan | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const router = useRouter();
 
   // ?new=1 opened the create modal once; drop it from the URL so a
@@ -731,15 +733,25 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     }
   };
 
-  const handleArchive = async (plan: DietPlan) => {
-    if (!confirm(`Archive "${plan.title}"? It will disappear from this list.`)) return;
-    const res = await progressService.archiveStandaloneDietPlan(plan._id);
-    if (res.success) {
-      setPlans((p) => p.filter((pl) => pl._id !== plan._id));
-      toast.success("Meal plan archived.");
-    } else {
-      toast.error(res.message ?? "Failed to archive meal plan.");
-    }
+  const handleArchive = (plan: DietPlan) => {
+    requestConfirmation({
+      title: `Archive "${plan.title}"?`,
+      // Archived plans leave the client's view and can't be edited again.
+      description: plan.client_id
+        ? "It leaves this list and your client's meal plans. An archived plan can't be edited or brought back."
+        : "It leaves this list. An archived plan can't be edited or brought back.",
+      confirmLabel: "Archive meal plan",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await progressService.archiveStandaloneDietPlan(plan._id);
+        if (res.success) {
+          setPlans((p) => p.filter((pl) => pl._id !== plan._id));
+          toast.success("Meal plan archived.");
+        } else {
+          toast.error(res.message ?? "Failed to archive meal plan.");
+        }
+      },
+    });
   };
 
   const FILTERS: Filter[] = ["All", "Templates", "Assigned"];
@@ -863,6 +875,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
           onAssigned={(created) => setPlans((p) => [created, ...p])}
         />
       )}
+      {confirmationModal}
     </DietitianDashboardShell>
   );
 }

@@ -7,6 +7,7 @@ import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShe
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
 
@@ -21,6 +22,7 @@ export default function LocationDetailClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Editable fields
   const [name, setName] = useState("");
@@ -110,23 +112,33 @@ export default function LocationDetailClient() {
     }
   }
 
-  async function handleDeactivate() {
+  function handleDeactivate() {
     if (!currentOrg || !location || saving) return;
-    if (!confirm(`Deactivate "${location.name}"? It will no longer appear in your locations.`)) return;
-    setSaving(true);
-    try {
-      const res = await teamsService.deleteLocation(currentOrg._id, location._id);
-      if (res.success) {
-        toast.success("Location deactivated");
-        router.push("/dashboard/gym-owner/locations");
-      } else {
-        toast.error(res.message || "Couldn't deactivate the location");
-        setSaving(false);
-      }
-    } catch {
-      toast.error("Couldn't deactivate the location");
-      setSaving(false);
-    }
+    const orgId = currentOrg._id;
+    const target = location;
+    requestConfirmation({
+      title: `Deactivate "${target.name}"?`,
+      description:
+        "It comes off your locations list. It can't be reactivated, so you'd have to add it again. Classes set to this location aren't changed.",
+      confirmLabel: "Deactivate location",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setSaving(true);
+        try {
+          const res = await teamsService.deleteLocation(orgId, target._id);
+          if (res.success) {
+            toast.success("Location deactivated");
+            router.push("/dashboard/gym-owner/locations");
+          } else {
+            toast.error(res.message || "Couldn't deactivate the location");
+            setSaving(false);
+          }
+        } catch {
+          toast.error("Couldn't deactivate the location");
+          setSaving(false);
+        }
+      },
+    });
   }
 
   const inputClass = "h-9 w-full rounded-(--r-2) border border-border bg-bg px-3 text-[13.5px] text-ink placeholder:text-fg-4 focus:border-border-2 focus:outline-none";
@@ -207,7 +219,7 @@ export default function LocationDetailClient() {
               )}
               <button
                 type="button"
-                onClick={() => void handleDeactivate()}
+                onClick={handleDeactivate}
                 disabled={saving}
                 className="rounded-(--r-2) border px-3 py-1.5 text-[12.5px] disabled:opacity-40"
                 style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
@@ -219,6 +231,7 @@ export default function LocationDetailClient() {
           )}
         </>
       ) : null}
+      {confirmationModal}
     </GymDashboardShell>
   );
 }

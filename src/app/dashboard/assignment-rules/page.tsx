@@ -7,6 +7,7 @@ import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useAssignmentRules } from "@/hooks/useAssignmentRules";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { minorToMajor } from "@/lib/money/minorMoney";
@@ -48,6 +49,7 @@ export default function AssignmentRulesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   // Form fields
   const [name, setName] = useState("");
@@ -232,15 +234,24 @@ export default function AssignmentRulesPage() {
     }
   }
 
-  async function handleDelete(ruleId: string) {
-    if (!confirm("Are you sure you want to delete this rule?")) return;
-
-    const success = await deleteRule(ruleId);
-    if (success) {
-      setFormSuccess("Rule deleted successfully");
-    } else {
-      setFormError("Failed to delete rule");
-    }
+  function handleDelete(rule: { _id: string; name: string }) {
+    requestConfirmation({
+      title: `Delete the rule "${rule.name}"?`,
+      description:
+        "New members are no longer assigned by this rule. Clients it already assigned keep their staff. This can't be undone.",
+      confirmLabel: "Delete rule",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setFormError(null);
+        setFormSuccess(null);
+        const success = await deleteRule(rule._id);
+        if (success) {
+          setFormSuccess("Rule deleted successfully");
+        } else {
+          setFormError("Failed to delete rule");
+        }
+      },
+    });
   }
 
   if (!currentOrg) {
@@ -438,7 +449,7 @@ export default function AssignmentRulesPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(rule._id)}
+                          onClick={() => handleDelete(rule)}
                           className="rounded-(--r-2) border px-3 py-1.5 text-xs"
                           style={{
                             borderColor: "var(--danger)",
@@ -710,6 +721,7 @@ export default function AssignmentRulesPage() {
           </section>
         )}
       </div>
+      {confirmationModal}
     </GymDashboardShell>
   );
 }

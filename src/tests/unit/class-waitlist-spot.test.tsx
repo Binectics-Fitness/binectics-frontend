@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MyClassBookingsCard } from "@/components/classes/MyClassBookingsCard";
@@ -179,5 +179,40 @@ describe("ListingClassesSection: a waitlisted member", () => {
     wrap(<ListingClassesSection listingId="l1" />);
     expect(await screen.findByRole("button", { name: "Book" })).toBeInTheDocument();
     expect(myBookings).not.toHaveBeenCalled();
+  });
+});
+
+describe("MyClassBookingsCard: Cancel asks in the app's dialog", () => {
+  const cancelBooking = vi.spyOn(classBookingsService, "cancelClassBooking");
+
+  it("cancels a confirmed booking only after the dialog, and never calls window.confirm", async () => {
+    const nativeConfirm = vi.spyOn(window, "confirm");
+    myBookings.mockResolvedValue({ success: true, data: [booking({ status: "confirmed", spot_open: undefined })] });
+    cancelBooking.mockResolvedValue({ success: true, data: booking({ status: "cancelled_by_member" as ClassBooking["status"] }) });
+    wrap(<MyClassBookingsCard />);
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    const dialog = await screen.findByRole("dialog", { name: /^Cancel Spin on / });
+    expect(dialog).toHaveTextContent("If anyone is waiting, your spot goes to them.");
+    expect(dialog).toHaveTextContent("the fee is recorded on your booking");
+    expect(cancelBooking).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel booking" }));
+    expect(cancelBooking).toHaveBeenCalledWith("b1");
+    expect(nativeConfirm).not.toHaveBeenCalled();
+  });
+
+  it("calls a waitlisted booking leaving the waitlist, keeps it on Keep booking, and shows a refusal inline", async () => {
+    myBookings.mockResolvedValue({ success: true, data: [booking({ spot_open: false })] });
+    cancelBooking.mockResolvedValue({ success: false, message: "This class has already started." });
+    wrap(<MyClassBookingsCard />);
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    let dialog = await screen.findByRole("dialog", { name: "Leave the waitlist for Spin?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Keep booking" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(cancelBooking).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    dialog = await screen.findByRole("dialog", { name: "Leave the waitlist for Spin?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Leave waitlist" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("This class has already started.");
   });
 });

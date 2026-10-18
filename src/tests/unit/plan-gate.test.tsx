@@ -17,6 +17,7 @@ import { progressService } from "@/lib/api/progress";
 import { teamsService } from "@/lib/api/teams";
 import ProgramsManager from "@/components/programs/ProgramsManager";
 import { programsService } from "@/lib/api/programs";
+import { confirmInDialog } from "@/test/confirmDialog";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -241,9 +242,9 @@ describe("Programs when the plan refuses a publish", () => {
       ],
     });
     vi.spyOn(programsService, "publishTemplate").mockResolvedValue(featureRefusal("health_auto_tasks_enabled"));
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     renderWithQuery(<ProgramsManager config={config} />);
     await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     expect(await screen.findByTestId("plan-gate")).toHaveTextContent(
       "Your Free plan doesn't include tasks that tick themselves from health apps.",
     );
@@ -257,9 +258,9 @@ describe("Programs when the plan refuses a publish", () => {
     };
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [draft as never] });
     vi.spyOn(programsService, "publishTemplate").mockResolvedValue(featureRefusal("health_auto_tasks_enabled"));
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     renderWithQuery(<ProgramsManager config={config} />);
     await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /New program/ }));
     expect(await screen.findByRole("button", { name: "Create draft" })).toBeInTheDocument();
@@ -280,11 +281,12 @@ describe("Programs: refused, then successful", () => {
     vi.spyOn(programsService, "publishTemplate")
       .mockResolvedValueOnce(featureRefusal("health_auto_tasks_enabled"))
       .mockResolvedValueOnce({ success: true, data: { template: draft } as never });
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     renderWithQuery(<ProgramsManager config={config} />);
     await userEvent.click(await screen.findByRole("button", { name: "Publish" }));
+    await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+    await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     await waitFor(() => expect(screen.queryByTestId("plan-gate")).toBeNull());
   });
 });

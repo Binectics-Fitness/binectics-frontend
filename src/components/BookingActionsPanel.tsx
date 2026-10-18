@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { EmptySlate } from "@/components/ds";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import {
   consultationsService,
   type ConsultationBooking,
@@ -50,6 +51,7 @@ export interface BookingActionsPanelProps {
 export function BookingActionsPanel({ booking, now, onActionComplete }: BookingActionsPanelProps) {
   const [acting, setActing] = useState<BookingActionKind | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   if (!isActionable(booking.status)) {
     return (
@@ -64,13 +66,6 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
   const cancelAllowed = canCancel(booking, now);
 
   const runAction = async (kind: BookingActionKind) => {
-    if (
-      kind === "complete" &&
-      needsEarlyCompleteConfirm(booking, now) &&
-      !confirm("This session hasn't started yet. Mark it as completed anyway?")
-    ) {
-      return;
-    }
     setActing(kind);
     let succeeded = false;
     try {
@@ -107,13 +102,30 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
     setActing(null);
   };
 
+  // Completing before the start time is allowed but unusual, so it asks first.
+  const onComplete = () => {
+    if (!needsEarlyCompleteConfirm(booking, now)) {
+      void runAction("complete");
+      return;
+    }
+    requestConfirmation({
+      title: "Complete a session that hasn't started?",
+      description:
+        "Its start time hasn't come yet. Completing it now tells your client the session is done and lets them review you. This can't be undone.",
+      confirmLabel: "Mark completed",
+      cancelLabel: "Not yet",
+      confirmVariant: "primary",
+      onConfirm: () => runAction("complete"),
+    });
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2 flex-wrap">
         <button
           className="btn-primary-v2 sm"
           disabled={acting !== null}
-          onClick={() => void runAction("complete")}
+          onClick={onComplete}
         >
           {acting === "complete" ? "Completing…" : "Complete"}
         </button>
@@ -158,6 +170,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
           {CANCEL_DISABLED_REASON}
         </div>
       )}
+      {confirmationModal}
     </div>
   );
 }

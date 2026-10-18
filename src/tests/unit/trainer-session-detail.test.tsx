@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/consultations";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { localTimeKey } from "@/lib/bookings/slots";
+import { confirmInDialog } from "@/test/confirmDialog";
 
 vi.mock("next/link", () => ({
   default: ({ children, href, className }: { children: ReactNode; href: string; className?: string }) => (
@@ -152,10 +153,14 @@ describe("trainer session detail page", () => {
     get.mockResolvedValueOnce(ok(session));
     get.mockResolvedValueOnce(ok({ ...session, status: ConsultationBookingStatus.COMPLETED }));
     complete.mockResolvedValue(ok({ ...session, status: ConsultationBookingStatus.COMPLETED }));
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const nativeConfirm = vi.spyOn(window, "confirm");
     renderPage();
     await userEvent.click(await screen.findByRole("button", { name: "Complete" }));
+    // The session is two days out, so completing it early asks first.
+    expect(complete).not.toHaveBeenCalled();
+    await confirmInDialog(userEvent, "Complete a session that hasn't started?", "Mark completed");
     expect(complete).toHaveBeenCalledWith(session.id);
+    expect(nativeConfirm).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByText("Completed")).toBeInTheDocument());
     expect(get).toHaveBeenCalledTimes(2);
   });

@@ -7,6 +7,7 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { nutritionService, type Protocol } from "@/lib/api/nutrition";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { DIETITIAN_PROGRAMS_CONFIG } from "@/components/programs/config";
 import { conversionMessage } from "@/components/programs/protocol-retirement";
@@ -27,6 +28,7 @@ export default function DietitianProtocolsPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     let mounted = true;
@@ -66,20 +68,25 @@ export default function DietitianProtocolsPage() {
     }
   };
 
-  const archive = async (protocol: Protocol) => {
-    if (
-      !confirm(
-        `Archive "${protocol.name}" without converting it? It won't be listed here again, and its steps won't carry over to Programs.`,
-      )
-    )
-      return;
-    const res = await nutritionService.archiveProtocol(protocol._id);
-    if (res.success) {
-      toast.success(`Archived "${protocol.name}".`);
-      refetch();
-    } else {
-      toast.error(res.message ?? "Failed to archive protocol.");
-    }
+  const archive = (protocol: Protocol) => {
+    requestConfirmation({
+      title: `Archive "${protocol.name}" without converting it?`,
+      description:
+        "It won't be listed here again, and its steps won't carry over to Programs. To keep them, choose Open as program instead.",
+      confirmLabel: "Archive protocol",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setBusyId(protocol._id);
+        const res = await nutritionService.archiveProtocol(protocol._id);
+        setBusyId(null);
+        if (res.success) {
+          toast.success(`Archived "${protocol.name}".`);
+          refetch();
+        } else {
+          toast.error(res.message ?? "Failed to archive protocol.");
+        }
+      },
+    });
   };
 
   return (
@@ -148,7 +155,7 @@ export default function DietitianProtocolsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => void archive(p)}
+                        onClick={() => archive(p)}
                         disabled={busyId === p._id}
                         aria-label={`Archive: ${p.name}`}
                         className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
@@ -176,6 +183,7 @@ export default function DietitianProtocolsPage() {
           </table>
         </div>
       </DSCard>
+      {confirmationModal}
     </DietitianDashboardShell>
   );
 }

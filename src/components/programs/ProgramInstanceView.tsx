@@ -6,6 +6,7 @@ import { AsyncSpinner, StatusPill } from "@/components/ds";
 import { adherenceCountTones, instanceStatusTone } from "@/lib/ui/statusTones";
 import { toneColors, type Tone } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import {
   programsService,
@@ -46,6 +47,7 @@ export default function ProgramInstanceView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const applyDetail = (res: Awaited<ReturnType<typeof programsService.getInstance>>) => {
     if (res.success && res.data) {
@@ -68,11 +70,7 @@ export default function ProgramInstanceView({
     };
   }, [instanceId]);
 
-  const runAction = async (
-    action: "pause" | "resume" | "complete" | "cancel",
-    confirmMsg?: string,
-  ) => {
-    if (confirmMsg && !confirm(confirmMsg)) return;
+  const runAction = async (action: "pause" | "resume" | "complete" | "cancel") => {
     setActing(true);
     const fn = {
       pause: programsService.pauseInstance,
@@ -90,6 +88,28 @@ export default function ProgramInstanceView({
       toast.error(res.message ?? `Failed to ${action} program.`);
     }
   };
+
+  // Complete and cancel end the program for the client, so they ask first.
+  const askComplete = (i: ProgramInstance) =>
+    requestConfirmation({
+      title: `Mark "${i.name}" complete for ${clientName(i)}?`,
+      description:
+        "The program ends and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen shows the program has ended. This can't be undone.",
+      confirmLabel: "Mark complete",
+      confirmVariant: "primary",
+      onConfirm: () => runAction("complete"),
+    });
+
+  const askCancel = (i: ProgramInstance) =>
+    requestConfirmation({
+      title: `Cancel "${i.name}" for ${clientName(i)}?`,
+      description:
+        "The program stops and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen shows the program has ended. This can't be undone.",
+      confirmLabel: "Cancel program",
+      cancelLabel: "Keep program",
+      confirmVariant: "danger",
+      onConfirm: () => runAction("cancel"),
+    });
 
   const instance = detail?.instance;
   const status = instance?.status;
@@ -130,10 +150,10 @@ export default function ProgramInstanceView({
                 <button type="button" disabled={acting} onClick={() => runAction("resume")} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}>Resume</button>
               )}
               {!isTerminal && (
-                <button type="button" disabled={acting} onClick={() => runAction("complete", `Mark "${instance.name}" complete for ${clientName(instance)}?`)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "var(--ink)", border: "none", color: "var(--bg)" }}>Complete</button>
+                <button type="button" disabled={acting} onClick={() => askComplete(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "var(--ink)", border: "none", color: "var(--bg)" }}>Complete</button>
               )}
               {!isTerminal && (
-                <button type="button" disabled={acting} onClick={() => runAction("cancel", `Cancel "${instance.name}" for ${clientName(instance)}? This can't be undone.`)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}>Cancel</button>
+                <button type="button" disabled={acting} onClick={() => askCancel(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}>Cancel</button>
               )}
             </div>
           </div>
@@ -180,6 +200,7 @@ export default function ProgramInstanceView({
           </div>
         </div>
       )}
+      {confirmationModal}
     </Shell>
   );
 }

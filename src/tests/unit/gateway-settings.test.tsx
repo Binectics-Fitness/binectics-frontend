@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { confirmInDialog } from "@/test/confirmDialog";
 import { payoutOptions } from "@/app/onboarding/_payout";
 import { normalizePaymentGateways, type PublicPaymentGateway } from "@/lib/api/paymentGateways";
 
@@ -86,7 +87,8 @@ describe("GatewaysSection", () => {
       { gateway: "stripe", public_key: "pk_live_abcdefghijklmnop", is_active: true, currencies: [] },
       { gateway: "paystack", public_key: "pk_live_1234567890abcdef", is_active: true, currencies: [] },
     ];
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const nativeConfirm = vi.spyOn(window, "confirm");
+    const user = userEvent.setup();
     render(<GatewaysSection />);
 
     const stripeRow = screen.getByText("Stripe").closest("div.flex") as HTMLElement;
@@ -95,8 +97,11 @@ describe("GatewaysSection", () => {
 
     h.remove.mockResolvedValue({ success: true });
     const removeButtons = screen.getAllByRole("button", { name: "Remove" });
-    await userEvent.click(removeButtons[0]);
+    await user.click(removeButtons[0]);
+    expect(h.remove).not.toHaveBeenCalled();
+    await confirmInDialog(user, "Remove your Stripe keys?", "Remove keys");
     expect(h.remove).toHaveBeenCalledWith("stripe");
+    expect(nativeConfirm).not.toHaveBeenCalled();
     // Paystack is connected and nothing else can be, so there is nothing to add.
     expect(screen.queryByRole("button", { name: "+ Add gateway" })).toBeNull();
   });
