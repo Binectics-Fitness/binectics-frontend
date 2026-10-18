@@ -1,0 +1,95 @@
+name: Release train
+
+# Once a day, ship whatever has merged to main. Nobody needs to be present.
+#
+# Netlify's production branch is `release`, so moving that branch is the
+# deploy. Netlify listens through its own GitHub webhook, which fires for a
+# push made with GITHUB_TOKEN too (only GitHub Actions workflows ignore those
+# pushes). If that ever stops holding, add a NETLIFY_BUILD_HOOK secret (a
+# Netlify build hook URL for the release branch) and the last step uses it.
+#
+# 1. Refuse to cut unless the API answers 200 on /health/build and
+#    /health/ready. The API train runs at 20:00 UTC, an hour earlier.
+# 2. If main and release point at the same commit, stop: nothing to ship.
+# 3. Fast-forward release to main (creating it on the first run), and tag
+#    it release-YYYY-MM-DD (release-YYYY-MM-DD-2 for a second cut). Never a
+#    force-push: if release has commits main lacks, the run fails.
+# 4. Write a GitHub Release with a "Watch out" section from the PR bodies.
+#
+# Cut early: Actions -> Release train -> Run workflow.
+# Roll back: Netlify -> Deploys -> the previous production deploy ->
+# "Publish deploy" (instant, no rebuild). That stops Netlify's auto
+# publishing: after the fix is cut, click "Start auto publishing".
+#
+# Cost: one job of curl, git and the GitHub API, no npm install. About a
+# minute a day.
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: release-train
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Require a healthy API
+        run: |
+          API="https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net"
+          for path in /health/build /health/ready; do
+            ok=""
+            for i in 1 2 3; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$API$path" || true)
+              if [ "$code" = "200" ]; then ok=1; break; fi
+              echo "$path answered ${code:-nothing} (attempt $i/3)"
+              sleep 10
+            done
+            if [ -z "$ok" ]; then
+              echo "::error title=API is not healthy, web not cut::$API$path did not return 200. Web ships only once the API is serving. Fix the API (see its Release train run), then run this workflow again."
+              exit 1
+            fi
+          done
+          echo "API live build: $(curl -s --max-time 20 "$API/health/build")"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fast-forward release to main and tag it
+        id: cut
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FALLBACK_TOKEN: ${{ secrets.RELEASE_TRAIN_TOKEN }}
+        run: bash .github/scripts/release-cut.sh cut
+
+      - name: Write the GitHub Release
+        if: steps.cut.outputs.cut == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.cut.outputs.tag }}
+          PREV_TAG: ${{ steps.cut.outputs.prev_tag }}
+          SHA: ${{ steps.cut.outputs.sha }}
+          EXTRA_NOTES: 'Netlify builds binectics.netlify.app from the release branch. The API answered 200 on /health/build and /health/ready before this cut.'
+        run: bash .github/scripts/release-cut.sh notes
+
+      # Only when the owner has set the secret (see the note at the top).
+      - name: Trigger the Netlify build hook
+        if: ${{ !cancelled() && steps.cut.outputs.cut == 'true' }}
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "No NETLIFY_BUILD_HOOK secret; Netlify builds from its own webhook on the push to release."
+            exit 0
+          fi
+          curl -fsS -X POST -d '{}' "$HOOK"
+          echo "Netlify build hook triggered."

@@ -127,3 +127,15 @@ NEXT_PUBLIC_ENABLE_ANALYTICS, NEXT_PUBLIC_ENABLE_COOKIE_CONSENT, NEXT_PUBLIC_MAI
 ```
 
 All secrets are backend-managed. Only `NEXT_PUBLIC_*` keys belong here.
+
+## Release train
+
+Owner rule (Oct 18 2026): a daily release train ships everything. It runs with nobody present.
+
+- **Agents merge to `main`.** Merging deploys nothing: Netlify's production branch is `release`. PR deploy previews still build.
+- **Never push to `release`, never deploy by hand, never build an APK from `main`.** Only the train moves `release`.
+- **Schedule:** `.github/workflows/release-train.yml` runs daily at 21:00 UTC, an hour after the API train. It refuses to cut unless the API answers 200 on `/health/build` and `/health/ready`. If `main` has moved, it fast-forwards `release`, tags it `release-YYYY-MM-DD` (`-2`, `-3` for extra cuts that day) and writes a GitHub Release. Netlify builds from the push.
+- **Cut early** for an urgent fix: Actions → Release train → Run workflow. If the fix needs new API code, cut the API first and wait for its run to pass.
+- **Roll back:** Netlify → Deploys → the previous production deploy → **Publish deploy** (instant, no rebuild). Publishing an old deploy by hand stops Netlify's auto publishing, so revert the bad PR on `main`, and once the next cut has built, click **Start auto publishing** on the Deploys page (until then cuts build but do not go live).
+- **Watch out:** a PR that changes something the API or mobile relies on says so under a `## Watch out` heading in its body. The train copies those lines into the release notes.
+- If the train reports that `release` has diverged from `main`, someone committed to `release`. Get those commits onto `main` through a PR; never force-push `release`.
