@@ -32,9 +32,29 @@ export interface ClassBooking {
    */
   spot_open?: boolean;
   cancelled_at: string | null;
+  /** Why the gym cancelled it (status cancelled_by_gym), e.g. "Class removed by the gym". Null otherwise. */
+  cancellation_reason?: string | null;
   cancellation_fee_applied: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/** A booking or waitlist place the gym cancelled (it deleted the class). */
+export function isGymCancelled(b: Pick<ClassBooking, "status">): boolean {
+  return b.status === "cancelled_by_gym";
+}
+
+/** What a member is told when the gym took the class off its timetable mid-booking. */
+export const CLASS_REMOVED_MESSAGE =
+  "The gym has just taken this class off its timetable, so it can't be booked.";
+
+/**
+ * The gym deleted (or switched off) the class while the booking was being
+ * made (410 CLASS_REMOVED, binectics-api #270). Nothing is held.
+ */
+export function classWasRemoved(res: ApiResponse<unknown>): boolean {
+  if (res.success) return false;
+  return res.code === "CLASS_REMOVED" || res.status === 410;
 }
 
 /**
@@ -70,13 +90,27 @@ export const classBookingsService = {
     );
   },
 
+  /**
+   * The member's live bookings (`data`: confirmed and waitlisted) and,
+   * apart from them, the ones the gym cancelled for an occurrence in the
+   * last 14 days or still to come (`cancelled_by_gym`, binectics-api #270).
+   * An API before that sends no second list; it reads as empty.
+   */
   async getMyClassBookings(
     includePast = false,
-  ): Promise<ApiResponse<ClassBooking[]>> {
+  ): Promise<ApiResponse<ClassBooking[]> & { cancelled_by_gym?: ClassBooking[] }> {
     const query = includePast ? "?include_past=true" : "";
-    return apiClient.get<ClassBooking[]>(
+    const res = await apiClient.get<ClassBooking[]>(
       `/marketplace/my-class-bookings${query}`,
     );
+    const raw = res.envelope?.cancelled_by_gym;
+    return {
+      ...res,
+      // Only ever the gym's cancellations, whatever else a row claims.
+      cancelled_by_gym: Array.isArray(raw)
+        ? (raw as ClassBooking[]).filter(isGymCancelled)
+        : [],
+    };
   },
 
   async cancelClassBooking(

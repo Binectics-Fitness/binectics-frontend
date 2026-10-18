@@ -6,7 +6,9 @@ import { StatusPill } from "@/components/ds/StatusPill";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { bookingStatusTone } from "@/lib/ui/statusTones";
 import {
+  CLASS_REMOVED_MESSAGE,
   classBookingsService,
+  classWasRemoved,
   keepsWaitlistPlace,
   type ClassBooking,
 } from "@/lib/api/classBookings";
@@ -17,6 +19,9 @@ const NOTICE_COLOR: Record<Notice["tone"], string> = {
   info: "var(--fg-2)",
   error: "var(--danger)",
 };
+
+type CardBookings = { live: ClassBooking[]; cancelled: ClassBooking[] };
+const NO_BOOKINGS: CardBookings = { live: [], cancelled: [] };
 
 function classOf(b: ClassBooking) {
   return typeof b.class_id === "object" ? b.class_id : null;
@@ -38,14 +43,22 @@ function occurrenceLabel(dateStr: string): string {
  * "Take the spot": booking again, which the API fills in waitlist order.
  * If someone ahead of them gets it, they are told so plainly and keep
  * their place.
+ *
+ * Bookings the gym cancelled (it deleted the class) follow, muted, with the
+ * reason and no actions: the API sends them apart from the live list, for
+ * the last 14 days and upcoming. An API without that list shows none.
  */
 export function MyClassBookingsCard() {
   const queryClient = useQueryClient();
-  const { data: bookings = [] } = useQuery<ClassBooking[]>({
-    queryKey: ["myClassBookings"],
+  // Its own key under the shared prefix: ListingClassesSection caches the
+  // live list alone at ["myClassBookings"], and invalidating that prefix
+  // refreshes both.
+  const { data: { live: bookings, cancelled } = NO_BOOKINGS } = useQuery<CardBookings>({
+    queryKey: ["myClassBookings", "withGymCancelled"],
     queryFn: async () => {
       const res = await classBookingsService.getMyClassBookings();
-      return res.success && res.data ? res.data : [];
+      if (!res.success) return NO_BOOKINGS;
+      return { live: res.data ?? [], cancelled: res.cancelled_by_gym ?? [] };
     },
   });
 
@@ -91,6 +104,8 @@ export function MyClassBookingsCard() {
         notice = { text: `You're in for ${occurrenceLabel(b.booking_date)}.`, tone: "ok" };
       } else if (keepsWaitlistPlace(res)) {
         notice = { text: res.message || "Someone ahead of you took the spot. You keep your place.", tone: "info" };
+      } else if (classWasRemoved(res)) {
+        notice = { text: CLASS_REMOVED_MESSAGE, tone: "error" };
       } else {
         notice = { text: res.message || "Couldn't take the spot. Try again.", tone: "error" };
       }
@@ -99,7 +114,7 @@ export function MyClassBookingsCard() {
     },
   });
 
-  if (bookings.length === 0) return null;
+  if (bookings.length === 0 && cancelled.length === 0) return null;
 
   return (
     <div className="rounded-(--r-3) overflow-hidden mb-6" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -114,7 +129,7 @@ export function MyClassBookingsCard() {
         const canTake = b.status === "waitlisted" && b.spot_open === true && !!b.listing_id && !!c;
         const notice = notices[b._id];
         return (
-          <div key={b._id} className="px-4.5 py-3" style={{ borderBottom: i < bookings.length - 1 ? "1px solid var(--border)" : "none" }}>
+          <div key={b._id} className="px-4.5 py-3" style={{ borderBottom: i < bookings.length - 1 || cancelled.length > 0 ? "1px solid var(--border)" : "none" }}>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -158,6 +173,32 @@ export function MyClassBookingsCard() {
                 {notice.text}
               </p>
             )}
+          </div>
+        );
+      })}
+      {/* The gym took the class off its timetable: the record, with why,
+          and nothing to cancel or take. */}
+      {cancelled.map((b, i) => {
+        const c = classOf(b);
+        return (
+          <div
+            key={b._id}
+            data-testid={`class-cancelled-${b._id}`}
+            className="px-4.5 py-3"
+            style={{ borderBottom: i < cancelled.length - 1 ? "1px solid var(--border)" : "none" }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[13.5px] font-medium" style={{ color: "var(--fg-3)" }}>{c?.name ?? "Class"}</span>
+              <StatusPill tone="neutral" label="Cancelled by the gym" />
+            </div>
+            <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
+              {occurrenceLabel(b.booking_date)}
+              {c ? ` · ${c.start_time} · ${c.duration_minutes}m` : ""}
+              {c?.instructor_name ? ` · ${c.instructor_name}` : ""}
+            </div>
+            <p className="text-[12px] mt-1" style={{ color: "var(--fg-2)" }}>
+              {b.cancellation_reason || "The gym cancelled this class."}
+            </p>
           </div>
         );
       })}

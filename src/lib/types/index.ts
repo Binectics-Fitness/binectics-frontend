@@ -476,6 +476,12 @@ export interface ApiResponse<T = unknown> {
   details?: Record<string, unknown>;
   /** HTTP status code from the response (only set on failures). */
   status?: number;
+  /**
+   * Success only: top-level fields the API sent beside `data` (other than
+   * `success` and `message`), e.g. my-class-bookings' `cancelled_by_gym`.
+   * Absent when there are none.
+   */
+  envelope?: Record<string, unknown>;
 }
 
 // ─── Membership Subscriptions ─────────────────────────────────────────────
