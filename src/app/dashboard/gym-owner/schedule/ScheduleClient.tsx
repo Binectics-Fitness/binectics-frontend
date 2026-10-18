@@ -13,6 +13,8 @@ import { TeamSessionsCard } from "./TeamSessionsCard";
 import { classTime, type GymClass } from "@/lib/api/classes";
 import { PlanGate, useFeatureGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
+import { useOrganizationDetails } from "@/lib/queries/teams";
+import { lateCancelSentence, policyFromRules } from "@/lib/classes/cancellationPolicy";
 
 /**
  * Weekly class timetable backed by the classes API. Week columns start on
@@ -69,6 +71,8 @@ export function ScheduleClient() {
           </span>
         }
       />
+
+      <CancellationPolicyLine orgId={orgId} canManage={canManage} />
 
       {gate && <PlanGate gate={gate} />}
 
@@ -131,5 +135,28 @@ function ClassCard({ gymClass: c, twelveHour }: { gymClass: GymClass; twelveHour
         {c.instructor_name ? `${c.instructor_name} · ` : ""}cap {c.capacity}{c.waitlist_enabled ? " · waitlist" : ""}
       </div>
     </Link>
+  );
+}
+
+/**
+ * The class cancellation policy members are shown, in one line, with the way
+ * to change it (Settings → Booking rules) for those who can.
+ */
+function CancellationPolicyLine({ orgId, canManage }: { orgId: string | undefined; canManage: boolean }) {
+  const { data: org } = useOrganizationDetails(orgId);
+  if (!org) return null;
+  const policy = policyFromRules(org.name ?? "", org.booking_rules);
+  const summary = !policy
+    ? "No class cancellation policy. Members see no fee wording."
+    : lateCancelSentence(policy) ?? "No late-cancellation fee. Members see your policy note.";
+  return (
+    <p className="text-[12.5px] max-w-[70ch]" style={{ color: "var(--fg-3)" }} data-testid="schedule-cancellation-policy">
+      <span className="font-medium" style={{ color: "var(--fg-2)" }}>Cancellation policy:</span> {summary}{" "}
+      {canManage && (
+        <Link href="/dashboard/gym-owner/settings#booking" className="underline" style={{ color: "var(--fg-2)" }}>
+          {policy ? "Change it" : "Set one"}
+        </Link>
+      )}
+    </p>
   );
 }
