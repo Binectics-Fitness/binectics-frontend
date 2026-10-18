@@ -7128,7 +7128,10 @@ export interface paths {
         get: operations["ClassesController_getClass"];
         put?: never;
         post?: never;
-        /** Delete a class */
+        /**
+         * Delete a class
+         * @description Takes the class off the timetable and cancels its upcoming bookings and waitlist places (each member is notified). Past bookings are kept. Returns how many bookings were cancelled.
+         */
         delete: operations["ClassesController_deleteClass"];
         options?: never;
         head?: never;
@@ -7233,12 +7236,35 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Deactivate a location */
+        /**
+         * Deactivate a location
+         * @description Refused with 409 for the primary location (LOCATION_PRIMARY) and for the only active location (LOCATION_LAST_ACTIVE).
+         */
         delete: operations["TeamsController_deleteLocation"];
         options?: never;
         head?: never;
         /** Update a location */
         patch: operations["TeamsController_updateLocation"];
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/locations/{locationId}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reactivate a deactivated location
+         * @description Returns as a branch (not primary) unless the organization has no active primary. Already active: returned unchanged.
+         */
+        post: operations["TeamsController_reactivateLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/teams/organizations/{organizationId}/members": {
@@ -8797,7 +8823,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -9220,8 +9246,10 @@ export interface components {
             success: boolean;
         };
         MySubscriptionExtrasDto: {
-            /** @description The listing to renew through (POST /marketplace/listings/:id/plans/:planId/checkout), the first that is published and not suspended of: the renewal plan's own listing (next_plan_id, else plan_id), the membership's own listing, the organization's newest listing. Null when there is none. */
+            /** @description The listing to renew through (POST /marketplace/listings/:id/plans/:planId/checkout), the first that is published and not suspended of: the renewal plan's own listing, the membership's own listing, the organization's newest listing. The renewal plan is next_plan_id while that plan is active, else plan_id while it is active. Null when there is none. */
             renewal_listing_id: string | null;
+            /** @description The plan to check out through renewal_listing_id: the renewal plan (next_plan_id while that plan is active, else plan_id while it is active), and only when that listing sells it and it is paid (price_minor > 0, with a currency) and recurring (not one_time), so the pair always opens a checkout that renews this membership in place. Null when renewal_listing_id is null, when there is no active renewal plan, when the listing does not sell it, or when it is free or one-time (ask the gym). Never the current plan in place of a scheduled next plan that cannot be bought. When this is a string, judge whether renewal is due by this plan; it is paid and recurring. Check out this plan, not plan_id: a scheduled next plan can sit on a different listing. */
+            renewal_plan_id: string | null;
             renewal_retry: components["schemas"]["RenewalRetryDto"];
         };
         MyTeamInvitationDto: {
@@ -15540,7 +15568,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at } and renewal_listing_id. */
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }, renewal_listing_id and renewal_plan_id (check out that pair to renew). */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22384,7 +22412,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Class deleted */
+            /** @description Class deleted; data.cancelled_bookings counts the bookings cancelled */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22637,7 +22665,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            204: {
+            /** @description Location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The primary location, or the only active one */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22662,6 +22698,41 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TeamsController_reactivateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                locationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Location reactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Another active location has the same name (LOCATION_NAME_IN_USE) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

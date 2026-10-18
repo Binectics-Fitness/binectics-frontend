@@ -710,8 +710,12 @@ export interface MembershipSubscription {
    */
   renewal_listing_id?: string | null;
   /**
-   * The plan the renewal checkout pays for, when the API names one (a
-   * separate API change adds it). Absent: the current `plan_id`.
+   * The plan the renewal checkout pays for (my-subscriptions, api #267):
+   * the gym's scheduled next plan, else the current plan, and only when
+   * `renewal_listing_id` sells it and it is paid and recurring. Renewal is
+   * judged due by this plan when it is set. Null: there is no plan to buy,
+   * so the member asks the gym (never fall back to `plan_id`). Absent on an
+   * older API: the current `plan_id`.
    */
   renewal_plan_id?: string | null;
   /**
