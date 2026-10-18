@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Readiness check for this repo — type-check, unit tests against the failure baseline, production build, design tokens, git state. Knows the real Vercel/Netlify pipeline and separates pre-existing failures from ones you introduced. Use before committing or pushing, when a change is finished, when asked whether the branch is ready, and after any batch of edits large enough to have broken something.
+description: Readiness check for this repo — type-check, unit tests against the failure baseline, production build, design tokens, git state. Knows the real Netlify pipeline and the release train and separates pre-existing failures from ones you introduced. Use before committing or pushing, when a change is finished, when asked whether the branch is ready, and after any batch of edits large enough to have broken something.
 allowed-tools: Bash(git *) Bash(npx tsc *) Bash(npx next build) Bash(npm run *) Bash(npm test *) Bash(npx eslint *) Bash(ls *)
 ---
 
@@ -18,14 +18,16 @@ This matters more than it looks, because it changes what a push costs:
 |---|---|---|
 | **pre-commit hook** | `git commit` | design tokens + eslint on staged files |
 | **pre-push hook** | `git push` | `tsc --noEmit`, then the test ratchet |
-| **CI** (`.github/workflows/ci.yml`) | push to `main`, PRs to `main` | type-check + build |
-| **Netlify** | **every push, any branch** | builds and publishes a deploy preview |
-| **Vercel** | **every push, any branch** | builds and publishes a deploy preview |
+| **CI** (`.github/workflows/ci.yml`) | PRs to `main` (not drafts), weekly | type-check + build |
+| **Netlify** | push to a PR branch | builds a deploy preview |
+| **Netlify** | push to `release` (the release train only) | production: binectics.netlify.app |
+| **Release train** (`.github/workflows/release-train.yml`) | after the API train passes; 23:37 UTC fallback | fast-forwards `release` to `main` |
 
-> **Pushing deploys.** Both hosts build from git integration, so a push to
-> any branch produces a live preview URL, and a push to `main` goes to
-> production. This is the opposite of a manual-dispatch pipeline: a broken
-> push is publicly visible, not just a red check.
+> **Merging does not deploy.** A PR push produces a live preview URL, but
+> `main` reaches production only when the daily release train moves
+> `release` (see Claude.MD, "Release train"). Never push to `release`.
+> Vercel used to build every push too; the owner is disconnecting it, so
+> do not use a Vercel URL to check work.
 
 There is an Azure workflow (`main_binectics-frontend-app.yml`) still in
 the repo. **It is not the deploy path** — it is `workflow_dispatch` only
@@ -94,8 +96,8 @@ regressions. Say so rather than trusting it.
 
 ### 5. Production build — BLOCKING
 
-Run `npm run build` (`next build --webpack`). This is what Netlify and
-Vercel run, so it is the one that ships.
+Run `npm run build` (`next build --webpack`). This is what Netlify
+runs, so it is the one that ships.
 
 Optionally `npx next build` too (Turbopack, the Next 16 default) to catch
 the two bundlers diverging.

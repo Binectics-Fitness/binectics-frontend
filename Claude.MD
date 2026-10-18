@@ -134,8 +134,9 @@ Owner rule (Oct 18 2026): a daily release train ships everything. It runs with n
 
 - **Agents merge to `main`.** Merging deploys nothing: Netlify's production branch is `release`. PR deploy previews still build.
 - **Never push to `release`, never deploy by hand, never build an APK from `main`.** Only the train moves `release`.
-- **Schedule:** `.github/workflows/release-train.yml` runs daily at 21:00 UTC, an hour after the API train. It refuses to cut unless the API answers 200 on `/health/build` and `/health/ready`. If `main` has moved, it fast-forwards `release`, tags it `release-YYYY-MM-DD` (`-2`, `-3` for extra cuts that day) and writes a GitHub Release. Netlify builds from the push.
-- **Cut early** for an urgent fix: Actions → Release train → Run workflow. If the fix needs new API code, cut the API first and wait for its run to pass.
+- **Schedule:** the API's release train (daily, 20:07 UTC) starts `.github/workflows/release-train.yml` here once the API passes its deploy check; 23:37 UTC is the fallback. If `main` has moved, it refuses to cut unless the API answers 200 on `/health/build` and `/health/ready` and is serving binectics-api's `release` head. Then it fast-forwards `release`, tags it `release-YYYY-MM-DD` (`-2`, `-3` for extra cuts that day) and writes a GitHub Release. Netlify builds from the push.
+- **Cut early** for an urgent fix: Actions → Release train → Run workflow. If the fix needs new API code, run the API's release train instead: it starts this one when the API is live.
+- **Never press "Trigger deploy"** in Netlify to ship: production builds only come from the train moving `release`.
 - **Roll back:** Netlify → Deploys → the previous production deploy → **Publish deploy** (instant, no rebuild). Publishing an old deploy by hand stops Netlify's auto publishing, so revert the bad PR on `main`, and once the next cut has built, click **Start auto publishing** on the Deploys page (until then cuts build but do not go live).
 - **Watch out:** a PR that changes something the API or mobile relies on says so under a `## Watch out` heading in its body. The train copies those lines into the release notes.
 - If the train reports that `release` has diverged from `main`, someone committed to `release`. Get those commits onto `main` through a PR; never force-push `release`.
