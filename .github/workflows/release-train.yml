@@ -1,0 +1,144 @@
+name: Release train
+
+# Ship whatever has merged to main. Nobody needs to be present.
+#
+# Normally started by the API's release train, right after the API passed
+# its deploy gate (or had nothing to deploy). The 23:37 UTC schedule is a
+# fallback that runs only if the API train did not start this one today
+# (UTC); Run workflow is the early cut.
+#
+# Netlify's production branch is `release`, so moving that branch is the
+# deploy. Netlify listens through its own GitHub webhook, which fires for a
+# push made with GITHUB_TOKEN too (only GitHub Actions workflows ignore those
+# pushes). If that ever stops holding, add a NETLIFY_BUILD_HOOK secret (a
+# Netlify build hook URL for the release branch) and the last step uses it.
+#
+# 1. If release already holds main, there is nothing to ship: skip the API
+#    checks (a rerun still writes a missing Release).
+# 2. Refuse to cut unless the API answers 200 on /health/build and
+#    /health/ready AND /health/build reports the API repo's release head,
+#    so web never ships ahead of the API it needs.
+# 3. Fast-forward release to the main commit approved in step 1, never by
+#    force, and tag it release-YYYY-MM-DD (-2, -3 for extra cuts).
+# 4. Write a GitHub Release with a "Watch out" section from the PR bodies.
+#
+# Roll back: Netlify -> Deploys -> the previous production deploy ->
+# "Publish deploy" (instant, no rebuild). That stops Netlify's auto
+# publishing: after the fix is cut, click "Start auto publishing".
+#
+# Cost: one job of curl, git and the GitHub API, no npm install. About a
+# minute per run.
+on:
+  schedule:
+    - cron: '37 23 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: release-train
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      actions: read
+    steps:
+      # The 23:37 schedule is only a fallback: if the API train (or anyone)
+      # already ran this workflow by hand today, UTC, there is nothing to do.
+      - name: Skip the fallback if the API train already started this today
+        id: fallback
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "schedule" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RAN=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release-train.yml --event workflow_dispatch \
+            --created ">=$(date -u +%F)" --json databaseId --jq length)
+          if [ "${RAN:-0}" -gt 0 ]; then
+            echo "Already started by workflow_dispatch today ($RAN run(s)); the fallback has nothing to do."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The API release train did not start this workflow today; running as the fallback."
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.fallback.outputs.go == 'true'
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Anything to cut
+        id: status
+        if: steps.fallback.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/release-cut.sh status
+
+      - name: Require the API to be serving its release
+        if: steps.status.outputs.pending == 'true'
+        env:
+          TOKEN: ${{ secrets.RELEASE_TRAIN_TOKEN }}
+        run: |
+          API="https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net"
+          fail() { echo "::error title=API is not ready, web not cut::$1 Web ships only once the API is serving its release. Fix the API (see its Release train run), then run this workflow again."; exit 1; }
+          for path in /health/build /health/ready; do
+            ok=""
+            for i in 1 2 3; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$API$path" || true)
+              if [ "$code" = "200" ]; then ok=1; break; fi
+              echo "$path answered ${code:-nothing} (attempt $i/3)"
+              sleep 10
+            done
+            [ -n "$ok" ] || fail "$API$path did not return 200."
+          done
+          [ -n "$TOKEN" ] || fail "RELEASE_TRAIN_TOKEN is not set, so the API's release branch cannot be read."
+          LIVE=$(curl -s --max-time 20 "$API/health/build" | jq -r '.sha // empty')
+          BASIC=$(printf 'x-access-token:%s' "$TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$BASIC"
+          WANT=$(git -c http.https://github.com/.extraheader= -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $BASIC" \
+            ls-remote https://github.com/Binectics-Fitness/binectics-api.git refs/heads/release \
+            | awk '$2 == "refs/heads/release" { print $1 }')
+          [ -n "$WANT" ] || fail "Could not read binectics-api's release branch."
+          [ "$LIVE" = "$WANT" ] || fail "The API serves '${LIVE:-<nothing>}' but its release branch is at $WANT."
+          echo "The API serves its release head ($LIVE)."
+
+      - name: Fast-forward release to main and tag it
+        id: cut
+        if: steps.fallback.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FALLBACK_TOKEN: ${{ secrets.RELEASE_TRAIN_TOKEN }}
+          CUT_SHA: ${{ steps.status.outputs.main_sha }}
+        run: bash .github/scripts/release-cut.sh cut
+
+      - name: Write the GitHub Release
+        if: steps.cut.outputs.notes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.cut.outputs.tag }}
+          PREV_TAG: ${{ steps.cut.outputs.prev_tag }}
+          SHA: ${{ steps.cut.outputs.sha }}
+          EXTRA_NOTES: 'Netlify builds binectics.netlify.app from the release branch. Before this cut the dev API answered 200 on /health/build and /health/ready and was serving its own release head.'
+        run: bash .github/scripts/release-cut.sh notes
+
+      # Only when the owner has set the secret (see the note at the top).
+      - name: Trigger the Netlify build hook
+        if: ${{ !cancelled() && steps.cut.outputs.cut == 'true' }}
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "No NETLIFY_BUILD_HOOK secret; Netlify builds from its own webhook on the push to release."
+            exit 0
+          fi
+          curl -fsS -X POST -d '{}' "$HOOK"
+          echo "Netlify build hook triggered."

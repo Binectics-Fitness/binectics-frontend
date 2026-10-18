@@ -1,6 +1,7 @@
-# Pushing publishes a Netlify and a Vercel preview, and on main it goes
-# to production — so this gate is the last thing between a broken build
-# and a live URL. Worth the seconds.
+# Pushing a PR branch publishes a Netlify deploy preview, and whatever
+# reaches main goes to production with the next release train cut, so this
+# gate is the last thing between a broken build and a live URL. Worth the
+# seconds.
 
 npx tsc --noEmit || exit 1
 npm run tokens:check || exit 1
