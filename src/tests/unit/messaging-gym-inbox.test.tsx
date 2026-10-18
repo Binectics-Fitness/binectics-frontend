@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   MessagingErrorCode,
@@ -11,6 +11,9 @@ import {
 } from "@/lib/api/messaging";
 import type { ApiResponse } from "@/lib/types";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
+import { gymInboxPollDelay, messagingKeys, useThreadSummary } from "@/components/messaging/queries";
+
+const ME = "aaaaaaaaaaaaaaaaaaaaaaaa";
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -122,6 +125,36 @@ describe("MessagingCenter: gym inbox for staff (?as_gym=)", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("You can't answer this gym's inbox.");
     expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+  });
+
+  it("polls the gym inbox only while page 1 alone is loaded", () => {
+    expect(gymInboxPollDelay(1, 0)).toBeGreaterThan(0);
+    expect(gymInboxPollDelay(1, 2)).toBe(10_000);
+    expect(gymInboxPollDelay(2, 0)).toBe(false);
+    expect(gymInboxPollDelay(5, 0)).toBe(false);
+  });
+
+  it("seeds an open thread from the gym inbox, dated by the gym inbox's own fetch", async () => {
+    const getThread = vi.spyOn(messagingService, "getThread").mockResolvedValue({ success: false, status: 503 });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const t = thread("Ada Member");
+    const updatedAt = Date.now() - 5_000;
+    // The member inbox was fetched just now, without this thread.
+    client.setQueryData(messagingKeys.inbox(ME), { threads: [], next_cursor: null });
+    client.setQueryData(
+      messagingKeys.gymInbox(ME, GYM),
+      { pages: [{ threads: [t], next_cursor: null }], pageParams: [undefined] },
+      { updatedAt },
+    );
+
+    const { result } = renderHook(() => useThreadSummary(t._id), {
+      wrapper: ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>,
+    });
+
+    expect(result.current.data?._id).toBe(t._id);
+    expect(result.current.dataUpdatedAt).toBe(updatedAt);
+    // Fresh enough (inside the 30 s staleTime): no request of its own.
+    expect(getThread).not.toHaveBeenCalled();
   });
 
   it("leaves the normal inbox alone: page 1 with no as_gym and no Load more", async () => {
