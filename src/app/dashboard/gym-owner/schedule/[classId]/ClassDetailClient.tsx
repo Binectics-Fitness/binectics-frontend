@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { localeForDateFormat } from "@/lib/format/orgFormat";
 import {
@@ -94,6 +95,7 @@ export function ClassDetailClient() {
   const update = useUpdateGymClass(orgId);
   const remove = useDeleteGymClass(orgId);
   const [error, setError] = useState<string | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   // Changing classes is team:manage_organization; others see the roster.
   const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
 
@@ -113,13 +115,20 @@ export function ClassDetailClient() {
     if (!res.success) setError(res.message || "Couldn't update the class.");
   };
 
-  const onDelete = async () => {
+  const onDelete = () => {
     if (!gymClass) return;
-    if (window.confirm(`Delete "${gymClass.name}" (${WEEKDAYS[gymClass.day_of_week]} ${gymClass.start_time})? This can't be undone.`)) {
-      const res = await remove.mutateAsync(classId);
-      if (res.success) router.push("/dashboard/gym-owner/schedule");
-      else setError(res.message || "Couldn't delete the class.");
-    }
+    requestConfirmation({
+      title: `Delete "${gymClass.name}"?`,
+      description: `The ${WEEKDAYS[gymClass.day_of_week]} ${gymClass.start_time} class comes off your schedule and can't be booked. Members who already booked aren't told, so let them know. This can't be undone; to pause it instead, deactivate it.`,
+      confirmLabel: "Delete class",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setError(null);
+        const res = await remove.mutateAsync(classId);
+        if (res.success) router.push("/dashboard/gym-owner/schedule");
+        else setError(res.message || "Couldn't delete the class.");
+      },
+    });
   };
 
   return (
@@ -132,7 +141,7 @@ export function ClassDetailClient() {
             <button className="btn-ghost-v2 sm" disabled={update.isPending} onClick={() => void onToggleActive()}>
               {gymClass.is_active ? "Deactivate" : "Reactivate"}
             </button>
-            <button className="btn-ghost-v2 sm" disabled={remove.isPending} onClick={() => void onDelete()}>
+            <button className="btn-ghost-v2 sm" disabled={remove.isPending} onClick={onDelete}>
               Delete
             </button>
           </div>
@@ -168,6 +177,7 @@ export function ClassDetailClient() {
           />
         </DSCard>
       )}
+      {confirmationModal}
     </GymDashboardShell>
   );
 }

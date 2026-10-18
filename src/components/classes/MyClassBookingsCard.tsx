@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { StatusPill } from "@/components/ds/StatusPill";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { bookingStatusTone } from "@/lib/ui/statusTones";
 import {
   classBookingsService,
@@ -56,6 +57,31 @@ export function MyClassBookingsCard() {
   });
 
   const [notices, setNotices] = useState<Record<string, Notice>>({});
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+
+  const askCancel = (b: ClassBooking) => {
+    const name = classOf(b)?.name ?? "this class";
+    const when = occurrenceLabel(b.booking_date);
+    const waitlisted = b.status === "waitlisted";
+    requestConfirmation({
+      title: waitlisted ? `Leave the waitlist for ${name}?` : `Cancel ${name} on ${when}?`,
+      description: waitlisted
+        ? "You give up your place in the queue. To get back on, you'd book again and join at the end."
+        : "Your spot goes to the next person on the waitlist. Cancelling inside the gym's late-cancellation window counts as a late cancellation. To come back, you'd book again.",
+      confirmLabel: waitlisted ? "Leave waitlist" : "Cancel booking",
+      cancelLabel: "Keep booking",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await cancel.mutateAsync(b._id);
+        if (!res.success) {
+          setNotices((n) => ({
+            ...n,
+            [b._id]: { text: res.message || "Couldn't cancel this booking. Try again.", tone: "error" },
+          }));
+        }
+      },
+    });
+  };
   const take = useMutation({
     mutationFn: (b: ClassBooking) =>
       classBookingsService.bookClass(b.listing_id as string, classOf(b)?._id as string, b.booking_date),
@@ -122,11 +148,7 @@ export function MyClassBookingsCard() {
               <button
                 className="btn-ghost-v2 sm shrink-0"
                 disabled={cancel.isPending}
-                onClick={() => {
-                  if (window.confirm("Cancel this class booking? Cancelling close to the class may incur the gym's fee.")) {
-                    cancel.mutate(b._id);
-                  }
-                }}
+                onClick={() => askCancel(b)}
               >
                 Cancel
               </button>
@@ -139,6 +161,7 @@ export function MyClassBookingsCard() {
           </div>
         );
       })}
+      {confirmationModal}
     </div>
   );
 }

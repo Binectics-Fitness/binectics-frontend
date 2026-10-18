@@ -11,6 +11,7 @@ import { usePaymentGateways } from "@/lib/queries/currencies";
 import { GATEWAY_NOT_SUPPORTED } from "@/lib/api/paymentGateways";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { providerCurrencyMessage } from "@/lib/currencies/helpers";
 import { ProviderCurrenciesPanel } from "./ProviderCurrenciesPanel";
 import { PaystackWebhookPanel } from "./PaystackWebhookPanel";
@@ -59,6 +60,7 @@ export function GatewaysSection({
   const { data: configs = [], isLoading } = useOrgPaymentConfigs(orgId);
   const upsert = useUpsertPaymentConfig(orgId);
   const remove = useDeletePaymentConfig(orgId);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const gateways = usePaymentGateways();
   const connectable = (gateways.data ?? []).filter((g) => g.provider_keys_supported);
   const labelOf = (id: string) =>
@@ -117,14 +119,21 @@ export function GatewaysSection({
     }
   };
 
-  const onRemove = async (id: string, label: string) => {
-    if (!window.confirm(`Remove the ${label} configuration? Checkout falls back to the platform's keys.`)) return;
-    const res = await remove.mutateAsync(id);
-    // 409 CURRENCY_LOCKED: plans or payments rest on a currency only this
-    // account can take. The server says what to do first.
-    if (res && res.success === false) {
-      toast.error(res.message || `We couldn't remove ${label}. Try again.`);
-    }
+  const onRemove = (id: string, label: string) => {
+    requestConfirmation({
+      title: `Remove your ${label} keys?`,
+      description: `Checkout goes back to the platform's keys. Cards members saved on your ${label} account stop working: their memberships stop renewing by card and they pay by link instead, and we let them know. If a plan or payment still needs a currency only this account takes, we won't remove it and will tell you what to change first.`,
+      confirmLabel: "Remove keys",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await remove.mutateAsync(id);
+        // 409 CURRENCY_LOCKED: plans or payments rest on a currency only this
+        // account can take. The server says what to do first.
+        if (res && res.success === false) {
+          toast.error(res.message || `We couldn't remove ${label}. Try again.`);
+        }
+      },
+    });
   };
 
   return (
@@ -166,7 +175,7 @@ export function GatewaysSection({
               <button
                 className="btn-ghost-v2 sm"
                 disabled={remove.isPending}
-                onClick={() => void onRemove(c.gateway, label)}
+                onClick={() => onRemove(c.gateway, label)}
               >
                 Remove
               </button>
@@ -229,6 +238,7 @@ export function GatewaysSection({
           <button className="btn-ghost-v2 sm self-start" disabled={!orgId} onClick={startAdd}>+ Add gateway</button>
         ) : null}
       </div>
+      {confirmationModal}
     </section>
   );
 }

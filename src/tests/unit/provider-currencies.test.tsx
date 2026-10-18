@@ -16,6 +16,7 @@ import {
 } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
 import { orgPrice } from "../setup/currencyFixtures";
+import { confirmInDialog, findConfirmDialog } from "@/test/confirmDialog";
 
 /**
  * Provider-account currencies (CURRENCY_MODEL.md): inside a connected,
@@ -97,7 +98,7 @@ describe("Currencies on your Paystack account", () => {
       orgPrice("USD", { name: "US Dollar" }),
       orgPrice("GHS", { name: "Ghanaian Cedi", route: "provider" }),
     ];
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    vi.spyOn(window, "confirm");
   });
 
   it("lists the platform's currencies as included and the added ones with their check date", () => {
@@ -170,8 +171,12 @@ describe("Currencies on your Paystack account", () => {
     const user = userEvent.setup();
     render(<GatewaysSection />);
     await user.click(screen.getByRole("button", { name: "Remove GHS" }));
+    expect(h.remove).not.toHaveBeenCalled();
+    await confirmInDialog(user, "Remove GHS?", "Remove GHS");
     expect(h.remove).toHaveBeenCalledWith({ gateway: "paystack", code: "GHS" });
     expect(toast.success).toHaveBeenCalledWith("GHS removed.");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(window.confirm).not.toHaveBeenCalled();
   });
 
   it("shows what depends on a currency when removing it is refused", async () => {
@@ -185,6 +190,7 @@ describe("Currencies on your Paystack account", () => {
     const user = userEvent.setup();
     render(<GatewaysSection />);
     await user.click(screen.getByRole("button", { name: "Remove GHS" }));
+    await confirmInDialog(user, "Remove GHS?", "Remove GHS");
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Before you remove GHS");
     expect(alert).toHaveTextContent("Depends on GHS: 2 active plans and 1 payment in progress.");
@@ -192,11 +198,14 @@ describe("Currencies on your Paystack account", () => {
   });
 
   it("asks before removing, and does nothing when the provider cancels", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     const user = userEvent.setup();
     render(<GatewaysSection />);
     await user.click(screen.getByRole("button", { name: "Remove GHS" }));
+    const dialog = await findConfirmDialog("Remove GHS?");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(h.remove).not.toHaveBeenCalled();
+    expect(window.confirm).not.toHaveBeenCalled();
   });
 
   it("re-checks with Paystack and says what was removed and what is missing but kept", async () => {

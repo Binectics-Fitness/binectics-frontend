@@ -7,6 +7,7 @@ import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { instanceStatusTone, templateStatusTone } from "@/lib/ui/statusTones";
 import SearchableSelect from "@/components/SearchableSelect";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { toast } from "@/components/Toast";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
@@ -1038,6 +1039,7 @@ export default function ProgramsManager({
     return billing != null;
   };
   const [clientsTemplate, setClientsTemplate] = useState<ProgramTemplate | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     if (initialCreateOpen || initialEditId) router.replace(basePath, { scroll: false });
@@ -1156,28 +1158,44 @@ export default function ProgramsManager({
     }
   };
 
-  const handlePublish = async (t: ProgramTemplate) => {
+  const handlePublish = (t: ProgramTemplate) => {
     setGate(null);
-    if (!confirm(`Publish "${t.name}"? This freezes the current version so you can assign it. Later edits start a new draft.`)) return;
-    const res = await programsService.publishTemplate(t._id);
-    if (res.success && res.data) {
-      setTemplates((list) => list.map((x) => (x._id === t._id ? res.data!.template : x)));
-      toast.success("Program published.");
-    } else if (!planRefused(res)) {
-      toast.error(res.message ?? "Failed to publish program.");
-    }
+    requestConfirmation({
+      title: `Publish "${t.name}"?`,
+      description:
+        "This freezes the current version so you can assign it. Later edits start a new draft. Clients already on this program stay on the version they started.",
+      confirmLabel: "Publish program",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        const res = await programsService.publishTemplate(t._id);
+        if (res.success && res.data) {
+          setTemplates((list) => list.map((x) => (x._id === t._id ? res.data!.template : x)));
+          toast.success("Program published.");
+        } else if (!planRefused(res)) {
+          toast.error(res.message ?? "Failed to publish program.");
+        }
+      },
+    });
   };
 
-  const handleArchive = async (t: ProgramTemplate) => {
+  const handleArchive = (t: ProgramTemplate) => {
     setGate(null);
-    if (!confirm(`Archive "${t.name}"? It will disappear from this list. Assigned clients keep their programs.`)) return;
-    const res = await programsService.archiveTemplate(t._id);
-    if (res.success) {
-      setTemplates((list) => list.filter((x) => x._id !== t._id));
-      toast.success("Program archived.");
-    } else {
-      toast.error(res.message ?? "Failed to archive program.");
-    }
+    requestConfirmation({
+      title: `Archive "${t.name}"?`,
+      description:
+        "It leaves this list and can't be assigned or published again. Clients already on it keep their programs. This can't be undone.",
+      confirmLabel: "Archive program",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await programsService.archiveTemplate(t._id);
+        if (res.success) {
+          setTemplates((list) => list.filter((x) => x._id !== t._id));
+          toast.success("Program archived.");
+        } else {
+          toast.error(res.message ?? "Failed to archive program.");
+        }
+      },
+    });
   };
 
   const FILTERS: Filter[] = ["All", "Draft", "Published"];
@@ -1298,6 +1316,7 @@ export default function ProgramsManager({
       {clientsTemplate && (
         <AssignmentsModal template={clientsTemplate} basePath={basePath} onClose={() => setClientsTemplate(null)} />
       )}
+      {confirmationModal}
     </Shell>
   );
 }

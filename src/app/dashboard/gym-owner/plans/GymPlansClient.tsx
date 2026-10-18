@@ -25,6 +25,8 @@ import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
 import { ChipEditor, DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { planPerLabel as perLabel } from "@/lib/marketplace/planDisplay";
 import SearchableSelect from "@/components/SearchableSelect";
+import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -58,6 +60,7 @@ export function GymPlansClient() {
   const setActive = useSetOrgMembershipPlanActive(orgId);
   const remove = useDeleteOrgMembershipPlan(orgId);
   const { fmtMoney, fmtNumber } = useOrgFormat();
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,10 +83,21 @@ export function GymPlansClient() {
     else setError(writeErrorMessage(res, "Couldn't create the plan."));
   };
 
+  // Delete is only offered on a plan nobody is on (the button is disabled
+  // otherwise); a plan with members is deactivated instead.
   const onDelete = (plan: MarketplaceMembershipPlan) => {
-    if (window.confirm(`Delete "${plan.name}"? This can't be undone.`)) {
-      void remove.mutateAsync(plan._id);
-    }
+    requestConfirmation({
+      title: `Delete "${plan.name}"?`,
+      description:
+        "The plan is deleted and comes off your listing, and any open offers for it are withdrawn. This can't be undone. To stop selling it but keep it, deactivate it instead.",
+      confirmLabel: "Delete plan",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await remove.mutateAsync(plan._id);
+        if (res.success) toast.success(`"${plan.name}" deleted`);
+        else toast.error(res.message || "Couldn't delete the plan. Try again.");
+      },
+    });
   };
 
   return (
@@ -188,6 +202,7 @@ export function GymPlansClient() {
           ))}
         </DSCard>
       )}
+      {confirmationModal}
     </GymDashboardShell>
   );
 }

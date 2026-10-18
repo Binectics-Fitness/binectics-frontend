@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import {
   useRefreshProviderCurrencies,
@@ -59,6 +60,7 @@ export function ProviderCurrenciesPanel({
   const priceCurrencies = useOrgPriceCurrencies(orgId);
   const verify = useVerifyProviderCurrency(orgId);
   const remove = useRemoveProviderCurrency(orgId);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const refresh = useRefreshProviderCurrencies(orgId);
 
   const [adding, setAdding] = useState(false);
@@ -102,29 +104,30 @@ export function ProviderCurrenciesPanel({
     }
   };
 
-  const onRemove = async (c: string) => {
-    if (
-      !window.confirm(
-        `Remove ${c}? You won't be able to price new membership plans in ${c} unless Binectics takes it.`,
-      )
-    ) {
-      return;
-    }
-    setLocked(null);
-    const res = await remove.mutateAsync({ gateway, code: c });
-    if (res.success) {
-      toast.success(`${c} removed.`);
-      return;
-    }
-    if (res.code === "CURRENCY_LOCKED") {
-      setLocked({
-        code: c,
-        message: res.message ?? `Plans or payments depend on ${c}.`,
-        holds: describeCurrencyLock(providerCurrencyLocks(res)[c]),
-      });
-      return;
-    }
-    toast.error(providerCurrencyMessage(res, label, c));
+  const onRemove = (c: string) => {
+    requestConfirmation({
+      title: `Remove ${c}?`,
+      description: `You won't be able to price new membership plans in ${c} unless Binectics takes it. If plans or payments still depend on ${c}, it stays and we'll tell you what to change first. You can add it back later by checking it again.`,
+      confirmLabel: `Remove ${c}`,
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setLocked(null);
+        const res = await remove.mutateAsync({ gateway, code: c });
+        if (res.success) {
+          toast.success(`${c} removed.`);
+          return;
+        }
+        if (res.code === "CURRENCY_LOCKED") {
+          setLocked({
+            code: c,
+            message: res.message ?? `Plans or payments depend on ${c}.`,
+            holds: describeCurrencyLock(providerCurrencyLocks(res)[c]),
+          });
+          return;
+        }
+        toast.error(providerCurrencyMessage(res, label, c));
+      },
+    });
   };
 
   const onRefresh = async () => {
@@ -201,7 +204,7 @@ export function ProviderCurrenciesPanel({
                     type="button"
                     className="btn-ghost-v2 sm"
                     disabled={remove.isPending}
-                    onClick={() => void onRemove(c.code)}
+                    onClick={() => onRemove(c.code)}
                     aria-label={`Remove ${c.code}`}
                   >
                     Remove
@@ -302,6 +305,7 @@ export function ProviderCurrenciesPanel({
           + Add a currency
         </button>
       )}
+      {confirmationModal}
     </div>
   );
 }

@@ -35,6 +35,7 @@ import { useOrgMembershipPlans } from "@/lib/queries/marketplace";
 import SearchableSelect from "@/components/SearchableSelect";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { useGymViewer } from "@/hooks/useGymViewer";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import Modal from "@/components/Modal";
 import {
@@ -137,6 +138,7 @@ function RowActions({
   const [liftOpen, setLiftOpen] = useState(false);
   const { fmtDate } = useOrgFormat();
   const [busy, setBusy] = useState(false);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -177,8 +179,6 @@ function RowActions({
    * needs precisely when a membership needs attention.
    */
   const isLive = !TERMINAL_MEMBERSHIP_STATUSES.includes(sub.status);
-  /** Has access right now: `active` or `past_due`. */
-  const hasAccess = isEntitlingMembershipStatus(sub.status);
   const scheduledPlan =
     sub.next_plan_id && typeof sub.next_plan_id === "object" ? sub.next_plan_id : null;
   const canRecordRenewal = canRecordRenewalFor(sub);
@@ -218,39 +218,57 @@ function RowActions({
       } else toast.error(res.message ?? "Couldn't clear the change");
     });
 
-  const handleCancel = () =>
-    run(async () => {
-      if (
-        !window.confirm(
-          hasAccess
-            ? `Cancel ${getMemberName(sub)}'s membership? They lose access and the seat is freed. If they paid online, the unused part of their term is refunded to them automatically.`
-            : `Cancel ${getMemberName(sub)}'s membership? It ends for good and the seat is freed, a pause or suspension can be lifted, this cannot.`,
-        )
-      )
-        return;
-      const res = await marketplaceService.cancelOrgSubscription(orgId, sub._id);
-      if (res.success && res.data) {
-        onUpdate(res.data);
-        toast.success("Membership cancelled");
-      } else toast.error(res.message ?? "Couldn't cancel the membership");
+  // Destructive actions ask first in the shared dialog. The dialog stays open
+  // (confirm button spinning) while `run` is in flight, so it can't be sent
+  // twice; failures are reported by toast with the API's reason.
+  const handleCancel = () => {
+    setOpen(false);
+    const name = getMemberName(sub);
+    // The API refunds the unused term only for a running (active or paused)
+    // membership, and only a Paystack charge it can tie to that term. The
+    // seat stays taken: only archiving frees it.
+    const running =
+      sub.status === MembershipSubscriptionStatus.ACTIVE ||
+      sub.status === MembershipSubscriptionStatus.PAUSED;
+    requestConfirmation({
+      title: `Cancel ${name}'s membership?`,
+      description: running
+        ? "It ends now and they lose access. If they paid online, the unused part of their term is refunded to them automatically; cash and manual payments aren't. Their seat stays taken until you archive them. This can't be undone."
+        : "It ends now and nothing is refunded. Their seat stays taken until you archive them. A pause or suspension can be lifted later; a cancellation can't.",
+      confirmLabel: "Cancel membership",
+      cancelLabel: "Keep membership",
+      confirmVariant: "danger",
+      onConfirm: () =>
+        run(async () => {
+          const res = await marketplaceService.cancelOrgSubscription(orgId, sub._id);
+          if (res.success && res.data) {
+            onUpdate(res.data);
+            toast.success("Membership cancelled");
+          } else toast.error(res.message ?? "Couldn't cancel the membership");
+        }),
     });
+  };
 
-  const handleArchive = () =>
-    run(async () => {
-      const memberUserId = getMemberUserId(sub);
-      if (!memberUserId) return toast.error("This member can't be archived yet.");
-      if (
-        !window.confirm(
-          `Archive ${getMemberName(sub)}? This frees their seat. They keep their account, login and history, archiving is billing-only, not a ban, and you can restore them any time.`,
-        )
-      )
-        return;
-      const res = await marketplaceService.archiveMember(orgId, memberUserId);
-      if (res.success) {
-        toast.success("Member archived, their seat is freed");
-        onRosterChange();
-      } else toast.error(res.message ?? "Couldn't archive the member");
+  const handleArchive = () => {
+    setOpen(false);
+    const memberUserId = getMemberUserId(sub);
+    if (!memberUserId) return toast.error("This member can't be archived yet.");
+    requestConfirmation({
+      title: `Archive ${getMemberName(sub)}?`,
+      description:
+        "This frees their seat. They keep their account, login and history. Archiving is billing-only, not a ban, and you can restore them later while you have a seat free.",
+      confirmLabel: "Archive member",
+      confirmVariant: "danger",
+      onConfirm: () =>
+        run(async () => {
+          const res = await marketplaceService.archiveMember(orgId, memberUserId);
+          if (res.success) {
+            toast.success("Member archived, their seat is freed");
+            onRosterChange();
+          } else toast.error(res.message ?? "Couldn't archive the member");
+        }),
     });
+  };
 
   const handleRestore = () =>
     run(async () => {
@@ -396,6 +414,7 @@ function RowActions({
         onClose={() => setLiftOpen(false)}
         onDone={onUpdate}
       />
+      {confirmationModal}
     </div>
   );
 }

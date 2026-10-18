@@ -11,6 +11,7 @@ import {
   type UpdateFoodItemRequest,
 } from "@/lib/api/nutrition";
 import { toast } from "@/components/Toast";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 
 /* ─── Form model ────────────────────────────────────────────────────────── */
 
@@ -112,6 +113,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
   const [saving, setSaving] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     let mounted = true;
@@ -177,18 +179,26 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
     }
   };
 
-  const handleArchive = async () => {
+  const handleArchive = () => {
     if (!food) return;
-    if (!confirm(`Archive "${food.name}"? It will be hidden from your library.`)) return;
-    setArchiving(true);
-    const res = await nutritionService.archiveFood(food._id);
-    setArchiving(false);
-    if (res.success) {
-      toast.success(`Archived "${food.name}".`);
-      router.push("/dashboard/dietitian/foods");
-    } else {
-      toast.error(res.message ?? "Failed to archive food.");
-    }
+    requestConfirmation({
+      title: `Archive "${food.name}"?`,
+      description:
+        "It's hidden from your library, so you can't add it to new meal plans. Meal plans that already use it don't change. You can't bring it back from here.",
+      confirmLabel: "Archive food",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setArchiving(true);
+        const res = await nutritionService.archiveFood(food._id);
+        setArchiving(false);
+        if (res.success) {
+          toast.success(`Archived "${food.name}".`);
+          router.push("/dashboard/dietitian/foods");
+        } else {
+          toast.error(res.message ?? "Failed to archive food.");
+        }
+      },
+    });
   };
 
   if (loading) {
@@ -329,6 +339,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
           </div>
         </DSCard>
       </div>
+      {confirmationModal}
     </DietitianDashboardShell>
   );
 }

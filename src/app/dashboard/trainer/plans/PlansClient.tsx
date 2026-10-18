@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   CreateOrgMembershipPlanRequest,
@@ -458,6 +459,7 @@ export default function TrainerPlansClient() {
   const { data: currencies, providerHint } = useOrgPriceCurrencies(orgId);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     // Keep showing skeletons while the org context is still resolving.
@@ -527,16 +529,29 @@ export default function TrainerPlansClient() {
     }
   };
 
-  const handleDelete = async (plan: MarketplaceMembershipPlan) => {
+  // The API deletes the plan outright, and refuses while anyone is still on it
+  // (paused, suspended and past-due included).
+  const handleDelete = (plan: MarketplaceMembershipPlan) => {
     if (!orgId) return;
-    if (!confirm(`Delete "${plan.name}"? This cannot be undone.`)) return;
-    const res = await marketplaceService.deleteOrgMembershipPlan(orgId, plan._id);
-    if (res.success) {
-      setPlans((p) => p.filter((pl) => pl._id !== plan._id));
-      toast.success("Plan deleted.");
-    } else {
-      toast.error(res.message ?? "Failed to delete plan.");
-    }
+    const onIt = membersByPlan.get(plan._id) ?? 0;
+    requestConfirmation({
+      title: `Delete "${plan.name}"?`,
+      description:
+        onIt > 0
+          ? `${onIt} ${onIt === 1 ? "person is" : "people are"} still on this plan, so it can't be deleted yet. Deactivate it instead to stop selling it; their memberships keep working.`
+          : "The plan is deleted and comes off your listing, and any open offers for it are withdrawn. This can't be undone. To stop selling it but keep it, deactivate it instead.",
+      confirmLabel: "Delete plan",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await marketplaceService.deleteOrgMembershipPlan(orgId, plan._id);
+        if (res.success) {
+          setPlans((p) => p.filter((pl) => pl._id !== plan._id));
+          toast.success("Plan deleted.");
+        } else {
+          toast.error(res.message ?? "Failed to delete plan.");
+        }
+      },
+    });
   };
 
   const activeCount = plans.filter((p) => p.is_active).length;
@@ -641,6 +656,7 @@ export default function TrainerPlansClient() {
           onSave={modal.mode === "create" ? handleCreate : handleEdit}
         />
       )}
+      {confirmationModal}
     </TrainerDashboardShell>
   );
 }

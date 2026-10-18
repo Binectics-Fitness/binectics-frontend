@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/forms";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { PlanGate } from "@/components/ds/PlanGate";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 const QUESTION_TYPE_OPTIONS = [
@@ -37,6 +38,7 @@ export default function FormsPage() {
   const [activeForm, setActiveForm] = useState<Form | null>(null);
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -141,20 +143,31 @@ export default function FormsPage() {
     }
   }
 
-  async function handleDeleteForm(formId: string) {
-    if (!confirm("Delete this form? All responses will be lost.")) return;
-
-    const res = await formsService.deleteForm(formId);
-    if (res.success) {
-      setForms((prev) => prev.filter((f) => f._id !== formId));
-      if (activeForm?._id === formId) {
-        setActiveForm(null);
-        setView("list");
-      }
-      showMessage("Form deleted.");
-    } else {
-      showMessage("Failed to delete form.", "error");
-    }
+  function handleDeleteForm(form: Form) {
+    const formId = form._id;
+    const responses = responseCounts[formId] ?? 0;
+    requestConfirmation({
+      title: `Delete "${form.title}"?`,
+      description:
+        responses > 0
+          ? `The form, its questions and its ${responses} ${responses === 1 ? "response" : "responses"} are deleted for good, and its link stops working. This can't be undone.`
+          : "The form and its questions are deleted for good, and its link stops working. This can't be undone.",
+      confirmLabel: "Delete form",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        const res = await formsService.deleteForm(formId);
+        if (res.success) {
+          setForms((prev) => prev.filter((f) => f._id !== formId));
+          if (activeForm?._id === formId) {
+            setActiveForm(null);
+            setView("list");
+          }
+          showMessage("Form deleted.");
+        } else {
+          showMessage("Failed to delete form.", "error");
+        }
+      },
+    });
   }
 
   async function openBuilder(form: Form) {
@@ -286,7 +299,7 @@ export default function FormsPage() {
       )}
       <button
         type="button"
-        onClick={() => handleDeleteForm(form._id)}
+        onClick={() => handleDeleteForm(form)}
         className="rounded-(--r-2) border px-3 py-1.5 text-xs"
         style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
       >
@@ -793,6 +806,7 @@ export default function FormsPage() {
           </>
         )}
       </div>
+      {confirmationModal}
     </WorkspaceShell>
   );
 }
