@@ -32,5 +32,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
+      # Tests run on the developer's machine before every push (the pre-push
+      # hook), so PR runs skip them to save Actions minutes. The weekly and
+      # manual runs on main still run the full suite.
       - run: npm test
+        if: github.event_name != 'pull_request'
       - run: npx next build
