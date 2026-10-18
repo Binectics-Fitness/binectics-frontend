@@ -218,15 +218,24 @@ const DAY = 86_400_000;
  * the saved card gets no Renew even when no retry is scheduled: the member
  * turns auto-renew off first (which ends the grace), then renews, never both
  * at once. Change both apps together.
+ *
+ * The plan judged is the one the member would renew onto. When the API
+ * names it (`renewal_plan_id` is an id, api #267), that plan: the API names
+ * only a paid, recurring plan the renewal listing sells, so a member on a
+ * free or one-time plan whose gym scheduled a paid next plan is due too.
+ * Otherwise (null, or an older API that sends no field) the membership's
+ * own plan.
  */
 export function renewDue(sub: MembershipSubscription, now: Date = new Date()): boolean {
-  const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
-  if (!plan?._id) return false;
   // Never while a card charge for this term is retrying or in flight.
   if (cardRetryFor(sub).pending) return false;
-  if (plan.plan_type === MembershipPlanType.ONE_TIME) return false;
-  if (!(plan.price_minor > 0)) return false;
-  if (plan.is_self_serve === false) return false;
+  if (typeof namedRenewalPlan(sub) !== "string") {
+    const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
+    if (!plan?._id) return false;
+    if (plan.plan_type === MembershipPlanType.ONE_TIME) return false;
+    if (!(plan.price_minor > 0)) return false;
+    if (plan.is_self_serve === false) return false;
+  }
   const end = sub.end_date ? new Date(sub.end_date).getTime() : NaN;
   if (Number.isNaN(end)) return false;
   const t = now.getTime();
@@ -278,13 +287,30 @@ export function renewalListingFor(sub: MembershipSubscription): string | null | 
 }
 
 /**
- * The plan a renewal checkout pays for: the API's `renewal_plan_id` when it
- * sends one (the plan the renewal will actually be on, e.g. a scheduled
- * plan change), else the membership's current plan.
+ * The API's `renewal_plan_id` (api #267): the id when it names one, null
+ * when it sends null (or an id unsafe to put in a URL), undefined on an
+ * older API that sends no field.
+ */
+function namedRenewalPlan(sub: MembershipSubscription): string | null | undefined {
+  const named = sub.renewal_plan_id;
+  if (named === undefined) return undefined;
+  return typeof named === "string" && SAFE_ID.test(named) ? named : null;
+}
+
+/**
+ * The plan a renewal checkout pays for:
+ *  - when the API sends `renewal_plan_id` (api #267), its answer is final:
+ *    the plan the renewal will be on (e.g. a gym's scheduled next plan), or
+ *    null when the renewal listing sells no plan the member can buy, and
+ *    the member is asked to go to the gym. Never the current plan in place
+ *    of a null;
+ *  - on an older API that sends no field, the membership's current plan.
+ *
+ * Mobile's `renewalPlanFor` (binectics-mobile src/utils/memberBilling.ts).
  */
 export function renewalPlanFor(sub: MembershipSubscription): string | null {
-  const named = sub.renewal_plan_id;
-  if (typeof named === "string" && SAFE_ID.test(named)) return named;
+  const named = namedRenewalPlan(sub);
+  if (named !== undefined) return named;
   const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
   return plan?._id ?? null;
 }
@@ -304,9 +330,9 @@ const SEAT_BEARING: readonly MembershipSubscriptionStatus[] = [
 
 /**
  * What renewing means for a membership that is due (renewDue):
- *  - checkout: the plan's checkout, through renewalListingFor's listing;
- *  - ask_gym: the API says there is no listing to pay through, so the member
- *    asks the gym. `canMessage` when any of the member's memberships at that
+ *  - checkout: renewalPlanFor's plan, through renewalListingFor's listing;
+ *  - ask_gym: the API says there is no listing to pay through, or no plan
+ *    to pay for there (`renewal_plan_id: null`), so the member asks the gym. `canMessage` when any of the member's memberships at that
  *    gym still opens its inbox (the API's gate is per organization).
  * Null when renewing is not due, where to renew is not known, or there is
  * no gym to ask. Mobile's `renewActionFor`, except that mobile returns
@@ -324,11 +350,10 @@ export function renewActionFor(
   memberships: readonly Pick<MembershipSubscription, "status" | "organization_id">[] = [],
 ): RenewAction | null {
   if (!renewDue(sub, now)) return null;
-  const planId = renewalPlanFor(sub);
-  if (!planId) return null;
   const listingId = renewalListingFor(sub);
-  if (listingId) return { kind: "checkout", href: checkoutHref(listingId, planId) };
   if (listingId === undefined) return null;
+  const planId = renewalPlanFor(sub);
+  if (listingId && planId) return { kind: "checkout", href: checkoutHref(listingId, planId) };
   const organizationId = idOf(sub.organization_id);
   if (!organizationId) return null;
   const orgName =
@@ -346,7 +371,7 @@ export function renewActionFor(
 /**
  * The checkout that renews this membership, or null when "Renew" shouldn't
  * show (renewDue), or there is no listing to renew through
- * (renewalListingFor). Mobile's `renewCheckoutFor`, with the listing order
+ * (renewalListingFor) or no plan to pay for (renewalPlanFor). Mobile's `renewCheckoutFor`, with the listing order
  * renewalListingFor describes.
  */
 export function renewHrefForMembership(

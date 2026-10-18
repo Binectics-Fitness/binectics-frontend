@@ -17,6 +17,7 @@ import {
   reasonFromError,
   renewActionFor,
   renewalListingFor,
+  renewalPlanFor,
   renewDue,
   renewHrefForMembership,
   renewHrefForNotification,
@@ -396,10 +397,14 @@ describe("where Renew points (renewal_listing_id, api #258/#263/#265)", () => {
     expect(renewActionFor(s, NOW)).toEqual({ kind: "ask_gym", gymName: "Iron Temple", organizationId: "o1", canMessage: true });
   });
 
-  it("pays for renewal_plan_id when the API names one, else the current plan", () => {
+  it("pays for renewal_plan_id when the API names one; the current plan only when the field is absent", () => {
     expect(renewHrefForMembership(sub({ renewal_plan_id: "p2" }), NOW)).toBe("/checkout?listing=l1&plan=p2");
-    expect(renewHrefForMembership(sub({ renewal_plan_id: null }), NOW)).toBe("/checkout?listing=l1&plan=p1");
-    expect(renewHrefForMembership(sub({ renewal_plan_id: "x y" }), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(sub(), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    // Null (or an id unsafe to put in a URL) is never replaced by plan_id.
+    expect(renewalPlanFor(sub({ renewal_plan_id: null }))).toBeNull();
+    expect(renewHrefForMembership(sub({ renewal_plan_id: null }), NOW)).toBeNull();
+    expect(renewalPlanFor(sub({ renewal_plan_id: "x y" }))).toBeNull();
+    expect(renewHrefForMembership(sub({ renewal_plan_id: "x y" }), NOW)).toBeNull();
     expect(renewHrefForMembership(sub({ renewal_listing_id: "gl1", renewal_plan_id: "p2" }), NOW)).toBe(
       "/checkout?listing=gl1&plan=p2",
     );
@@ -447,6 +452,81 @@ describe("where Renew points (renewal_listing_id, api #258/#263/#265)", () => {
     expect(renewActionFor(sub({ ...none, plan_id: { ...plan, price_minor: 0 } }), NOW)).toBeNull();
     expect(renewActionFor(sub({ ...none, plan_id: { ...plan, is_self_serve: false } }), NOW)).toBeNull();
     expect(renewActionFor(sub({ ...none, end_date: new Date(NOW.getTime() + 20 * DAY).toISOString() }), NOW)).toBeNull();
+  });
+});
+
+describe("the renewal plan the API names (renewal_plan_id, api #267; mobile #124)", () => {
+  const plan = sub().plan_id as Exclude<MembershipSubscription["plan_id"], string>;
+  const free = { ...plan, price_minor: 0 };
+  const oneTime = { ...plan, plan_type: MembershipPlanType.ONE_TIME };
+  const pastDue = { status: MembershipSubscriptionStatus.PAST_DUE };
+
+  it("a free or one-time current plan with a paid next plan: due, and Renew checks out the next plan", () => {
+    // Judged by the current plan alone, neither is due.
+    expect(renewDue(sub({ ...pastDue, plan_id: free }), NOW)).toBe(false);
+    expect(renewDue(sub({ ...pastDue, plan_id: oneTime }), NOW)).toBe(false);
+    expect(renewDue(sub({ plan_id: free }), NOW)).toBe(false);
+
+    const next = { renewal_listing_id: "l-next", renewal_plan_id: "p-next" };
+    for (const current of [free, oneTime]) {
+      expect(renewDue(sub({ ...pastDue, plan_id: current, ...next }), NOW)).toBe(true);
+      // Active, ending within the week: due too.
+      expect(renewDue(sub({ plan_id: current, ...next }), NOW)).toBe(true);
+      expect(renewActionFor(sub({ ...pastDue, plan_id: current, ...next }), NOW)).toEqual({
+        kind: "checkout",
+        href: "/checkout?listing=l-next&plan=p-next",
+      });
+    }
+    // A negotiated current plan moved onto a buyable next plan: due as well.
+    expect(renewDue(sub({ ...pastDue, plan_id: { ...plan, is_self_serve: false }, ...next }), NOW)).toBe(true);
+  });
+
+  it("the timing and card rules still apply to the next plan", () => {
+    const next = { plan_id: free, renewal_listing_id: "l-next", renewal_plan_id: "p-next" };
+    // A month left is not due.
+    expect(renewDue(sub({ ...next, end_date: new Date(NOW.getTime() + 30 * DAY).toISOString() }), NOW)).toBe(false);
+    // A saved card renews it: not due.
+    expect(renewDue(sub({ ...next, auto_renew: true, collection_method: "card_auto" }), NOW)).toBe(false);
+    // A card retry pending: not due.
+    expect(
+      renewDue(sub({ ...next, ...pastDue, renewal_retry: { pending: true, next_attempt_at: null } }), NOW),
+    ).toBe(false);
+  });
+
+  it("a null plan asks the gym, never plan_id; and the current plan decides whether it is due", () => {
+    const unsold = sub({ ...pastDue, renewal_listing_id: "l-api", renewal_plan_id: null });
+    expect(renewalPlanFor(unsold)).toBeNull();
+    expect(renewActionFor(unsold, NOW)).toEqual({
+      kind: "ask_gym",
+      gymName: "Iron Temple",
+      organizationId: "o1",
+      canMessage: true,
+    });
+    expect(renewHrefForMembership(unsold, NOW)).toBeNull();
+    // A free current plan and no renewal plan: nothing to renew, nobody to ask.
+    expect(renewDue(sub({ ...pastDue, plan_id: free, renewal_listing_id: "l-api", renewal_plan_id: null }), NOW)).toBe(false);
+    expect(renewActionFor(sub({ ...pastDue, plan_id: free, renewal_listing_id: "l-api", renewal_plan_id: null }), NOW)).toBeNull();
+  });
+
+  it("a null listing asks the gym, even with a plan and a listing of its own", () => {
+    const none = sub({ ...pastDue, renewal_listing_id: null, renewal_plan_id: null });
+    expect(renewalListingFor(none)).toBeNull();
+    expect(renewActionFor(none, NOW)).toMatchObject({ kind: "ask_gym", organizationId: "o1" });
+    // Even if a plan were named, there is no listing to buy it through.
+    expect(renewActionFor(sub({ ...pastDue, renewal_listing_id: null, renewal_plan_id: "p-next" }), NOW)).toMatchObject({
+      kind: "ask_gym",
+    });
+  });
+
+  it("an absent field (an older API): the membership's own plan decides and is checked out", () => {
+    const older = sub({ ...pastDue, renewal_listing_id: "l-api" });
+    expect(renewalPlanFor(older)).toBe("p1");
+    expect(renewActionFor(older, NOW)).toEqual({ kind: "checkout", href: "/checkout?listing=l-api&plan=p1" });
+    // Neither field: the own listing and own plan.
+    expect(renewHrefForMembership(sub(pastDue), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    // And a free or one-time current plan is still not due.
+    expect(renewDue(sub({ ...pastDue, plan_id: free, renewal_listing_id: "l-api" }), NOW)).toBe(false);
+    expect(renewDue(sub({ ...pastDue, plan_id: oneTime }), NOW)).toBe(false);
   });
 });
 
