@@ -40,3 +40,9 @@ describe("nudges and milestones", () => {
     expect(notificationIcon({ type: "PROGRAM_COMPLETED" })).toEqual({ icon: "program", tone: "success" });
   });
 });
+
+describe("a gym ending a connection", () => {
+  it("is a client notice, not a message, though the API files it under mention", () => {
+    expect(notificationIcon({ type: "CONNECTION_ENDED", category: "mention" })).toEqual({ icon: "client", tone: "neutral" });
+  });
+});
