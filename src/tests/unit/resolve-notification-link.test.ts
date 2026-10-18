@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { resolveNotificationLink } from "@/utils/resolveNotificationLink";
+import {
+  resolveNotificationLink,
+  resolveNotificationTarget,
+} from "@/utils/resolveNotificationLink";
 import { UserRole } from "@/lib/types";
 
 describe("resolveNotificationLink", () => {
@@ -161,5 +164,20 @@ describe("nudge and milestone links (API buildActionUrl)", () => {
 
   it("program halfway and completed links land on the member home (no web program page)", () => {
     expect(resolveNotificationLink("/dashboard/my-programs/6abc", UserRole.USER)).toBe("/dashboard/member");
+  });
+});
+
+describe("a gym ending a member's connection (CONNECTION_ENDED)", () => {
+  it("opens the member home, where the My coaches card no longer lists the gym", () => {
+    expect(
+      resolveNotificationTarget(
+        {
+          type: "CONNECTION_ENDED",
+          actionUrl: "/dashboard/member",
+          metadata: { organizationId: "o1", profileId: "p1" },
+        },
+        UserRole.USER,
+      ),
+    ).toBe("/dashboard/member");
   });
 });

@@ -73,6 +73,8 @@ const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   CLIENT_REQUEST: { icon: "client", tone: "warn" },
   CLIENT_ACCEPTED: { icon: "client", tone: "success" },
   CLIENT_DEPARTED: { icon: "client" },
+  // A gym ended the member's connection: news, like a client departing.
+  CONNECTION_ENDED: { icon: "client" },
   MARKETPLACE_REQUEST_RECEIVED: { icon: "client", tone: "warn" },
   MARKETPLACE_REQUEST_ACCEPTED: { icon: "client", tone: "success" },
   MARKETPLACE_REQUEST_REJECTED: { icon: "client", tone: "danger" },

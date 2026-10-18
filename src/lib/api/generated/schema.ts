@@ -2662,10 +2662,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List reviews for a marketplace listing */
+        /**
+         * List reviews for a marketplace listing
+         * @description The reviews module's visible reviews of the listing (the same set GET /reviews/targets/:type/:id returns and the listing's average_rating counts), in this route's original shape.
+         */
         get: operations["MarketplaceController_getListingReviews"];
         put?: never;
-        /** Submit a review for a listing */
+        /**
+         * Submit a review for a listing
+         * @deprecated
+         * @description Deprecated: use POST /reviews with the listing as target. Writes there, under its eligibility rules.
+         */
         post: operations["MarketplaceController_createReview"];
         delete?: never;
         options?: never;
@@ -3224,6 +3231,40 @@ export interface paths {
         patch: operations["AssignmentsController_update"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/connected-clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People connected to the organization (an accepted request, or added as a client) who hold no membership here */
+        get: operations["MarketplaceOrgController_getConnectedClients"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/connected-clients/{profileId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End a connection from the Connected list. The seat it held is freed. Refused for members and trainer assignments. */
+        post: operations["MarketplaceOrgController_endConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/enrollment-offers": {
         parameters: {
             query?: never;
@@ -3528,6 +3569,23 @@ export interface paths {
         put?: never;
         /** Send the invitations an import held back. They go out within the daily send limit. */
         post: operations["MemberImportController_sendInvites"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/member-imports/{importId}/invites/resend-unconfirmed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Try once more to send the invitations that may not have arrived (unconfirmed). A member may receive a copy twice. Within the daily send limit. */
+        post: operations["MemberImportController_resendUnconfirmedInvites"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3845,6 +3903,23 @@ export interface paths {
         patch: operations["MarketplaceOrgController_rejectRequest"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/requests/pending-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many incoming requests wait on the organization */
+        get: operations["MarketplaceOrgController_getPendingRequestCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions": {
         parameters: {
             query?: never;
@@ -4059,11 +4134,19 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete own review */
+        /**
+         * Delete own review
+         * @deprecated
+         * @description Deprecated: use DELETE /reviews/:id.
+         */
         delete: operations["MarketplaceController_deleteReview"];
         options?: never;
         head?: never;
-        /** Update own review */
+        /**
+         * Update own review
+         * @deprecated
+         * @description Deprecated: use PATCH /reviews/:id.
+         */
         patch: operations["MarketplaceController_updateReview"];
         trace?: never;
     };
@@ -8714,7 +8797,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -9136,7 +9219,9 @@ export interface components {
             /** @example true */
             success: boolean;
         };
-        MySubscriptionRenewalRetryDto: {
+        MySubscriptionExtrasDto: {
+            /** @description The listing to renew through (POST /marketplace/listings/:id/plans/:planId/checkout), the first that is published and not suspended of: the renewal plan's own listing (next_plan_id, else plan_id), the membership's own listing, the organization's newest listing. Null when there is none. */
+            renewal_listing_id: string | null;
             renewal_retry: components["schemas"]["RenewalRetryDto"];
         };
         MyTeamInvitationDto: {
@@ -9166,6 +9251,45 @@ export interface components {
             medium: string;
             /** @example https://res.cloudinary.com/.../w_200,h_200/.../image.jpg */
             thumbnail: string;
+        };
+        OrgConnectedClientDto: {
+            /** @description Who accepted their connection request. Null when they came another way, or the request was answered before this was recorded. */
+            accepted_by: components["schemas"]["OrgConnectedClientUserDto"] | null;
+            client: components["schemas"]["OrgConnectedClientPersonDto"];
+            /**
+             * Format: date-time
+             * @description When the link was made.
+             * @example 2026-10-18T09:30:00.000Z
+             */
+            connected_at: string | null;
+            /**
+             * @description The client profile linking them to the gym.
+             * @example 665f1c2e9b1e8a0012345679
+             */
+            profile_id: string;
+        };
+        OrgConnectedClientPersonDto: {
+            /** @example 665f1c2e9b1e8a0012345678 */
+            _id: string;
+            /** @example ada@example.com */
+            email: string | null;
+            /** @example Ada */
+            first_name: string | null;
+            /** @example Obi */
+            last_name: string | null;
+        };
+        OrgConnectedClientsResponseDto: {
+            data: components["schemas"]["OrgConnectedClientDto"][];
+            /** @example true */
+            success: boolean;
+        };
+        OrgConnectedClientUserDto: {
+            /** @example 665f1c2e9b1e8a0012345678 */
+            _id: string;
+            /** @example Ada */
+            first_name: string | null;
+            /** @example Obi */
+            last_name: string | null;
         };
         OrgDashboardStatsDto: {
             /**
@@ -15416,14 +15540,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }. */
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at } and renewal_listing_id. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        data?: components["schemas"]["MySubscriptionRenewalRetryDto"][];
+                        data?: components["schemas"]["MySubscriptionExtrasDto"][];
                         success?: boolean;
                     };
                 };
@@ -15628,6 +15752,47 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_getConnectedClients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrgConnectedClientsResponseDto"];
+                };
+            };
+        };
+    };
+    MarketplaceOrgController_endConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16116,6 +16281,26 @@ export interface operations {
             };
         };
     };
+    MemberImportController_resendUnconfirmedInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MemberImportController_preview: {
         parameters: {
             query?: never;
@@ -16481,6 +16666,8 @@ export interface operations {
             query?: {
                 limit?: string;
                 cursor?: string;
+                /** @description pending: waiting on the gym. answered: accepted, declined, withdrawn or expired. Omitted: all. */
+                status?: "pending" | "answered";
             };
             header?: never;
             path: {
@@ -16557,6 +16744,25 @@ export interface operations {
                 "application/json": components["schemas"]["RespondMarketplaceRequestDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_getPendingRequestCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -17100,6 +17306,8 @@ export interface operations {
                 limit?: number;
                 /** @description Opaque cursor from next_cursor. */
                 cursor?: string;
+                /** @description Only this gym's inbox threads (kind 'gym'), for its owner or staff holding messaging:answer_members; 403 MESSAGING_NOT_GYM_INBOX otherwise. Always the paged shape. */
+                as_gym?: string;
             };
             header?: never;
             path?: never;
@@ -18180,7 +18388,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "CONNECTION_ENDED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
