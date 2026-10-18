@@ -135,6 +135,24 @@ describe("membershipNotice (F8)", () => {
     expect(n?.body).toBe(`We'll try your card again on ${inDays(1).slice(0, 10)}. You don't need to do anything yet.`);
   });
 
+  it("points to Billing, not Renew, when the overdue membership is still on the saved card and no retry is left", () => {
+    const onCard = sub({
+      _id: "s3",
+      status: MembershipSubscriptionStatus.PAST_DUE,
+      auto_renew: true,
+      collection_method: "card_auto",
+      renewal_retry: { pending: false, next_attempt_at: null },
+      grace_expires_at: inDays(5),
+    });
+    const n = membershipNotice([onCard], NOW, fmt);
+    expect(n).toMatchObject({
+      kind: "past_due",
+      renewHref: null,
+      billingHref: "/dashboard/member/billing?subscriptionId=s3",
+      body: "Your saved card is still set to pay for it. Open Billing to see your options.",
+    });
+  });
+
   it("names the gym when the membership has no listing (enrolled by the gym)", () => {
     const n = membershipNotice([sub({ listing_id: undefined, status: MembershipSubscriptionStatus.PAST_DUE })], NOW, fmt);
     expect(n?.title).toBe("Your Iron Temple payment is overdue");

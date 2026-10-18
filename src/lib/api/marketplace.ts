@@ -1,7 +1,7 @@
 /**
  * Marketplace API Service
- * Handles public listing search, client requests, reviews,
- * and professional listing management.
+ * Handles public listing search, client requests and professional
+ * listing management. Reviews live in ./reviews.ts (/reviews).
  */
 
 import { apiClient } from "./client";
@@ -15,7 +15,6 @@ import type {
   FacilityStatus,
   MarketplaceListing,
   MarketplaceRequest,
-  MarketplaceReview,
   MarketplaceSearchParams,
   MarketplaceSearchResult,
   MarketplaceAccountType,
@@ -237,16 +236,6 @@ export interface CreateMarketplaceRequestPayload {
   target_weight_kg?: number;
   height_cm?: number;
   goals?: string[];
-}
-
-export interface CreateReviewRequest {
-  rating: number;
-  comment?: string;
-}
-
-export interface UpdateReviewRequest {
-  rating?: number;
-  comment?: string;
 }
 
 export interface TransferClientRequest {
@@ -535,24 +524,6 @@ export const marketplaceService = {
     );
   },
 
-  async getListingReviews(
-    id: string,
-    page = 1,
-    limit = 20,
-  ): Promise<
-    ApiResponse<{
-      reviews: MarketplaceReview[];
-      total: number;
-      page: number;
-      limit: number;
-    }>
-  > {
-    return await apiClient.get(
-      `/marketplace/listings/${id}/reviews?page=${page}&limit=${limit}`,
-      false,
-    );
-  },
-
   async getFeatured(
     params: { country?: string; limit?: number } = {},
   ): Promise<ApiResponse<FeaturedListingsResult>> {
@@ -626,32 +597,6 @@ export const marketplaceService = {
       "/marketplace/transfer",
       data,
     );
-  },
-
-  // ─── Reviews (Authenticated) ───
-
-  async createReview(
-    listingId: string,
-    data: CreateReviewRequest,
-  ): Promise<ApiResponse<MarketplaceReview>> {
-    return await apiClient.post<MarketplaceReview>(
-      `/marketplace/listings/${listingId}/reviews`,
-      data,
-    );
-  },
-
-  async updateReview(
-    reviewId: string,
-    data: UpdateReviewRequest,
-  ): Promise<ApiResponse<MarketplaceReview>> {
-    return await apiClient.patch<MarketplaceReview>(
-      `/marketplace/reviews/${reviewId}`,
-      data,
-    );
-  },
-
-  async deleteReview(reviewId: string): Promise<ApiResponse<void>> {
-    return await apiClient.delete<void>(`/marketplace/reviews/${reviewId}`);
   },
 
   // ─── Solo Professional Management ───

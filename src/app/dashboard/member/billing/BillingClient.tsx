@@ -306,7 +306,10 @@ export function BillingClient() {
                   ? retry.nextAttemptAt
                     ? `We'll try your card again on ${formatDate(retry.nextAttemptAt)}. You don't need to do anything yet.`
                     : "We'll try your card again soon. You don't need to do anything yet."
-                  : s.grace_expires_at
+                  : s.auto_renew && s.collection_method === "card_auto"
+                    ? // No Renew here (renewHrefForMembership): auto-renew goes off first.
+                      "Your saved card is still set to pay for it. To pay another way, turn auto-renew off on the membership below first."
+                    : s.grace_expires_at
                     ? `Pay by ${formatDate(s.grace_expires_at)} to keep your access.`
                     : "Pay now to keep your access."}
               </p>

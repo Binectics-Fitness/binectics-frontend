@@ -290,7 +290,7 @@ describe("past due, card retries (no second payment)", () => {
     expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
   });
 
-  it("offers Renew once the API says no retry is pending", async () => {
+  it("no retry pending but still on the card: no Renew, points to the membership's auto-renew switch (as mobile)", async () => {
     getSubs.mockResolvedValue({
       success: true,
       data: [
@@ -298,6 +298,27 @@ describe("past due, card retries (no second payment)", () => {
           status: MembershipSubscriptionStatus.PAST_DUE,
           auto_renew: true,
           collection_method: "card_auto",
+          renewal_retry: { pending: false, next_attempt_at: null },
+        }),
+      ],
+    });
+    renderPage();
+    const banner = await screen.findByRole("alert");
+    expect(banner).toHaveTextContent(
+      "Your saved card is still set to pay for it. To pay another way, turn auto-renew off on the membership below first.",
+    );
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "Turn off auto-renew for Monthly" })).toBeInTheDocument();
+  });
+
+  it("offers Renew once the past-due membership is off the card", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [
+        sub({
+          status: MembershipSubscriptionStatus.PAST_DUE,
+          auto_renew: false,
+          collection_method: "pay_link",
           renewal_retry: { pending: false, next_attempt_at: null },
         }),
       ],

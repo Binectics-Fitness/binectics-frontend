@@ -344,6 +344,22 @@ describe("review fixes (SF-1, SF-2)", () => {
     expect(cardRetryFor(sub()).pending).toBe(false);
   });
 
+  it("no Renew on a past-due membership still on the saved card, even with no retry left (mobile renewDue)", () => {
+    const onCard = { status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: true, collection_method: "card_auto" as const };
+    expect(renewHrefForMembership(sub({ ...onCard, renewal_retry: { pending: false, next_attempt_at: null } }), NOW)).toBeNull();
+    expect(renewHrefForMembership(sub({ ...onCard, renewal_retry: null }), NOW)).toBeNull();
+    // Off the card (auto-renew off, or moved to pay_link): Renew comes back.
+    expect(
+      renewHrefForMembership(sub({ ...onCard, auto_renew: false, renewal_retry: { pending: false, next_attempt_at: null } }), NOW),
+    ).toBe("/checkout?listing=l1&plan=p1");
+    expect(
+      renewHrefForMembership(
+        sub({ ...onCard, collection_method: "pay_link", renewal_retry: { pending: false, next_attempt_at: null } }),
+        NOW,
+      ),
+    ).toBe("/checkout?listing=l1&plan=p1");
+  });
+
   it("renewal_retry wins on any status: pending hides Renew, even on an active term", () => {
     const pendingActive = sub({ renewal_retry: { pending: true, next_attempt_at: "2026-10-12T00:00:00Z" } });
     expect(cardRetryFor(pendingActive)).toEqual({ pending: true, nextAttemptAt: "2026-10-12T00:00:00Z" });

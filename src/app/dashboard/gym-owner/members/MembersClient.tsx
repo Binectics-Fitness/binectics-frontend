@@ -833,6 +833,36 @@ export default function GymMembersClient() {
 
       {/* Table */}
       <DSCard>
+        {/* The error and empty states sit outside the table's overflow-x
+            wrapper: inside it they were laid out across the 780px table and
+            clipped at phone width (375px). */}
+        {!loading && loadError ? (
+          <div role="alert" className="flex flex-wrap items-center justify-center gap-2 px-4 py-12 text-center text-[13.5px]" style={{ color: "var(--danger, #b00020)" }}>
+            <span>Couldn&apos;t load members, {loadError}</span>
+            <button className="btn-ghost-v2 sm" onClick={() => setRefreshKey((k) => k + 1)}>Retry</button>
+          </div>
+        ) : !loading && filtered.length === 0 ? (
+          <div data-testid="members-empty" className="px-4 py-12 text-center text-[13.5px]" style={{ color: "var(--fg-3)" }}>
+            {search || filter !== "all" ? (
+              "No members match your filters."
+            ) : (
+              // A new gym with no one on the books is exactly who has
+              // a member list in another system.
+              <div className="mx-auto flex max-w-[420px] flex-col items-center gap-2">
+                <span style={{ color: "var(--ink)" }}>No members yet.</span>
+                <span>
+                  Moving from another system? Import your member list. Everyone keeps the time left on
+                  their membership.
+                </span>
+                <ImportMembersButton
+                  orgId={currentOrg?._id}
+                  variant="primary"
+                  onImported={() => setRefreshKey((k) => k + 1)}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13.5px] min-w-[780px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             <thead>
@@ -857,35 +887,6 @@ export default function GymMembersClient() {
                     ))}
                   </tr>
                 ))
-              ) : loadError ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-[13.5px]" style={{ color: "var(--danger, #b00020)" }}>
-                    Couldn&apos;t load members, {loadError} <button className="btn-ghost-v2 sm ml-2" onClick={() => setRefreshKey((k) => k + 1)}>Retry</button>
-                  </td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 px-4 text-[13.5px]" style={{ color: "var(--fg-3)" }}>
-                    {search || filter !== "all" ? (
-                      "No members match your filters."
-                    ) : (
-                      // A new gym with no one on the books is exactly who has
-                      // a member list in another system.
-                      <div className="mx-auto flex max-w-[420px] flex-col items-center gap-2">
-                        <span style={{ color: "var(--ink)" }}>No members yet.</span>
-                        <span>
-                          Moving from another system? Import your member list. Everyone keeps the time left on
-                          their membership.
-                        </span>
-                        <ImportMembersButton
-                          orgId={currentOrg?._id}
-                          variant="primary"
-                          onImported={() => setRefreshKey((k) => k + 1)}
-                        />
-                      </div>
-                    )}
-                  </td>
-                </tr>
               ) : (
                 filtered.map((sub, i) => {
                   const name = getMemberName(sub);
@@ -990,7 +991,8 @@ export default function GymMembersClient() {
             </tbody>
           </table>
         </div>
-        {!loading && filtered.length > 0 && (
+        )}
+        {!loading && !loadError && filtered.length > 0 && (
           <div className="flex items-center justify-between px-4.5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
             <span className="font-mono text-[11.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
               Showing <strong className="text-[13px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>{filtered.length}</strong> of <strong className="text-[13px] font-medium" style={{ color: "var(--ink)", fontFamily: "var(--font-sans)", textTransform: "none", letterSpacing: "-0.005em" }}>{subscriptions.length}</strong> members
