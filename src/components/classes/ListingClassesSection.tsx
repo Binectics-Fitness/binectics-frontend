@@ -16,6 +16,8 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
 import { formatDate } from "@/utils/format";
+import { NO_TIMETABLE, useListingTimetable } from "@/lib/queries/classes";
+import { ClassCancellationPolicyNotice } from "./ClassCancellationPolicyNotice";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -60,14 +62,7 @@ export function ListingClassesSection({
   // sign-out the last member's entries could still be cached, so nothing
   // is read from it without a signed-in user.
   const myWaitlist = user ? mine : [];
-  const { data: classes = [], isLoading } = useQuery<GymClass[]>({
-    queryKey: ["listingClasses", listingId],
-    queryFn: async () => {
-      const res = await classBookingsService.getListingClasses(listingId);
-      return res.success && res.data ? res.data : [];
-    },
-    enabled: !!listingId,
-  });
+  const { data: { classes, policy } = NO_TIMETABLE, isLoading } = useListingTimetable(listingId);
 
   if (!isLoading && classes.length === 0) return null; // gyms without classes skip the section
 
@@ -80,6 +75,9 @@ export function ListingClassesSection({
       <p className="text-[13.5px] mb-5" style={{ color: "var(--fg-3)" }}>
         Weekly timetable · times in the gym&rsquo;s local time · booking requires an active membership.
       </p>
+      {/* Before booking: the gym's late-cancellation terms. Nothing at all
+          when it has none. */}
+      <ClassCancellationPolicyNotice policy={policy} className="mb-5 max-w-[780px]" />
       {isLoading ? (
         <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>Loading timetable…</p>
       ) : (

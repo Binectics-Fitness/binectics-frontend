@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
+import { ClassCancellationPolicyEditor } from "./ClassCancellationPolicyEditor";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
@@ -55,25 +57,13 @@ const SECTIONS = [
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
 ];
 
-/** Booking toggles — key maps to a boolean on BookingRules (fee is derived). */
+/**
+ * Booking toggles — key maps to a boolean on BookingRules. The class
+ * cancellation fee has its own editor below them (ClassCancellationPolicyEditor).
+ */
 const BOOKING_TOGGLE_DEFS = [
   { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed." },
   { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
-  {
-    key: "cancellation_fee" as const,
-    t: "Charge cancellation fee within 24h",
-    // Classes only (the API applies it to class bookings). Refunds on paid
-    // 1:1 sessions follow the separate cancellation policy, so say where.
-    s: (
-      <>
-        Classes only: 50% of the class price. Refunds on paid sessions follow your{" "}
-        <Link href={CANCELLATION_POLICY_HREF} className="underline" style={{ color: "var(--fg-2)" }}>
-          cancellation policy
-        </Link>
-        .
-      </>
-    ),
-  },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
   { key: "public_reviews" as const, t: "Public reviews on listing", s: "Members see ratings and reviews on your listing page." },
 ];
@@ -173,7 +163,11 @@ export function SettingsClient() {
   const showActivity = canSeeActivityLog(currentOrg);
   // Payment keys and payout settings are the owner's alone on the API
   // (OrgOwnerGuard, owner-only payout fields): staff admins don't see them.
-  const { isOwner } = useGymViewer();
+  const viewer = useGymViewer();
+  const { isOwner } = viewer;
+  // Every section saves through PATCH /teams/organizations/:id
+  // (team:manage_organization); the policy editor says so when it can't.
+  const canManage = holds(viewer, TeamPermission.MANAGE_ORGANIZATION);
   const sections = useMemo(
     () =>
       SECTIONS.filter((g) => isOwner || g.group !== "Money").map((g) =>
@@ -258,24 +252,11 @@ export function SettingsClient() {
   const setPayout = (patch: Partial<PayoutSchedule>) =>
     setForm((f) => (f ? { ...f, payout_schedule: { ...f.payout_schedule, ...patch } } : f));
 
-  // The "cancellation fee" toggle is derived: on = a non-zero fee percent.
-  // Turning it on restores the standard 50% / 24h; off zeroes the fee.
-  const bookingOn = (key: (typeof BOOKING_TOGGLE_DEFS)[number]["key"]): boolean => {
-    if (!form) return false;
-    if (key === "cancellation_fee") return form.booking_rules.cancellation_fee_percent > 0;
-    return form.booking_rules[key];
-  };
+  const bookingOn = (key: (typeof BOOKING_TOGGLE_DEFS)[number]["key"]): boolean =>
+    form ? form.booking_rules[key] : false;
   const toggleBooking = (key: (typeof BOOKING_TOGGLE_DEFS)[number]["key"]) => {
     if (!form) return;
-    if (key === "cancellation_fee") {
-      setBooking(
-        form.booking_rules.cancellation_fee_percent > 0
-          ? { cancellation_fee_percent: 0 }
-          : { cancellation_fee_percent: 50, cancellation_window_hours: 24 },
-      );
-    } else {
-      setBooking({ [key]: !form.booking_rules[key] });
-    }
+    setBooking({ [key]: !form.booking_rules[key] });
   };
   // Switching payout frequency resets payout_day to that frequency's default
   // (the field's meaning changes: weekday index vs day of month).
@@ -419,7 +400,22 @@ export function SettingsClient() {
             desc="Defaults that apply to all locations · individual locations can override."
             items={BOOKING_TOGGLE_DEFS.map((d) => ({ ...d, on: bookingOn(d.key), onToggle: () => toggleBooking(d.key) }))}
             disabled={!form}
-          />
+          >
+            <ClassCancellationPolicyEditor
+              rules={form?.booking_rules ?? null}
+              providerName={form?.name || org?.name || ""}
+              onChange={setBooking}
+              canManage={canManage}
+              disabled={!form}
+            />
+            <p className="text-[12px] mt-2.5 max-w-[60ch]" style={{ color: "var(--fg-3)" }}>
+              Refunds on paid 1:1 sessions follow your separate{" "}
+              <Link href={CANCELLATION_POLICY_HREF} className="underline" style={{ color: "var(--fg-2)" }}>
+                cancellation policy
+              </Link>
+              .
+            </p>
+          </WiredToggleSection>
 
           {/* Kiosk & QR. The kiosk has no settings of its own yet; this
               explains how check-in works and links to the kiosk page. */}
@@ -603,7 +599,7 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle?: () => void
   );
 }
 
-function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void }[]; disabled?: boolean }) {
+function WiredToggleSection({ id, title, desc, items, disabled, children }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void }[]; disabled?: boolean; children?: ReactNode }) {
   return (
     <section id={id}>
       <SectionHeading title={title} desc={desc} />
@@ -618,6 +614,7 @@ function WiredToggleSection({ id, title, desc, items, disabled }: { id: string; 
           </div>
         ))}
       </DSCard>
+      {children && <div className="mt-3.5">{children}</div>}
     </section>
   );
 }

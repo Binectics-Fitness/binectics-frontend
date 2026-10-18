@@ -12,8 +12,11 @@ import type {
 export const DEFAULT_BOOKING_RULES: BookingRules = {
   auto_confirm: true,
   require_parq: true,
-  cancellation_fee_percent: 50,
-  cancellation_window_hours: 24,
+  // No fee until the gym sets one: the API reads an org without booking
+  // rules as having none, and members are shown exactly that.
+  cancellation_fee_percent: 0,
+  cancellation_window_hours: 0,
+  cancellation_policy_note: "",
   allow_video_recording: true,
   public_reviews: true,
   booking_lead_time_hours: 0,

@@ -12,6 +12,7 @@ import {
   keepsWaitlistPlace,
   type ClassBooking,
 } from "@/lib/api/classBookings";
+import { confirmedCancelCopy, policyHasFee } from "@/lib/classes/cancellationPolicy";
 
 type Notice = { text: string; tone: "ok" | "info" | "error" };
 const NOTICE_COLOR: Record<Notice["tone"], string> = {
@@ -80,7 +81,7 @@ export function MyClassBookingsCard() {
       title: waitlisted ? `Leave the waitlist for ${name}?` : `Cancel ${name} on ${when}?`,
       description: waitlisted
         ? "You give up your place in the queue. To get back on, you'd book again and join at the end."
-        : "If anyone is waiting, your spot goes to them. If the gym charges a late-cancellation fee and the class starts within its cancellation window, the fee is recorded on your booking. To come back, you'd book again.",
+        : confirmedCancelCopy(b.cancellation_policy),
       confirmLabel: waitlisted ? "Leave waitlist" : "Cancel booking",
       cancelLabel: "Keep booking",
       confirmVariant: "danger",
@@ -121,7 +122,8 @@ export function MyClassBookingsCard() {
       <div className="px-4.5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Gym classes</h2>
         <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
-          Your upcoming class bookings. Late cancellations may incur the gym&rsquo;s fee.
+          Your upcoming class bookings.
+          {bookings.some((b) => policyHasFee(b.cancellation_policy)) ? " Late cancellations may incur the gym’s fee." : ""}
         </p>
       </div>
       {bookings.map((b, i) => {
