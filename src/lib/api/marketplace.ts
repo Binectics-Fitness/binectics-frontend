@@ -390,6 +390,25 @@ export interface AcceptEnrollmentOfferResult {
   transfer_account?: EnrollTransferAccount;
 }
 
+/**
+ * Someone connected to the gym (an accepted request, or added as a client)
+ * who holds no membership there: the Members page's Connected list.
+ */
+export interface OrgConnectedClient {
+  /** The client profile linking them to the gym. */
+  profile_id: string;
+  client: {
+    _id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  };
+  /** When the link was made (ISO). */
+  connected_at: string | null;
+  /** Who accepted their request; null when unknown or they came another way. */
+  accepted_by: { _id: string; first_name: string | null; last_name: string | null } | null;
+}
+
 /** A pending offer as the gym sees it (plan populated). */
 export interface OrgEnrollmentOffer {
   _id: string;
@@ -1186,6 +1205,26 @@ export const marketplaceService = {
     return await apiClient.post<EnrollMemberResponse>(
       `/marketplace/organizations/${organizationId}/subscriptions/enroll`,
       data,
+    );
+  },
+
+  /** People connected to the gym who hold no membership (marketplace:manage_listing). */
+  async getOrgConnectedClients(
+    organizationId: string,
+  ): Promise<ApiResponse<OrgConnectedClient[]>> {
+    return await apiClient.get<OrgConnectedClient[]>(
+      `/marketplace/organizations/${organizationId}/connected-clients`,
+    );
+  },
+
+  /** End a connection from the Connected list; the seat it held is freed. */
+  async endOrgConnection(
+    organizationId: string,
+    profileId: string,
+  ): Promise<ApiResponse<{ ended: boolean }>> {
+    return await apiClient.post<{ ended: boolean }>(
+      `/marketplace/organizations/${organizationId}/connected-clients/${profileId}/end`,
+      {},
     );
   },
 

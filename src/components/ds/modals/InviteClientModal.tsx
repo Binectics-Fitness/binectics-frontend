@@ -23,6 +23,11 @@ interface InviteClientModalProps {
   open: boolean;
   onClose: () => void;
   onEnrolled?: () => void;
+  /**
+   * Who to offer a plan to, filled in when the modal mounts (the Connected
+   * list's "Offer a plan"). Mount the modal per person for it to apply.
+   */
+  prefill?: { email?: string; first_name?: string; last_name?: string };
 }
 
 const EMPTY_FORM = {
@@ -64,11 +69,16 @@ function useCountdown(expiresAt: string | null | undefined): string | null {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-export function InviteClientModal({ open, onClose, onEnrolled }: InviteClientModalProps) {
+export function InviteClientModal({ open, onClose, onEnrolled, prefill }: InviteClientModalProps) {
   const { currentOrg } = useOrganization();
   const queryClient = useQueryClient();
   const cancelledRef = useRef(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    email: prefill?.email ?? "",
+    first_name: prefill?.first_name ?? "",
+    last_name: prefill?.last_name ?? "",
+  }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Legacy only: an API that still returns a transfer account to the gym

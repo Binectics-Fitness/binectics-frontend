@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { PendingOffers } from "./PendingOffers";
+import { ConnectedClients } from "./ConnectedClients";
 import { AddMemberButton, ImportMembersButton } from "./_actions";
 import { RecentImports } from "./import/RecentImports";
 import { buildMembersCsv } from "./members-csv";
@@ -1001,6 +1002,11 @@ export default function GymMembersClient() {
         )}
       </DSCard>
 
+      <ConnectedClients
+        orgId={currentOrg?._id}
+        refreshKey={refreshKey}
+        onEnrolled={() => setRefreshKey((k) => k + 1)}
+      />
       <PendingOffers orgId={currentOrg?._id} refreshKey={refreshKey} />
       <RecentImports orgId={currentOrg?._id} refreshKey={refreshKey} />
     </GymDashboardShell>

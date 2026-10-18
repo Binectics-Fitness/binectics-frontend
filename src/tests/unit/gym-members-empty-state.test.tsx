@@ -21,6 +21,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/app/dashboard/gym-owner/members/PendingOffers", () => ({ PendingOffers: () => null }));
+vi.mock("@/app/dashboard/gym-owner/members/ConnectedClients", () => ({ ConnectedClients: () => null }));
 vi.mock("@/app/dashboard/gym-owner/members/_actions", () => ({
   AddMemberButton: () => null,
   ImportMembersButton: ({ variant }: { variant?: string }) => (
