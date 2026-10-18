@@ -16,6 +16,15 @@ function addressLine(loc: OrganizationLocation): string {
   return parts.length > 0 ? parts.join(" · ") : "No address on file";
 }
 
+/** The API's order: the primary first, then oldest first. */
+function byPrimaryThenAge(list: OrganizationLocation[]): OrganizationLocation[] {
+  return [...list].sort(
+    (a, b) =>
+      Number(!!b.is_primary) - Number(!!a.is_primary) ||
+      (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0),
+  );
+}
+
 export default function LocationsClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const [locations, setLocations] = useState<OrganizationLocation[]>([]);
@@ -57,7 +66,8 @@ export default function LocationsClient() {
   }, [orgId, orgLoading, reloadKey]);
 
   const activeLocations = locations.filter((l) => l.is_active);
-  const inactiveLocations = locations.filter((l) => !l.is_active);
+  // Deactivated is is_active === false, as the API has it.
+  const inactiveLocations = locations.filter((l) => l.is_active === false);
 
   async function handleReactivate(loc: OrganizationLocation) {
     if (!orgId || reactivatingId) return;
@@ -66,7 +76,7 @@ export default function LocationsClient() {
       const res = await teamsService.reactivateLocation(orgId, loc._id);
       if (res.success && res.data) {
         const back = res.data;
-        setLocations((prev) => prev.map((l) => (l._id === back._id ? back : l)));
+        setLocations((prev) => byPrimaryThenAge(prev.map((l) => (l._id === back._id ? back : l))));
         toast.success(
           back.is_primary
             ? `${back.name} is active again, as your primary location`

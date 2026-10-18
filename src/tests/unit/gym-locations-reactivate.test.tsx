@@ -82,7 +82,12 @@ describe("locations list: deactivated locations", () => {
     expect(screen.getByRole("link", { name: /Lekki annex/ })).toBeInTheDocument();
   });
 
-  it("says when it came back as the primary location", async () => {
+  it("says when it came back as the primary location, and lists it first", async () => {
+    // The old primary was deactivated meanwhile; a branch is still active.
+    vi.spyOn(teamsService, "getLocations").mockResolvedValue({
+      success: true,
+      data: [{ ...main, is_primary: false, created_at: "2026-01-01" }, { ...annex, created_at: "2026-02-01" }],
+    } as never);
     vi.spyOn(teamsService, "reactivateLocation").mockResolvedValue({
       success: true,
       data: { ...annex, is_active: true, is_primary: true },
@@ -92,6 +97,9 @@ describe("locations list: deactivated locations", () => {
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith("Lekki annex is active again, as your primary location"),
     );
+    const cards = screen.getAllByRole("link");
+    expect(cards[0]).toHaveTextContent("Lekki annex");
+    expect(cards[1]).toHaveTextContent("Ikoyi main");
   });
 
   it("explains a name already in use", async () => {
