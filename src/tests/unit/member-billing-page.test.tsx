@@ -311,6 +311,27 @@ describe("Renew through the listing the API names, or ask the gym", () => {
     expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
   });
 
+  it("past due on card_auto with auto-renew off (still retried): never tells the member to press a Renew that isn't there", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: false, collection_method: "card_auto" })],
+    });
+    renderPage();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/try your card again soon/);
+    expect(screen.getByText("Auto-renew is off.")).toBeInTheDocument();
+    expect(screen.queryByText(/Renew to keep your access/)).toBeNull();
+    expect(screen.queryByRole("link", { name: /^Renew/ })).toBeNull();
+  });
+
+  it("past due off the card with a listing: the line still points to Renew", async () => {
+    getSubs.mockResolvedValue({
+      success: true,
+      data: [sub({ status: MembershipSubscriptionStatus.PAST_DUE, auto_renew: false, collection_method: "pay_link" })],
+    });
+    renderPage();
+    expect(await screen.findByText("Auto-renew is off. Renew to keep your access.")).toBeInTheDocument();
+  });
+
   it("an older API (no renewal_listing_id) and no listing: neither Renew nor ask", async () => {
     getSubs.mockResolvedValue({
       success: true,

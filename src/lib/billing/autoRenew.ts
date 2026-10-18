@@ -254,26 +254,39 @@ const idOf = (v: unknown): string | null =>
 
 /**
  * The listing a membership renews through:
- *  1. `renewal_listing_id` (my-subscriptions, api #258/#263/#265): the
- *     openable listing that sells the plan, else the membership's own, else
- *     its gym's newest;
- *  2. the membership's own listing (an API that sent no usable answer);
- *  3. null when the API says there is none (`renewal_listing_id: null`);
- *  4. undefined on an older API that sends no `renewal_listing_id`: whether
- *     the gym has a listing isn't known, so nobody is told to ask the gym.
+ *  - when the API sends `renewal_listing_id` (my-subscriptions, api
+ *    #258/#263/#265), its answer is final: the openable listing that sells
+ *    the plan, else the membership's own if still openable, else its gym's
+ *    newest. Null means none of those can be opened (the own listing may be
+ *    unpublished or suspended, so its checkout would 404), and the member
+ *    is asked to go to the gym instead;
+ *  - on an older API that sends no field, the membership's own listing;
+ *    without one, undefined: whether the gym has a listing isn't known, so
+ *    nobody is told to ask the gym.
  *
  * Not quite mobile's `gymListingFor`: mobile tries the membership's own
  * listing before `renewal_listing_id`, and on an older API looks for the
- * gym's listing among the member's providers. Web puts the API's answer
- * first because it names the listing that sells the plan (api #263), which
- * the membership's own listing may not.
+ * gym's listing among the member's providers. Web trusts the API's answer
+ * because it names the listing that sells the plan (api #263) and has
+ * already checked that the own listing can still be opened.
  */
 export function renewalListingFor(sub: MembershipSubscription): string | null | undefined {
   const named = sub.renewal_listing_id;
-  if (typeof named === "string" && SAFE_ID.test(named)) return named;
+  if (named !== undefined) return typeof named === "string" && SAFE_ID.test(named) ? named : null;
   const own = idOf(sub.listing_id);
-  if (own && SAFE_ID.test(own)) return own;
-  return named === null ? null : undefined;
+  return own && SAFE_ID.test(own) ? own : undefined;
+}
+
+/**
+ * The plan a renewal checkout pays for: the API's `renewal_plan_id` when it
+ * sends one (the plan the renewal will actually be on, e.g. a scheduled
+ * plan change), else the membership's current plan.
+ */
+export function renewalPlanFor(sub: MembershipSubscription): string | null {
+  const named = sub.renewal_plan_id;
+  if (typeof named === "string" && SAFE_ID.test(named)) return named;
+  const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
+  return plan?._id ?? null;
 }
 
 /**
@@ -311,10 +324,10 @@ export function renewActionFor(
   memberships: readonly Pick<MembershipSubscription, "status" | "organization_id">[] = [],
 ): RenewAction | null {
   if (!renewDue(sub, now)) return null;
-  const plan = typeof sub.plan_id === "object" ? sub.plan_id : null;
-  if (!plan) return null;
+  const planId = renewalPlanFor(sub);
+  if (!planId) return null;
   const listingId = renewalListingFor(sub);
-  if (listingId) return { kind: "checkout", href: checkoutHref(listingId, plan._id) };
+  if (listingId) return { kind: "checkout", href: checkoutHref(listingId, planId) };
   if (listingId === undefined) return null;
   const organizationId = idOf(sub.organization_id);
   if (!organizationId) return null;

@@ -710,6 +710,11 @@ export interface MembershipSubscription {
    */
   renewal_listing_id?: string | null;
   /**
+   * The plan the renewal checkout pays for, when the API names one (a
+   * separate API change adds it). Absent: the current `plan_id`.
+   */
+  renewal_plan_id?: string | null;
+  /**
    * Set on the subscribe response when "Renew automatically" was ticked but
    * the card wasn't saved: why, as a code (api #206).
    */

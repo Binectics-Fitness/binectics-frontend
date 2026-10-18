@@ -492,12 +492,14 @@ export function BillingClient() {
                 ) : s.status === MembershipSubscriptionStatus.PAST_DUE ? (
                   // Past due: only OFF (the API turns it on for active or
                   // paused memberships only), behind a confirmation. Once
-                  // it's off the row offers Renew instead.
+                  // it's off the row offers Renew instead, when there is a
+                  // Renew to press (not while the card is still retried, nor
+                  // when the gym has to be asked).
                   s.auto_renew ? (
                     <AutoRenewControl sub={s} renewHref={null} onChanged={onAutoRenewChanged} offOnly />
                   ) : (
                     <p className="text-[12.5px] text-fg-2">
-                      {ask ? "Auto-renew is off." : "Auto-renew is off. Renew to keep your access."}
+                      {renewHref ? "Auto-renew is off. Renew to keep your access." : "Auto-renew is off."}
                     </p>
                   )
                 ) : (

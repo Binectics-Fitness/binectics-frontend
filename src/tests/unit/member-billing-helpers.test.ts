@@ -379,15 +379,30 @@ describe("parity with mobile's memberBilling (#246 review)", () => {
 });
 
 describe("where Renew points (renewal_listing_id, api #258/#263/#265)", () => {
-  it("renewal_listing_id first, then the membership's own listing", () => {
+  it("renewal_listing_id when the API sends it; the own listing only on an older API", () => {
     expect(renewalListingFor(sub({ renewal_listing_id: "l2" }))).toBe("l2");
     expect(renewHrefForMembership(sub({ renewal_listing_id: "l2" }), NOW)).toBe("/checkout?listing=l2&plan=p1");
+    // No field (older API): the membership's own listing.
     expect(renewalListingFor(sub())).toBe("l1");
     expect(renewalListingFor(sub({ listing_id: "l3" }))).toBe("l3");
-    // Explicit null but an own listing: the own listing.
-    expect(renewalListingFor(sub({ renewal_listing_id: null }))).toBe("l1");
-    // A malformed id is never put in a URL.
-    expect(renewalListingFor(sub({ renewal_listing_id: "a/b?c" }))).toBe("l1");
+    // A malformed id is never put in a URL, and isn't replaced by the own one.
+    expect(renewalListingFor(sub({ renewal_listing_id: "a/b?c" }))).toBeNull();
+  });
+
+  it("explicit null is final, even with an own listing: the API found it can't be opened, so ask the gym", () => {
+    const s = sub({ renewal_listing_id: null });
+    expect(renewalListingFor(s)).toBeNull();
+    expect(renewHrefForMembership(s, NOW)).toBeNull();
+    expect(renewActionFor(s, NOW)).toEqual({ kind: "ask_gym", gymName: "Iron Temple", organizationId: "o1", canMessage: true });
+  });
+
+  it("pays for renewal_plan_id when the API names one, else the current plan", () => {
+    expect(renewHrefForMembership(sub({ renewal_plan_id: "p2" }), NOW)).toBe("/checkout?listing=l1&plan=p2");
+    expect(renewHrefForMembership(sub({ renewal_plan_id: null }), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(sub({ renewal_plan_id: "x y" }), NOW)).toBe("/checkout?listing=l1&plan=p1");
+    expect(renewHrefForMembership(sub({ renewal_listing_id: "gl1", renewal_plan_id: "p2" }), NOW)).toBe(
+      "/checkout?listing=gl1&plan=p2",
+    );
   });
 
   it("a gym-enrolled membership renews through the gym's listing the API names", () => {

@@ -212,8 +212,8 @@ const askOf = (a: RenewAction | null): MembershipNotice["ask"] =>
  *
  * When to renew is mobile's renewDue rule; where follows renewActionFor
  * (see its note on how it differs from mobile's): Renew opens the listing
- * the API names (`renewal_listing_id`), else the membership's own; when the
- * API says there is none, the card says to ask the gym (with Message when
+ * the API names (`renewal_listing_id`), or on an older API the membership's
+ * own; when the API says there is none, the card says to ask the gym (with Message when
  * its inbox takes the member). A past-due membership still on the saved
  * card, or one whose card will be tried again, gets Billing only.
  */

@@ -183,8 +183,13 @@ describe("membershipNotice (F8)", () => {
 
   it("prefers renewal_listing_id (the listing that sells the plan) over the membership's own", () => {
     expect(membershipNotice([sub({ renewal_listing_id: "l2" })], NOW, fmt)?.renewHref).toBe("/checkout?listing=l2&plan=p1");
-    // Explicit null with an own listing: the own listing still renews it.
-    expect(membershipNotice([sub({ renewal_listing_id: null })], NOW, fmt)?.renewHref).toBe("/checkout?listing=l1&plan=p1");
+    // Explicit null with an own listing: the API found it can't be opened,
+    // so no Renew (its checkout would 404); the member asks the gym.
+    expect(membershipNotice([sub({ renewal_listing_id: null })], NOW, fmt)).toMatchObject({
+      renewHref: null,
+      ask: { gymName: "Iron Temple", organizationId: "g1", canMessage: true },
+      body: "It won't renew on its own. Ask Iron Temple to renew it.",
+    });
   });
 
   it("asks the gym to renew when the API says it has no listing", () => {
