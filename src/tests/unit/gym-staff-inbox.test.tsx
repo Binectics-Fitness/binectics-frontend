@@ -27,8 +27,26 @@ vi.mock("@/contexts/OrganizationContext", () => ({ useOrganization: () => ({ cur
 vi.mock("@/components/ds/GymDashboardShell", () => ({
   GymDashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+const queryCalls = vi.hoisted(() => ({ inbox: [] as boolean[], gymInbox: [] as (string | null)[] }));
 vi.mock("@/components/messaging/queries", () => ({
-  useInbox: () => ({ data: { threads }, isLoading: false, isError: false, refetch: vi.fn() }),
+  useInbox: (enabled = true) => {
+    queryCalls.inbox.push(enabled);
+    return { data: { threads }, isLoading: false, isError: false, refetch: vi.fn() };
+  },
+  // The server answers ?as_gym= with that gym's inbox only.
+  useGymInbox: (orgId: string | null) => {
+    queryCalls.gymInbox.push(orgId);
+    return {
+      data: orgId
+        ? { pages: [{ threads: threads.filter((t) => t.as_gym?.organization_id === orgId), next_cursor: null }] }
+        : undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+      hasNextPage: false,
+      refetch: vi.fn(),
+    };
+  },
   useThreadSummary: () => ({ data: undefined, error: null }),
 }));
 vi.mock("@/components/messaging/ThreadList", () => ({
@@ -53,12 +71,17 @@ const listed = () => screen.getAllByRole("listitem").map((li) => li.textContent)
 beforeEach(() => {
   mockUser = { id: "u1", role: "USER" };
   mockOrg = { _id: "gym", name: "Iron Temple", owner_id: "boss", account_type: "gym_owner", is_owner: false };
+  queryCalls.inbox = [];
+  queryCalls.gymInbox = [];
 });
 
 describe("the gym inbox in the gym dashboard", () => {
   it("lists only this gym's member conversations for its staff, without Announce", () => {
     render(<GymOwnerMessagesPage />);
     expect(listed()).toEqual(["Ngozi (gym inbox)"]);
+    // Asked of the server (?as_gym=gym), not filtered from the member inbox.
+    expect(queryCalls.gymInbox.at(-1)).toBe("gym");
+    expect(queryCalls.inbox.at(-1)).toBe(false);
     expect(screen.queryByRole("button", { name: "Announce" })).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Conversations list" })).toHaveAttribute(
       "data-hint",
@@ -71,6 +94,8 @@ describe("the gym inbox in the gym dashboard", () => {
     mockOrg = { ...mockOrg, is_owner: true };
     render(<GymOwnerMessagesPage />);
     expect(listed()).toEqual(["Ngozi (gym inbox)", "Other gym thread", "My own trainer"]);
+    expect(queryCalls.inbox.at(-1)).toBe(true);
+    expect(queryCalls.gymInbox.at(-1)).toBeNull();
     expect(screen.getByRole("button", { name: "Announce" })).toBeInTheDocument();
   });
 });

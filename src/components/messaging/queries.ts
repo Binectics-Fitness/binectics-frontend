@@ -8,7 +8,13 @@
  * refetched at once when it becomes visible again, and backed off on errors.
  */
 
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   messagingService,
@@ -20,6 +26,9 @@ import {
 export const messagingKeys = {
   all: ["messaging"] as const,
   inbox: (userId: string) => ["messaging", userId, "inbox"] as const,
+  /** Every gym inbox this user has open; prefix for invalidation. */
+  gymInboxes: (userId: string) => ["messaging", userId, "gym-inbox"] as const,
+  gymInbox: (userId: string, orgId: string) => ["messaging", userId, "gym-inbox", orgId] as const,
   thread: (userId: string, threadId: string) => ["messaging", userId, "thread", threadId] as const,
   unread: (userId: string) => ["messaging", userId, "unread"] as const,
 };
@@ -70,6 +79,57 @@ export function useInbox(enabled = true) {
   });
 }
 
+const GYM_INBOX_PAGE = 30;
+
+/**
+ * One gym's inbox, for its staff: `?as_gym=<orgId>`, paged by `next_cursor`
+ * so a busy inbox never hides threads past the first page. Polled like the
+ * inbox. A 403 MESSAGING_NOT_GYM_INBOX surfaces as the query error.
+ */
+export function useGymInbox(orgId: string | null) {
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
+  return useInfiniteQuery<
+    ThreadsPage,
+    MessagingRequestError,
+    InfiniteData<ThreadsPage, string | undefined>,
+    readonly string[],
+    string | undefined
+  >({
+    queryKey: messagingKeys.gymInbox(userId, orgId ?? ""),
+    enabled: Boolean(userId && orgId),
+    initialPageParam: undefined,
+    queryFn: async ({ pageParam }) => {
+      const res = await messagingService.listThreads({
+        asGym: orgId as string,
+        limit: GYM_INBOX_PAGE,
+        cursor: pageParam,
+      });
+      if (!res.success || !res.data) {
+        throw new MessagingRequestError(res.message ?? "Couldn't load conversations", res.status, res.code);
+      }
+      return res.data;
+    },
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    staleTime: 0,
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: (query) => pollDelay(INBOX_POLL_MS, query.state.fetchFailureCount),
+  });
+}
+
+function findInGymInboxes(queryClient: QueryClient, userId: string, threadId: string | null) {
+  for (const [, data] of queryClient.getQueriesData<InfiniteData<ThreadsPage>>({
+    queryKey: messagingKeys.gymInboxes(userId),
+  })) {
+    for (const page of data?.pages ?? []) {
+      const hit = page.threads.find((t) => t._id === threadId);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
+}
+
 /**
  * One thread's summary. Seeded from the inbox when it's there; fetched on
  * its own for deep links, push taps and threads beyond page 1 (§4.2).
@@ -91,7 +151,7 @@ export function useThreadSummary(threadId: string | null) {
     initialData: () =>
       queryClient
         .getQueryData<ThreadsPage>(messagingKeys.inbox(userId))
-        ?.threads.find((t) => t._id === threadId),
+        ?.threads.find((t) => t._id === threadId) ?? findInGymInboxes(queryClient, userId, threadId),
     initialDataUpdatedAt: () => queryClient.getQueryState(messagingKeys.inbox(userId))?.dataUpdatedAt,
     staleTime: 30_000,
     retry: false,
@@ -138,13 +198,19 @@ export function applyReadResult(
   queryClient.setQueryData<ThreadsPage>(messagingKeys.inbox(userId), (prev) =>
     prev ? { ...prev, threads: prev.threads.map(patch) } : prev,
   );
+  queryClient.setQueriesData<InfiniteData<ThreadsPage>>({ queryKey: messagingKeys.gymInboxes(userId) }, (prev) =>
+    prev
+      ? { ...prev, pages: prev.pages.map((page) => ({ ...page, threads: page.threads.map(patch) })) }
+      : prev,
+  );
   queryClient.setQueryData<ThreadSummary>(messagingKeys.thread(userId, threadId), (prev) =>
     prev ? patch(prev) : prev,
   );
 }
 
-/** Refresh inbox page 1 and the badge (after a send, a push, or a thread action). */
+/** Refresh inbox page 1, any open gym inbox and the badge (after a send, a push, or a thread action). */
 export function refreshMessaging(queryClient: QueryClient, userId: string): void {
   void queryClient.invalidateQueries({ queryKey: messagingKeys.inbox(userId) });
+  void queryClient.invalidateQueries({ queryKey: messagingKeys.gymInboxes(userId) });
   void queryClient.invalidateQueries({ queryKey: messagingKeys.unread(userId) });
 }

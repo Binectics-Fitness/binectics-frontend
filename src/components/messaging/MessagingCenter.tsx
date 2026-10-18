@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnnouncePanel } from "./AnnouncePanel";
-import { useInbox, useThreadSummary, type MessagingRequestError } from "./queries";
+import { MessagingErrorCode } from "@/lib/api/messaging";
+import { useGymInbox, useInbox, useThreadSummary, type MessagingRequestError } from "./queries";
 import { ThreadList } from "./ThreadList";
 import { SearchBox, SearchPanel } from "./SearchPanel";
 import { PaneMessage, THREAD_ID_PATTERN, ThreadPane } from "./ThreadPane";
@@ -52,16 +53,23 @@ export function MessagingCenter({ emptyHint, broadcastOrg, gymInboxOf }: Messagi
   const heading = useRef<HTMLHeadingElement>(null);
   const lastOpened = useRef<string | null>(null);
 
-  const inbox = useInbox();
+  // Staff on a gym's inbox read that gym's threads only (`?as_gym=`, paged);
+  // everyone else reads their own inbox, page 1.
+  const gymMode = Boolean(gymInboxOf);
+  const inbox = useInbox(!gymMode);
+  const gymInbox = useGymInbox(gymInboxOf ?? null);
   const summary = useThreadSummary(validId);
   const summaryError = summary.error as MessagingRequestError | null;
   const summaryMissing = summaryError ? [400, 403, 404].includes(summaryError.status ?? 0) : false;
 
-  const allThreads = inbox.data?.threads ?? [];
-  const threads = gymInboxOf
-    ? allThreads.filter((t) => t.as_gym?.organization_id === gymInboxOf)
-    : allThreads;
-  const listStatus = inbox.isLoading ? "loading" : inbox.isError ? "error" : "ready";
+  const threads = gymMode
+    ? (gymInbox.data?.pages.flatMap((page) => page.threads) ?? [])
+    : (inbox.data?.threads ?? []);
+  const list = gymMode ? gymInbox : inbox;
+  const listStatus = list.isLoading ? "loading" : list.isError ? "error" : "ready";
+  const gymInboxRefused =
+    gymMode && (gymInbox.error?.code === MessagingErrorCode.NOT_GYM_INBOX || gymInbox.error?.status === 403);
+  const refetchList = () => void (gymMode ? gymInbox.refetch() : inbox.refetch());
 
   const open = useCallback(
     (threadId: string, seq?: number) => {
@@ -137,7 +145,24 @@ export function MessagingCenter({ emptyHint, broadcastOrg, gymInboxOf }: Messagi
             activeId={activeId}
             emptyHint={emptyHint}
             onOpen={(id) => open(id)}
-            onRetry={() => void inbox.refetch()}
+            onRetry={refetchList}
+            errorText={
+              gymInboxRefused
+                ? "You can't answer this gym's inbox. Ask the gym owner to give your role access to member messages."
+                : undefined
+            }
+            footer={
+              gymMode && gymInbox.hasNextPage ? (
+                <button
+                  type="button"
+                  className="btn-ghost-v2 sm"
+                  disabled={gymInbox.isFetchingNextPage}
+                  onClick={() => void gymInbox.fetchNextPage()}
+                >
+                  {gymInbox.isFetchingNextPage ? "Loading…" : "Load more"}
+                </button>
+              ) : undefined
+            }
           />
         )}
       </div>
@@ -154,7 +179,7 @@ export function MessagingCenter({ emptyHint, broadcastOrg, gymInboxOf }: Messagi
             onBack={back}
             onSent={(threadId) => {
               setAnnouncing(false);
-              void inbox.refetch();
+              refetchList();
               router.replace(`${pathname}?thread=${encodeURIComponent(threadId)}`, { scroll: false });
             }}
           />

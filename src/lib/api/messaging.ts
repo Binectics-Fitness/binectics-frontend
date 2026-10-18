@@ -47,6 +47,8 @@ export enum MessagingErrorCode {
   ANNOUNCEMENTS_ONLY = "MESSAGING_ANNOUNCEMENTS_ONLY",
   UNAVAILABLE = "MESSAGING_UNAVAILABLE",
   MOVED_TO_GYM_INBOX = "MESSAGING_MOVED_TO_GYM_INBOX",
+  /** `?as_gym=` named a gym whose inbox this caller doesn't answer. */
+  NOT_GYM_INBOX = "MESSAGING_NOT_GYM_INBOX",
   NOT_SENDER = "MESSAGING_NOT_SENDER",
   EDIT_WINDOW_CLOSED = "MESSAGING_EDIT_WINDOW_CLOSED",
   REACTIONS_DISABLED = "MESSAGING_REACTIONS_DISABLED",
@@ -240,9 +242,18 @@ function query(params: Record<string, string | number | undefined>): string {
 }
 
 export const messagingService = {
-  /** Inbox page, newest activity first (§4.1). Always paged: passing `limit` opts out of the legacy array. */
-  listThreads: (params: { limit?: number; cursor?: string } = {}): Promise<ApiResponse<ThreadsPage>> =>
-    apiClient.get<ThreadsPage>(`/messaging/threads${query({ limit: params.limit ?? 30, cursor: params.cursor })}`),
+  /**
+   * Inbox page, newest activity first (§4.1). Always paged: passing `limit`
+   * opts out of the legacy array. `asGym` narrows it to that gym's inbox
+   * threads (owner or staff holding messaging:answer_members; otherwise 403
+   * MESSAGING_NOT_GYM_INBOX).
+   */
+  listThreads: (
+    params: { limit?: number; cursor?: string; asGym?: string } = {},
+  ): Promise<ApiResponse<ThreadsPage>> =>
+    apiClient.get<ThreadsPage>(
+      `/messaging/threads${query({ as_gym: params.asGym, limit: params.limit ?? 30, cursor: params.cursor })}`,
+    ),
 
   /** One summary, for deep links, push taps and after a refusal (§4.2). */
   getThread: (threadId: string): Promise<ApiResponse<ThreadSummary>> =>
