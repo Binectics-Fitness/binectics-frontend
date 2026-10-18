@@ -8,10 +8,21 @@ import { AsyncSpinner, DSCard, EmptySlate, PageHeader } from "@/components/ds";
 import { AddLocationModal } from "@/components/ds/modals/AddLocationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { toast } from "@/components/Toast";
+import { locationErrorMessage } from "@/lib/locationErrors";
 
 function addressLine(loc: OrganizationLocation): string {
   const parts = [loc.street, loc.city, loc.postal_code, loc.country].filter(Boolean);
   return parts.length > 0 ? parts.join(" · ") : "No address on file";
+}
+
+/** The API's order: the primary first, then oldest first. */
+function byPrimaryThenAge(list: OrganizationLocation[]): OrganizationLocation[] {
+  return [...list].sort(
+    (a, b) =>
+      Number(!!b.is_primary) - Number(!!a.is_primary) ||
+      (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0),
+  );
 }
 
 export default function LocationsClient() {
@@ -21,6 +32,8 @@ export default function LocationsClient() {
   const [error, setError] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showInactive, setShowInactive] = useState(false);
+  const [reactivatingId, setReactivatingId] = useState<string | null>(null);
   // Adding, editing and closing locations is team:manage_organization.
   const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
 
@@ -31,7 +44,7 @@ export default function LocationsClient() {
     const run = async () => {
       setLoading(true);
       try {
-        const res = await teamsService.getLocations(orgId);
+        const res = await teamsService.getLocations(orgId, { includeInactive: true });
         if (!active) return;
         if (res.success && res.data) {
           setLocations(res.data);
@@ -53,6 +66,31 @@ export default function LocationsClient() {
   }, [orgId, orgLoading, reloadKey]);
 
   const activeLocations = locations.filter((l) => l.is_active);
+  // Deactivated is is_active === false, as the API has it.
+  const inactiveLocations = locations.filter((l) => l.is_active === false);
+
+  async function handleReactivate(loc: OrganizationLocation) {
+    if (!orgId || reactivatingId) return;
+    setReactivatingId(loc._id);
+    try {
+      const res = await teamsService.reactivateLocation(orgId, loc._id);
+      if (res.success && res.data) {
+        const back = res.data;
+        setLocations((prev) => byPrimaryThenAge(prev.map((l) => (l._id === back._id ? back : l))));
+        toast.success(
+          back.is_primary
+            ? `${back.name} is active again, as your primary location`
+            : `${back.name} is active again`,
+        );
+      } else {
+        toast.error(locationErrorMessage(res, "reactivate", loc.name, "Couldn't reactivate the location"));
+      }
+    } catch {
+      toast.error("Couldn't reactivate the location");
+    } finally {
+      setReactivatingId(null);
+    }
+  }
 
   return (
     <GymDashboardShell
@@ -112,6 +150,53 @@ export default function LocationsClient() {
           ))}
         </div>
       ) : null}
+
+      {inactiveLocations.length > 0 && (
+        <DSCard className="p-4.5">
+          <button
+            type="button"
+            onClick={() => setShowInactive((v) => !v)}
+            aria-expanded={showInactive}
+            aria-controls="deactivated-locations"
+            className="flex w-full items-center justify-between gap-2 text-left"
+            style={{ background: "transparent", border: 0, padding: 0, cursor: "pointer" }}
+          >
+            <span className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+              Deactivated locations ({inactiveLocations.length})
+            </span>
+            <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+              {showInactive ? "Hide" : "Show"}
+            </span>
+          </button>
+          {showInactive && (
+            <ul id="deactivated-locations" className="mt-3 flex flex-col">
+              {inactiveLocations.map((loc) => (
+                <li
+                  key={loc._id}
+                  className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                  style={{ borderTop: "1px solid var(--border)" }}
+                >
+                  <div className="min-w-0">
+                    <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{loc.name}</div>
+                    <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{addressLine(loc)}</div>
+                  </div>
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => void handleReactivate(loc)}
+                      disabled={reactivatingId !== null}
+                      aria-label={`Reactivate ${loc.name}`}
+                      className="btn-ghost-v2 sm disabled:opacity-40"
+                    >
+                      {reactivatingId === loc._id ? "Reactivating…" : "Reactivate"}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </DSCard>
+      )}
 
       <AddLocationModal
         open={addOpen}

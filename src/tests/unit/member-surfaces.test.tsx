@@ -192,6 +192,21 @@ describe("membershipNotice (F8)", () => {
     });
   });
 
+  it("prompts a member on a free plan whose gym moved them to a paid next plan (renewal_plan_id)", () => {
+    const plan = sub().plan_id as Exclude<MembershipSubscription["plan_id"], string>;
+    const free = { ...plan, price_minor: 0 };
+    // Judged by the free current plan alone: no card.
+    expect(membershipNotice([sub({ plan_id: free })], NOW, fmt)).toBeNull();
+    expect(
+      membershipNotice([sub({ plan_id: free, renewal_listing_id: "l2", renewal_plan_id: "p-next" })], NOW, fmt),
+    ).toMatchObject({ kind: "ending", renewHref: "/checkout?listing=l2&plan=p-next", ask: null });
+    // A paid current plan whose listing sells no renewal plan: ask the gym.
+    expect(membershipNotice([sub({ renewal_listing_id: "l2", renewal_plan_id: null })], NOW, fmt)).toMatchObject({
+      renewHref: null,
+      ask: { gymName: "Iron Temple" },
+    });
+  });
+
   it("asks the gym to renew when the API says it has no listing", () => {
     const due = sub({
       listing_id: undefined,
