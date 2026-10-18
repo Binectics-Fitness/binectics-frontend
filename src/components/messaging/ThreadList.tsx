@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { AsyncSpinner } from "@/components/ds";
 import { MessageSide, ThreadKind, type ThreadSummary } from "@/lib/api/messaging";
 import { Avatar } from "./Avatar";
@@ -39,6 +40,8 @@ export function ThreadList({
   emptyHint,
   onOpen,
   onRetry,
+  errorText,
+  footer,
 }: {
   threads: ThreadSummary[];
   status: "loading" | "error" | "ready";
@@ -46,12 +49,22 @@ export function ThreadList({
   emptyHint: string;
   onOpen: (threadId: string) => void;
   onRetry: () => void;
+  /** Replaces the generic load error; with it, there is no retry button. */
+  errorText?: string;
+  /** Shown under the last row, e.g. a "Load more" button. */
+  footer?: ReactNode;
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {status === "loading" ? (
         <div className="flex flex-1 items-center justify-center">
           <AsyncSpinner label="Loading conversations" />
+        </div>
+      ) : status === "error" && errorText ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+          <p role="alert" className="max-w-[34ch] text-[14px] leading-normal" style={{ color: "var(--ink)" }}>
+            {errorText}
+          </p>
         </div>
       ) : status === "error" && threads.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -134,6 +147,7 @@ export function ThreadList({
               </li>
             );
           })}
+          {footer && <li className="flex justify-center p-3">{footer}</li>}
         </ul>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { AsyncSpinner } from "@/components/ds";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +11,7 @@ import { ownsWorkspace } from "@/lib/workspaces";
 
 export default function GymOwnerMessagesPage() {
   const { user } = useAuth();
-  const { currentOrg } = useOrganization();
+  const { currentOrg, isLoading: isOrgLoading } = useOrganization();
   // Only the owner of a gym posts announcements (the API refuses anyone else).
   const isOwner =
     !!currentOrg && currentOrg.account_type === AccountType.GYM_OWNER && ownsWorkspace(currentOrg, user?.id);
@@ -18,7 +19,17 @@ export default function GymOwnerMessagesPage() {
   return (
     <GymDashboardShell activeItem="Messages" crumb="Messages">
       <Suspense fallback={null}>
-        {isOwner ? (
+        {!currentOrg ? (
+          // Until the workspace is known, neither inbox can be chosen: never
+          // fall through to the person's own conversations meanwhile.
+          isOrgLoading ? (
+            <AsyncSpinner size="page" label="Loading messages" />
+          ) : (
+            <p className="p-8 text-center text-[14px]" style={{ color: "var(--fg-3)" }}>
+              Choose a gym workspace to see its messages.
+            </p>
+          )
+        ) : isOwner ? (
           <MessagingCenter
             broadcastOrg={broadcastOrg}
             emptyHint="Conversations with your members and staff appear here. Start one from a member's or staff profile, or post an announcement."
@@ -27,8 +38,8 @@ export default function GymOwnerMessagesPage() {
           // A gym's staff answer the gym's inbox here, as the gym. Their own
           // conversations stay in Messages on their member home.
           <MessagingCenter
-            gymInboxOf={currentOrg?._id ?? null}
-            emptyHint={`Messages members send ${currentOrg?.name ?? "the gym"} appear here, and you reply as the gym.`}
+            gymInboxOf={currentOrg._id}
+            emptyHint={`Messages members send ${currentOrg.name} appear here, and you reply as the gym.`}
           />
         )}
       </Suspense>

@@ -8,7 +8,13 @@
  * refetched at once when it becomes visible again, and backed off on errors.
  */
 
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   messagingService,
@@ -20,6 +26,9 @@ import {
 export const messagingKeys = {
   all: ["messaging"] as const,
   inbox: (userId: string) => ["messaging", userId, "inbox"] as const,
+  /** Every gym inbox this user has open; prefix for invalidation. */
+  gymInboxes: (userId: string) => ["messaging", userId, "gym-inbox"] as const,
+  gymInbox: (userId: string, orgId: string) => ["messaging", userId, "gym-inbox", orgId] as const,
   thread: (userId: string, threadId: string) => ["messaging", userId, "thread", threadId] as const,
   unread: (userId: string) => ["messaging", userId, "unread"] as const,
 };
@@ -70,6 +79,86 @@ export function useInbox(enabled = true) {
   });
 }
 
+const GYM_INBOX_PAGE = 30;
+
+/**
+ * Poll cadence for a gym inbox. A refetch of an infinite query re-requests
+ * every loaded page, so the timer runs only while page 1 alone is loaded.
+ * Once someone has paged back through older threads the timer stops; the
+ * list still refreshes on focus, after a send or thread action, and the nav
+ * badge keeps polling, so new messages still show.
+ */
+export function gymInboxPollDelay(pagesLoaded: number, failures: number): number | false {
+  return pagesLoaded > 1 ? false : pollDelay(INBOX_POLL_MS, failures);
+}
+
+/**
+ * One gym's inbox, for its staff: `?as_gym=<orgId>`, paged by `next_cursor`
+ * so a busy inbox never hides threads past the first page. Polled like the
+ * inbox while only page 1 is loaded (see gymInboxPollDelay). A 403
+ * MESSAGING_NOT_GYM_INBOX surfaces as the query error.
+ */
+export function useGymInbox(orgId: string | null) {
+  const { user } = useAuth();
+  const userId = user?.id ?? "";
+  return useInfiniteQuery<
+    ThreadsPage,
+    MessagingRequestError,
+    InfiniteData<ThreadsPage, string | undefined>,
+    readonly string[],
+    string | undefined
+  >({
+    queryKey: messagingKeys.gymInbox(userId, orgId ?? ""),
+    enabled: Boolean(userId && orgId),
+    initialPageParam: undefined,
+    queryFn: async ({ pageParam }) => {
+      const res = await messagingService.listThreads({
+        asGym: orgId as string,
+        limit: GYM_INBOX_PAGE,
+        cursor: pageParam,
+      });
+      if (!res.success || !res.data) {
+        throw new MessagingRequestError(res.message ?? "Couldn't load conversations", res.status, res.code);
+      }
+      return res.data;
+    },
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    staleTime: 0,
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: (query) =>
+      gymInboxPollDelay(query.state.data?.pages.length ?? 1, query.state.fetchFailureCount),
+  });
+}
+
+/**
+ * Where a thread's cached summary lives: the member inbox first, then any
+ * gym inbox. Returns the hit with that query's freshness, so a seed taken
+ * from a gym inbox is dated by the gym inbox, not by the member inbox.
+ */
+function findCachedSummary(
+  queryClient: QueryClient,
+  userId: string,
+  threadId: string | null,
+): { thread: ThreadSummary; updatedAt: number | undefined } | undefined {
+  const inboxKey = messagingKeys.inbox(userId);
+  const fromInbox = queryClient
+    .getQueryData<ThreadsPage>(inboxKey)
+    ?.threads.find((t) => t._id === threadId);
+  if (fromInbox) {
+    return { thread: fromInbox, updatedAt: queryClient.getQueryState(inboxKey)?.dataUpdatedAt };
+  }
+  for (const [key, data] of queryClient.getQueriesData<InfiniteData<ThreadsPage>>({
+    queryKey: messagingKeys.gymInboxes(userId),
+  })) {
+    for (const page of data?.pages ?? []) {
+      const hit = page.threads.find((t) => t._id === threadId);
+      if (hit) return { thread: hit, updatedAt: queryClient.getQueryState(key)?.dataUpdatedAt };
+    }
+  }
+  return undefined;
+}
+
 /**
  * One thread's summary. Seeded from the inbox when it's there; fetched on
  * its own for deep links, push taps and threads beyond page 1 (§4.2).
@@ -88,11 +177,8 @@ export function useThreadSummary(threadId: string | null) {
       }
       return res.data;
     },
-    initialData: () =>
-      queryClient
-        .getQueryData<ThreadsPage>(messagingKeys.inbox(userId))
-        ?.threads.find((t) => t._id === threadId),
-    initialDataUpdatedAt: () => queryClient.getQueryState(messagingKeys.inbox(userId))?.dataUpdatedAt,
+    initialData: () => findCachedSummary(queryClient, userId, threadId)?.thread,
+    initialDataUpdatedAt: () => findCachedSummary(queryClient, userId, threadId)?.updatedAt,
     staleTime: 30_000,
     retry: false,
   });
@@ -138,13 +224,19 @@ export function applyReadResult(
   queryClient.setQueryData<ThreadsPage>(messagingKeys.inbox(userId), (prev) =>
     prev ? { ...prev, threads: prev.threads.map(patch) } : prev,
   );
+  queryClient.setQueriesData<InfiniteData<ThreadsPage>>({ queryKey: messagingKeys.gymInboxes(userId) }, (prev) =>
+    prev
+      ? { ...prev, pages: prev.pages.map((page) => ({ ...page, threads: page.threads.map(patch) })) }
+      : prev,
+  );
   queryClient.setQueryData<ThreadSummary>(messagingKeys.thread(userId, threadId), (prev) =>
     prev ? patch(prev) : prev,
   );
 }
 
-/** Refresh inbox page 1 and the badge (after a send, a push, or a thread action). */
+/** Refresh inbox page 1, any open gym inbox and the badge (after a send, a push, or a thread action). */
 export function refreshMessaging(queryClient: QueryClient, userId: string): void {
   void queryClient.invalidateQueries({ queryKey: messagingKeys.inbox(userId) });
+  void queryClient.invalidateQueries({ queryKey: messagingKeys.gymInboxes(userId) });
   void queryClient.invalidateQueries({ queryKey: messagingKeys.unread(userId) });
 }
