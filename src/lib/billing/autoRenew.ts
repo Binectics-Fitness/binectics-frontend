@@ -201,10 +201,20 @@ const DAY = 86_400_000;
 /**
  * The checkout that renews this membership, or null when "Renew" shouldn't
  * show. Shown for a paid, recurring, self-serve plan bought from a listing
- * (a negotiated plan, `is_self_serve: false`, never; as on mobile) when:
- *  - it is past due, or expired within the last 30 days (renew in place);
+ * (a negotiated plan, `is_self_serve: false`, never) when:
+ *  - it is past due and no longer on the saved card (auto-renew off, or
+ *    collected by pay link);
+ *  - it expired within the last 30 days (renew in place);
  *  - it is active and ends within RENEW_AHEAD_DAYS (7), and no saved card
  *    will renew it.
+ * Never while a card charge for the term is retrying or in flight.
+ *
+ * The same rule as mobile's `renewDue` / `renewCheckoutFor`
+ * (binectics-mobile src/utils/memberBilling.ts). In particular, a past-due
+ * membership still on the saved card gets no Renew even when no retry is
+ * scheduled: the member turns auto-renew off first (which ends the grace),
+ * then renews, never both at once. Callers point them to the membership on
+ * Billing instead. Change both apps together.
  */
 export function renewHrefForMembership(
   sub: MembershipSubscription,
@@ -225,6 +235,8 @@ export function renewHrefForMembership(
 
   switch (sub.status) {
     case MembershipSubscriptionStatus.PAST_DUE:
+      // Still on the saved card: auto-renew goes off first, then Renew.
+      if (renewsByCard) return null;
       return checkoutHref(listingId, plan._id);
     case MembershipSubscriptionStatus.EXPIRED:
       if (Number.isNaN(end) || t - end > RENEWABLE_AFTER_EXPIRY_DAYS * DAY) return null;

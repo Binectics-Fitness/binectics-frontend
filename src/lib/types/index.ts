@@ -437,24 +437,6 @@ export interface MarketplaceRequest {
   updated_at: string;
 }
 
-export interface MarketplaceReview {
-  _id: string;
-  client_id:
-    | string
-    | {
-        _id: string;
-        first_name: string;
-        last_name: string;
-        profile_picture?: string;
-      };
-  listing_id: string;
-  rating: number;
-  comment?: string;
-  is_visible: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface MarketplaceSearchParams {
   account_type?: MarketplaceAccountType;
   country_code?: string;

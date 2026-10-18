@@ -198,7 +198,9 @@ const billingHrefFor = (sub: MembershipSubscription) =>
  * a payment that is overdue, or a term ending within RENEW_AHEAD_DAYS that
  * nothing will renew. Overdue first, then the soonest end. Never one the
  * member cancelled (they chose to leave), one a saved card renews, or one
- * that can't be renewed in the app. The same rules as mobile's Today card.
+ * that can't be renewed in the app. Renew follows renewHrefForMembership,
+ * the same rule as mobile's renewDue (a past-due membership still on the
+ * saved card gets Billing only).
  */
 export function membershipNotice(
   subs: readonly MembershipSubscription[],
@@ -216,6 +218,10 @@ export function membershipNotice(
       body = retry.nextAttemptAt
         ? `We'll try your card again on ${fmt(retry.nextAttemptAt)}. You don't need to do anything yet.`
         : "We'll try your card again soon. You don't need to do anything yet.";
+    } else if (due.auto_renew && due.collection_method === "card_auto") {
+      // Still on the saved card: no Renew (renewHrefForMembership), so the
+      // card points to the membership on Billing, where auto-renew goes off.
+      body = "Your saved card is still set to pay for it. Open Billing to see your options.";
     } else {
       body = due.grace_expires_at
         ? `Pay by ${fmt(due.grace_expires_at)} to keep your access.`
