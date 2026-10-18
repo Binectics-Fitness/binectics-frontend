@@ -25,6 +25,7 @@ vi.mock("@/contexts/OrganizationContext", () => {
   return { useOrganization: () => value, useOptionalOrganization: () => value };
 });
 vi.mock("@/lib/queries/marketplace", () => ({ usePendingListingRequestCount: () => 0 }));
+vi.mock("@/lib/queries/orgRequests", () => ({ useOrgPendingRequestCount: () => 0 }));
 vi.mock("@/components/messaging/queries", () => ({ useMessagingUnread: () => 0 }));
 vi.mock("@/lib/queries/refunds", () => ({
   useRefundsAttentionCount: (enabled = true) => {

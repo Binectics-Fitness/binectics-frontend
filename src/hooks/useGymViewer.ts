@@ -9,7 +9,12 @@ import { gymViewer, type GymViewer } from "@/lib/gymStaffNav";
  * staff (managers, assistants, admins, custom roles) see what their role's
  * permissions allow (lib/gymStaffNav).
  */
-export function useGymViewer(): GymViewer & { staff: boolean; orgName: string | null; roleCode: string | null } {
+export function useGymViewer(): GymViewer & {
+  staff: boolean;
+  orgId: string | null;
+  orgName: string | null;
+  roleCode: string | null;
+} {
   const { user } = useAuth();
   const { currentOrg: org } = useOrganization();
   const viewer = gymViewer(org, user?.id);
@@ -17,6 +22,7 @@ export function useGymViewer(): GymViewer & { staff: boolean; orgName: string | 
     ...viewer,
     // Someone in this gym's dashboard who doesn't own the gym.
     staff: !!org && !viewer.isOwner,
+    orgId: org?._id ?? null,
     orgName: org?.name ?? null,
     roleCode: org?.my_role_code ?? null,
   };

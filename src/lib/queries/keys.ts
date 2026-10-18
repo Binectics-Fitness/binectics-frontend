@@ -73,6 +73,13 @@ export const queryKeys = {
       [...queryKeys.marketplace.all, "orgListing", orgId] as const,
     myListingRequests: () =>
       [...queryKeys.marketplace.all, "myListingRequests"] as const,
+    /** Everything about one gym's incoming requests (lists and count). */
+    orgRequestsAll: (orgId: string) =>
+      [...queryKeys.marketplace.all, "orgRequests", orgId] as const,
+    orgRequests: (orgId: string, status: string) =>
+      [...queryKeys.marketplace.all, "orgRequests", orgId, "list", status] as const,
+    orgPendingRequestCount: (orgId: string) =>
+      [...queryKeys.marketplace.all, "orgRequests", orgId, "pendingCount"] as const,
     orgMembershipSubscriptions: (orgId: string) =>
       [...queryKeys.marketplace.all, "orgMembershipSubs", orgId] as const,
     orgMembershipPlans: (orgId: string) =>

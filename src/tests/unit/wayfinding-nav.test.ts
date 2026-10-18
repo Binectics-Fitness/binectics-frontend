@@ -18,6 +18,7 @@ import { SETUP_HREFS } from "@/lib/provider/setupSteps";
 import { PLAN_GATE_HREF } from "@/components/ds/PlanGate";
 import { GATEWAYS_HREF } from "@/app/dashboard/gym-owner/card-renewals/CardRenewalsClient";
 import { PENDING_INVITES_HREF } from "@/app/dashboard/dietitian/DietitianTodayClient";
+import { resolveNotificationLink } from "@/utils/resolveNotificationLink";
 import { isAppRoute } from "./appRoutes";
 
 type Section = { label: string; items: { name: string; href: string }[] };
@@ -96,6 +97,28 @@ describe("dietitian and gym nav", () => {
   it("puts meal feedback with the dietitian's plans and food (F23)", () => {
     const food = DIETITIAN_SIDEBAR.find((s) => s.label === "Plans & food");
     expect(food?.items.find((i) => i.name === "Meal feedback")?.href).toBe("/dashboard/dietitian/feedback");
+  });
+
+  it("gives the gym its own Requests page, after Schedule (F23)", () => {
+    const operate = GYM_SIDEBAR.find((s) => s.label === "Operate")?.items ?? [];
+    const names = operate.map((i) => i.name);
+    expect(names.indexOf("Requests")).toBe(names.indexOf("Schedule") + 1);
+    expect(operate.find((i) => i.name === "Requests")?.href).toBe("/dashboard/gym-owner/requests");
+  });
+
+  it("sends a gym's request notifications, old and new, to the gym's Requests page", () => {
+    const id = "6abe5a17882f018fcdb21c61";
+    const fromApi = resolveNotificationLink(`/dashboard/gym-owner/requests?requestId=${id}`, UserRole.GYM_OWNER);
+    // Stored before the gym page existed: the solo page's address.
+    const stored = resolveNotificationLink(`/dashboard/marketplace/requests?requestId=${id}`, UserRole.GYM_OWNER);
+    for (const href of [fromApi, stored]) {
+      expect(href).toBe(`/dashboard/gym-owner/requests?requestId=${id}`);
+      expect(isAppRoute(href)).toBe(true);
+    }
+    // A solo trainer's stays on their own page.
+    expect(resolveNotificationLink(`/dashboard/marketplace/requests?requestId=${id}`, UserRole.TRAINER)).toBe(
+      `/dashboard/marketplace/requests?requestId=${id}`,
+    );
   });
 
   it("puts Refunds with the gym's money", () => {

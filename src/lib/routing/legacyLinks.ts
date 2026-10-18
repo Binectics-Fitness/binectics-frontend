@@ -43,6 +43,16 @@ export function messagesHref(role: string | null | undefined, threadId?: string 
     : base;
 }
 
+/** The gym's connection requests page. */
+export const GYM_REQUESTS_PATH = "/dashboard/gym-owner/requests";
+
+/** The gym's requests page, with one request in view when the id is a well-formed ObjectId. */
+export function gymRequestsHref(requestId?: string | null): string {
+  return requestId && /^[a-f0-9]{24}$/i.test(requestId)
+    ? `${GYM_REQUESTS_PATH}?requestId=${requestId}`
+    : GYM_REQUESTS_PATH;
+}
+
 /**
  * Where a legacy address goes for this role, or null when the address is
  * not one of them (a real page). Query strings are dropped: the pages they
@@ -63,6 +73,11 @@ export function legacyLinkTarget(
       return messagesHref(role, params.get("thread"));
     }
     return null;
+  }
+  if (path === "/dashboard/marketplace/requests") {
+    // A real page for solo providers. A gym answers its requests on its own
+    // page; request notifications sent before that page existed point here.
+    return role === "GYM_OWNER" ? gymRequestsHref(params.get("requestId")) : null;
   }
   if (path === "/dashboard/subscriptions") {
     return pick({ ...PROVIDER_CLIENTS, USER: "/dashboard/member/billing" }, role);
@@ -106,7 +121,7 @@ export function legacyLinkTarget(
         USER: "/dashboard/member",
         TRAINER: "/dashboard/marketplace/requests",
         DIETITIAN: "/dashboard/marketplace/requests",
-        GYM_OWNER: "/dashboard/marketplace/requests",
+        GYM_OWNER: GYM_REQUESTS_PATH,
         ADMIN: "/admin/dashboard",
       },
       role,
