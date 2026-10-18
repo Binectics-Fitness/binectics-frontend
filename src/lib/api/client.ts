@@ -257,10 +257,19 @@ class ApiClient {
     // in favour of the whole envelope.
     const hasDataKey =
       parsed !== null && typeof parsed === "object" && "data" in parsed;
+    // Fields beside `data` in the envelope are kept apart, so a caller that
+    // needs one (a second list, say) can read it without changing `data`.
+    const envelope: Record<string, unknown> = {};
+    if (hasDataKey) {
+      for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+        if (key !== "data" && key !== "success" && key !== "message") envelope[key] = value;
+      }
+    }
     return {
       success: true,
       data: (hasDataKey ? body.data : parsed) as T,
       message: typeof body.message === "string" ? body.message : undefined,
+      ...(Object.keys(envelope).length > 0 ? { envelope } : {}),
     };
   }
 

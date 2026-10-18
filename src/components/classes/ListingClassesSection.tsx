@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  CLASS_REMOVED_MESSAGE,
   classBookingsService,
+  classWasRemoved,
   keepsWaitlistPlace,
   nextOccurrences,
   type ClassBooking,
@@ -159,6 +161,12 @@ function BookableClassRow({
         void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
       } else if (keepsWaitlistPlace(res)) {
         setMessage({ text: res.message || "You keep your place on the waitlist.", tone: "info" });
+        void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
+      } else if (classWasRemoved(res)) {
+        // The gym deleted the class as this was booked: nothing is held.
+        // The timetable is left as it is so this message stays on screen;
+        // the next visit no longer lists the class.
+        setMessage({ text: CLASS_REMOVED_MESSAGE, tone: "error" });
         void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
       } else {
         setMessage({ text: res.message || "Couldn't book, log in and check your membership.", tone: "error" });
