@@ -145,13 +145,16 @@ export default function FormsPage() {
 
   function handleDeleteForm(form: Form) {
     const formId = form._id;
-    const responses = responseCounts[formId] ?? 0;
+    // A count that failed to load is unknown, not zero.
+    const responses = formId in responseCounts ? responseCounts[formId] : null;
     requestConfirmation({
       title: `Delete "${form.title}"?`,
       description:
-        responses > 0
-          ? `The form, its questions and its ${responses} ${responses === 1 ? "response" : "responses"} are deleted for good, and its link stops working. This can't be undone.`
-          : "The form and its questions are deleted for good, and its link stops working. This can't be undone.",
+        responses === 0
+          ? "The form and its questions are deleted for good, and its link stops working. This can't be undone."
+          : responses === null
+            ? "The form, its questions and all its responses are deleted for good, and its link stops working. This can't be undone."
+            : `The form, its questions and its ${responses} ${responses === 1 ? "response" : "responses"} are deleted for good, and its link stops working. This can't be undone.`,
       confirmLabel: "Delete form",
       confirmVariant: "danger",
       onConfirm: async () => {

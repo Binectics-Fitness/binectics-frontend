@@ -80,6 +80,15 @@ describe("forms: delete", () => {
     expect(nativeConfirm).not.toHaveBeenCalled();
   });
 
+  it("says all its responses go when the counts didn't load", async () => {
+    vi.spyOn(formsService, "getFormResponseCounts").mockResolvedValue({ success: false, message: "Server error" } as never);
+    const user = userEvent.setup();
+    wrap(<FormsPage />);
+    await user.click((await screen.findAllByRole("button", { name: "Delete" }))[0]);
+    const dialog = await findConfirmDialog('Delete "Intake"?');
+    expect(dialog).toHaveTextContent("all its responses are deleted for good");
+  });
+
   it("does nothing on Cancel", async () => {
     const del = vi.spyOn(formsService, "deleteForm");
     const user = userEvent.setup();
@@ -125,7 +134,7 @@ describe("programs: archive", () => {
     wrap(<ProgramsManager config={config} />);
     await user.click(await screen.findByRole("button", { name: "Archive" }));
     const dialog = await findConfirmDialog('Archive "Couch to 5k"?');
-    expect(dialog).toHaveTextContent("Clients already on it keep their programs.");
+    expect(dialog).toHaveTextContent("can't be published or edited again. Clients already on it keep their programs.");
     expect(archive).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Archive program" }));
     await waitFor(() => expect(archive).toHaveBeenCalledWith("t1"));
@@ -170,6 +179,7 @@ describe("a client's program: complete and cancel", () => {
     await user.click(await screen.findByRole("button", { name: "Cancel" }));
     let dialog = await findConfirmDialog('Cancel "Couch to 5k" for Bola Ade?');
     expect(dialog).toHaveTextContent("This can't be undone.");
+    expect(dialog).toHaveTextContent("their Today screen shows the program has ended");
     await user.click(within(dialog).getByRole("button", { name: "Keep program" }));
     expect(cancel).not.toHaveBeenCalled();
 

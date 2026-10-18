@@ -100,14 +100,24 @@ describe.each([
     expect(nativeConfirm).not.toHaveBeenCalled();
   });
 
-  it("says a plan people are on can't be deleted, and Cancel leaves it", async () => {
+  it("disables Delete on a plan people are on, as the API would refuse it", async () => {
     vi.spyOn(marketplaceService, "getOrgMembershipSubscriptions").mockResolvedValue({ success: true, data: [member("p1")] });
     const user = userEvent.setup();
     wrap(<Client />);
     // Plans and the roster load together, so the card carries the count.
+    const button = await screen.findByRole("button", { name: "Delete" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("title", expect.stringContaining("Deactivate it instead"));
+    await user.click(button);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it("does nothing on Cancel", async () => {
+    const user = userEvent.setup();
+    wrap(<Client />);
     await user.click(await screen.findByRole("button", { name: "Delete" }));
     const dialog = await findConfirmDialog('Delete "Monthly"?');
-    expect(dialog).toHaveTextContent("1 person is still on this plan, so it can't be deleted yet.");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(del).not.toHaveBeenCalled();

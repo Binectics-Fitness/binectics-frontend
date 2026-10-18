@@ -67,7 +67,7 @@ export function MyClassBookingsCard() {
       title: waitlisted ? `Leave the waitlist for ${name}?` : `Cancel ${name} on ${when}?`,
       description: waitlisted
         ? "You give up your place in the queue. To get back on, you'd book again and join at the end."
-        : "Your spot goes to the next person on the waitlist. Cancelling inside the gym's late-cancellation window counts as a late cancellation. To come back, you'd book again.",
+        : "If anyone is waiting, your spot goes to them. If the gym charges a late-cancellation fee and the class starts within its cancellation window, the fee is recorded on your booking. To come back, you'd book again.",
       confirmLabel: waitlisted ? "Leave waitlist" : "Cancel booking",
       cancelLabel: "Keep booking",
       confirmVariant: "danger",

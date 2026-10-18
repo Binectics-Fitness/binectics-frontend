@@ -94,7 +94,7 @@ export default function ProgramInstanceView({
     requestConfirmation({
       title: `Mark "${i.name}" complete for ${clientName(i)}?`,
       description:
-        "The program ends and leaves their active programs. Tasks they haven't done stay as they are, and they aren't notified. This can't be undone.",
+        "The program ends and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen shows the program has ended. This can't be undone.",
       confirmLabel: "Mark complete",
       confirmVariant: "primary",
       onConfirm: () => runAction("complete"),
@@ -104,7 +104,7 @@ export default function ProgramInstanceView({
     requestConfirmation({
       title: `Cancel "${i.name}" for ${clientName(i)}?`,
       description:
-        "The program stops and leaves their active programs. Tasks they haven't done stay as they are, and they aren't notified. This can't be undone.",
+        "The program stops and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen shows the program has ended. This can't be undone.",
       confirmLabel: "Cancel program",
       cancelLabel: "Keep program",
       confirmVariant: "danger",

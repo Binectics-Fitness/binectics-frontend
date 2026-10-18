@@ -1183,7 +1183,7 @@ export default function ProgramsManager({
     requestConfirmation({
       title: `Archive "${t.name}"?`,
       description:
-        "It leaves this list and can't be assigned or published again. Clients already on it keep their programs. This can't be undone.",
+        "It leaves this list and can't be published or edited again. Clients already on it keep their programs.",
       confirmLabel: "Archive program",
       confirmVariant: "danger",
       onConfirm: async () => {

@@ -413,7 +413,9 @@ function PlanCard({
           <button
             type="button"
             onClick={onDelete}
-            className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+            disabled={memberCount > 0}
+            title={memberCount > 0 ? "People are on this plan. Deactivate it instead so their memberships keep working." : undefined}
+            className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
           >
             Delete
@@ -524,16 +526,14 @@ export default function DietitianPlansClient() {
   };
 
   // The API deletes the plan outright, and refuses while anyone is still on it
-  // (paused, suspended and past-due included).
+  // (paused, suspended and past-due included), so the card disables Delete
+  // then, as the gym plans page does.
   const handleDelete = (plan: MarketplaceMembershipPlan) => {
     if (!orgId) return;
-    const onIt = membersByPlan.get(plan._id) ?? 0;
     requestConfirmation({
       title: `Delete "${plan.name}"?`,
       description:
-        onIt > 0
-          ? `${onIt} ${onIt === 1 ? "person is" : "people are"} still on this plan, so it can't be deleted yet. Deactivate it instead to stop selling it; their memberships keep working.`
-          : "The plan is deleted and comes off your listing, and any open offers for it are withdrawn. This can't be undone. To stop selling it but keep it, deactivate it instead.",
+        "The plan is deleted and comes off your listing, and any open offers for it are withdrawn. This can't be undone. To stop selling it but keep it, deactivate it instead.",
       confirmLabel: "Delete plan",
       confirmVariant: "danger",
       onConfirm: async () => {
