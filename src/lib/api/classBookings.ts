@@ -6,6 +6,7 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 import type { GymClass } from "./classes";
+import { readCancellationPolicy, type ClassCancellationPolicy } from "@/lib/classes/cancellationPolicy";
 
 export type ClassBookingStatus =
   | "confirmed"
@@ -34,7 +35,13 @@ export interface ClassBooking {
   cancelled_at: string | null;
   /** Why the gym cancelled it (status cancelled_by_gym), e.g. "Class removed by the gym". Null otherwise. */
   cancellation_reason?: string | null;
+  /** Cancelled inside the gym's window while it had a fee: recorded, never charged by Binectics. */
   cancellation_fee_applied: boolean;
+  /**
+   * Live bookings only: the gym's class cancellation policy as it stands,
+   * or null/absent when it has none (then no fee is mentioned).
+   */
+  cancellation_policy?: ClassCancellationPolicy | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,11 +78,18 @@ export function keepsWaitlistPlace(res: ApiResponse<unknown>): boolean {
 
 export const classBookingsService = {
   /** Public weekly timetable for a listing. */
-  async getListingClasses(listingId: string): Promise<ApiResponse<GymClass[]>> {
-    return apiClient.get<GymClass[]>(
+  /**
+   * Public weekly timetable for a listing, with the gym's class cancellation
+   * policy beside it (null when it has none, and from an API before it).
+   */
+  async getListingClasses(
+    listingId: string,
+  ): Promise<ApiResponse<GymClass[]> & { cancellation_policy?: ClassCancellationPolicy | null }> {
+    const res = await apiClient.get<GymClass[]>(
       `/marketplace/listings/${listingId}/classes`,
       false,
     );
+    return { ...res, cancellation_policy: readCancellationPolicy(res.envelope?.cancellation_policy) };
   },
 
   /** Book one occurrence; server enforces the gym's booking rules. */

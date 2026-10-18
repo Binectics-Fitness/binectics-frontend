@@ -193,7 +193,8 @@ describe("MyClassBookingsCard: Cancel asks in the app's dialog", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
     const dialog = await screen.findByRole("dialog", { name: /^Cancel Spin on / });
     expect(dialog).toHaveTextContent("If anyone is waiting, your spot goes to them.");
-    expect(dialog).toHaveTextContent("the fee is recorded on your booking");
+    // The gym has no cancellation policy: no fee is mentioned at all.
+    expect(dialog).not.toHaveTextContent(/fee/i);
     expect(cancelBooking).not.toHaveBeenCalled();
     await userEvent.click(within(dialog).getByRole("button", { name: "Cancel booking" }));
     expect(cancelBooking).toHaveBeenCalledWith("b1");
