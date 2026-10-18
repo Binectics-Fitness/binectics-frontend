@@ -4,6 +4,7 @@ import {
   marketplaceService,
   type EnrollmentOffer,
   type OrgEnrollmentOffer,
+  type OrgConnectedClient,
   type OrgPaymentConfig,
 } from "@/lib/api/marketplace";
 import type {
@@ -635,6 +636,35 @@ export function useOrgEnrollmentOffers(orgId?: string, enabled = true) {
     },
     enabled: enabled && !!orgId,
     retry: false,
+  });
+}
+
+/** The gym's Connected list: client links with no membership. */
+export function useOrgConnectedClients(orgId?: string, enabled = true) {
+  return useQuery<OrgConnectedClient[]>({
+    queryKey: queryKeys.marketplace.orgConnectedClients(orgId ?? ""),
+    queryFn: async () => {
+      const res = await marketplaceService.getOrgConnectedClients(orgId!);
+      if (!res.success) throw new Error(res.message ?? "Couldn't load connected people");
+      return res.data ?? [];
+    },
+    enabled: enabled && !!orgId,
+    retry: false,
+  });
+}
+
+/** Ends a connection from the Connected list, then reloads it. */
+export function useEndOrgConnection(orgId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (profileId: string) => {
+      const res = await marketplaceService.endOrgConnection(orgId!, profileId);
+      if (!res.success) throw new Error(res.message ?? "Couldn't remove this person");
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.marketplace.orgConnectedClients(orgId ?? ""),
+      }),
   });
 }
 
