@@ -157,6 +157,10 @@ expect_eq "no tag at the head: retry" "$(sd false '' old)" "true"
 expect_eq "promoted head, older build live: a rollback, left alone" "$(sd false rel-promoted old)" "false"
 grep -q 'deliberate rollback' "$T/log" && pass "rollback warning explains itself" || fail "rollback warning explains itself"
 expect_eq "API not answering: no deploy" "$(sd false rel-pre '')" "false"
+expect_eq "API not answering: not live, so no promotion" "$(sd false rel-pre ''; o live)" "$(printf 'false\nfalse')"
+expect_eq "already live, deploy skipped: live, so promote" "$(sd false rel-pre head; o live)" "$(printf 'false\ntrue')"
+expect_eq "rollback declined: not live, so no promotion" "$(sd false rel-promoted old; o live)" "$(printf 'false\nfalse')"
+expect_eq "new cut: not proven live yet" "$(sd true rel-pre old; o live)" "$(printf 'true\nfalse')"
 
 echo
 if [ "$FAILS" -gt 0 ]; then echo "$FAILS failed"; exit 1; fi

@@ -286,9 +286,16 @@ cmd_notes() {
 #   - still a pre-release, or no Release: its deploy never passed, so
 #     deploy again;
 #   - promoted: it was live and someone rolled back on purpose, so leave it.
+# Also outputs live=true only when /health/build already reports SHA. With
+# a skipped deploy, that is the only proof the Release may be promoted.
 cmd_should_deploy() {
   : "${SHA:?}"
   local state
+  if [ -n "${LIVE_SHA:-}" ] && [ "$LIVE_SHA" = "$SHA" ]; then
+    out live true
+  else
+    out live false
+  fi
   if [ "${CUT:-}" = "true" ]; then
     echo "release moved; deploying $SHA."
     out deploy true
