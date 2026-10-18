@@ -292,6 +292,14 @@ export const programsService = {
     return apiClient.delete<{ archived: boolean }>(`/programs/${id}`);
   },
 
+  /**
+   * Undo an archive: the program returns to published (its latest version
+   * is published) or draft. A program that isn't archived comes back as is.
+   */
+  restoreTemplate(id: string): Promise<ApiResponse<ProgramTemplateDetail>> {
+    return apiClient.post<ProgramTemplateDetail>(`/programs/${id}/restore`, {});
+  },
+
   // ── Assignment & monitoring ────────────────────────────────────
   assign(
     id: string,
