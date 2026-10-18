@@ -3,8 +3,9 @@ name: Release train
 # Ship whatever has merged to main. Nobody needs to be present.
 #
 # Normally started by the API's release train, right after the API passed
-# its deploy gate (or had nothing to deploy). 23:37 UTC is the fallback, in
-# case the API train could not start this one; Run workflow is the early cut.
+# its deploy gate (or had nothing to deploy). The 23:37 UTC schedule is a
+# fallback that runs only if the API train did not start this one today
+# (UTC); Run workflow is the early cut.
 #
 # Netlify's production branch is `release`, so moving that branch is the
 # deploy. Netlify listens through its own GitHub webhook, which fires for a
@@ -44,8 +45,32 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+      actions: read
     steps:
-      - uses: actions/checkout@v4
+      # The 23:37 schedule is only a fallback: if the API train (or anyone)
+      # already ran this workflow by hand today, UTC, there is nothing to do.
+      - name: Skip the fallback if the API train already started this today
+        id: fallback
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "schedule" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RAN=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow release-train.yml --event workflow_dispatch \
+            --created ">=$(date -u +%F)" --json databaseId --jq length)
+          if [ "${RAN:-0}" -gt 0 ]; then
+            echo "Already started by workflow_dispatch today ($RAN run(s)); the fallback has nothing to do."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The API release train did not start this workflow today; running as the fallback."
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.fallback.outputs.go == 'true'
         with:
           ref: main
           fetch-depth: 0
@@ -53,6 +78,7 @@ jobs:
 
       - name: Anything to cut
         id: status
+        if: steps.fallback.outputs.go == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .github/scripts/release-cut.sh status
@@ -87,6 +113,7 @@ jobs:
 
       - name: Fast-forward release to main and tag it
         id: cut
+        if: steps.fallback.outputs.go == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           FALLBACK_TOKEN: ${{ secrets.RELEASE_TRAIN_TOKEN }}

@@ -66,7 +66,11 @@ cat > "$T/bin/gh" <<EOF
 #!/usr/bin/env bash
 R="$T/releases"
 case "\$1 \$2" in
-  "release view") [ -f "\$R/\$3" ] ;;
+  "release view")
+    [ -f "\$R/\$3" ] || exit 1
+    case "\$*" in
+      *--json*) if grep -q 'flags=prerelease' "\$R/\$3"; then echo true; else echo false; fi ;;
+    esac ;;
   "release create"|"release edit")
     tag=\$3; verb=\$2; flags=""; nf=""
     shift 3
@@ -136,6 +140,23 @@ grep -qx -- '- Runs a boot migration (#12)' "$T/releases/release-n1" && pass "no
 grep -qx 'Previous release: release-n0 (roll back to this)' "$T/releases/release-n1" && pass "notes name the previous release" || fail "notes name the previous release"
 expect_eq "rerun edits instead of creating" "$(notes release-n1 release-n0 true; head -1 "$T/releases/release-n1")" "$(printf '0\nverb=edit flags=')"
 expect_eq "first release has no Watch out lines" "$(notes release-n2 ''; grep -c 'None flagged.' "$T/releases/release-n2")" "$(printf '0\n1')"
+
+# On a runner the token mask goes to stderr, so it cannot corrupt a sha.
+expect_eq "status on a runner still reads clean shas" \
+  "$(GITHUB_ACTIONS=true run status; o release_sha)" "$(printf '0\n%s' "$(git -C "$T/origin.git" rev-parse release)")"
+
+# ----------------------------------------------------------- should-deploy
+sd() { : > "$T/out"; (CUT=$1 SHA=head TAG=$2 LIVE_SHA=$3 bash "$SCRIPT" should-deploy) >"$T/log" 2>&1; o deploy; }
+echo "verb=create flags=prerelease" > "$T/releases/rel-pre"
+echo "verb=edit flags=" > "$T/releases/rel-promoted"
+expect_eq "a new cut deploys" "$(sd true rel-promoted old)" "true"
+expect_eq "already serving the head: no deploy" "$(sd false rel-promoted head)" "false"
+expect_eq "head never passed its deploy (pre-release): retry" "$(sd false rel-pre old)" "true"
+expect_eq "head has no Release: retry" "$(sd false rel-missing old)" "true"
+expect_eq "no tag at the head: retry" "$(sd false '' old)" "true"
+expect_eq "promoted head, older build live: a rollback, left alone" "$(sd false rel-promoted old)" "false"
+grep -q 'deliberate rollback' "$T/log" && pass "rollback warning explains itself" || fail "rollback warning explains itself"
+expect_eq "API not answering: no deploy" "$(sd false rel-pre '')" "false"
 
 echo
 if [ "$FAILS" -gt 0 ]; then echo "$FAILS failed"; exit 1; fi

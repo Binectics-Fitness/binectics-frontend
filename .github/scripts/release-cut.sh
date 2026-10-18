@@ -10,6 +10,7 @@
 #   release-cut.sh notes         write (or rewrite) the GitHub Release for TAG
 #   release-cut.sh watch-out N   print the Watch out lines of PR N's body,
 #                                read from stdin
+#   release-cut.sh should-deploy API only: deploy the release head now?
 #
 # Runs on a GitHub runner with nothing but git, gh and python3: no npm
 # install. Inputs come from the environment:
@@ -50,7 +51,8 @@ authed_git() {
   local token=$1 basic
   shift
   basic=$(printf 'x-access-token:%s' "$token" | base64 | tr -d '\n')
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then echo "::add-mask::$basic"; fi
+  # stderr: stdout may be a pipe (remote_head) that would swallow it.
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then echo "::add-mask::$basic" >&2; fi
   git -c http.https://github.com/.extraheader= \
       -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $basic" "$@"
 }
@@ -274,10 +276,52 @@ cmd_notes() {
   fi
 }
 
+# API only: should this run deploy the release head?
+#   CUT       the cut step's `cut` output
+#   SHA       the release head
+#   TAG       the release tag at SHA (may be empty)
+#   LIVE_SHA  what /health/build reports now (empty if it did not answer)
+# A new cut always deploys. Otherwise a live build that is not the release
+# head means one of two things, told apart by the tag's GitHub Release:
+#   - still a pre-release, or no Release: its deploy never passed, so
+#     deploy again;
+#   - promoted: it was live and someone rolled back on purpose, so leave it.
+cmd_should_deploy() {
+  : "${SHA:?}"
+  local state
+  if [ "${CUT:-}" = "true" ]; then
+    echo "release moved; deploying $SHA."
+    out deploy true
+    return 0
+  fi
+  if [ "${LIVE_SHA:-}" = "$SHA" ]; then
+    echo "The API is already serving the release head ($SHA)."
+    out deploy false
+    return 0
+  fi
+  if [ -z "${LIVE_SHA:-}" ]; then
+    echo "::warning::The API did not report a build on /health/build, so this run cannot tell a failed deploy from a rollback. Not deploying; check the API."
+    out deploy false
+    return 0
+  fi
+  state=missing
+  if [ -n "${TAG:-}" ]; then
+    state=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease 2>/dev/null || echo missing)
+  fi
+  if [ "$state" = "false" ]; then
+    echo "::warning::The API serves $LIVE_SHA, not the release head $SHA, but ${TAG:-the head} was already promoted, so it did go live once: this is a deliberate rollback. Not redeploying. Revert the bad PR on main; the next cut ships the revert."
+    out deploy false
+  else
+    echo "::warning::The API serves $LIVE_SHA but release is at $SHA, and ${TAG:-the head} never passed its deploy (Release: $state). Deploying the release head again."
+    out deploy true
+  fi
+}
+
 case "${1:-}" in
   status) cmd_status ;;
   cut) cmd_cut ;;
   notes) cmd_notes ;;
   watch-out) cmd_watch_out "${2:?PR number}" ;;
-  *) echo "usage: $0 status|cut|notes|watch-out N" >&2; exit 2 ;;
+  should-deploy) cmd_should_deploy ;;
+  *) echo "usage: $0 status|cut|notes|watch-out N|should-deploy" >&2; exit 2 ;;
 esac
