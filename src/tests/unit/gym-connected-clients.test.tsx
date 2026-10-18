@@ -136,16 +136,23 @@ describe("gym members: the Connected list", () => {
   it("Remove asks first, ends the connection, and reloads the list", async () => {
     list.mockResolvedValueOnce({ success: true, data: [ada, ben] }).mockResolvedValue({ success: true, data: [ben] });
     end.mockResolvedValue({ success: true, data: { ended: true } });
-    const confirm = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const confirmSpy = vi.spyOn(window, "confirm");
     wrap(<ConnectedClients orgId="o1" />);
 
+    // The in-app confirmation, not a browser dialog.
     await userEvent.click(await screen.findByRole("button", { name: "Remove Ada Obi" }));
-    expect(end).not.toHaveBeenCalled(); // declined the confirm
+    expect(screen.getByRole("heading", { name: "Remove Ada Obi?" })).toBeInTheDocument();
+    expect(screen.getByText(/their seat is freed\. They keep their account and history/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("heading", { name: "Remove Ada Obi?" })).toBeNull();
+    expect(end).not.toHaveBeenCalled();
 
     await userEvent.click(screen.getByRole("button", { name: "Remove Ada Obi" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove" }));
     await waitFor(() => expect(end).toHaveBeenCalledWith("o1", "cp1"));
-    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(confirmSpy).not.toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith("Ada Obi removed, their seat is freed");
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Remove Ada Obi?" })).toBeNull());
     await waitFor(() => expect(screen.queryByText("Ada Obi")).toBeNull());
     expect(screen.getByText("Connected · 1")).toBeInTheDocument();
   });
@@ -153,10 +160,12 @@ describe("gym members: the Connected list", () => {
   it("a refused remove says why", async () => {
     list.mockResolvedValue({ success: true, data: [ada] });
     end.mockResolvedValue({ success: false, message: "They hold a membership here." } as never);
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     wrap(<ConnectedClients orgId="o1" />);
     await userEvent.click(await screen.findByRole("button", { name: "Remove Ada Obi" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove" }));
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("They hold a membership here."));
+    // Still listed: nothing was removed.
+    expect(screen.getByText("Ada Obi")).toBeInTheDocument();
   });
 
   it("sits on the Members page under the members table", async () => {

@@ -5,6 +5,7 @@ import { DSCard, DSCardHead } from "@/components/ds/DSCard";
 import { InviteClientModal } from "@/components/ds/modals/InviteClientModal";
 import { toast } from "@/components/Toast";
 import { useGymViewer } from "@/hooks/useGymViewer";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { holds, TeamPermission } from "@/lib/gymStaffNav";
 import { useEndOrgConnection, useOrgConnectedClients } from "@/lib/queries/marketplace";
 import type { OrgConnectedClient } from "@/lib/api/marketplace";
@@ -15,7 +16,9 @@ function fullName(p: { first_name: string | null; last_name: string | null }): s
 }
 
 /**
- * People connected to the gym who hold no membership: accepting a
+ * People connected to the gym who hold no membership (only links the gym
+ * owns: a staff trainer's own clients stay theirs and the API leaves them
+ * out). Accepting a
  * connection request makes someone the gym's client (and takes a seat),
  * but the members table above lists memberships only. Each row offers a
  * plan (the Add member flow, filled in) or ends the connection, which
@@ -39,6 +42,7 @@ export function ConnectedClients({
   const end = useEndOrgConnection(orgId);
   const { fmtDate } = useOrgFormat();
   const [offerTo, setOfferTo] = useState<OrgConnectedClient | null>(null);
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
     if (refreshKey && canManage) void refetch();
@@ -46,27 +50,32 @@ export function ConnectedClients({
 
   if (!canManage || people.length === 0) return null;
 
-  const remove = async (person: OrgConnectedClient) => {
+  const remove = (person: OrgConnectedClient) => {
     const name = fullName(person.client) || person.client.email || "this person";
-    if (
-      !window.confirm(
-        `Remove ${name}? They stop being the gym's client and their seat is freed. They keep their account and history, and can send a new request later.`,
-      )
-    )
-      return;
-    try {
-      await end.mutateAsync(person.profile_id);
-      toast.success(`${name} removed, their seat is freed`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't remove this person");
-    }
+    requestConfirmation({
+      title: `Remove ${name}?`,
+      description:
+        "They stop being the gym's client and their seat is freed. They keep their account and history, and can send a new request later.",
+      confirmLabel: "Remove",
+      confirmVariant: "danger",
+      // Errors are reported here (with the API's reason), not by the
+      // modal's generic alert.
+      onConfirm: async () => {
+        try {
+          await end.mutateAsync(person.profile_id);
+          toast.success(`${name} removed, their seat is freed`);
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Couldn't remove this person");
+        }
+      },
+    });
   };
 
   return (
     <DSCard>
       <DSCardHead
         title={`Connected · ${people.length}`}
-        subtitle="Clients of the gym without a membership. Each holds a seat. Offer them a plan, or remove them to free it."
+        subtitle="The gym's clients without a membership: requests you accepted, and people you added. Your trainers' own clients aren't listed. Each counts toward your seats until removed."
       />
       <ul aria-label="Connected without a membership">
         {people.map((person, i) => {
@@ -112,7 +121,7 @@ export function ConnectedClients({
                   className="btn-ghost-v2 sm"
                   disabled={end.isPending}
                   aria-label={`Remove ${name}`}
-                  onClick={() => void remove(person)}
+                  onClick={() => remove(person)}
                 >
                   Remove
                 </button>
@@ -134,6 +143,7 @@ export function ConnectedClients({
           onEnrolled={onEnrolled}
         />
       )}
+      {confirmationModal}
     </DSCard>
   );
 }
