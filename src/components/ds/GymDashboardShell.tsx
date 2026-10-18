@@ -7,6 +7,7 @@ import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 import { useGymViewer } from "@/hooks/useGymViewer";
+import { useOrgPendingRequestCount } from "@/lib/queries/orgRequests";
 import {
   GYM_NAV_ACCESS,
   allows,
@@ -24,6 +25,7 @@ export const SIDEBAR: NavSection[] = [
     { name: "Overview", href: "/dashboard/gym-owner", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Members", href: "/dashboard/gym-owner/members", icon: <I><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></I> },
     { name: "Schedule", href: "/dashboard/gym-owner/schedule", icon: <I><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></I> },
+    { name: "Requests", href: "/dashboard/gym-owner/requests", icon: <I><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></I> },
     { name: "Check‑ins", href: "/dashboard/gym-owner/checkins", icon: <I d="M12 22V2M2 7l10 5 10-5M2 17l10 5 10-5" /> },
     { name: "Check-in kiosk", href: "/dashboard/gym-owner/kiosk", icon: <I><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h.01M20 17v3h-3"/></I> },
   ]},
@@ -69,8 +71,15 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
   const unreadMessages = useMessagingUnread();
   // Billing and refunds are the owner's: staff don't ask for the count.
   const refundsWaiting = useRefundsAttentionCount(viewer.isOwner);
+  // Only asked for when the role may see requests; the API refuses the rest.
+  const requestsWaiting = useOrgPendingRequestCount(viewer.orgId ?? undefined, allows(viewer, GYM_NAV_ACCESS.Requests));
   const sections = gymSidebarFor(
-    withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+    withNavBadge(
+      withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+      "Requests",
+      requestsWaiting,
+      "warn",
+    ),
     viewer,
   );
   const { staff } = viewer;

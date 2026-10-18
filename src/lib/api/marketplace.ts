@@ -238,6 +238,15 @@ export interface CreateMarketplaceRequestPayload {
   goals?: string[];
 }
 
+/** Waiting on the gym, or the rest (accepted, declined, withdrawn, expired). */
+export type OrgRequestListStatus = "pending" | "answered";
+
+/** One page of a gym's requests; `next_cursor` is null on the last page. */
+export interface OrgRequestsPage {
+  requests: MarketplaceRequest[];
+  next_cursor: string | null;
+}
+
 export interface TransferClientRequest {
   from_profile_id: string;
   to_listing_id: string;
@@ -943,32 +952,65 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * Requests members sent the gym's (org's) listing, newest first, a page at
+   * a time. `status` narrows to those waiting on the gym or the answered
+   * rest. Needs marketplace:view_requests (the owner always has it). A gym
+   * with no listing gets an empty page.
+   */
   async getOrgListingRequests(
     organizationId: string,
-  ): Promise<ApiResponse<MarketplaceRequest[]>> {
-    return await apiClient.get<MarketplaceRequest[]>(
-      `/marketplace/organizations/${organizationId}/listing/requests`,
+    opts: { status?: OrgRequestListStatus; limit?: number; cursor?: string } = {},
+  ): Promise<ApiResponse<OrgRequestsPage>> {
+    const params = new URLSearchParams();
+    if (opts.status) params.set("status", opts.status);
+    if (opts.limit) params.set("limit", String(opts.limit));
+    if (opts.cursor) params.set("cursor", opts.cursor);
+    const query = params.toString();
+    const res = await apiClient.get<MarketplaceRequest[]>(
+      `/marketplace/organizations/${organizationId}/requests${query ? `?${query}` : ""}`,
+    );
+    if (!res.success) return res as unknown as ApiResponse<OrgRequestsPage>;
+    // The API answers { success, data: MarketplaceRequest[], next_cursor }.
+    const raw = res as unknown as { data?: MarketplaceRequest[]; next_cursor?: string | null };
+    return {
+      success: true,
+      data: { requests: raw.data ?? [], next_cursor: raw.next_cursor ?? null },
+    };
+  },
+
+  /** How many requests wait on the gym, for the nav badge. */
+  async getOrgPendingRequestCount(
+    organizationId: string,
+  ): Promise<ApiResponse<{ count: number }>> {
+    return await apiClient.get<{ count: number }>(
+      `/marketplace/organizations/${organizationId}/requests/pending-count`,
     );
   },
 
+  /**
+   * Accepts a request to the gym's listing (marketplace:respond_requests).
+   * The API answers with the client profile it created or found.
+   */
   async acceptOrgRequest(
     organizationId: string,
     requestId: string,
     responseNote?: string,
-  ): Promise<ApiResponse<MarketplaceRequest>> {
-    return await apiClient.patch<MarketplaceRequest>(
-      `/marketplace/organizations/${organizationId}/listing/requests/${requestId}/accept`,
+  ): Promise<ApiResponse<{ _id: string }>> {
+    return await apiClient.patch<{ _id: string }>(
+      `/marketplace/organizations/${organizationId}/requests/${requestId}/accept`,
       responseNote ? { response_note: responseNote } : {},
     );
   },
 
+  /** Declines a request to the gym's listing. The API returns only a message. */
   async rejectOrgRequest(
     organizationId: string,
     requestId: string,
     responseNote?: string,
-  ): Promise<ApiResponse<MarketplaceRequest>> {
-    return await apiClient.patch<MarketplaceRequest>(
-      `/marketplace/organizations/${organizationId}/listing/requests/${requestId}/reject`,
+  ): Promise<ApiResponse<void>> {
+    return await apiClient.patch<void>(
+      `/marketplace/organizations/${organizationId}/requests/${requestId}/reject`,
       responseNote ? { response_note: responseNote } : {},
     );
   },

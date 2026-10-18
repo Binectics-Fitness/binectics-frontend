@@ -62,6 +62,16 @@ describe("legacyLinkTarget", () => {
     expect(legacyLinkTarget("/dashboard/messages", `?thread=${id}`, "ADMIN")).toBeNull();
   });
 
+  it("sends a gym owner from the solo requests page to the gym's, keeping a well-formed request id", () => {
+    expect(legacyLinkTarget("/dashboard/marketplace/requests", `?requestId=${id}`, "GYM_OWNER")).toBe(
+      `/dashboard/gym-owner/requests?requestId=${id}`,
+    );
+    expect(legacyLinkTarget("/dashboard/marketplace/requests", "?requestId=../x", "GYM_OWNER")).toBe("/dashboard/gym-owner/requests");
+    expect(legacyLinkTarget("/dashboard/marketplace", "", "GYM_OWNER")).toBe("/dashboard/gym-owner/requests");
+    expect(legacyLinkTarget("/dashboard/marketplace/requests", `?requestId=${id}`, "TRAINER")).toBeNull();
+    expect(legacyLinkTarget("/dashboard/marketplace/requests", `?requestId=${id}`, "DIETITIAN")).toBeNull();
+  });
+
   it("leaves real pages alone", () => {
     for (const p of ["/dashboard/member/billing", "/dashboard/team", "/dashboard/marketplace/requests", "/marketplace"]) {
       expect(legacyLinkTarget(p, "", "USER")).toBeNull();

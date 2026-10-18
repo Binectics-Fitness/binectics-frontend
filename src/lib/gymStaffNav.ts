@@ -67,6 +67,9 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Members: needs(P.MARKETPLACE_MANAGE_LISTING),
   // GET /teams/organizations/:id/classes (changing classes: manage_organization)
   Schedule: needs(P.VIEW_MEMBERS),
+  // GET /marketplace/organizations/:id/requests (+ /pending-count). Answering
+  // needs respond_requests, checked on the page's buttons.
+  Requests: needs(P.MARKETPLACE_VIEW_REQUESTS),
   // GET /checkins/organizations/:id
   "Check‑ins": needs(P.MARKETPLACE_MANAGE_LISTING),
   // GET /checkins/organizations/:id/kiosk-token
@@ -119,6 +122,7 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   // GET /marketplace/organizations/:id/member-billing/charges: owner only
   ["/dashboard/gym-owner/card-renewals", OWNER],
   ["/dashboard/gym-owner/schedule", NAV.Schedule],
+  ["/dashboard/gym-owner/requests", NAV.Requests],
   ["/dashboard/gym-owner/checkins", NAV["Check‑ins"]],
   ["/dashboard/gym-owner/kiosk", NAV["Check-in kiosk"]],
   ["/dashboard/gym-owner/devices", NAV["Check-in kiosk"]],

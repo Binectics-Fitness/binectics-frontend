@@ -36,14 +36,14 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 const EXPECTED: Record<string, string[]> = {
   owner: SIDEBAR.flatMap((s) => s.items.map((i) => i.name)),
   admin: [
-    "Overview", "Members", "Schedule", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
+    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
     "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
   ],
   manager: [
-    "Overview", "Members", "Schedule", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
+    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
     "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
   ],
-  assistant: ["Schedule", "Team & roles", "Locations", "Staff"],
+  assistant: ["Schedule", "Requests", "Team & roles", "Locations", "Staff"],
   front_desk: ["Schedule", "Team & roles", "Locations", "Staff", "Messages"],
 };
 const OWNER_ONLY = ["Payouts", "Refunds", "Billing", "My listing", "Forms", "Loyalty"];
@@ -135,6 +135,14 @@ vi.mock("@/lib/queries/refunds", () => ({
   },
 }));
 vi.mock("@/components/ds/ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
+const requestCountCalls: { orgId: string | undefined; enabled: boolean }[] = [];
+let mockPendingRequests = 0;
+vi.mock("@/lib/queries/orgRequests", () => ({
+  useOrgPendingRequestCount: (orgId: string | undefined, enabled = true) => {
+    requestCountCalls.push({ orgId, enabled });
+    return enabled ? mockPendingRequests : 0;
+  },
+}));
 
 function sidebar() {
   return within(screen.getByRole("complementary", { name: "Sidebar navigation" }));
@@ -171,6 +179,8 @@ beforeEach(() => {
   mockUser = { id: "u1", role: "GYM_OWNER", first_name: "Dapo", last_name: "A" };
   replace.mockReset();
   refundCountCalls.length = 0;
+  requestCountCalls.length = 0;
+  mockPendingRequests = 0;
 });
 afterEach(() => act(() => resetShellNav()));
 
@@ -204,6 +214,34 @@ describe("GymDashboardShell for a gym's staff", () => {
     mockUser = { id: "u1", role: "USER", first_name: "Tobi", last_name: "B" };
     renderShell();
     expect(refundCountCalls.every((enabled) => enabled === false)).toBe(true);
+  });
+
+  it("badges Requests with the gym's pending count for the owner", () => {
+    mockPendingRequests = 3;
+    renderShell();
+    const link = sidebar().getByRole("link", { name: /Requests/ });
+    expect(link).toHaveAttribute("href", "/dashboard/gym-owner/requests");
+    expect(link).toHaveTextContent("3");
+    expect(requestCountCalls.at(-1)).toEqual({ orgId: "gym", enabled: true });
+  });
+
+  it("asks for the pending count only when the role may see requests", () => {
+    mockOrg = staffOrg("front_desk");
+    mockUser = { id: "u1", role: "USER", first_name: "Tobi", last_name: "B" };
+    mockPendingRequests = 3;
+    renderShell();
+    expect(sidebar().queryByRole("link", { name: /Requests/ })).not.toBeInTheDocument();
+    expect(requestCountCalls.every((c) => c.enabled === false)).toBe(true);
+  });
+
+  it("covers the Requests page for view_requests only, and shows one line to a role without it", () => {
+    expect(gymPageRule("/dashboard/gym-owner/requests")).toEqual({ all: [P.MARKETPLACE_VIEW_REQUESTS] });
+    mockOrg = staffOrg("front_desk");
+    mockUser = { id: "u1", role: "USER", first_name: "Tobi", last_name: "B" };
+    mockPath = "/dashboard/gym-owner/requests";
+    renderShell("Requests");
+    expect(screen.queryByText("page body")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("shows one line, not the page, on a deep link the role doesn't cover", () => {
