@@ -259,7 +259,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             <div className="flex-1">
               <h1 className="text-[30px] font-medium tracking-[-0.024em]" style={{ color: "var(--ink)" }}>{name}</h1>
               <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-                {client.is_active ? "Active client" : "Paused"} &middot; joined {fmtDate(client.created_at)}
+                {client.is_active ? "Active client" : "Former client"} &middot; joined {fmtDate(client.created_at)}
               </p>
             </div>
             {typeof client.client_id === "object" && client.client_id?._id && (
