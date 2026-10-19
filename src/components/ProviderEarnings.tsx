@@ -23,8 +23,9 @@ import { minorToMajor, formatMinorMap, dominantCurrency } from "@/lib/money/mino
  *
  *  1. Settled revenue — real money off the org transactions ledger.
  *  2. Session activity — booking counts are real; the money figure is an
- *     ESTIMATE derived from consultation-type prices (bookings aren't paid
- *     through Binectics yet) and must stay labelled as one.
+ *     ESTIMATE: session-type prices times completed sessions, paid or not,
+ *     and must stay labelled as one. A session paid by card is in both
+ *     sections, so the page never adds the two figures together.
  *
  * Render it as the sole child of a provider dashboard shell; it returns a
  * fragment so the shell's own <main> flex gap still applies.
@@ -413,7 +414,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
             {/* Estimated value */}
             <SectionCard
               title="Estimated session value"
-              sub="Estimated from your session prices, bookings aren't paid through Binectics yet"
+              sub={`Your ${sessionNoun} prices times the ${sessionNoun}s you completed, paid or not. Paid ones are also in settled revenue above, so don't add the two.`}
             >
               <div className="px-4.5 py-4 flex flex-col gap-2.5">
                 {estimatedEntries.length === 0 ? (

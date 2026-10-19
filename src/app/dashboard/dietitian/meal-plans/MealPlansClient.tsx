@@ -698,8 +698,10 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     const isDocument = plan.delivery_type === DietPlanDeliveryType.DOCUMENT;
     const data: UpdateDietPlanRequest = {
       title: form.title.trim(),
-      description: form.description.trim() || undefined,
-      dietitian_notes: form.dietitian_notes.trim() || undefined,
+      // Always sent, empty included: leaving the key out would keep the old
+      // text, so a cleared description or note would come back.
+      description: form.description.trim(),
+      dietitian_notes: form.dietitian_notes.trim(),
       // Document plans keep their content in the file — never overwrite meals.
       ...(isDocument ? {} : { days: daysStateToRequests(form.days) }),
     };

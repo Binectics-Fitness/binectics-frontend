@@ -10272,23 +10272,23 @@ export interface components {
             /** @example 52 */
             carbsG?: number;
             /** @example Grains */
-            category?: string;
+            category?: string | null;
             /** @example 11 */
             fatG?: number;
             /** @example 2.4 */
-            fiberG?: number;
+            fiberG?: number | null;
             /** @example Jollof rice */
             name?: string;
             /** @example Prepared with minimal oil. */
-            notes?: string;
+            notes?: string | null;
             /** @example 7.5 */
             proteinG?: number;
             /** @example 1 cup (200 g) */
             servingLabel?: string;
             /** @example 520 */
-            sodiumMg?: number;
+            sodiumMg?: number | null;
             /** @example 3.1 */
-            sugarG?: number;
+            sugarG?: number | null;
         };
         UpdateFormDto: {
             /**

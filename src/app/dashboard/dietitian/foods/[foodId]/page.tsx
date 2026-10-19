@@ -50,10 +50,12 @@ function parseForm(form: FoodForm): { payload: UpdateFoodItemRequest } | { error
   if (!form.name.trim()) return { error: "Name is required." };
   if (!form.servingLabel.trim()) return { error: "Serving label is required." };
 
-  const parse = (raw: string, label: string, required: boolean): number | undefined | { error: string } => {
+  // An emptied optional figure is sent as null, so the API clears it
+  // (leaving the key out would keep the old value).
+  const parse = (raw: string, label: string, required: boolean): number | null | { error: string } => {
     const trimmed = raw.trim();
     if (trimmed === "") {
-      return required ? { error: `${label} is required.` } : undefined;
+      return required ? { error: `${label} is required.` } : null;
     }
     const n = Number(trimmed);
     if (!Number.isFinite(n) || n < 0) return { error: `${label} must be a number ≥ 0.` };
@@ -69,7 +71,7 @@ function parseForm(form: FoodForm): { payload: UpdateFoodItemRequest } | { error
     ["sugarG", "Sugar", false],
     ["sodiumMg", "Sodium", false],
   ];
-  const nums: Partial<Record<keyof FoodForm, number | undefined>> = {};
+  const nums: Partial<Record<keyof FoodForm, number | null>> = {};
   for (const [key, label, required] of fields) {
     const result = parse(form[key], label, required);
     if (typeof result === "object" && result !== null) return result;
@@ -79,7 +81,7 @@ function parseForm(form: FoodForm): { payload: UpdateFoodItemRequest } | { error
   return {
     payload: {
       name: form.name.trim(),
-      category: form.category.trim() || undefined,
+      category: form.category.trim() || null,
       servingLabel: form.servingLabel.trim(),
       caloriesKcal: nums.caloriesKcal as number,
       proteinG: nums.proteinG as number,
@@ -88,7 +90,7 @@ function parseForm(form: FoodForm): { payload: UpdateFoodItemRequest } | { error
       fiberG: nums.fiberG,
       sugarG: nums.sugarG,
       sodiumMg: nums.sodiumMg,
-      notes: form.notes.trim() || undefined,
+      notes: form.notes.trim() || null,
     },
   };
 }

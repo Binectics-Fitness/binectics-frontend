@@ -58,7 +58,19 @@ export interface CreateFoodItemRequest {
   notes?: string;
 }
 
-export type UpdateFoodItemRequest = Partial<CreateFoodItemRequest> & {
+/**
+ * A missing key leaves the stored value alone; `null` clears an optional
+ * field (category, fibre, sugar, sodium, notes). The required figures
+ * can't be cleared.
+ */
+export type UpdateFoodItemRequest = Partial<
+  Omit<CreateFoodItemRequest, "category" | "fiberG" | "sugarG" | "sodiumMg" | "notes">
+> & {
+  category?: string | null;
+  fiberG?: number | null;
+  sugarG?: number | null;
+  sodiumMg?: number | null;
+  notes?: string | null;
   isArchived?: boolean;
 };
 
