@@ -19,6 +19,14 @@ describe("gym settings diff", () => {
     expect(taxRateError("7.5")).toBeNull();
   });
 
+  it("keeps a typo the field now passes through as text, rather than clearing the rate", () => {
+    // A type="number" input reported these as "", which went as null.
+    for (const typo of ["1e", "7,5"]) {
+      expect(diff(base, { ...base, tax_rate: typo })).toEqual({ tax_rate: typo });
+      expect(taxRateError(typo)).not.toBeNull();
+    }
+  });
+
   it("sends a changed rate as a number", () => {
     expect(diff(base, { ...base, tax_rate: "10" })).toEqual({ tax_rate: 10 });
   });

@@ -399,7 +399,9 @@ export function SettingsClient() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
                 <div className="flex flex-col gap-1.5">
-                  <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
+                  {/* Text, not type="number": a number input reports a typo ("1e", "7,5") as "",
+                      which would clear the saved rate; as text the typo stays and taxRateError refuses it. */}
+                  <TextField label="Tax rate %" inputMode="decimal" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
                   {form && taxRateError(form.tax_rate) && (
                     <span role="alert" className="text-[11px]" style={{ color: "var(--danger)" }}>{taxRateError(form.tax_rate)}</span>
                   )}
@@ -523,11 +525,11 @@ function SectionHeading({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function TextField({ label, value, onChange, disabled, type = "text" }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string }) {
+function TextField({ label, value, onChange, disabled, type = "text", inputMode }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string; inputMode?: "decimal" }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Eyebrow as="label">{label}</Eyebrow>
-      <input type={type} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+      <input type={type} inputMode={inputMode} aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
     </div>
   );
 }
