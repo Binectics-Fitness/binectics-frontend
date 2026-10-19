@@ -923,7 +923,8 @@ export interface LoyaltyRewardInput {
   description?: string;
   points_cost: number;
   image_url?: string;
-  max_redemptions?: number;
+  /** null clears an edited reward's limit. */
+  max_redemptions?: number | null;
   is_active?: boolean;
 }
 

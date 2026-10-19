@@ -101,6 +101,40 @@ describe("provider loyalty settings", () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  it("clears an edited reward's emptied description and limit", async () => {
+    vi.spyOn(loyaltyService, "getOrgSettings").mockReturnValue(
+      ok({ organization_id: "org1", enabled: true, updated_at: null }) as never,
+    );
+    vi.spyOn(loyaltyService, "listOrgRewards").mockReturnValue(
+      ok([
+        {
+          _id: "r1",
+          name: "Smoothie",
+          description: "Cold",
+          points_cost: 100,
+          max_redemptions: 5,
+          redemption_count: 0,
+          is_active: true,
+          created_at: "",
+          updated_at: "",
+        },
+      ]) as never,
+    );
+    const update = vi.spyOn(loyaltyService, "updateOrgReward").mockReturnValue(ok({}) as never);
+    renderWith(<ProviderLoyaltyPanel />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Description (optional)"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Limit (optional)"), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save reward" }));
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        "org1",
+        "r1",
+        expect.objectContaining({ description: "", max_redemptions: null }),
+      ),
+    );
+  });
+
   it("a teammate without manage-organization sees the switch but can't change it", async () => {
     currentOrg = { ...org, is_owner: false, can_manage_organization: false };
     vi.spyOn(loyaltyService, "getOrgSettings").mockReturnValue(
