@@ -140,8 +140,10 @@ export function ProviderLoyaltyPanel() {
       name: draft.name.trim(),
       points_cost: cost,
       is_active: draft.is_active,
-      ...(draft.description.trim() ? { description: draft.description.trim() } : {}),
-      ...(cap !== undefined ? { max_redemptions: cap } : {}),
+      // Editing sends an emptied description ('') and limit (null) so
+      // clearing them sticks; a new reward leaves them out.
+      ...(draft.id || draft.description.trim() ? { description: draft.description.trim() } : {}),
+      ...(cap !== undefined ? { max_redemptions: cap } : draft.id ? { max_redemptions: null } : {}),
     };
     try {
       await save.mutateAsync({ rewardId: draft.id, data });
