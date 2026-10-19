@@ -731,6 +731,12 @@ export interface MembershipSubscription {
   card_not_saved_reason?: string;
   /** When the current pause began. Null in every state except `paused`. */
   paused_at?: string | null;
+  /**
+   * Who started the current pause: the member (their own break) or the gym
+   * (at the desk, api #282). Null in every state except `paused`; null or
+   * absent on pauses made before the API recorded it, which were the member's.
+   */
+  paused_by?: "member" | "gym" | null;
   /** Total time spent paused, in ms, across all pauses. Credited to end_date. */
   accumulated_pause_ms?: number;
   /**

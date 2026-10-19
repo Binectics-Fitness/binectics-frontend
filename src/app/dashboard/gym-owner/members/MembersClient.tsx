@@ -43,8 +43,14 @@ import {
   type RecordRenewalMethod,
 } from "@/lib/api/memberBilling";
 import { formatMinor } from "@/lib/currencies/helpers";
-import { canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
-import { LiftSuspensionModal, SuspendMemberModal, holdDetailLine } from "./HoldActions";
+import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import {
+  LiftSuspensionModal,
+  PauseMemberModal,
+  ResumeMemberModal,
+  SuspendMemberModal,
+  holdDetailLine,
+} from "./HoldActions";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -129,13 +135,19 @@ function RowActions({
 }) {
   const router = useRouter();
   // The gym's inbox answers members: the owner, or staff whose role may.
-  const canMessageAsGym = holds(useGymViewer(), TeamPermission.MESSAGING_ANSWER_MEMBERS);
+  const viewer = useGymViewer();
+  const canMessageAsGym = holds(viewer, TeamPermission.MESSAGING_ANSWER_MEMBERS);
+  // Pause and resume for the member are member management (api #282 gates
+  // them on marketplace:manage_listing).
+  const canManageMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [recordRenewalOpen, setRecordRenewalOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [liftOpen, setLiftOpen] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const [resumeOpen, setResumeOpen] = useState(false);
   const { fmtDate } = useOrgFormat();
   const [busy, setBusy] = useState(false);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
@@ -346,8 +358,21 @@ function RowActions({
               Clear scheduled change ({scheduledPlan.name})
             </button>
           )}
-          {/* Gym-side holds. Pause and resume are the member's own (the API
-              takes them only from the member), so the gym gets suspend. */}
+          {/* Gym-side holds. Pause gives the paused days back (the member's
+              break, started at the desk); suspend doesn't. Either side may
+              resume a pause, whoever started it. */}
+          {canManageMembers && canPause(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setPauseOpen(true); }}>
+              Pause…
+            </button>
+          )}
+          {canManageMembers && canResume(sub) && (
+            <button type="button" className={item} style={{ color: "var(--ink)" }}
+              onClick={() => { setOpen(false); setResumeOpen(true); }}>
+              Resume…
+            </button>
+          )}
           {canSuspend(sub) && (
             <button type="button" className={item} style={{ color: "var(--ink)" }}
               onClick={() => { setOpen(false); setSuspendOpen(true); }}>
@@ -412,6 +437,22 @@ function RowActions({
         orgId={orgId}
         fmtDate={fmtDate}
         onClose={() => setLiftOpen(false)}
+        onDone={onUpdate}
+      />
+      <PauseMemberModal
+        open={pauseOpen}
+        sub={sub}
+        orgId={orgId}
+        fmtDate={fmtDate}
+        onClose={() => setPauseOpen(false)}
+        onDone={onUpdate}
+      />
+      <ResumeMemberModal
+        open={resumeOpen}
+        sub={sub}
+        orgId={orgId}
+        fmtDate={fmtDate}
+        onClose={() => setResumeOpen(false)}
         onDone={onUpdate}
       />
       {confirmationModal}
