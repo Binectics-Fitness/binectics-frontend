@@ -413,7 +413,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
 
             {/* Estimated value */}
             <SectionCard
-              title="Estimated session value"
+              title={`Estimated ${sessionNoun} value`}
               sub={`Your ${sessionNoun} prices times the ${sessionNoun}s you completed, paid or not. Paid ones are also in settled revenue above, so don't add the two.`}
             >
               <div className="px-4.5 py-4 flex flex-col gap-2.5">

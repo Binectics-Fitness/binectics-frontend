@@ -15,8 +15,14 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
-import { canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
-import { LiftSuspensionModal, SuspendMemberModal, holdDetailLine } from "../HoldActions";
+import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import {
+  LiftSuspensionModal,
+  PauseMemberModal,
+  ResumeMemberModal,
+  SuspendMemberModal,
+  holdDetailLine,
+} from "../HoldActions";
 
 function getMemberName(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
@@ -61,7 +67,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   const [subscription, setSubscription] = useState<MembershipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [holdDialog, setHoldDialog] = useState<"suspend" | "lift" | null>(null);
+  const [holdDialog, setHoldDialog] = useState<"suspend" | "lift" | "pause" | "resume" | null>(null);
 
   useEffect(() => {
     if (!currentOrg) return;
@@ -133,6 +139,8 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
     subscription.status === MembershipSubscriptionStatus.ACTIVE &&
     !!memberUserId &&
     holds(viewer, TeamPermission.MESSAGING_ANSWER_MEMBERS);
+  // Pause and resume for the member: marketplace:manage_listing (api #282).
+  const canManageMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
 
   const holdLine = holdDetailLine(subscription, fmtDate);
 
@@ -202,6 +210,16 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
+          {canManageMembers && canResume(subscription) && (
+            <button type="button" className="btn-primary-v2 md" onClick={() => setHoldDialog("resume")}>
+              Resume
+            </button>
+          )}
+          {canManageMembers && canPause(subscription) && (
+            <button type="button" className="btn-ghost-v2 md" onClick={() => setHoldDialog("pause")}>
+              Pause
+            </button>
+          )}
           {canSuspend(subscription) && (
             <button type="button" className="btn-ghost-v2 md" onClick={() => setHoldDialog("suspend")}>
               Suspend
@@ -288,6 +306,22 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           />
           <LiftSuspensionModal
             open={holdDialog === "lift"}
+            sub={subscription}
+            orgId={currentOrg._id}
+            fmtDate={fmtDate}
+            onClose={() => setHoldDialog(null)}
+            onDone={setSubscription}
+          />
+          <PauseMemberModal
+            open={holdDialog === "pause"}
+            sub={subscription}
+            orgId={currentOrg._id}
+            fmtDate={fmtDate}
+            onClose={() => setHoldDialog(null)}
+            onDone={setSubscription}
+          />
+          <ResumeMemberModal
+            open={holdDialog === "resume"}
             sub={subscription}
             orgId={currentOrg._id}
             fmtDate={fmtDate}
