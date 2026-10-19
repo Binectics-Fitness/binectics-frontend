@@ -1332,6 +1332,31 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * The gym pauses a membership for the member (api #282): access stops and
+   * the paused days are added back to end_date when it resumes. Active,
+   * unexpired memberships only; 409 RENEWAL_CHARGE_IN_PROGRESS while a card
+   * renewal is with Paystack. Answers with an unpopulated row.
+   */
+  async pauseOrgSubscription(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${encodeURIComponent(organizationId)}/subscriptions/${encodeURIComponent(subscriptionId)}/pause`,
+    );
+  },
+
+  /** The gym resumes a pause, whoever started it. end_date moves out by the time paused. */
+  async resumeOrgSubscription(
+    organizationId: string,
+    subscriptionId: string,
+  ): Promise<ApiResponse<MembershipSubscription>> {
+    return await apiClient.patch<MembershipSubscription>(
+      `/marketplace/organizations/${encodeURIComponent(organizationId)}/subscriptions/${encodeURIComponent(subscriptionId)}/resume`,
+    );
+  },
+
   /** Lift a suspension. end_date is unchanged: suspended days aren't returned. */
   async unsuspendOrgSubscription(
     organizationId: string,

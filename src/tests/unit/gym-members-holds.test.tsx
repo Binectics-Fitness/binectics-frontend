@@ -82,6 +82,8 @@ const list = vi.spyOn(marketplaceService, "getOrgMembershipSubscriptions");
 const one = vi.spyOn(marketplaceService, "getOrgMembershipSubscriptionById");
 const suspend = vi.spyOn(marketplaceService, "suspendOrgSubscription");
 const unsuspend = vi.spyOn(marketplaceService, "unsuspendOrgSubscription");
+const pause = vi.spyOn(marketplaceService, "pauseOrgSubscription");
+const resume = vi.spyOn(marketplaceService, "resumeOrgSubscription");
 vi.spyOn(marketplaceService, "getOrgMembershipPlans").mockResolvedValue({ success: true, data: [] });
 const billingStatus = vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue({ success: false } as never);
 
@@ -106,7 +108,7 @@ describe("gym members list: holds", () => {
     wrap(<GymMembersClient />);
     const paused = await rowOf("Tunde Bakare");
     expect(within(paused).getByText("Paused")).toBeInTheDocument();
-    expect(within(paused).getByTestId("hold-line")).toHaveTextContent(/^Paused since .+ \(4 days\)\. Ends .+ if they resume today\.$/);
+    expect(within(paused).getByTestId("hold-line")).toHaveTextContent(/^Paused by the member since .+ \(4 days\)\. Ends .+ if it resumes today\.$/);
     const suspended = await rowOf("Halima Yusuf");
     expect(within(suspended).getByText("Suspended")).toBeInTheDocument();
     expect(within(suspended).getByTestId("hold-line")).toHaveTextContent(/Suspended since .+: “Outstanding balance from March”/);
@@ -124,18 +126,102 @@ describe("gym members list: holds", () => {
     expect(screen.queryByText("Halima Yusuf")).not.toBeInTheDocument();
   });
 
-  it("offers Suspend on an active member, Lift on a suspended one, and neither (nor pause) on a paused one", async () => {
+  it("offers Pause and Suspend on an active member, Lift on a suspended one, and Resume on a paused one", async () => {
     wrap(<GymMembersClient />);
     await openMenu("Ngozi Okafor");
     expect(screen.getByRole("button", { name: "Suspend…" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause…" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Lift suspension…" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Resume…" })).toBeNull();
     await openMenu("Halima Yusuf");
     expect(screen.getByRole("button", { name: "Lift suspension…" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Suspend…" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^(Pause|Resume)…$/ })).toBeNull();
     await openMenu("Tunde Bakare");
     expect(screen.queryByRole("button", { name: "Suspend…" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Lift suspension…" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /^(Pause|Resume)\b/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Pause…" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Resume…" })).toBeInTheDocument();
+  });
+
+  it("doesn't offer Pause on a term that has already ended", async () => {
+    list.mockResolvedValue({ success: true, data: [sub({ end_date: new Date(Date.now() - DAY).toISOString() })] });
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    expect(screen.queryByRole("button", { name: "Pause…" })).toBeNull();
+  });
+
+  it("pauses after saying the days are given back, buttons disabled while sending", async () => {
+    let finish!: (v: unknown) => void;
+    pause.mockReturnValue(new Promise((r) => (finish = r)) as never);
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    await userEvent.click(screen.getByRole("button", { name: "Pause…" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause Ngozi Okafor's membership?" });
+    const copy = within(dialog).getByTestId("pause-copy");
+    expect(copy).toHaveTextContent("They can't check in or book classes while it's paused.");
+    expect(copy).toHaveTextContent("The days it's paused are given back: it's due to end on");
+    expect(copy).toHaveTextContent("You or they can resume it any time. We'll let them know it's paused.");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    expect(pause).toHaveBeenCalledWith("o1", "s1");
+    expect(within(dialog).getByRole("button", { name: "Pausing…" })).toBeDisabled();
+    expect(within(dialog).getByRole("button", { name: "Keep active" })).toBeDisabled();
+    finish({
+      success: true,
+      data: { ...sub({ status: S.PAUSED, paused_at: new Date().toISOString(), paused_by: "gym" }), member_user_id: "u1", plan_id: "p1" },
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const row = await rowOf("Ngozi Okafor");
+    expect(within(row).getByText("Paused")).toBeInTheDocument();
+    expect(within(row).getByTestId("hold-line")).toHaveTextContent(/^Paused by the gym since .+ \(0 days\)\. Ends .+ if it resumes today\.$/);
+  });
+
+  it("a pause refused while a card renewal is processing says to wait", async () => {
+    pause.mockResolvedValue({ success: false, status: 409, code: "RENEWAL_CHARGE_IN_PROGRESS", message: "A renewal payment is being processed." });
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    await userEvent.click(screen.getByRole("button", { name: "Pause…" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause Ngozi Okafor's membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "A card renewal for this membership is being processed. Try again in a few minutes.",
+    );
+    expect(within(await rowOf("Ngozi Okafor")).getByText("Active")).toBeInTheDocument();
+  });
+
+  it("resumes the member's own pause, naming the new end date", async () => {
+    const later = new Date(Date.parse(end) + 4 * DAY).toISOString();
+    resume.mockResolvedValue({ success: true, data: { ...sub({ _id: "s2", status: S.ACTIVE, end_date: later, paused_at: null }), member_user_id: "u2", plan_id: "p1" } });
+    wrap(<GymMembersClient />);
+    await openMenu("Tunde Bakare");
+    await userEvent.click(screen.getByRole("button", { name: "Resume…" }));
+    const dialog = await screen.findByRole("dialog", { name: "Resume Tunde Bakare's membership?" });
+    expect(within(dialog).getByTestId("resume-copy")).toHaveTextContent(
+      /^They can check in and book again straight away\. The paused days are added back, so it now runs to .+\. We'll let them know\.$/,
+    );
+    await userEvent.click(within(dialog).getByRole("button", { name: "Resume membership" }));
+    expect(resume).toHaveBeenCalledWith("o1", "s2");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const row = await rowOf("Tunde Bakare");
+    expect(within(row).getByText("Active")).toBeInTheDocument();
+    expect(within(row).queryByTestId("hold-line")).toBeNull();
+  });
+
+  it("staff without member management get no Pause or Resume", async () => {
+    authState.user = { id: "staff1" };
+    const owned = orgState.currentOrg;
+    orgState.currentOrg = { ...owned, is_owner: false, my_permissions: ["team:view_members"] };
+    try {
+      wrap(<GymMembersClient />);
+      await openMenu("Ngozi Okafor");
+      expect(screen.getByRole("button", { name: "View details" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Pause…" })).toBeNull();
+      await openMenu("Tunde Bakare");
+      expect(screen.queryByRole("button", { name: "Resume…" })).toBeNull();
+    } finally {
+      authState.user = { id: "owner1" };
+      orgState.currentOrg = owned;
+    }
   });
 
   it("suspends with a reason after saying what it does, buttons disabled while sending", async () => {
@@ -232,8 +318,10 @@ describe("single member page: holds", () => {
     await screen.findByRole("heading", { level: 1 });
   };
 
-  it("an active member: Suspend", async () => {
+  it("an active member: Pause and Suspend", async () => {
     await renderDetail(ngozi());
+    expect(screen.getByRole("button", { name: "Pause" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume" })).toBeNull();
     expect(screen.getByRole("button", { name: "Suspend" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Lift suspension" })).toBeNull();
   });
@@ -245,11 +333,24 @@ describe("single member page: holds", () => {
     expect(screen.getByText(/Suspended since .+: “Outstanding balance from March”/)).toBeInTheDocument();
   });
 
-  it("a paused member: no hold action for the gym, and the pause in the details", async () => {
+  it("a paused member: Resume, and the pause in the details", async () => {
     await renderDetail(tunde());
+    expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pause" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Suspend" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Lift suspension" })).toBeNull();
-    expect(screen.getByText(/Paused since .+ \(4 days\)\. Ends .+ if they resume today\./)).toBeInTheDocument();
+    expect(screen.getByText(/Paused by the member since .+ \(4 days\)\. Ends .+ if it resumes today\./)).toBeInTheDocument();
+  });
+
+  it("pauses from the page and shows the new state", async () => {
+    pause.mockResolvedValue({ success: true, data: { ...sub({ status: S.PAUSED, paused_at: new Date().toISOString(), paused_by: "gym" }), member_user_id: "u1", plan_id: "p1" } });
+    await renderDetail(ngozi());
+    await userEvent.click(screen.getByRole("button", { name: "Pause" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause Ngozi Okafor's membership?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    expect(pause).toHaveBeenCalledWith("o1", "s1");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument());
+    expect(screen.getByText(/^Paused by the gym since/)).toBeInTheDocument();
   });
 
   it("suspends from the page and shows the new state", async () => {

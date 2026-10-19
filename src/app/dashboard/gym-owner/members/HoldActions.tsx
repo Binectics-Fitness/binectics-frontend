@@ -9,7 +9,7 @@ import {
   type ApiResponse,
   type MembershipSubscription,
 } from "@/lib/types";
-import { pausedLine } from "@/lib/billing/membershipHolds";
+import { endIfResumedAt, pausedLine, renewsByCard } from "@/lib/billing/membershipHolds";
 
 /** Longest reason the API accepts (SuspendSubscriptionDto). */
 export const SUSPEND_REASON_MAX = 500;
@@ -39,6 +39,9 @@ export function holdErrorCopy(res: ApiResponse<unknown>, fallback: string): stri
  */
 const HOLD_FIELDS = [
   "status",
+  "paused_at",
+  "paused_by",
+  "end_date",
   "suspended_at",
   "suspension_reason",
   "auto_renew",
@@ -46,7 +49,6 @@ const HOLD_FIELDS = [
   "payment_method_id",
   "next_charge_at",
   "grace_expires_at",
-  "end_date",
 ] as const;
 
 export function mergeHoldChange(
@@ -60,6 +62,10 @@ export function mergeHoldChange(
   if (updated.status !== MembershipSubscriptionStatus.SUSPENDED) {
     next.suspended_at = null;
     next.suspension_reason = null;
+  }
+  if (updated.status !== MembershipSubscriptionStatus.PAUSED) {
+    next.paused_at = null;
+    next.paused_by = null;
   }
   return next as unknown as MembershipSubscription;
 }
@@ -266,9 +272,190 @@ export function LiftSuspensionModal({
   );
 }
 
+/** What the gym pausing does, for the confirm step, in order (mobile #142's words). */
+export function gymPauseEffectLines(
+  sub: MembershipSubscription,
+  fmtDate: (d: string | Date) => string,
+): string[] {
+  const lines = [
+    "They can't check in or book classes while it's paused.",
+    sub.end_date
+      ? `The days it's paused are given back: it's due to end on ${fmtDate(sub.end_date)}, and that moves later by every day it stays paused.`
+      : "The days it's paused are given back when it resumes.",
+  ];
+  if (renewsByCard(sub)) {
+    lines.push("Their card isn't charged while it's paused. Auto-renew carries on for the new end date.");
+  }
+  lines.push("You or they can resume it any time. We'll let them know it's paused.");
+  return lines;
+}
+
+/** What the gym resuming does, for the confirm step. */
+export function gymResumeCopy(
+  sub: MembershipSubscription,
+  fmtDate: (d: string | Date) => string,
+  now: Date = new Date(),
+): string {
+  const end = endIfResumedAt(sub, now);
+  return end
+    ? `They can check in and book again straight away. The paused days are added back, so it now runs to ${fmtDate(end)}. We'll let them know.`
+    : "They can check in and book again straight away. We'll let them know.";
+}
+
 /**
- * The detail under a Paused or Suspended pill, for the gym: since when, the
- * end date if a paused member resumed today, and the reason they gave.
+ * The gym pauses a membership for the member (api #282): access stops, the
+ * seat is kept, and every paused day is added back to the end date when it
+ * resumes, whoever resumes it. Nothing is taken from the member, so there is
+ * no reason to give and card auto-renew stays on.
+ */
+export function PauseMemberModal({
+  open,
+  sub,
+  orgId,
+  fmtDate,
+  onClose,
+  onDone,
+}: {
+  open: boolean;
+  sub: MembershipSubscription;
+  orgId: string;
+  fmtDate: (d: string | Date) => string;
+  onClose: () => void;
+  onDone: (updated: MembershipSubscription) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const name = memberNameOf(sub);
+
+  const close = () => {
+    if (saving) return;
+    setError(null);
+    onClose();
+  };
+
+  const onConfirm = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    const res = await marketplaceService.pauseOrgSubscription(orgId, sub._id);
+    setSaving(false);
+    if (res.success && res.data) {
+      toast.success(`${name}'s membership is paused`);
+      onDone(mergeHoldChange(sub, res.data));
+      onClose();
+    } else if (res.code === "RENEWAL_CHARGE_IN_PROGRESS") {
+      setError("A card renewal for this membership is being processed. Try again in a few minutes.");
+    } else {
+      setError(holdErrorCopy(res, "We couldn't pause this membership. Please try again."));
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title={`Pause ${name}'s membership?`}
+      size="sm"
+      disableCloseGuard
+      footer={
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-ghost-v2 md" disabled={saving} onClick={close}>
+            Keep active
+          </button>
+          <button type="button" className="btn-primary-v2 md" disabled={saving} onClick={() => void onConfirm()}>
+            {saving ? "Pausing…" : "Pause membership"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-3 text-[13.5px] text-fg-2" data-testid="pause-copy">
+        {gymPauseEffectLines(sub, fmtDate).map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+        {error && (
+          <p role="alert" className="text-danger-ink">
+            {error}
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/** The gym resumes a pause, its own or the member's: the paused days are added back. */
+export function ResumeMemberModal({
+  open,
+  sub,
+  orgId,
+  fmtDate,
+  onClose,
+  onDone,
+}: {
+  open: boolean;
+  sub: MembershipSubscription;
+  orgId: string;
+  fmtDate: (d: string | Date) => string;
+  onClose: () => void;
+  onDone: (updated: MembershipSubscription) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const name = memberNameOf(sub);
+
+  const close = () => {
+    if (saving) return;
+    setError(null);
+    onClose();
+  };
+
+  const onConfirm = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    const res = await marketplaceService.resumeOrgSubscription(orgId, sub._id);
+    setSaving(false);
+    if (res.success && res.data) {
+      toast.success(`${name}'s membership is running again`);
+      onDone(mergeHoldChange(sub, res.data));
+      onClose();
+    } else {
+      setError(holdErrorCopy(res, "We couldn't resume this membership. Please try again."));
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title={`Resume ${name}'s membership?`}
+      size="sm"
+      disableCloseGuard
+      footer={
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn-ghost-v2 md" disabled={saving} onClick={close}>
+            Keep paused
+          </button>
+          <button type="button" className="btn-primary-v2 md" disabled={saving} onClick={() => void onConfirm()}>
+            {saving ? "Resuming…" : "Resume membership"}
+          </button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-3 text-[13.5px] text-fg-2" data-testid="resume-copy">
+        <p>{gymResumeCopy(sub, fmtDate)}</p>
+        {error && (
+          <p role="alert" className="text-danger-ink">
+            {error}
+          </p>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * The detail under a Paused or Suspended pill, for the gym: who paused it and
+ * since when, the end date if it resumed today, and the suspension reason.
  */
 export function holdDetailLine(
   sub: MembershipSubscription,

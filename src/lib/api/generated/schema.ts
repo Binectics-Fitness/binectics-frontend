@@ -4028,6 +4028,23 @@ export interface paths {
         patch: operations["MarketplaceOrgController_setNextPlan"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Pause a member's membership for them. Access stops; the remaining days are held and added back to end_date on resume (by the gym or the member). Active, unexpired memberships only; refused (409 RENEWAL_CHARGE_IN_PROGRESS) while a card renewal is processing. paused_by is 'gym'. */
+        patch: operations["MarketplaceOrgController_pauseOrgSubscription"];
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/record-renewal": {
         parameters: {
             query?: never;
@@ -4060,6 +4077,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resume a paused membership, whoever paused it. end_date moves out by exactly how long the pause lasted. */
+        patch: operations["MarketplaceOrgController_resumeOrgSubscription"];
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/suspend": {
@@ -8501,6 +8535,8 @@ export interface components {
             primary_email?: string;
             /** @example 2018/123456/07 */
             registration_number?: string;
+            /** @description Return the live workspace of this type the caller already owns instead of opening another (onboarding retries). Trainer and dietitian workspaces always behave this way. */
+            reuse_existing?: boolean;
             /**
              * @description Whether listed prices already include tax.
              * @example true
@@ -17058,6 +17094,26 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_pauseOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_recordRenewalPayment: {
         parameters: {
             query?: never;
@@ -17095,6 +17151,26 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_resumeOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
