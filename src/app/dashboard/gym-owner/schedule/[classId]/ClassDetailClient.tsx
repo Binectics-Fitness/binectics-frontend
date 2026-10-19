@@ -22,12 +22,19 @@ import {
 import { ClassForm, WEEKDAYS } from "../ClassForm";
 import SearchableSelect from "@/components/SearchableSelect";
 import { DSCard } from "@/components/ds";
+import { toast } from "@/components/Toast";
 
 function memberName(b: ClassBooking): string {
   if (typeof b.member_user_id === "object") {
     return `${b.member_user_id.first_name} ${b.member_user_id.last_name}`;
   }
   return "Member";
+}
+
+/** The toast after a delete: how many bookings it cancelled (api #268). */
+export function deletedClassMessage(name: string, cancelled: number): string {
+  if (cancelled <= 0) return `${name} was deleted.`;
+  return `${name} was deleted. ${cancelled} ${cancelled === 1 ? "booking was" : "bookings were"} cancelled and the members told.`;
 }
 
 /** Roster for one occurrence of the class (confirmed + waitlist). */
@@ -62,7 +69,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
           value={date}
           onChange={setDate}
           options={dates.map((d) => ({
-            label: new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }),
+            label: new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale, { weekday: "short", day: "numeric", month: "short" }),
             value: d,
           }))}
         />
@@ -119,13 +126,18 @@ export function ClassDetailClient() {
     if (!gymClass) return;
     requestConfirmation({
       title: `Delete "${gymClass.name}"?`,
-      description: `The ${WEEKDAYS[gymClass.day_of_week]} ${gymClass.start_time} class comes off your schedule and can't be booked. Members who already booked aren't told, so let them know. This can't be undone; to pause it instead, deactivate it.`,
+      // Since api #268 a delete cancels the class's upcoming bookings and
+      // waitlist places and tells each member; past bookings stay as history.
+      description: `The ${WEEKDAYS[gymClass.day_of_week]} ${gymClass.start_time} class comes off your schedule and can't be booked. Upcoming bookings and waitlist places are cancelled, and each member is told. This can't be undone; to pause it instead, deactivate it.`,
       confirmLabel: "Delete class",
       confirmVariant: "danger",
       onConfirm: async () => {
         setError(null);
         const res = await remove.mutateAsync(classId);
-        if (res.success) router.push("/dashboard/gym-owner/schedule");
+        if (res.success) {
+          toast.success(deletedClassMessage(gymClass.name, res.data?.cancelled_bookings ?? 0));
+          router.push("/dashboard/gym-owner/schedule");
+        }
         else setError(res.message || "Couldn't delete the class.");
       },
     });
