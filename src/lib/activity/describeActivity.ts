@@ -77,6 +77,12 @@ function subjectName(subject: OrgAuditPerson | null): string {
   return subject.kind === OrgAuditPersonKind.FORMER_MEMBER ? "a former team member" : subject.name;
 }
 
+/** The member a membership event is about; never a name the API withheld. */
+function memberName(subject: OrgAuditPerson | null): string {
+  if (!subject || subject.kind === OrgAuditPersonKind.FORMER_MEMBER) return "a member";
+  return subject.name;
+}
+
 function roleOrUnknown(name: string | null | undefined): string {
   return name ?? "a role that no longer exists";
 }
@@ -185,6 +191,15 @@ export function describeActivity(entry: OrgAuditEntry): string {
       return d.enabled === undefined
         ? `${who} changed the loyalty programme.`
         : `${who} switched the loyalty programme ${d.enabled ? "on" : "off"}.`;
+
+    case "MEMBERSHIP_PAUSED_BY_GYM":
+      return `${who} paused ${possessive(memberName(entry.subject))} membership.`;
+    case "MEMBERSHIP_RESUMED_BY_GYM":
+      return `${who} resumed ${possessive(memberName(entry.subject))} membership${d.paused_by === "member" ? ", which the member had paused" : ""}.`;
+    case "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER": {
+      const holder = entry.actor.kind === OrgAuditPersonKind.FORMER_MEMBER ? "A member" : who;
+      return `${holder} resumed their membership, which the gym had paused.`;
+    }
 
     default:
       return `${who}: ${entry.label}.`;

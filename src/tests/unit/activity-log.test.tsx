@@ -182,6 +182,29 @@ describe("describeActivity", () => {
     );
   });
 
+  it("describes a gym pausing and resuming a membership, and a member resuming a gym pause", () => {
+    const tolu = { kind: OrgAuditPersonKind.GYM_MEMBER, name: "Tolu Ade" };
+    const d = (e: Partial<OrgAuditEntry> & Pick<OrgAuditEntry, "event">) =>
+      describeActivity(entry({ category: OrgAuditCategory.MEMBERSHIPS, ...e }));
+    expect(d({ event: "MEMBERSHIP_PAUSED_BY_GYM", actor: kemi, subject: tolu })).toBe(
+      "Kemi Ola paused Tolu Ade's membership.",
+    );
+    expect(d({ event: "MEMBERSHIP_RESUMED_BY_GYM", subject: tolu, details: { paused_by: "gym" } })).toBe(
+      "Ada Obi resumed Tolu Ade's membership.",
+    );
+    expect(d({ event: "MEMBERSHIP_RESUMED_BY_GYM", subject: tolu, details: { paused_by: "member" } })).toBe(
+      "Ada Obi resumed Tolu Ade's membership, which the member had paused.",
+    );
+    expect(d({ event: "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER", actor: tolu, subject: tolu })).toBe(
+      "Tolu Ade resumed their membership, which the gym had paused.",
+    );
+    // Someone the API would not name stays unnamed, and is not called a team member.
+    expect(d({ event: "MEMBERSHIP_PAUSED_BY_GYM", subject: former })).toBe("Ada Obi paused a member's membership.");
+    expect(d({ event: "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER", actor: former, subject: former })).toBe(
+      "A member resumed their membership, which the gym had paused.",
+    );
+  });
+
   it("falls back to the label for an event it does not know", () => {
     expect(describeActivity(entry({ event: "SOMETHING_NEW", label: "Something new" }))).toBe(
       "Ada Obi: Something new.",
