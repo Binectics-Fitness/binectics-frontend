@@ -5015,6 +5015,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/programs/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived program template to published (if its latest version is published) or draft. A program that is not archived is returned unchanged */
+        post: operations["ProgramsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/programs/clients/{clientProfileId}/overview": {
         parameters: {
             query?: never;
@@ -19203,6 +19220,25 @@ export interface operations {
             };
         };
     };
+    ProgramsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgramsController_clientOverview: {
         parameters: {
             query?: never;
@@ -19440,7 +19476,10 @@ export interface operations {
     };
     ProgressController_getMyClientProfiles: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description true: also list former clients (ended links), after the active ones: who they were, with is_active false and none of their progress. */
+                include_ended?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -20141,7 +20180,10 @@ export interface operations {
     };
     ProgressController_getClientSummaries: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description true: also list former clients (ended links), after the active ones, with is_active false and summary null: none of their progress. */
+                include_ended?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
