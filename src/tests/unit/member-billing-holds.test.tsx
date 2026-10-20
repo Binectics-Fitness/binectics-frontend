@@ -265,3 +265,58 @@ describe("a suspended membership", () => {
     expect(screen.queryByRole("switch", { name: /Auto-renew/ })).not.toBeInTheDocument();
   });
 });
+
+describe("the gym's yearly limit on pauses", () => {
+  const allowance = (limit: number | null, used: number, next: string | null = null) => ({
+    limit,
+    used,
+    remaining: limit === null ? null : Math.max(0, limit - used),
+    window: "rolling_12_months" as const,
+    next_available_at: next,
+  });
+
+  it("shows the pauses left, and what this pause uses", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(3, 1) })] });
+    renderPage();
+    expect(await screen.findByTestId("pause-allowance-line")).toHaveTextContent("2 of 3 pauses left this year.");
+    await userEvent.click(screen.getByRole("button", { name: "Pause Monthly" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause this membership?" });
+    expect(dialog).toHaveTextContent("This uses 1 of the 2 pauses you have left this year.");
+  });
+
+  it("with none left, offers no Pause and says when they can pause again", async () => {
+    const next = new Date(Date.now() + 40 * DAY).toISOString();
+    getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(3, 3, next) })] });
+    renderPage();
+    expect(await screen.findByTestId("pause-allowance-line")).toHaveTextContent(
+      `You've used all 3 pauses for this year. You can pause again on ${formatDate(next)}.`,
+    );
+    expect(screen.queryByRole("button", { name: "Pause Monthly" })).toBeNull();
+  });
+
+  it("no limit: no count shown, Pause offered", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(null, 5) })] });
+    renderPage();
+    expect(await screen.findByRole("button", { name: "Pause Monthly" })).toBeInTheDocument();
+    expect(screen.queryByTestId("pause-allowance-line")).toBeNull();
+  });
+
+  it("a pause refused for the limit shows the gym's rule and re-reads the page", async () => {
+    getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(2, 1) })] });
+    pause.mockResolvedValue({
+      success: false,
+      status: 409,
+      code: "PAUSE_LIMIT_REACHED",
+      message: "Your gym allows 2 pauses in any 12 months, and you have used them all. You can pause again on 3 March 2027.",
+    });
+    renderPage();
+    await userEvent.click(await screen.findByRole("button", { name: "Pause Monthly" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pause this membership?" });
+    const reads = getSubs.mock.calls.length;
+    await userEvent.click(within(dialog).getByRole("button", { name: "Pause membership" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "Your gym allows 2 pauses in any 12 months, and you have used them all. You can pause again on 3 March 2027.",
+    );
+    await waitFor(() => expect(getSubs.mock.calls.length).toBeGreaterThan(reads));
+  });
+});

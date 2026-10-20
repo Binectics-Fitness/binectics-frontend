@@ -15,13 +15,21 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
-import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import {
+  canPause,
+  canSuspend,
+  canUnsuspend,
+  gymCanResume,
+  memberPauseNote,
+  pausedByMember,
+} from "@/lib/billing/membershipHolds";
 import {
   LiftSuspensionModal,
   PauseMemberModal,
   ResumeMemberModal,
   SuspendMemberModal,
   holdDetailLine,
+  memberNameOf,
 } from "../HoldActions";
 
 function getMemberName(sub: MembershipSubscription): string {
@@ -210,10 +218,26 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
-          {canManageMembers && canResume(subscription) && (
+          {canManageMembers && gymCanResume(subscription) && (
             <button type="button" className="btn-primary-v2 md" onClick={() => setHoldDialog("resume")}>
               Resume
             </button>
+          )}
+          {/* A pause the member started is theirs to end (owner ruling,
+              Oct 20 2026): shown disabled, with why. */}
+          {canManageMembers && pausedByMember(subscription) && (
+            <>
+              <button type="button" className="btn-primary-v2 md" disabled aria-describedby="member-pause-note">
+                Resume
+              </button>
+              <span
+                id="member-pause-note"
+                className="text-[12px] max-w-[34ch]"
+                style={{ color: "var(--fg-3)" }}
+              >
+                {memberPauseNote(memberNameOf(subscription))}
+              </span>
+            </>
           )}
           {canManageMembers && canPause(subscription) && (
             <button type="button" className="btn-ghost-v2 md" onClick={() => setHoldDialog("pause")}>

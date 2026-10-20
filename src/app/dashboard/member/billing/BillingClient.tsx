@@ -32,6 +32,8 @@ import {
   canPause,
   canResume,
   endIfResumedAt,
+  memberCanPause,
+  pauseAllowanceLine,
   pauseEffectLines,
   pausedLine,
   suspendedLine,
@@ -400,6 +402,13 @@ export function BillingClient() {
                     <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }}>{meta.hint}</div>
                   )
                 )}
+                {/* The gym's yearly limit on the member's own pauses: what's
+                    left, or why Pause isn't offered. */}
+                {canPause(s) && pauseAllowanceLine(s, formatDate) && (
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }} data-testid="pause-allowance-line">
+                    {pauseAllowanceLine(s, formatDate)}
+                  </div>
+                )}
                 {s.cancel_requested_at && s.status === MembershipSubscriptionStatus.ACTIVE && (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--fg-3)" }} data-testid="membership-ends">
                     Cancelled, access ends {s.end_date ? formatDate(s.end_date) : "at the end of the term"}. It won&rsquo;t renew.
@@ -455,7 +464,7 @@ export function BillingClient() {
                   Resume
                 </button>
               )}
-              {canPause(s) && (
+              {memberCanPause(s) && (
                 <button
                   type="button"
                   className="btn-ghost-v2 md shrink-0"
