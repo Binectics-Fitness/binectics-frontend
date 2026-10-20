@@ -6,6 +6,12 @@ import { AsyncSpinner, PageHeader, Eyebrow } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
+import {
+  MAX_ANNUAL_DISCOUNT_PERCENT,
+  annualDiscountOf,
+  annualFromMonthlyMinor,
+  clampAnnualDiscount,
+} from "@/lib/billing/annualDiscount";
 import { formatCurrency } from "@/utils/format";
 import { writeErrorMessage } from "@/lib/currencies/helpers";
 import {
@@ -132,6 +138,12 @@ export default function AdminPlansPage() {
     amount_major: string;
     overage_major: string;
     gateway_plan_code: string;
+    /** Annual discount %, yearly prices only. Blank = no discount. */
+    discount_percent: string;
+    /** Provider type the price is for; "ALL" is the shared price. */
+    audience: string;
+    /** Whether providers can buy at this price. Carried through an edit, never reset. */
+    is_active: boolean;
   } | null>(null);
   const [priceBusy, setPriceBusy] = useState(false);
   // Currencies a provider plan can be billed in right now (provider_billing
@@ -185,13 +197,21 @@ export default function AdminPlansPage() {
       const res = await adminService.upsertPlanPrice({
         plan_code: priceDraft.plan_code,
         market_code: priceDraft.market_code.trim().toUpperCase() || "GLOBAL",
+        audience: priceDraft.audience || "ALL",
         interval: priceDraft.interval,
         currency: priceDraft.currency.trim().toUpperCase(),
         amount_minor: majorToMinor(amount, priceDraft.currency),
         overage_per_seat_minor: majorToMinor(overage, priceDraft.currency),
-        is_active: true,
+        // The "Save N%" providers see. Yearly prices only; the API refuses
+        // one on a monthly price, so a monthly save always sends 0.
+        discount_percent:
+          priceDraft.interval === "year" ? clampAnnualDiscount(priceDraft.discount_percent) : 0,
+        is_active: priceDraft.is_active,
         // A Paystack plan code makes the charge recurring; omitted =
-        // one-shot payment (tier still activates, but never renews).
+        // one-shot payment (tier still activates, but never renews). On an
+        // edit, a cleared code sends an empty list, which the API stores, so
+        // the price goes back to one-shot rather than silently keeping the
+        // old code.
         ...(priceDraft.gateway_plan_code.trim()
           ? {
               gateway_prices: [
@@ -202,7 +222,9 @@ export default function AdminPlansPage() {
                 },
               ],
             }
-          : {}),
+          : existingPriceFor(prices, priceDraft)?.gateway_prices?.length
+            ? { gateway_prices: [] }
+            : {}),
       });
       if (res.success && res.data) {
         const saved = res.data;
@@ -212,7 +234,8 @@ export default function AdminPlansPage() {
               !(
                 x.plan_code === saved.plan_code &&
                 x.market_code === saved.market_code &&
-                x.interval === saved.interval
+                x.interval === saved.interval &&
+                audienceOf(x) === audienceOf(saved)
               ),
           ),
           saved,
@@ -431,6 +454,11 @@ export default function AdminPlansPage() {
                           {formatCurrency(minorToMajor(pr.amount_minor, pr.currency), pr.currency)}
                         </span>
                         <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>/ {pr.interval}</span>
+                        {pr.interval === "year" && annualDiscountOf(pr) !== null && (
+                          <span className="text-[12px]" style={{ color: "var(--fg-2)" }} title="Annual discount providers see">
+                            Providers see &ldquo;Save {annualDiscountOf(pr)}%&rdquo;
+                          </span>
+                        )}
                         {pr.overage_per_seat_minor != null && (
                           <span className="text-[12px]" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }} title="Per-seat overage rate">
                             +{formatCurrency(minorToMajor(pr.overage_per_seat_minor, pr.currency), pr.currency)}/seat over cap
@@ -440,7 +468,13 @@ export default function AdminPlansPage() {
                           {pr.gateway_prices?.length ? "recurring" : "one-shot"}
                         </span>
                         {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger)" }}>inactive</span>}
-                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
+                        {audienceOf(pr) !== "ALL" && (
+                          <span className="font-mono text-[10px] uppercase" style={{ color: "var(--fg-3)" }}>{audienceOf(pr)}</span>
+                        )}
+                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => setPriceDraft(draftFromPrice(pr))}>
+                          Edit
+                        </button>
+                        <button type="button" className="text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
                           Remove
                         </button>
                       </div>
@@ -484,10 +518,58 @@ export default function AdminPlansPage() {
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Interval</div>
                         <SearchableSelect
                           value={priceDraft.interval}
-                          onChange={(v) => setPriceDraft({ ...priceDraft, interval: v as "month" | "year" })}
+                          onChange={(v) => {
+                            const next = { ...priceDraft, interval: v as "month" | "year" };
+                            const saved = existingPriceFor(prices, next);
+                            setPriceDraft(
+                              next.interval === "year" && next.discount_percent === "" && saved && annualDiscountOf(saved) !== null
+                                ? { ...next, discount_percent: String(annualDiscountOf(saved)) }
+                                : next,
+                            );
+                          }}
                           options={[{ label: "month", value: "month" }, { label: "year", value: "year" }]}
                         />
                       </div>
+                      {priceDraft.interval === "year" && (
+                        <div>
+                          <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Annual discount % (0 to {MAX_ANNUAL_DISCOUNT_PERCENT})</div>
+                          <input
+                            type="number"
+                            min={0}
+                            max={MAX_ANNUAL_DISCOUNT_PERCENT}
+                            step={1}
+                            value={priceDraft.discount_percent}
+                            placeholder="e.g. 20"
+                            aria-label="Annual discount percent"
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              const monthly = monthlyPriceFor(prices, priceDraft);
+                              // The yearly amount follows the discount: twelve
+                              // monthly payments, less the discount. The admin can
+                              // still type a different amount afterwards.
+                              const derived =
+                                monthly && raw !== ""
+                                  ? String(minorToMajor(annualFromMonthlyMinor(monthly.amount_minor, clampAnnualDiscount(raw)), monthly.currency))
+                                  : priceDraft.amount_major;
+                              setPriceDraft({ ...priceDraft, discount_percent: raw, amount_major: derived });
+                            }}
+                            className="h-8 w-24 rounded-(--r-2) border border-border bg-bg px-2 text-[13px] text-ink"
+                          />
+                        </div>
+                      )}
+                      {priceDraft.interval === "year" && (
+                        <AnnualDiscountHint prices={prices} draft={priceDraft} />
+                      )}
+                      <label className="flex items-center gap-2 text-[12.5px] self-end h-8" style={{ color: "var(--fg-2)" }}>
+                        <input
+                          type="checkbox"
+                          checked={priceDraft.is_active}
+                          onChange={(e) => setPriceDraft({ ...priceDraft, is_active: e.target.checked })}
+                        />
+                        Active (providers can buy at this price)
+                      </label>
+                      <PaystackAmountWarning prices={prices} draft={priceDraft} />
+                      <MonthlyDiscountWarning prices={prices} draft={priceDraft} />
                       <button type="button" className="btn-primary-v2 sm" disabled={priceBusy} onClick={() => void savePrice()}>
                         {priceBusy ? "Saving…" : "Save price"}
                       </button>
@@ -498,7 +580,7 @@ export default function AdminPlansPage() {
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
-                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: billingCurrencies?.length === 1 ? billingCurrencies[0].value : "", amount_major: "", overage_major: "", gateway_plan_code: "" })}
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: billingCurrencies?.length === 1 ? billingCurrencies[0].value : "", amount_major: "", overage_major: "", gateway_plan_code: "", discount_percent: "", audience: "ALL", is_active: true })}
                       >
                         Add price
                       </button>
@@ -643,5 +725,185 @@ export default function AdminPlansPage() {
         </div>
       )}
     </AdminDashboardShell>
+  );
+}
+
+type PriceDraftKey = { plan_code: string; market_code: string; currency: string; audience?: string };
+
+/** A price row's audience; rows from before the audience axis are the shared "ALL" price. */
+function audienceOf(x: { audience?: string | null }): string {
+  return x.audience || "ALL";
+}
+
+/**
+ * The monthly price a yearly one in the same plan, market, audience and
+ * currency is measured against. Audience matters: a gym-only override must
+ * not be the base for the shared yearly price, or the other way round.
+ */
+function monthlyPriceFor(prices: readonly AdminPlanPrice[], draft: PriceDraftKey): AdminPlanPrice | null {
+  const market = draft.market_code.trim().toUpperCase() || "GLOBAL";
+  const currency = draft.currency.trim().toUpperCase();
+  const audience = draft.audience || "ALL";
+  return (
+    prices.find(
+      (x) =>
+        x.plan_code === draft.plan_code &&
+        x.market_code === market &&
+        audienceOf(x) === audience &&
+        x.interval === "month" &&
+        x.currency === currency &&
+        x.amount_minor > 0,
+    ) ?? null
+  );
+}
+
+/** The saved row a draft would overwrite (same plan, market, audience and interval). */
+function existingPriceFor(
+  prices: readonly AdminPlanPrice[],
+  draft: { plan_code: string; market_code: string; interval: string; audience?: string },
+): AdminPlanPrice | null {
+  const market = draft.market_code.trim().toUpperCase() || "GLOBAL";
+  const audience = draft.audience || "ALL";
+  return (
+    prices.find(
+      (x) =>
+        x.plan_code === draft.plan_code &&
+        x.market_code === market &&
+        audienceOf(x) === audience &&
+        x.interval === draft.interval,
+    ) ?? null
+  );
+}
+
+/** The form's values for an existing price, so "Edit" re-saves what was there. */
+function draftFromPrice(pr: AdminPlanPrice) {
+  const discount = pr.interval === "year" ? annualDiscountOf(pr) : null;
+  return {
+    plan_code: pr.plan_code,
+    market_code: pr.market_code,
+    interval: pr.interval,
+    currency: pr.currency,
+    amount_major: String(minorToMajor(pr.amount_minor, pr.currency)),
+    overage_major: pr.overage_per_seat_minor != null ? String(minorToMajor(pr.overage_per_seat_minor, pr.currency)) : "",
+    gateway_plan_code: pr.gateway_prices?.[0]?.external_price_id ?? "",
+    discount_percent: discount !== null ? String(discount) : "",
+    audience: audienceOf(pr),
+    is_active: pr.is_active !== false,
+  };
+}
+
+/**
+ * Paystack renews a subscription at the amount on its own plan code, not at
+ * ours. Changing the amount of a price that has a plan code therefore only
+ * changes the first charge: say so, so the admin updates the plan on
+ * Paystack (or sets a new code) as well.
+ */
+function PaystackAmountWarning({
+  prices,
+  draft,
+}: {
+  prices: readonly AdminPlanPrice[];
+  draft: { plan_code: string; market_code: string; interval: string; audience?: string; currency: string; amount_major: string; gateway_plan_code: string };
+}) {
+  const code = draft.gateway_plan_code.trim();
+  const saved = existingPriceFor(prices, draft);
+  const savedCode = saved?.gateway_prices?.[0]?.external_price_id ?? "";
+  if (saved && savedCode && !code) {
+    return (
+      <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+        Saving without the Paystack plan code ({savedCode}) makes this price one-shot: it will no longer renew
+        automatically. Enter the code again to keep auto-renewal.
+      </p>
+    );
+  }
+  if (!code || draft.amount_major === "") return null;
+  if (!saved) return null;
+  const typed = Number(draft.amount_major);
+  if (!Number.isFinite(typed)) return null;
+  const currency = draft.currency || saved.currency;
+  if (currency.toUpperCase() === saved.currency && majorToMinor(typed, currency) === saved.amount_minor) return null;
+  return (
+    <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+      This price renews through Paystack plan {code}, and Paystack charges the amount set on that plan. Changing the amount here
+      does not change renewals: update the plan on Paystack, or create a new plan there and enter its code here.
+    </p>
+  );
+}
+
+/**
+ * Plain-words check under the annual discount field: what the discount
+ * makes the yearly price, and a warning when the amount typed says
+ * otherwise, since providers are shown the admin's percentage either way.
+ */
+function AnnualDiscountHint({
+  prices,
+  draft,
+}: {
+  prices: readonly AdminPlanPrice[];
+  draft: PriceDraftKey & { discount_percent: string; amount_major: string };
+}) {
+  const pct = clampAnnualDiscount(draft.discount_percent);
+  const monthly = monthlyPriceFor(prices, draft);
+  const style = { color: "var(--fg-3)" } as const;
+  if (!monthly) {
+    return (
+      <p className="basis-full text-[12px]" style={style}>
+        {draft.currency
+          ? "Add a monthly price in this market and currency first, and the yearly amount will be worked out from the discount."
+          : "Choose a currency to work the yearly amount out from the monthly price."}
+      </p>
+    );
+  }
+  const expected = annualFromMonthlyMinor(monthly.amount_minor, pct);
+  const typed = Number(draft.amount_major);
+  const typedMinor = Number.isFinite(typed) && draft.amount_major !== "" ? majorToMinor(typed, monthly.currency) : null;
+  const money = (minor: number) => formatCurrency(minorToMajor(minor, monthly.currency), monthly.currency);
+  return (
+    <p className="basis-full text-[12px]" style={style}>
+      {pct > 0
+        ? `Providers will see "Save ${pct}%". 12 × ${money(monthly.amount_minor)} less ${pct}% is ${money(expected)} a year.`
+        : `No annual discount: providers see no saving. 12 × ${money(monthly.amount_minor)} is ${money(expected)} a year.`}
+      {typedMinor !== null && typedMinor !== expected && (
+        <span className="block" style={{ color: "var(--danger)" }}>
+          {pct > 0
+            ? `The yearly amount you entered is not ${money(expected)}. Providers are still shown "Save ${pct}%", so check the two match.`
+            : typedMinor < expected
+              ? "The yearly amount you entered is less than twelve months, but no discount is set, so providers are shown no saving."
+              : `The yearly amount you entered is more than twelve months (${money(expected)}).`}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/**
+ * A monthly price edit changes what a discounted yearly price was built
+ * from. When the yearly price in the same plan, market, audience and
+ * currency has a discount and its amount is no longer 12 × the new monthly
+ * price less that discount, say so, so the admin updates the yearly price
+ * too (providers see the discount either way).
+ */
+function MonthlyDiscountWarning({
+  prices,
+  draft,
+}: {
+  prices: readonly AdminPlanPrice[];
+  draft: PriceDraftKey & { interval: string; amount_major: string };
+}) {
+  if (draft.interval !== "month" || draft.amount_major === "") return null;
+  const typed = Number(draft.amount_major);
+  const currency = draft.currency.trim().toUpperCase();
+  if (!Number.isFinite(typed) || typed <= 0 || !currency) return null;
+  const yearly = existingPriceFor(prices, { ...draft, interval: "year" });
+  const pct = yearly ? annualDiscountOf(yearly) : null;
+  if (!yearly || pct === null || yearly.currency !== currency) return null;
+  const expected = annualFromMonthlyMinor(majorToMinor(typed, currency), pct);
+  if (expected === yearly.amount_minor) return null;
+  const money = (minor: number) => formatCurrency(minorToMajor(minor, currency), currency);
+  return (
+    <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+      The yearly price ({money(yearly.amount_minor)}) carries a {pct}% saving. With this monthly price, 12 × monthly less {pct}% is{" "}
+      {money(expected)}. Update the yearly price too, or providers see a saving that no longer matches.
+    </p>
   );
 }

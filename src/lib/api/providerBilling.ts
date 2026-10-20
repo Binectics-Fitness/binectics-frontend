@@ -112,6 +112,12 @@ export interface ProviderPlanPrice {
   currency: string;
   /** ISO 4217 exponent of `currency` (the API sends it; older rows may not). */
   minor_unit?: number;
+  /**
+   * The annual discount a Binectics admin set, as a whole percent (0–90).
+   * Only a yearly price carries one; show "Save N%" from it when above 0.
+   * Absent from an API older than this field, which reads as no discount.
+   */
+  discount_percent?: number;
 }
 
 export interface ProviderPlanOption {
