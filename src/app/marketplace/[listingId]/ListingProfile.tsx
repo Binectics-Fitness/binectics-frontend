@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatMinor, isSelectable } from "@/lib/currencies/helpers";
 import { useCurrencies } from "@/lib/queries/currencies";
-import { planPerLabel } from "@/lib/marketplace/planDisplay";
+import { planPerLabel, planSavingLabel } from "@/lib/marketplace/planDisplay";
 import { listingPriceFrom } from "@/lib/marketplace/listingDisplay";
 import type { PublicListing } from "@/lib/marketplace/publicListing";
 import { useAuth } from "@/contexts/AuthContext";
@@ -82,6 +82,8 @@ interface Plan {
   currency: string;
   features?: string[];
   is_active?: boolean;
+  /** "Save N% vs <plan>" from the API, when the provider set one. */
+  comparison?: MarketplaceMembershipPlan["comparison"];
 }
 
 /* ═══ PROFILE ════════════════════════════════════════════════ */
@@ -301,6 +303,9 @@ export function ListingProfile({
                     <div className="font-mono text-[26px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.015em", color: "var(--ink)" }}>
                       {planPrice(p)} <small className="font-mono text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>{planPerLabel(p)}</small>
                     </div>
+                    {planSavingLabel(p) && (
+                      <div className="text-[13px] font-medium -mt-1.5" style={{ color: "var(--signal-ink)" }}>{planSavingLabel(p)}</div>
+                    )}
                     {p.features && p.features.length > 0 && (
                       <ul className="flex flex-col gap-1.5 list-none p-0">
                         {p.features.map((f) => (
@@ -422,7 +427,12 @@ export function ListingProfile({
                           className="shrink-0"
                           style={{ accentColor: "var(--ink)" }}
                         />
-                        <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                        <span className="flex-1 min-w-0 truncate">
+                          {p.name}
+                          {planSavingLabel(p) && (
+                            <small className="ml-1.5" style={{ color: "var(--signal-ink)" }}>{planSavingLabel(p)}</small>
+                          )}
+                        </span>
                         <span className="font-mono shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
                           {planPrice(p)} <small style={{ color: "var(--fg-3)" }}>{planPerLabel(p)}</small>
                         </span>
