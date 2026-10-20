@@ -15,6 +15,7 @@ import { useClientNow } from "@/lib/ui/useClientNow";
 import { mealsToday } from "../_lib/logStats";
 import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
+import { mealReplyAuthorName } from "@/lib/progress/mealReplies";
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
   [MealType.BREAKFAST]: "Breakfast",
@@ -179,7 +180,19 @@ export default function MealLogPage() {
   // On a failed load only the error shows, never zeros.
   const showData = !loading && meals !== null;
   const [openId, setOpenId] = useState<string | null>(null);
-  const opened = meals?.find((m) => m._id === openId) ?? null;
+  // A reply notification links here with ?mealId=: that meal opens once the
+  // list has it, until closed. Read once from the URL (no Suspense boundary
+  // needed; on the server there are no meals, so nothing opens there).
+  const [linkedMealId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("mealId"),
+  );
+  const [linkClosed, setLinkClosed] = useState(false);
+  const shownId = openId ?? (linkClosed ? null : linkedMealId);
+  const opened = meals?.find((m) => m._id === shownId) ?? null;
+  const closeDetail = () => {
+    setOpenId(null);
+    setLinkClosed(true);
+  };
 
   return (
     <MemberDashboardShell activeLabel="Activity">
@@ -435,6 +448,7 @@ export default function MealLogPage() {
                       mealTypeLabel(meal.meal_type),
                       meal.calories ? `${meal.calories} kcal` : null,
                       meal.rating ? MEAL_RATING_LABELS[meal.rating] : null,
+                      meal.reply ? `${mealReplyAuthorName(meal.reply)} replied` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -449,7 +463,7 @@ export default function MealLogPage() {
 
       <LogDetailDrawer
         open={opened !== null}
-        onClose={() => setOpenId(null)}
+        onClose={closeDetail}
         title={opened ? mealTypeLabel(opened.meal_type) : "Meal"}
         fields={
           opened
@@ -459,6 +473,10 @@ export default function MealLogPage() {
                 { label: "Calories", value: opened.calories ? `${opened.calories} kcal` : null },
                 { label: "How it felt", value: opened.rating ? MEAL_RATING_LABELS[opened.rating] : null },
                 { label: "Notes", value: opened.feedback },
+                {
+                  label: opened.reply ? `Reply from ${mealReplyAuthorName(opened.reply)}` : "Reply",
+                  value: opened.reply?.text ?? null,
+                },
               ]
             : []
         }

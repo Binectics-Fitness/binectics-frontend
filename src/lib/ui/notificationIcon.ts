@@ -41,6 +41,7 @@ export type NotificationIconKey =
 const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   DIET_PLAN_ASSIGNED: { icon: "meal", tone: "dietitian" },
   MEAL_LOGGED: { icon: "meal", tone: "dietitian" },
+  MEAL_REPLY: { icon: "meal", tone: "dietitian" },
   WORKOUT_PLAN_ASSIGNED: { icon: "workout", tone: "trainer" },
   PROGRAM_ASSIGNED: { icon: "program" },
   PROGRAM_REMINDER: { icon: "program" },
