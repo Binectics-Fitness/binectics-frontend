@@ -183,6 +183,14 @@ export const queryKeys = {
       [...queryKeys.refunds.all, "attentionCount", orgId] as const,
   },
 
+  payoutAccount: {
+    all: ["payoutAccount"] as const,
+    status: (orgId: string) =>
+      [...queryKeys.payoutAccount.all, "status", orgId] as const,
+    banks: (orgId: string) =>
+      [...queryKeys.payoutAccount.all, "banks", orgId] as const,
+  },
+
   assignmentRules: {
     all: ["assignmentRules"] as const,
     list: (orgId: string) =>
