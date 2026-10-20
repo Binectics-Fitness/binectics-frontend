@@ -15,6 +15,7 @@ import type {
   PublicProviderPlanOption,
 } from "@/lib/api/providerBilling";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { annualDiscountOf } from "@/lib/billing/annualDiscount";
 import { ProviderPlanTier } from "@/lib/api/providerBilling";
 
 /** The provider types the pricing pages price for, in display order. */
@@ -107,17 +108,12 @@ export function hasYearlyPrices(plans: readonly Pick<PublicProviderPlanOption, "
 }
 
 /**
- * Whole-percent saving of paying yearly over twelve monthly payments, from
- * the plan's own prices. Null unless both exist in the same currency and the
- * yearly one is cheaper.
+ * The annual discount a Binectics admin set on this plan's yearly price, or
+ * null when none was set. It is the admin's figure, not one worked out from
+ * the monthly and yearly amounts (owner ruling, Oct 20 2026).
  */
 export function yearlySavingPercent(plan: Pick<PublicProviderPlanOption, "prices">): number | null {
-  const { month, year } = plan.prices;
-  if (!month || !year || month.currency !== year.currency || month.amount_minor <= 0) return null;
-  const twelve = month.amount_minor * 12;
-  if (year.amount_minor >= twelve) return null;
-  const pct = Math.round(((twelve - year.amount_minor) / twelve) * 100);
-  return pct > 0 ? pct : null;
+  return annualDiscountOf(plan.prices.year);
 }
 
 export const LIMIT_LABELS: readonly { key: keyof ProviderBillingLimits; noun: string }[] = [
