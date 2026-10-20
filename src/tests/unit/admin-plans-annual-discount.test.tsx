@@ -174,6 +174,53 @@ describe("admin plans editor: annual discount", () => {
     expect(screen.getByText(/renews through Paystack plan PLN_year/)).toBeInTheDocument();
   });
 
+  it("keeps an inactive price inactive when it is edited, and reactivates only when asked", async () => {
+    listPlanPrices.mockResolvedValue({ success: true, data: [{ ...monthly, is_active: false }] });
+    render(<AdminPlansPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    expect(screen.getByLabelText(/Active \(providers can buy/)).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Save price" }));
+    await waitFor(() => expect(upsertPlanPrice).toHaveBeenCalledTimes(1));
+    expect(upsertPlanPrice.mock.calls[0][0]).toMatchObject({ interval: "month", is_active: false });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByLabelText(/Active \(providers can buy/));
+    fireEvent.click(screen.getByRole("button", { name: "Save price" }));
+    await waitFor(() => expect(upsertPlanPrice).toHaveBeenCalledTimes(2));
+    expect(upsertPlanPrice.mock.calls[1][0]).toMatchObject({ is_active: true });
+  });
+
+  it("clearing the Paystack code on Edit sends an empty list and says the price goes one-shot", async () => {
+    listPlanPrices.mockResolvedValue({
+      success: true,
+      data: [{ ...monthly, gateway_prices: [{ gateway: "paystack", external_price_id: "PLN_month" }] }],
+    });
+    render(<AdminPlansPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByPlaceholderText("PLN_xxxx"), { target: { value: "" } });
+    expect(screen.getByText(/makes this price one-shot: it will no longer renew/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save price" }));
+    await waitFor(() => expect(upsertPlanPrice).toHaveBeenCalled());
+    expect(upsertPlanPrice.mock.calls[0][0]).toMatchObject({ gateway_prices: [] });
+  });
+
+  it("a price with no Paystack code sends no gateway list at all", async () => {
+    render(<AdminPlansPage />);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Edit" }))[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Save price" }));
+    await waitFor(() => expect(upsertPlanPrice).toHaveBeenCalled());
+    expect(upsertPlanPrice.mock.calls[0][0]).not.toHaveProperty("gateway_prices");
+  });
+
+  it("warns when a monthly edit leaves the discounted yearly price out of step", async () => {
+    render(<AdminPlansPage />);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Edit" }))[0]);
+    expect(screen.queryByText(/carries a 20% saving/)).not.toBeInTheDocument();
+    // ₦20,000 a month: 12 × 20,000 less 20% is ₦192,000, not the saved ₦144,000.
+    fireEvent.change(screen.getByDisplayValue("15000"), { target: { value: "20000" } });
+    expect(screen.getByText(/carries a 20% saving/)).toBeInTheDocument();
+  });
+
   it("sends no discount on a monthly price, and clamps a yearly one to 90", async () => {
     render(<AdminPlansPage />);
     fireEvent.click(await screen.findByRole("button", { name: "Add price" }));
