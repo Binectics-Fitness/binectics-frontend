@@ -184,7 +184,7 @@ describe("programs: restore", () => {
     const restore = vi.spyOn(programsService, "restoreTemplate").mockResolvedValue({
       success: false,
       status: 403,
-      message: "You no longer have access to this program.",
+      message: "You do not own this program template",
     } as never);
     const user = userEvent.setup();
     wrap(<ProgramsManager config={config} />);
@@ -193,7 +193,7 @@ describe("programs: restore", () => {
     const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
     await user.click(within(dialog).getByRole("button", { name: "Restore program" }));
     await waitFor(() => expect(restore).toHaveBeenCalledWith("t2"));
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("You no longer have access to this program."));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("You do not own this program template"));
     expect(toast.success).not.toHaveBeenCalled();
     // Still archived: still behind the Archived filter, still restorable.
     expect(await screen.findByRole("button", { name: "Restore" })).toBeInTheDocument();

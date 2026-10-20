@@ -200,6 +200,11 @@ describe("describeActivity", () => {
     );
     // Someone the API would not name stays unnamed, and is not called a team member.
     expect(d({ event: "MEMBERSHIP_PAUSED_BY_GYM", subject: former })).toBe("Ada Obi paused a member's membership.");
+    // The API's unnamed gym member reads in lower case mid-sentence.
+    const unnamed = { kind: OrgAuditPersonKind.GYM_MEMBER, name: "A member" };
+    expect(d({ event: "MEMBERSHIP_RESUMED_BY_GYM", subject: unnamed, details: { paused_by: "member" } })).toBe(
+      "Ada Obi resumed a member's membership, which the member had paused.",
+    );
     expect(d({ event: "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER", actor: former, subject: former })).toBe(
       "A member resumed their membership, which the gym had paused.",
     );

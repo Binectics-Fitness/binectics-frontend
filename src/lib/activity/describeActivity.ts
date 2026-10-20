@@ -77,9 +77,13 @@ function subjectName(subject: OrgAuditPerson | null): string {
   return subject.kind === OrgAuditPersonKind.FORMER_MEMBER ? "a former team member" : subject.name;
 }
 
+/** The API's name for a gym member it won't name ("A member"). */
+const UNNAMED_GYM_MEMBER = "A member";
+
 /** The member a membership event is about; never a name the API withheld. */
 function memberName(subject: OrgAuditPerson | null): string {
   if (!subject || subject.kind === OrgAuditPersonKind.FORMER_MEMBER) return "a member";
+  if (subject.kind === OrgAuditPersonKind.GYM_MEMBER && subject.name === UNNAMED_GYM_MEMBER) return "a member";
   return subject.name;
 }
 
