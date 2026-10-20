@@ -141,6 +141,9 @@ export default function DietitianFeedbackPage() {
       }
       setRows((prev) => prev.map((r) => (r._id === row._id ? { ...r, reply: null } : r)));
       setEditing(null);
+      toast.success("Reply removed");
+    } catch {
+      toast.error("We couldn't remove your reply. Check your connection.");
     } finally {
       setSaving(false);
     }

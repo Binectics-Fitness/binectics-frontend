@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, DSStatCard, EmptySlate, Eyebrow, ListRow, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
@@ -62,7 +63,16 @@ const fieldInputStyle = {
   color: "var(--ink)",
 };
 
+/** useSearchParams needs a Suspense boundary for the static build. */
 export default function MealLogPage() {
+  return (
+    <Suspense fallback={null}>
+      <MealLog />
+    </Suspense>
+  );
+}
+
+function MealLog() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   // null until the list has loaded: a failed load must not read as "no meals".
   const [meals, setMeals] = useState<MealFeedback[] | null>(null);
@@ -180,18 +190,16 @@ export default function MealLogPage() {
   // On a failed load only the error shows, never zeros.
   const showData = !loading && meals !== null;
   const [openId, setOpenId] = useState<string | null>(null);
-  // A reply notification links here with ?mealId=: that meal opens once the
-  // list has it, until closed. Read once from the URL (no Suspense boundary
-  // needed; on the server there are no meals, so nothing opens there).
-  const [linkedMealId] = useState<string | null>(() =>
-    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("mealId"),
-  );
-  const [linkClosed, setLinkClosed] = useState(false);
-  const shownId = openId ?? (linkClosed ? null : linkedMealId);
+  // A reply notification links here with ?mealId=: that meal opens once
+  // the list has it, and again when another one is opened while the page
+  // is open. Closing it keeps it closed until the link names another.
+  const linkedMealId = useSearchParams()?.get("mealId") ?? null;
+  const [closedLink, setClosedLink] = useState<string | null>(null);
+  const shownId = openId ?? (linkedMealId && linkedMealId !== closedLink ? linkedMealId : null);
   const opened = meals?.find((m) => m._id === shownId) ?? null;
   const closeDetail = () => {
     setOpenId(null);
-    setLinkClosed(true);
+    setClosedLink(linkedMealId);
   };
 
   return (
