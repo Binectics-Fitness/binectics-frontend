@@ -39,7 +39,7 @@ const faqItems = [
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents, business registration, certifications, identity, and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
   { q: "Is my data secure?", a: "Data is encrypted in transit and at rest. Card payments are handled by Paystack, so Binectics never sees or stores card numbers." },
   { q: "Can I cancel or downgrade anytime?", a: "Yes. Move to the free plan at any time, your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Custom plans follow the terms in your service agreement." },
-  { q: "Can I use my own payment account?", a: "Yes. Providers connect their own Paystack account, and membership payments settle directly into it. 1:1 session payments, and memberships taken before a provider connects, are collected by Binectics and paid out to the provider after verification. Binectics takes no cut." },
+  { q: "Can I use my own payment account?", a: "Yes. Payments go straight to a provider's own Paystack account once they've connected one. Until then, Binectics collects them and pays them out to the provider after verification. Binectics takes no cut." },
   { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings, each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
 
@@ -101,7 +101,7 @@ export default function Home() {
 
             <p className="text-[16px] sm:text-[19px] text-fg-2 max-w-[580px] mt-5 sm:mt-7 leading-relaxed">
               Whether you coach ten clients or run three locations: memberships, classes,
-              QR check-in, training programs, and meal plans, with membership payments<PaidInPhrase />{" "}
+              QR check-in, training programs, and meal plans, with payments<PaidInPhrase />{" "}
               straight into your own Paystack account once you connect it. Built for Nigeria, priced per seat,
               with no cut of your takings.
             </p>

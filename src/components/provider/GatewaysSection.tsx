@@ -144,7 +144,7 @@ export function GatewaysSection({
         {isLoading && <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading gateways…</span>}
         {!isLoading && configs.length === 0 && !adding && (
           <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-            No gateways configured, checkout uses the platform&rsquo;s keys. Add your own so membership payments settle directly to your account.
+            No gateways configured, checkout uses the platform&rsquo;s keys. Add your own so payments go straight to your account.
           </span>
         )}
         {configs.map((c) => {

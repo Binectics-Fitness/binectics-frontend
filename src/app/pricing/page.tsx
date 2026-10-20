@@ -20,7 +20,7 @@ import { PaymentCoverage } from "@/components/pricing/PaymentCoverage";
 const FAQS = [
   { q: "Is there a setup fee or annual contract?", a: "No setup fee. Paid plans are billed monthly, or yearly where a yearly price is offered, and you can cancel any time. We don't ask for an upfront payment." },
   { q: "What happens if I cross my plan's member limit?", a: <>We tell you as you get close. We don&apos;t auto-upgrade you: you choose a larger plan, or archive members you no longer work with to free seats. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>No surprise charges.</strong></> },
-  { q: "Can I use my own payment account?", a: "Yes. Connect your own Paystack account and membership payments settle directly into it. 1:1 session payments, and memberships taken before you connect, are collected by Binectics and paid out to you after verification. Binectics takes no cut." },
+  { q: "Can I use my own payment account?", a: "Yes. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you after verification. Binectics takes no cut." },
   { q: "What do members pay?", a: "Nothing to join. Members pay providers directly, at each provider's own prices and in the provider's currency. The full amount is shown before they confirm." },
   { q: "What if I'm not happy with my plan?", a: "Change or cancel it from your billing settings. Your data stays exportable after you leave." },
   { q: "What if my business needs more than the largest plan?", a: "Each plan's limits are listed above. If you need more locations, staff or members than a plan allows, talk to us and we'll shape a custom plan." },

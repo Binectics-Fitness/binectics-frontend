@@ -203,7 +203,7 @@ export function gymSetupSteps(input: GymSetupInput): SetupStep[] {
             title: "Add your payment keys",
             detail:
               state === "none"
-                ? "Membership payments then settle straight to your Paystack account, and members can renew by card."
+                ? "Payments then go straight to your Paystack account, and members can renew by card."
                 : "Connected.",
             done: state === "connected",
             href: href.payments,

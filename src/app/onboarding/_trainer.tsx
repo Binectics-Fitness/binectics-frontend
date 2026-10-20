@@ -176,7 +176,7 @@ export function TrainerStep4({ data, setField }: StepProps) {
 export function TrainerStep5({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 05 of 06, trainer track" title="Connect your payout." desc="Plan payments go to your own Paystack account once you connect it. Binectics collects 1:1 session payments and pays them out to you after verification." />
+      <StageHead crumb="Step 05 of 06, trainer track" title="Connect your payout." desc="Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you after verification." />
       <PayoutChoice data={data} setField={setField} />
     </>
   );

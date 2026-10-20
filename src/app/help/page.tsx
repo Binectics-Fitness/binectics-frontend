@@ -25,7 +25,7 @@ const MEMBER_ANSWERS = [
 ];
 
 const PROVIDER_ANSWERS = [
-  { q: "How do I get paid?", a: "Connect your own Paystack account in your workspace\u2019s payment settings. Membership payments then settle directly into it. 1:1 session payments, and memberships taken before you connect, are collected by Binectics and paid out to you after verification. Binectics takes no cut. You pay Binectics only for your plan\u2019s seats." },
+  { q: "How do I get paid?", a: "Connect your own Paystack account in your workspace\u2019s payment settings. Payments then go straight into it. Until then, Binectics collects them and pays them out to you after verification. Binectics takes no cut. You pay Binectics only for your plan\u2019s seats." },
   { q: "How do I get verified?", a: "Upload your documents from your dashboard. Our team reviews them and adds the verified badge to your listing, or tells you what to fix." },
   { q: "How do I set up check-in at my gym?", a: "Open the kiosk page from your gym dashboard on a tablet or phone at the door. It shows a rotating QR code that members scan from the app." },
   { q: "How do I bring my existing clients?", a: "Invite them by email from your clients page. They join your roster without going through the marketplace." },
