@@ -21,6 +21,10 @@ function titleCase(id: string): string {
   return id ? id.charAt(0).toUpperCase() + id.slice(1) : id;
 }
 
+/** What replacing keys does, depending on whether the public key changes (the API's in-place update). */
+export const REPLACE_KEYS_COPY =
+  "Checkout switches to the new keys at once. If the public key is unchanged (a new secret for the same account), members' saved cards, your webhook and your checked currencies all stay. A different public key (another Paystack account, or switching between Test and Live) stops members' saved cards (they pay by link instead and are told), resets the webhook status so you set the URL in that account's dashboard, and re-checks your currencies there. Any it doesn't have are dropped, and we won't switch while plans or payments still need one.";
+
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
   color: "var(--ink)",
@@ -69,6 +73,8 @@ export function GatewaysSection({
   const addable = connectable.filter((g) => !configs.some((c) => c.gateway === g.gateway));
 
   const [adding, setAdding] = useState(false);
+  // The connected gateway whose keys are being replaced in place.
+  const [replacing, setReplacing] = useState<string | null>(null);
   const [gateway, setGateway] = useState<string>("");
   const [publicKey, setPublicKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
@@ -80,11 +86,33 @@ export function GatewaysSection({
   const secretHintId = `${fieldId}-secret-hint`;
 
   const startAdd = () => {
+    setReplacing(null);
     setAdding(true);
     setError(null);
     setPublicKey("");
     setSecretKey("");
     setGateway(addable[0]?.gateway ?? "");
+  };
+
+  /**
+   * New keys for a connected gateway, updated in place: the same POST
+   * replaces the saved keys and keeps the webhook and checked currencies
+   * (and members' saved cards when the keys are for the same account).
+   * Never remove-then-add, which retires every saved card.
+   */
+  const startReplace = (id: string) => {
+    setAdding(false);
+    setReplacing(id);
+    setError(null);
+    setPublicKey("");
+    setSecretKey("");
+    setGateway(id);
+  };
+
+  const closeForm = () => {
+    setAdding(false);
+    setReplacing(null);
+    setSecretKey("");
   };
 
   const onSave = async () => {
@@ -97,14 +125,33 @@ export function GatewaysSection({
       return;
     }
     setError(null);
+    if (replacing) {
+      const label = labelOf(replacing);
+      requestConfirmation({
+        title: `Replace your ${label} keys?`,
+        description: REPLACE_KEYS_COPY,
+        confirmLabel: "Replace keys",
+        confirmVariant: "primary",
+        onConfirm: () => sendKeys(),
+      });
+      return;
+    }
+    await sendKeys();
+  };
+
+  const sendKeys = async () => {
+    const wasReplacing = replacing;
     const res = await upsert.mutateAsync({
       gateway,
       public_key: publicKey.trim(),
       secret_key: secretKey.trim(),
       is_active: true,
     });
+    // The secret is never kept past one attempt.
+    setSecretKey("");
     if (res.success) {
-      setAdding(false);
+      closeForm();
+      if (wasReplacing) toast.success(`${labelOf(wasReplacing)} keys replaced. Checkout uses the new keys now.`);
     } else if (res.code === GATEWAY_NOT_SUPPORTED) {
       // The API names what can be connected ("You can't connect Stripe
       // yet. You can connect Paystack."); refresh the list it came from.
@@ -172,6 +219,16 @@ export function GatewaysSection({
               ) : c.is_active ? (
                 <span className="font-mono text-[10px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full" style={{ color: "var(--signal-ink)", background: "var(--signal-soft)" }}>Active</span>
               ) : null}
+              {!legacy && replacing !== c.gateway && (
+                <button
+                  className="btn-ghost-v2 sm"
+                  disabled={remove.isPending || upsert.isPending}
+                  onClick={() => startReplace(c.gateway)}
+                  aria-label={`Replace your ${label} keys`}
+                >
+                  Replace keys
+                </button>
+              )}
               <button
                 className="btn-ghost-v2 sm"
                 disabled={remove.isPending}
@@ -180,6 +237,7 @@ export function GatewaysSection({
                 Remove
               </button>
             </div>
+            {replacing === c.gateway && keyForm(true)}
             {!legacy && c.is_active && gateways.isSuccess && orgId && (
               <ProviderCurrenciesPanel
                 orgId={orgId}
@@ -201,35 +259,7 @@ export function GatewaysSection({
         })}
 
         {adding ? (
-          <div className="flex flex-col gap-3.5 p-3.5 rounded-(--r-2)" style={{ border: "1px dashed var(--border-2)" }}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor={gatewayId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Gateway</label>
-                <SearchableSelect
-                  id={gatewayId}
-                  value={gateway}
-                  onChange={(v) => setGateway(v)}
-                  options={addable.map((g) => ({ label: g.label, value: g.gateway }))}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor={publicKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Public key</label>
-                <input id={publicKeyId} value={publicKey} onChange={(e) => setPublicKey(e.target.value)} placeholder="pk_live_…" className={INPUT_CLASS} style={INPUT_STYLE} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor={secretKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Secret key</label>
-                <input id={secretKeyId} type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="off" aria-describedby={secretHintId} className={INPUT_CLASS} style={INPUT_STYLE} />
-                <span id={secretHintId} className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>Stored encrypted. Never shown again.</span>
-              </div>
-            </div>
-            {error && <span className="text-[12px]" style={{ color: "var(--danger, #b00020)" }}>{error}</span>}
-            <div className="flex gap-2">
-              <button className="btn-primary-v2 sm" disabled={upsert.isPending} onClick={() => void onSave()}>
-                {upsert.isPending ? "Saving…" : "Save gateway"}
-              </button>
-              <button className="btn-ghost-v2 sm" disabled={upsert.isPending} onClick={() => setAdding(false)}>Cancel</button>
-            </div>
-          </div>
+          keyForm(false)
         ) : gateways.isError ? (
           <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
             We couldn&rsquo;t load the payment providers you can connect. Try again shortly.
@@ -241,4 +271,44 @@ export function GatewaysSection({
       {confirmationModal}
     </section>
   );
+
+  /** The keys form: a new gateway, or (`replace`) new keys for `replacing`. */
+  function keyForm(replace: boolean) {
+    return (
+      <div className="flex flex-col gap-3.5 p-3.5 rounded-(--r-2) mt-3" style={{ border: "1px dashed var(--border-2)" }}>
+        {replace && replacing && (
+          <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>New {labelOf(replacing)} keys</div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {!replace && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={gatewayId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Gateway</label>
+            <SearchableSelect
+              id={gatewayId}
+              value={gateway}
+              onChange={(v) => setGateway(v)}
+              options={addable.map((g) => ({ label: g.label, value: g.gateway }))}
+            />
+          </div>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={publicKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Public key</label>
+            <input id={publicKeyId} value={publicKey} onChange={(e) => setPublicKey(e.target.value)} placeholder="pk_live_…" className={INPUT_CLASS} style={INPUT_STYLE} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={secretKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Secret key</label>
+            <input id={secretKeyId} type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="new-password" data-1p-ignore data-lpignore="true" aria-describedby={secretHintId} className={INPUT_CLASS} style={INPUT_STYLE} />
+            <span id={secretHintId} className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>Stored encrypted. Never shown again.</span>
+          </div>
+        </div>
+        {error && <span className="text-[12px]" style={{ color: "var(--danger, #b00020)" }}>{error}</span>}
+        <div className="flex gap-2">
+          <button className="btn-primary-v2 sm" disabled={upsert.isPending} onClick={() => void onSave()}>
+            {upsert.isPending ? "Saving…" : replace ? "Replace keys" : "Save gateway"}
+          </button>
+          <button className="btn-ghost-v2 sm" disabled={upsert.isPending} onClick={closeForm}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
 }
