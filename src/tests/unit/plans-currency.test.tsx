@@ -93,6 +93,43 @@ describe("trainer plan currency", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("saves a saving against another active plan in the same currency, and leaves the price alone", async () => {
+    const monthly = {
+      _id: "p-m",
+      organization_id: "org-1",
+      created_by: "u1",
+      name: "Monthly coaching",
+      plan_type: "subscription",
+      duration_days: 30,
+      price_minor: 2_000_000,
+      currency: "NGN",
+      features: [],
+      is_active: true,
+      is_public: true,
+      created_at: "",
+      updated_at: "",
+    };
+    vi.spyOn(marketplaceService, "getOrgMembershipPlans").mockResolvedValue({ success: true, data: [monthly] as never });
+    const create = vi
+      .spyOn(marketplaceService, "createOrgMembershipPlan")
+      .mockResolvedValue({ success: true, data: { ...monthly, _id: "p-new" } as never });
+    const user = await openCreate();
+    await user.type(screen.getByLabelText("Price"), "200000");
+    const compare = screen
+      .getAllByLabelText("Currency")
+      .find((el) => Array.from((el as HTMLSelectElement).options).some((o) => o.value === "p-m")) as HTMLSelectElement;
+    await user.selectOptions(compare, "p-m");
+    await user.type(screen.getByLabelText("Saving percent"), "17");
+    expect(screen.getByText(/Members will see "Save 17% vs Monthly coaching"/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create plan" }));
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(create.mock.calls[0][1]).toMatchObject({
+      price_minor: 20_000_000,
+      compare_to_plan_id: "p-m",
+      discount_percent: 17,
+    });
+  });
+
   it("shows the CURRENCY_NOT_SELECTABLE message and reasons on save", async () => {
     vi.spyOn(marketplaceService, "createOrgMembershipPlan").mockResolvedValue({
       success: false,

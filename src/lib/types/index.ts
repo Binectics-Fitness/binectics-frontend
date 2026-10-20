@@ -286,8 +286,27 @@ export interface MarketplaceMembershipPlan {
   features: string[];
   is_active: boolean;
   is_public: boolean;
+  /**
+   * Another of the provider's plans this one is a saving against (e.g.
+   * Annual vs Monthly). A label only: the price above is what is charged.
+   */
+  compare_to_plan_id?: string | null;
+  /** The saving the provider set against compare_to_plan_id, 0–90. */
+  discount_percent?: number;
+  /**
+   * Set by the public listing-plans endpoint when members should see
+   * "Save N% vs <plan>": both fields are set and the compared plan is still
+   * active, public and in the same currency. Null or absent: no saving.
+   */
+  comparison?: PlanComparison | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface PlanComparison {
+  plan_id: string;
+  plan_name: string;
+  discount_percent: number;
 }
 
 export interface MarketplaceListing {

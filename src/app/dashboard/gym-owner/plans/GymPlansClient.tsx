@@ -24,6 +24,7 @@ import {
 import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
 import { ChipEditor, DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { planPerLabel as perLabel } from "@/lib/marketplace/planDisplay";
+import { PlanComparisonFields, comparisonFromPlan, comparisonPayload, ownerSavingLabel } from "@/components/plans/PlanComparisonFields";
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
@@ -131,7 +132,7 @@ export function GymPlansClient() {
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 overflow-visible!">
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New plan</h2>
-          <PlanForm saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
+          <PlanForm plans={plans} saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
         </DSCard>
       )}
 
@@ -174,6 +175,11 @@ export function GymPlansClient() {
                   <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
                     {fmtNumber(membersOf(p._id))} member{membersOf(p._id) === 1 ? "" : "s"}
                   </div>
+                  {ownerSavingLabel(p, plans) && (
+                    <div className="text-[12px] mt-1" style={{ color: "var(--fg-2)" }}>
+                      Members see &ldquo;{ownerSavingLabel(p, plans)}&rdquo;
+                    </div>
+                  )}
                 </div>
                 <span className="font-mono text-[15px] shrink-0" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                   {fmtMoney(minorToMajor(p.price_minor, p.currency), p.currency)} <small className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>{perLabel(p)}</small>
@@ -195,7 +201,7 @@ export function GymPlansClient() {
               </div>
               {editingId === p._id && (
                 <div className="px-5.5 pb-4">
-                  <EditPlanForm plan={p} orgId={orgId} onDone={() => setEditingId(null)} />
+                  <EditPlanForm plan={p} plans={plans} orgId={orgId} onDone={() => setEditingId(null)} />
                 </div>
               )}
             </div>
@@ -207,7 +213,7 @@ export function GymPlansClient() {
   );
 }
 
-function EditPlanForm({ plan, orgId, onDone }: { plan: MarketplaceMembershipPlan; orgId: string | undefined; onDone: () => void }) {
+function EditPlanForm({ plan, plans, orgId, onDone }: { plan: MarketplaceMembershipPlan; plans: MarketplaceMembershipPlan[]; orgId: string | undefined; onDone: () => void }) {
   const update = useUpdateOrgMembershipPlan(orgId);
   const [error, setError] = useState<string | null>(null);
   const onSave = async (data: CreateOrgMembershipPlanRequest) => {
@@ -216,11 +222,13 @@ function EditPlanForm({ plan, orgId, onDone }: { plan: MarketplaceMembershipPlan
     if (res.success) onDone();
     else setError(writeErrorMessage(res, "Couldn't save the plan."));
   };
-  return <PlanForm initial={plan} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
+  return <PlanForm initial={plan} plans={plans} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
 }
 
-function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel, submitLabel = "Save plan" }: {
+function PlanForm({ initial, plans, saving, error, defaultCurrency, onSubmit, onCancel, submitLabel = "Save plan" }: {
   initial?: MarketplaceMembershipPlan;
+  /** The gym's plans, for "Show a saving" against another of them. */
+  plans: MarketplaceMembershipPlan[];
   saving: boolean;
   error?: string | null;
   defaultCurrency: string;
@@ -257,6 +265,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
   const [priceMinor, setPriceMinor] = useState<number | null>(initial?.price_minor ?? null);
   const [features, setFeatures] = useState<string[]>(initial?.features ?? []);
   const [isPublic, setIsPublic] = useState(initial?.is_public ?? true);
+  const [comparison, setComparison] = useState(() => comparisonFromPlan(initial));
   const [localError, setLocalError] = useState<string | null>(null);
 
   const oneTime = planType === MembershipPlanType.ONE_TIME;
@@ -282,6 +291,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
       currency: defaultCurrency,
       features,
       is_public: isPublic,
+      ...comparisonPayload(comparison),
     });
   };
 
@@ -351,6 +361,7 @@ function PlanForm({ initial, saving, error, defaultCurrency, onSubmit, onCancel,
         </label>
       </div>
       <ChipEditor label="Features" values={features} onChange={setFeatures} placeholder="e.g. 24/7 access" />
+      <PlanComparisonFields plans={plans} planId={initial?._id} currency={defaultCurrency} value={comparison} onChange={setComparison} />
       {(localError || error) && <p className="text-[12.5px]" style={{ color: "var(--danger, #b00020)" }}>{localError || error}</p>}
       <div className="flex gap-2">
         <button className="btn-primary-v2 sm" disabled={saving} onClick={submit}>{saving ? "Saving…" : submitLabel}</button>
