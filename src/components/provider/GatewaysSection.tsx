@@ -21,6 +21,10 @@ function titleCase(id: string): string {
   return id ? id.charAt(0).toUpperCase() + id.slice(1) : id;
 }
 
+/** What replacing keys does, depending on whether the public key changes (the API's in-place update). */
+export const REPLACE_KEYS_COPY =
+  "Checkout switches to the new keys at once. If the public key is unchanged (a new secret for the same account), members' saved cards, your webhook and your checked currencies all stay. A different public key (another Paystack account, or switching between Test and Live) stops members' saved cards (they pay by link instead and are told), resets the webhook status so you set the URL in that account's dashboard, and re-checks your currencies there. Any it doesn't have are dropped, and we won't switch while plans or payments still need one.";
+
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
   color: "var(--ink)",
@@ -125,7 +129,7 @@ export function GatewaysSection({
       const label = labelOf(replacing);
       requestConfirmation({
         title: `Replace your ${label} keys?`,
-        description: `Checkout switches to the new keys at once. Your webhook and checked currencies stay. Cards members saved keep working if the new keys are for the same ${label} account; keys for a different account stop them, and those members pay by link instead and are told.`,
+        description: REPLACE_KEYS_COPY,
         confirmLabel: "Replace keys",
         confirmVariant: "primary",
         onConfirm: () => sendKeys(),
@@ -293,7 +297,7 @@ export function GatewaysSection({
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor={secretKeyId} className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Secret key</label>
-            <input id={secretKeyId} type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="off" aria-describedby={secretHintId} className={INPUT_CLASS} style={INPUT_STYLE} />
+            <input id={secretKeyId} type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)} placeholder="sk_live_…" autoComplete="new-password" data-1p-ignore data-lpignore="true" aria-describedby={secretHintId} className={INPUT_CLASS} style={INPUT_STYLE} />
             <span id={secretHintId} className="text-[11.5px]" style={{ color: "var(--fg-3)" }}>Stored encrypted. Never shown again.</span>
           </div>
         </div>

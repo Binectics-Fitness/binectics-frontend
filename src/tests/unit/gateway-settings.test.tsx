@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { GatewaysSection, REPLACE_KEYS_COPY } from "@/components/provider/GatewaysSection";
 import { confirmInDialog } from "@/test/confirmDialog";
 import { payoutOptions } from "@/app/onboarding/_payout";
 import { normalizePaymentGateways, type PublicPaymentGateway } from "@/lib/api/paymentGateways";
@@ -72,6 +72,10 @@ describe("GatewaysSection", () => {
     expect(screen.getByLabelText("Public key")).toHaveAttribute("placeholder", "pk_live_…");
     const secret = screen.getByLabelText("Secret key");
     expect(secret).toHaveAttribute("type", "password");
+    // Browsers and password managers must not offer to save an sk_ key.
+    expect(secret).toHaveAttribute("autocomplete", "new-password");
+    expect(secret).toHaveAttribute("data-1p-ignore");
+    expect(secret).toHaveAttribute("data-lpignore", "true");
     expect(secret).toHaveAccessibleDescription("Stored encrypted. Never shown again.");
   });
 
@@ -122,7 +126,8 @@ describe("GatewaysSection", () => {
     await user.click(screen.getByRole("button", { name: "Replace keys" }));
     expect(h.upsert).not.toHaveBeenCalled();
     const dialog = await confirmInDialog(user, "Replace your Paystack keys?", "Replace keys");
-    expect(dialog).toHaveTextContent("Your webhook and checked currencies stay");
+    expect(dialog).toHaveTextContent(REPLACE_KEYS_COPY);
+    expect(dialog).toHaveTextContent("If the public key is unchanged");
     expect(h.upsert).toHaveBeenCalledWith({
       gateway: "paystack",
       public_key: "pk_live_new0001",
