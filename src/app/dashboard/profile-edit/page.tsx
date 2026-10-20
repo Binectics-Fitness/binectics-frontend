@@ -16,7 +16,7 @@ export default function ProfileEditPage() {
           How your gym appears in the marketplace. Save, then publish to go live.
         </div>
       </div>
-      <ProviderListingProfile />
+      <ProviderListingProfile scope="gym" />
     </GymDashboardShell>
   );
 }

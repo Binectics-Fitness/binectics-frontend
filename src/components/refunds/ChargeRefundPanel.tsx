@@ -92,6 +92,18 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
   // A submit is open: from the click until its confirmation is cancelled or
   // its request ends. A ref, not state: a double-click lands before a render.
   const inFlight = useRef(false);
+  // The API answered the last submit with a refusal (4xx): nothing was
+  // created under its key. If the amount or reason then changes, it is a
+  // different refund and takes a new key (else the API would answer
+  // REFUND_IDEMPOTENCY_CONFLICT). A network failure or a 5xx never sets
+  // this: the refund may exist, so a retry must reuse the key.
+  const refusedRef = useRef(false);
+  const edited = () => {
+    if (refusedRef.current) {
+      keyRef.current = newIdempotencyKey();
+      refusedRef.current = false;
+    }
+  };
   // The direct refund waiting on its confirmation: the amount and the key
   // captured at submit. The ref is what a click reads (a double-click on
   // the confirm button lands before a render); the state draws it.
@@ -172,9 +184,15 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
         : await refundsService.adminRefund(chargeId, input);
       if (!res.success || !res.data) {
         // A network failure keeps the same key, so trying again is safe.
+        // A refusal keeps it too, until the form is changed (see edited()).
+        const status = (res as { status?: number }).status;
+        if (typeof status === "number" && status >= 400 && status < 500) {
+          refusedRef.current = true;
+        }
         setFormError(refundErrorMessage(res.code, res.message));
         return;
       }
+      refusedRef.current = false;
       setDone(
         isRequest
           ? "Request sent. Binectics will review it."
@@ -265,6 +283,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
                 value={display}
                 currency={cur}
                 onChange={(d, m) => {
+                  if (m !== minor) edited();
                   setDisplay(d);
                   setMinor(m);
                   setFormError(null);
@@ -274,6 +293,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
                 type="button"
                 className="btn-ghost-v2"
                 onClick={() => {
+                  if (quote.refundable_minor !== minor) edited();
                   setMinor(quote.refundable_minor);
                   setDisplay(formatMinorForInput(quote.refundable_minor, { currency: cur }));
                   setFormError(null);
@@ -289,7 +309,10 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
               value={reason}
               maxLength={500}
               rows={2}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                edited();
+                setReason(e.target.value);
+              }}
               className="rounded-(--r-2) px-3 py-2 text-[14px]"
               style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" }}
             />

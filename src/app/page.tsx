@@ -39,7 +39,7 @@ const faqItems = [
   { q: 'What does "verified" mean on a listing?', a: "It means a human on our team has reviewed the provider\u2019s documents, business registration, certifications, identity, and approved them. Verified listings get the green badge and appear in marketplace results. Rejection comes with a written reason and a path to resubmit." },
   { q: "Is my data secure?", a: "Data is encrypted in transit and at rest. Card payments are handled by Paystack, so Binectics never sees or stores card numbers." },
   { q: "Can I cancel or downgrade anytime?", a: "Yes. Move to the free plan at any time, your listing stays live, and existing members keep their active subscriptions until they expire. No cancellation fees, no lock-in contracts. Custom plans follow the terms in your service agreement." },
-  { q: "Can I use my own payment account?", a: "Yes. Payments go straight to a provider's own Paystack account once they've connected one. Until then, Binectics collects them and pays them out to the provider after verification. Binectics takes no cut." },
+  { q: "Can I use my own payment account?", a: "Yes. Payments go straight to a provider's own Paystack account once they've connected one. Until then, Binectics collects them and pays them out to the provider once payouts are available and their account is verified. Binectics takes no cut." },
   { q: "How do team and multi-location plans work?", a: "Gym owners create an organization, invite staff with role and permission scopes, and manage multiple listings, each with its own facility details, amenities, gallery, and documents. Assignment rules route new clients to the right staff automatically." },
 ];
 

@@ -5,12 +5,13 @@ import { describe, expect, it } from "vitest";
 /**
  * Where provider money goes (owner ruling, Oct 20 2026): straight to the
  * provider's own Paystack account once they connect one; until then the
- * platform collects it and pays it out after verification. "Binectics never
+ * platform collects it and pays it out once payouts are available and the
+ * account is verified (payouts don't run yet). "Binectics never
  * holds money" was wrong, and so was "1:1 sessions are always collected by
  * Binectics" (since api #189 they use the provider's own key too).
  */
 const SENTENCE =
-  "Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you after verification.";
+  "Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified.";
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
 
@@ -43,5 +44,8 @@ describe("money wording", () => {
     expect(src).not.toMatch(/never holds?\b/i);
     expect(src).not.toMatch(/1:1 sessions?(, and memberships)?[^."]*collected by Binectics/i);
     expect(src).not.toMatch(/Binectics collects 1:1/i);
+    expect(src).not.toMatch(/pays? (the )?providers? directly/i);
+    expect(src).not.toMatch(/refunds come from the provider you paid/i);
+    expect(src).not.toMatch(/pays them out to (you|the provider) after verification/i);
   });
 });

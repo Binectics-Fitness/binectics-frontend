@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymViewer } from "@/hooks/useGymViewer";
-import { TeamPermission, holds } from "@/lib/gymStaffNav";
+import { TeamPermission, allows, gymPageRule, holds } from "@/lib/gymStaffNav";
 import { GalleryManager } from "@/components/provider/GalleryManager";
 import { authService } from "@/lib/api/auth";
 import {
@@ -103,15 +103,19 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
  *
  * A gym's staff (a role holding marketplace:manage_listing) working in the
  * gym's workspace edit the GYM's listing through the same org routes, never
- * a solo listing of their own.
+ * a solo listing of their own, but only where the gym's page asks for it
+ * (scope="gym"). Everywhere else the viewer edits their own listing.
  */
-export function ProviderListingProfile() {
+export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own" } = {}) {
   const { user, updateUser } = useAuth();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const viewer = useGymViewer();
 
-  // Someone working in a gym they don't own: its listing is the gym's.
-  const gymStaff = viewer.staff && currentOrg?.account_type === AccountType.GYM_OWNER;
+  // Someone working in a gym they don't own: its listing is the gym's. Only
+  // on the gym's own listing page (scope="gym", /dashboard/profile-edit): a
+  // gym's staff trainer whose current org is that gym edits their OWN listing
+  // on /dashboard/trainer/profile and the dietitian profile.
+  const gymStaff = scope === "gym" && viewer.staff && currentOrg?.account_type === AccountType.GYM_OWNER;
   const isGym = user?.role === UserRole.GYM_OWNER || gymStaff;
   // Every org listing route asks for manage_listing (the owner holds it).
   const canEditGymListing = !gymStaff || holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
@@ -234,7 +238,9 @@ export function ProviderListingProfile() {
         { href: "/dashboard/gym-owner/plans", label: "Plans & pricing →" },
         { href: "/dashboard/gym-owner/locations", label: "Locations →" },
         { href: "/dashboard/gym-owner/settings", label: "Settings →" },
-      ]
+        // A gym's staff see only the pages their role opens (Settings needs
+        // manage_organization as well, for one).
+      ].filter((l) => !gymStaff || allows(viewer, gymPageRule(l.href)))
     : [
         { href: "/dashboard/trainer/plans", label: "Packages & pricing →" },
         { href: "/dashboard/consultations", label: "Availability →" },

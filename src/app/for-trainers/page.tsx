@@ -46,7 +46,7 @@ const FEATURES = [
   },
   {
     title: "Get paid",
-    desc: "Clients pay by card or bank transfer. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you after verification. Binectics takes no cut.",
+    desc: "Clients pay by card or bank transfer. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified. Binectics takes no cut.",
     stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },

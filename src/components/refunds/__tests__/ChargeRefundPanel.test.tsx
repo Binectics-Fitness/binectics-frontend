@@ -167,6 +167,46 @@ describe("ChargeRefundPanel: a direct refund asks first (owner ruling 6)", () =>
     expect(keys[0]).toEqual(expect.any(String));
   });
 
+  it("after a refusal (4xx), changing the amount or reason takes a new key", async () => {
+    svc.orgRefund
+      .mockResolvedValueOnce({ success: false, code: "REFUND_EXCEEDS_REMAINING", message: "Too much", status: 400 })
+      .mockResolvedValueOnce({ success: false, code: "REFUND_DISPUTE_OPEN", message: "Disputed", status: 409 })
+      .mockResolvedValueOnce({ success: true, data: refund });
+    await openForm();
+    const send = async () => {
+      await userEvent.click(screen.getByRole("button", { name: "Refund" }));
+      await userEvent.click(await screen.findByRole("button", { name: /^Refund .+/ }));
+    };
+    await send();
+    await waitFor(() => expect(svc.orgRefund).toHaveBeenCalledTimes(1));
+    // Change the reason: a different refund, so a different key.
+    await userEvent.type(screen.getByRole("textbox", { name: /Reason/ }), "Class cancelled");
+    await send();
+    await waitFor(() => expect(svc.orgRefund).toHaveBeenCalledTimes(2));
+    // Unchanged form after a refusal: retrying keeps that key.
+    await send();
+    await waitFor(() => expect(svc.orgRefund).toHaveBeenCalledTimes(3));
+    const keys = svc.orgRefund.mock.calls.map((c) => c[2].idempotency_key);
+    expect(keys[1]).not.toBe(keys[0]);
+    expect(keys[2]).toBe(keys[1]);
+  });
+
+  it("after a network failure, editing the form keeps the key (the refund may exist)", async () => {
+    svc.orgRefund
+      .mockResolvedValueOnce({ success: false, message: "Network error" })
+      .mockResolvedValueOnce({ success: true, data: refund });
+    await openForm();
+    await userEvent.click(screen.getByRole("button", { name: "Refund" }));
+    await userEvent.click(await screen.findByRole("button", { name: /^Refund .+/ }));
+    await waitFor(() => expect(svc.orgRefund).toHaveBeenCalledTimes(1));
+    await userEvent.type(screen.getByRole("textbox", { name: /Reason/ }), "x");
+    await userEvent.click(screen.getByRole("button", { name: "Refund" }));
+    await userEvent.click(await screen.findByRole("button", { name: /^Refund .+/ }));
+    await waitFor(() => expect(svc.orgRefund).toHaveBeenCalledTimes(2));
+    const [a, b] = svc.orgRefund.mock.calls;
+    expect(b[2].idempotency_key).toBe(a[2].idempotency_key);
+  });
+
   it("a new refund after a successful one gets a new key", async () => {
     svc.orgRefund.mockResolvedValue({ success: true, data: { ...refund, amount_minor: 100 } });
     await openForm();

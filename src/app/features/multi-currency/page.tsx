@@ -31,7 +31,7 @@ const WORKFLOW = [
   {
     step: "03",
     title: "It reaches you, in full",
-    desc: "Payments go straight to your own Paystack account when you've connected one, in the currency they were charged in. Until then, Binectics collects them and pays them out to you after verification. Binectics takes no cut.",
+    desc: "Payments go straight to your own Paystack account when you've connected one, in the currency they were charged in. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified. Binectics takes no cut.",
   },
 ];
 
