@@ -144,6 +144,43 @@ describe("AddBankAccountModal", () => {
     expect(svc.resolve).toHaveBeenCalledTimes(2);
   });
 
+  it("a per-minute 429 says to wait a minute and offers a retry", async () => {
+    svc.resolve
+      .mockResolvedValueOnce({ success: false, status: 429, message: "ThrottlerException: Too Many Requests" })
+      .mockResolvedValueOnce({ success: true, data: resolved });
+    renderModal();
+    await chooseBank("Access Bank");
+    await userEvent.type(screen.getByLabelText("Account number"), FULL_NUMBER);
+    expect((await screen.findByRole("alert")).textContent).toMatch(/Wait a minute/);
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await screen.findByRole("status", { name: "Account found" });
+    expect(svc.resolve).toHaveBeenCalledTimes(2);
+  });
+
+  it("the daily limit shows the API's words (try again tomorrow) and offers no retry", async () => {
+    svc.resolve.mockResolvedValue({
+      success: false,
+      status: 429,
+      code: "PAYOUT_RESOLVE_DAILY_LIMIT",
+      message: "Your workspace has checked too many bank accounts today. Try again tomorrow.",
+    });
+    renderModal();
+    await chooseBank("Access Bank");
+    const input = screen.getByLabelText("Account number");
+    await userEvent.type(input, FULL_NUMBER);
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Your workspace has checked too many bank accounts today. Try again tomorrow.",
+    );
+    expect(screen.queryByText(/Wait a minute/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Check account" })).toBeNull();
+    expect(saveButton()).toBeDisabled();
+    // Blurring doesn't ask again for the same number.
+    fireEvent.blur(input);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(svc.resolve).toHaveBeenCalledTimes(1);
+  });
+
   it("explains a workspace with no currency, from the API's message", async () => {
     svc.listBanks.mockResolvedValue({ success: false, status: 400, message: "Set your workspace currency in Settings first." });
     renderModal();

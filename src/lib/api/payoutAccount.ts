@@ -108,6 +108,9 @@ export function payoutAccountErrorMessage(res: Pick<ApiResponse, "code" | "statu
       return "Paystack can't pay to that bank. Choose another bank.";
     case "ORG_OWNER_ONLY":
       return "Only the workspace's owner can manage its payout account.";
+    case "PAYOUT_RESOLVE_DAILY_LIMIT":
+      // The workspace used its day's lookups: the API says "try again tomorrow".
+      return res.message || "Your workspace has checked too many bank accounts today. Try again tomorrow.";
   }
   if (res.status === 429) return "Too many checks in a row. Wait a minute, then try again.";
   if (res.status === 502) return "We couldn't reach Paystack to check the account. Try again in a minute.";

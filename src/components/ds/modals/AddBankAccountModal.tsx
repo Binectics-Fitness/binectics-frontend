@@ -96,8 +96,13 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
     pendingChecks.current = Math.max(0, pendingChecks.current - 1);
     setChecking(pendingChecks.current > 0);
     // Paystack's answer (found, no such account, unknown bank) is final for
-    // this pair; a lookup that couldn't reach it (502, 429) may be retried.
-    const final = res.success || res.code === "PAYOUT_ACCOUNT_NOT_RESOLVED" || res.code === "PAYOUT_BANK_UNKNOWN";
+    // this pair; a lookup that couldn't reach it (502, a per-minute 429) may
+    // be retried. The daily limit can't be waited out in a minute: no retry.
+    const final =
+      res.success ||
+      res.code === "PAYOUT_ACCOUNT_NOT_RESOLVED" ||
+      res.code === "PAYOUT_BANK_UNKNOWN" ||
+      res.code === "PAYOUT_RESOLVE_DAILY_LIMIT";
     const entry: Omit<Lookup, "pair"> =
       res.success && res.data ? { result: res.data } : { error: payoutAccountErrorMessage(res), retry: !final };
     if (final) answered.current.set(key, entry);
