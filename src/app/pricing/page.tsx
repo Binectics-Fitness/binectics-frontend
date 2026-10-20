@@ -20,8 +20,8 @@ import { PaymentCoverage } from "@/components/pricing/PaymentCoverage";
 const FAQS = [
   { q: "Is there a setup fee or annual contract?", a: "No setup fee. Paid plans are billed monthly, or yearly where a yearly price is offered, and you can cancel any time. We don't ask for an upfront payment." },
   { q: "What happens if I cross my plan's member limit?", a: <>We tell you as you get close. We don&apos;t auto-upgrade you: you choose a larger plan, or archive members you no longer work with to free seats. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>No surprise charges.</strong></> },
-  { q: "Can I use my own payment account?", a: "Yes. Connect your own Paystack account and your customers' payments settle directly into it. Binectics takes no cut." },
-  { q: "What do members pay?", a: "Nothing to join. Members pay providers directly, at each provider's own prices and in the provider's currency. The full amount is shown before they confirm." },
+  { q: "Can I use my own payment account?", a: "Yes. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified. Binectics takes no cut." },
+  { q: "What do members pay?", a: "Nothing to join. Members pay at each provider's own prices and in the provider's currency, into the provider's own Paystack account or, before the provider connects one, to Binectics, which pays the provider. The full amount is shown before they confirm." },
   { q: "What if I'm not happy with my plan?", a: "Change or cancel it from your billing settings. Your data stays exportable after you leave." },
   { q: "What if my business needs more than the largest plan?", a: "Each plan's limits are listed above. If you need more locations, staff or members than a plan allows, talk to us and we'll shape a custom plan." },
 ];
@@ -41,7 +41,7 @@ export default function PricingPage() {
             Free to start.<br />Pay as you <em className="font-serif font-normal italic" style={{ letterSpacing: "-0.01em" }}>grow.</em>
           </h1>
           <p className="text-[17px] max-w-[50ch] leading-[1.55]" style={{ color: "var(--fg-2)", marginTop: "24px" }}>
-            Providers pick a plan sized to their practice, priced in naira. Members join free and pay providers directly. No setup fees, no lock-ins.
+            Providers pick a plan sized to their practice, priced in naira. Members join free and pay at each provider&apos;s own prices. No setup fees, no lock-ins.
           </p>
         </div>
         <div className="font-mono text-[11px] uppercase tracking-[0.05em] flex flex-col gap-3 pb-3" style={{ color: "var(--fg-3)" }}>

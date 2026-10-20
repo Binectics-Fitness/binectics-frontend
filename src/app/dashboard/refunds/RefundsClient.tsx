@@ -156,7 +156,7 @@ function PaymentsTab({ orgId }: { orgId: string }) {
         ))}
       </ul>
       <ActionModal open={!!open} onClose={() => setOpen(null)} title="Refund a payment" size="lg">
-        {open ? <ChargeRefundPanel mode="provider" orgId={orgId} chargeId={open._id} /> : null}
+        {open ? <ChargeRefundPanel mode="provider" orgId={orgId} chargeId={open._id} payerName={payer(open)} /> : null}
       </ActionModal>
     </div>
   );

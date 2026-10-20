@@ -18,6 +18,9 @@ vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({ currentOrg, isLoading: false }),
   useOptionalOrganization: () => ({ currentOrg, isLoading: false }),
 }));
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: { id: "u1", role: "GYM_OWNER" }, isLoading: false }),
+}));
 vi.mock("@/components/Toast", () => {
   const toast = Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() });
   return { toast };
@@ -109,5 +112,34 @@ describe("provider loyalty settings", () => {
     renderWith(<ProviderLoyaltyPanel />);
     expect(await screen.findByRole("switch", { name: "Loyalty program" })).toBeDisabled();
     expect(screen.getByText(/Only the owner/)).toBeInTheDocument();
+  });
+
+  it("a gym's staff member whose role holds manage-organization runs the gym's program", async () => {
+    currentOrg = {
+      _id: "org1",
+      name: "Iron Lab",
+      owner_id: "boss",
+      is_owner: false,
+      my_permissions: ["team:view_members", "team:manage_organization"],
+    };
+    vi.spyOn(loyaltyService, "getOrgSettings").mockReturnValue(
+      ok({ organization_id: "org1", enabled: true, updated_at: null }) as never,
+    );
+    renderWith(<ProviderLoyaltyPanel />);
+    expect(await screen.findByRole("switch", { name: "Loyalty program" })).toBeEnabled();
+    expect(await screen.findByText("Your rewards")).toBeInTheDocument();
+    await waitFor(() => expect(loyaltyService.listOrgRewards).toHaveBeenCalledWith("org1"));
+    expect(screen.queryByText(/Only the owner/)).toBeNull();
+  });
+
+  it("a staff member who can only view members sees the gym's setting but can't change it", async () => {
+    currentOrg = { _id: "org1", name: "Iron Lab", owner_id: "boss", is_owner: false, my_permissions: ["team:view_members"] };
+    vi.spyOn(loyaltyService, "getOrgSettings").mockReturnValue(
+      ok({ organization_id: "org1", enabled: true, updated_at: null }) as never,
+    );
+    renderWith(<ProviderLoyaltyPanel />);
+    expect(await screen.findByRole("switch", { name: "Loyalty program" })).toBeDisabled();
+    expect(screen.queryByText("Your rewards")).toBeNull();
+    expect(loyaltyService.listOrgRewards).not.toHaveBeenCalled();
   });
 });

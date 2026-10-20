@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, allows, gymPageRule, holds } from "@/lib/gymStaffNav";
 import { GalleryManager } from "@/components/provider/GalleryManager";
 import { authService } from "@/lib/api/auth";
 import {
@@ -23,7 +25,7 @@ import type {
   UpdateListingRequest,
 } from "@/lib/api/marketplace";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
-import { UserRole } from "@/lib/types";
+import { AccountType, UserRole } from "@/lib/types";
 import { ChipEditor } from "@/components/ds";
 
 const INPUT_STYLE = {
@@ -98,17 +100,31 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
  * (/marketplace/my-listing). Both flows load → edit diffs → publish, and both
  * can create a listing when none exists yet. Rendered by /dashboard/profile-edit
  * and the trainer/dietitian profile routes.
+ *
+ * A gym's staff (a role holding marketplace:manage_listing) working in the
+ * gym's workspace edit the GYM's listing through the same org routes, never
+ * a solo listing of their own, but only where the gym's page asks for it
+ * (scope="gym"). Everywhere else the viewer edits their own listing.
  */
-export function ProviderListingProfile() {
+export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own" } = {}) {
   const { user, updateUser } = useAuth();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
+  const viewer = useGymViewer();
 
-  const isGym = user?.role === UserRole.GYM_OWNER;
+  // Someone working in a gym they don't own: its listing is the gym's. Only
+  // on the gym's own listing page (scope="gym", /dashboard/profile-edit): a
+  // gym's staff trainer whose current org is that gym edits their OWN listing
+  // on /dashboard/trainer/profile and the dietitian profile.
+  const gymStaff = scope === "gym" && viewer.staff && currentOrg?.account_type === AccountType.GYM_OWNER;
+  const isGym = user?.role === UserRole.GYM_OWNER || gymStaff;
+  // Every org listing route asks for manage_listing (the owner holds it).
+  const canEditGymListing = !gymStaff || holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
   const orgId = currentOrg?._id;
 
   // Role-aware data source. Only one query runs; the other is disabled.
-  const orgListing = useOrgListing(orgId, isGym);
+  const orgListing = useOrgListing(orgId, isGym && canEditGymListing);
   const myListing = useMyListing(!isGym);
+  const accountType: MarketplaceAccountType = isGym ? "gym_owner" : roleToAccountType(user?.role);
   const listing = (isGym ? orgListing.data : myListing.data) ?? null;
   const listingLoading = isGym ? orgListing.isLoading : myListing.isLoading;
   const isLoading = listingLoading || (isGym && orgLoading);
@@ -214,15 +230,17 @@ export function ProviderListingProfile() {
     }
   };
 
-  const hasListing = !!listing;
+  const hasListing = !!listing && canEditGymListing;
   // A gym owner needs their org resolved before we can create/edit its listing.
-  const orgReady = !isGym || !!orgId;
+  const orgReady = (!isGym || !!orgId) && canEditGymListing;
   const moreLinks = isGym
     ? [
         { href: "/dashboard/gym-owner/plans", label: "Plans & pricing →" },
         { href: "/dashboard/gym-owner/locations", label: "Locations →" },
         { href: "/dashboard/gym-owner/settings", label: "Settings →" },
-      ]
+        // A gym's staff see only the pages their role opens (Settings needs
+        // manage_organization as well, for one).
+      ].filter((l) => !gymStaff || allows(viewer, gymPageRule(l.href)))
     : [
         { href: "/dashboard/trainer/plans", label: "Packages & pricing →" },
         { href: "/dashboard/consultations", label: "Availability →" },
@@ -263,7 +281,7 @@ export function ProviderListingProfile() {
       {!isLoading && !hasListing && orgReady && (
         <CreateListingCard
           isGym={isGym}
-          accountType={roleToAccountType(user?.role)}
+          accountType={accountType}
           countries={countries}
           creating={createBusy}
           onCreate={onCreate}

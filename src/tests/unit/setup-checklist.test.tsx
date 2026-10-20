@@ -278,15 +278,16 @@ describe("SetupChecklist", () => {
     expect(marketplaceService.getOrgListing).toHaveBeenCalledWith("o1");
   });
 
-  it("shows a gym's staff only what their role opens, never the owner's payment keys", async () => {
+  it("shows a gym's staff only what their role opens (the listing with manage_listing), never the owner's payment keys", async () => {
     signIn("USER", "staff1");
     workspace({ owner_id: "gymowner", account_type: AccountType.GYM_OWNER, my_permissions: ["marketplace:manage_listing", "team:view_members"] });
     renderWithQuery(<SetupChecklist kind="gym" people={0} />);
     const card = await screen.findByTestId("setup-checklist");
     const links = within(card).getAllByRole("link").map((a) => a.getAttribute("href"));
-    expect(links).toEqual(["/dashboard/gym-owner/plans", "/dashboard/gym-owner/members"]);
+    // manage_listing opens the gym's listing to staff (owner ruling, Oct 20 2026).
+    expect(links).toEqual(["/dashboard/profile-edit", "/dashboard/gym-owner/plans", "/dashboard/gym-owner/members"]);
     expect(marketplaceService.getPaymentConfigs).not.toHaveBeenCalled();
-    expect(marketplaceService.getOrgListing).not.toHaveBeenCalled();
+    expect(marketplaceService.getOrgListing).toHaveBeenCalledWith("o1");
   });
 });
 
