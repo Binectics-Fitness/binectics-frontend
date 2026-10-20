@@ -107,6 +107,73 @@ describe("admin plans editor: annual discount", () => {
     });
   });
 
+  it("Edit reopens a yearly price with its saved discount, so a re-save keeps it", async () => {
+    render(<AdminPlansPage />);
+    const edits = await screen.findAllByRole("button", { name: "Edit" });
+    // Rows render in list order: monthly, then yearly.
+    fireEvent.click(edits[1]);
+    expect(screen.getByLabelText("Annual discount percent")).toHaveValue(20);
+    expect(screen.getByDisplayValue("144000")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Save price" }));
+    await waitFor(() => expect(upsertPlanPrice).toHaveBeenCalled());
+    expect(upsertPlanPrice.mock.calls[0][0]).toMatchObject({
+      interval: "year",
+      audience: "ALL",
+      amount_minor: 14_400_000,
+      discount_percent: 20,
+    });
+  });
+
+  it("switching a new price to yearly picks up the saved discount for that market", async () => {
+    render(<AdminPlansPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Add price" }));
+    fireEvent.change(screen.getByDisplayValue("GLOBAL"), { target: { value: "NG" } });
+    fireEvent.change(screen.getByLabelText("Interval"), { target: { value: "year" } });
+    expect(screen.getByLabelText("Annual discount percent")).toHaveValue(20);
+  });
+
+  it("works the yearly amount out from the shared monthly price, not an audience override", async () => {
+    listPlanPrices.mockResolvedValue({
+      success: true,
+      data: [
+        // A gym-only monthly override at ₦9,000 sits before the shared ₦15,000.
+        { ...monthly, _id: "m-gym", audience: "gym_owner", amount_minor: 900_000 },
+        monthly,
+      ],
+    });
+    render(<AdminPlansPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Add price" }));
+    fireEvent.change(screen.getByDisplayValue("GLOBAL"), { target: { value: "NG" } });
+    await waitFor(() => expect(screen.getByLabelText("Currency")).toHaveValue("NGN"));
+    fireEvent.change(screen.getByLabelText("Interval"), { target: { value: "year" } });
+    fireEvent.change(screen.getByLabelText("Annual discount percent"), { target: { value: "10" } });
+    // 12 × ₦15,000 less 10%, from the ALL row.
+    expect(screen.getByDisplayValue("162000")).toBeInTheDocument();
+  });
+
+  it("warns that Paystack renews at its plan's amount when the amount of a coded price changes", async () => {
+    listPlanPrices.mockResolvedValue({
+      success: true,
+      data: [
+        monthly,
+        {
+          ...monthly,
+          _id: "y1",
+          interval: "year",
+          amount_minor: 14_400_000,
+          discount_percent: 20,
+          gateway_prices: [{ gateway: "paystack", external_price_id: "PLN_year" }],
+        },
+      ],
+    });
+    render(<AdminPlansPage />);
+    const edits = await screen.findAllByRole("button", { name: "Edit" });
+    fireEvent.click(edits[1]);
+    expect(screen.queryByText(/Paystack charges the amount set on that plan/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Annual discount percent"), { target: { value: "25" } });
+    expect(screen.getByText(/renews through Paystack plan PLN_year/)).toBeInTheDocument();
+  });
+
   it("sends no discount on a monthly price, and clamps a yearly one to 90", async () => {
     render(<AdminPlansPage />);
     fireEvent.click(await screen.findByRole("button", { name: "Add price" }));

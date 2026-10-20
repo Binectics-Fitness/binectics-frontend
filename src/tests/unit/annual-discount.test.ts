@@ -40,12 +40,28 @@ describe("annual discount helpers", () => {
   });
 
   it("labels the toggle from the admin's figures", () => {
-    const withYear = (discount_percent?: number) => ({
-      prices: { year: { discount_percent } },
+    const withYear = (discount_percent?: number, is_self_serve = true) => ({
+      is_self_serve,
+      prices: { year: { amount_minor: 1000, discount_percent } },
     });
+    const noYear = { is_self_serve: true, prices: { year: null } };
     expect(annualToggleLabel([])).toBe("Annual");
-    expect(annualToggleLabel([withYear(), { prices: { year: null } }])).toBe("Annual");
-    expect(annualToggleLabel([withYear(20), withYear(20), withYear()])).toBe("Annual (save 20%)");
+    expect(annualToggleLabel([withYear(), noYear])).toBe("Annual");
+    expect(annualToggleLabel([withYear(20), withYear(20), noYear])).toBe("Annual (save 20%)");
     expect(annualToggleLabel([withYear(10), withYear(25)])).toBe("Annual (save up to 25%)");
+  });
+
+  it("counts a yearly tier with no discount as 0, so mixed tiers say 'up to'", () => {
+    const pro = { is_self_serve: true, prices: { year: { amount_minor: 14_400_000, discount_percent: 20 } } };
+    const plus = { is_self_serve: true, prices: { year: { amount_minor: 30_000_000 } } };
+    const enterprise = { is_self_serve: false, prices: { year: { amount_minor: 99_000_000, discount_percent: 40 } } };
+    const freeYear = { is_self_serve: true, prices: { year: { amount_minor: 0, discount_percent: 0 } } };
+    // Pro saves 20%, Plus saves nothing: not every plan saves 20%.
+    expect(annualToggleLabel([pro, plus])).toBe("Annual (save up to 20%)");
+    // Enterprise is "talk to us": its figure is left out entirely.
+    expect(annualToggleLabel([pro, enterprise])).toBe("Annual (save 20%)");
+    // A free yearly price is nothing to save on.
+    expect(annualToggleLabel([pro, freeYear])).toBe("Annual (save 20%)");
+    expect(annualToggleLabel([plus, enterprise])).toBe("Annual");
   });
 });

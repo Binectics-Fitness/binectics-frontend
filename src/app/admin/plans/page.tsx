@@ -140,6 +140,8 @@ export default function AdminPlansPage() {
     gateway_plan_code: string;
     /** Annual discount %, yearly prices only. Blank = no discount. */
     discount_percent: string;
+    /** Provider type the price is for; "ALL" is the shared price. */
+    audience: string;
   } | null>(null);
   const [priceBusy, setPriceBusy] = useState(false);
   // Currencies a provider plan can be billed in right now (provider_billing
@@ -193,6 +195,7 @@ export default function AdminPlansPage() {
       const res = await adminService.upsertPlanPrice({
         plan_code: priceDraft.plan_code,
         market_code: priceDraft.market_code.trim().toUpperCase() || "GLOBAL",
+        audience: priceDraft.audience || "ALL",
         interval: priceDraft.interval,
         currency: priceDraft.currency.trim().toUpperCase(),
         amount_minor: majorToMinor(amount, priceDraft.currency),
@@ -224,7 +227,8 @@ export default function AdminPlansPage() {
               !(
                 x.plan_code === saved.plan_code &&
                 x.market_code === saved.market_code &&
-                x.interval === saved.interval
+                x.interval === saved.interval &&
+                audienceOf(x) === audienceOf(saved)
               ),
           ),
           saved,
@@ -457,7 +461,13 @@ export default function AdminPlansPage() {
                           {pr.gateway_prices?.length ? "recurring" : "one-shot"}
                         </span>
                         {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger)" }}>inactive</span>}
-                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
+                        {audienceOf(pr) !== "ALL" && (
+                          <span className="font-mono text-[10px] uppercase" style={{ color: "var(--fg-3)" }}>{audienceOf(pr)}</span>
+                        )}
+                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => setPriceDraft(draftFromPrice(pr))}>
+                          Edit
+                        </button>
+                        <button type="button" className="text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
                           Remove
                         </button>
                       </div>
@@ -501,7 +511,15 @@ export default function AdminPlansPage() {
                         <div className="text-[11px] mb-1" style={{ color: "var(--fg-3)" }}>Interval</div>
                         <SearchableSelect
                           value={priceDraft.interval}
-                          onChange={(v) => setPriceDraft({ ...priceDraft, interval: v as "month" | "year" })}
+                          onChange={(v) => {
+                            const next = { ...priceDraft, interval: v as "month" | "year" };
+                            const saved = existingPriceFor(prices, next);
+                            setPriceDraft(
+                              next.interval === "year" && next.discount_percent === "" && saved && annualDiscountOf(saved) !== null
+                                ? { ...next, discount_percent: String(annualDiscountOf(saved)) }
+                                : next,
+                            );
+                          }}
                           options={[{ label: "month", value: "month" }, { label: "year", value: "year" }]}
                         />
                       </div>
@@ -535,6 +553,7 @@ export default function AdminPlansPage() {
                       {priceDraft.interval === "year" && (
                         <AnnualDiscountHint prices={prices} draft={priceDraft} />
                       )}
+                      <PaystackAmountWarning prices={prices} draft={priceDraft} />
                       <button type="button" className="btn-primary-v2 sm" disabled={priceBusy} onClick={() => void savePrice()}>
                         {priceBusy ? "Saving…" : "Save price"}
                       </button>
@@ -545,7 +564,7 @@ export default function AdminPlansPage() {
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
-                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: billingCurrencies?.length === 1 ? billingCurrencies[0].value : "", amount_major: "", overage_major: "", gateway_plan_code: "", discount_percent: "" })}
+                        onClick={() => setPriceDraft({ plan_code: plan.code, market_code: "GLOBAL", interval: "month", currency: billingCurrencies?.length === 1 ? billingCurrencies[0].value : "", amount_major: "", overage_major: "", gateway_plan_code: "", discount_percent: "", audience: "ALL" })}
                       >
                         Add price
                       </button>
@@ -693,21 +712,95 @@ export default function AdminPlansPage() {
   );
 }
 
-type PriceDraftKey = { plan_code: string; market_code: string; currency: string };
+type PriceDraftKey = { plan_code: string; market_code: string; currency: string; audience?: string };
 
-/** The monthly price a yearly one in the same plan, market and currency is measured against. */
+/** A price row's audience; rows from before the audience axis are the shared "ALL" price. */
+function audienceOf(x: { audience?: string | null }): string {
+  return x.audience || "ALL";
+}
+
+/**
+ * The monthly price a yearly one in the same plan, market, audience and
+ * currency is measured against. Audience matters: a gym-only override must
+ * not be the base for the shared yearly price, or the other way round.
+ */
 function monthlyPriceFor(prices: readonly AdminPlanPrice[], draft: PriceDraftKey): AdminPlanPrice | null {
   const market = draft.market_code.trim().toUpperCase() || "GLOBAL";
   const currency = draft.currency.trim().toUpperCase();
+  const audience = draft.audience || "ALL";
   return (
     prices.find(
       (x) =>
         x.plan_code === draft.plan_code &&
         x.market_code === market &&
+        audienceOf(x) === audience &&
         x.interval === "month" &&
         x.currency === currency &&
         x.amount_minor > 0,
     ) ?? null
+  );
+}
+
+/** The saved row a draft would overwrite (same plan, market, audience and interval). */
+function existingPriceFor(
+  prices: readonly AdminPlanPrice[],
+  draft: { plan_code: string; market_code: string; interval: string; audience?: string },
+): AdminPlanPrice | null {
+  const market = draft.market_code.trim().toUpperCase() || "GLOBAL";
+  const audience = draft.audience || "ALL";
+  return (
+    prices.find(
+      (x) =>
+        x.plan_code === draft.plan_code &&
+        x.market_code === market &&
+        audienceOf(x) === audience &&
+        x.interval === draft.interval,
+    ) ?? null
+  );
+}
+
+/** The form's values for an existing price, so "Edit" re-saves what was there. */
+function draftFromPrice(pr: AdminPlanPrice) {
+  const discount = pr.interval === "year" ? annualDiscountOf(pr) : null;
+  return {
+    plan_code: pr.plan_code,
+    market_code: pr.market_code,
+    interval: pr.interval,
+    currency: pr.currency,
+    amount_major: String(minorToMajor(pr.amount_minor, pr.currency)),
+    overage_major: pr.overage_per_seat_minor != null ? String(minorToMajor(pr.overage_per_seat_minor, pr.currency)) : "",
+    gateway_plan_code: pr.gateway_prices?.[0]?.external_price_id ?? "",
+    discount_percent: discount !== null ? String(discount) : "",
+    audience: audienceOf(pr),
+  };
+}
+
+/**
+ * Paystack renews a subscription at the amount on its own plan code, not at
+ * ours. Changing the amount of a price that has a plan code therefore only
+ * changes the first charge: say so, so the admin updates the plan on
+ * Paystack (or sets a new code) as well.
+ */
+function PaystackAmountWarning({
+  prices,
+  draft,
+}: {
+  prices: readonly AdminPlanPrice[];
+  draft: { plan_code: string; market_code: string; interval: string; audience?: string; currency: string; amount_major: string; gateway_plan_code: string };
+}) {
+  const code = draft.gateway_plan_code.trim();
+  if (!code || draft.amount_major === "") return null;
+  const saved = existingPriceFor(prices, draft);
+  if (!saved) return null;
+  const typed = Number(draft.amount_major);
+  if (!Number.isFinite(typed)) return null;
+  const currency = draft.currency || saved.currency;
+  if (currency.toUpperCase() === saved.currency && majorToMinor(typed, currency) === saved.amount_minor) return null;
+  return (
+    <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+      This price renews through Paystack plan {code}, and Paystack charges the amount set on that plan. Changing the amount here
+      does not change renewals: update the plan on Paystack, or create a new plan there and enter its code here.
+    </p>
   );
 }
 

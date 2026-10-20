@@ -36,17 +36,27 @@ export function annualFromMonthlyMinor(monthlyMinor: number, discountPercent: nu
 }
 
 /**
- * Label for a Monthly/Annual toggle: "Annual (save 20%)" when every
- * discounted plan shares one figure, "Annual (save up to 25%)" when they
- * differ, plain "Annual" when no admin set one.
+ * Label for a Monthly/Annual toggle. The set is every self-serve plan with
+ * a paid yearly price (a plan with no discount counts as 0; "Contact us"
+ * tiers such as Enterprise are left out):
+ * - "Annual (save 20%)" when every plan in the set saves the same 20%;
+ * - "Annual (save up to 25%)" when they differ and the best is above 0;
+ * - plain "Annual" otherwise.
+ * The mobile app's annualChipLabel uses the same rule and words.
  */
 export function annualToggleLabel(
-  plans: readonly { prices: { year: { discount_percent?: number | null } | null } }[],
+  plans: readonly {
+    is_self_serve?: boolean;
+    prices: { year: { amount_minor?: number; discount_percent?: number | null } | null };
+  }[],
 ): string {
-  const all = plans
-    .map((p) => annualDiscountOf(p.prices.year))
-    .filter((x): x is number => x !== null);
-  if (all.length === 0) return "Annual";
-  const max = Math.max(...all);
-  return all.every((x) => x === max) ? `Annual (save ${max}%)` : `Annual (save up to ${max}%)`;
+  const set = plans
+    // A ₦0 yearly price (a free tier) is nothing to save on, so it is not a
+    // paid yearly price and stays out of the set.
+    .filter((p) => p.is_self_serve !== false && !!p.prices.year && (p.prices.year.amount_minor ?? 1) > 0)
+    .map((p) => annualDiscountOf(p.prices.year) ?? 0);
+  if (set.length === 0) return "Annual";
+  const max = Math.max(...set);
+  if (max <= 0) return "Annual";
+  return set.every((x) => x === max) ? `Annual (save ${max}%)` : `Annual (save up to ${max}%)`;
 }
