@@ -9,8 +9,9 @@ import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
 import { queryKeys } from "@/lib/queries/keys";
 import { reviewsService, ReviewTargetType, type Review } from "@/lib/api/reviews";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { CredentialsTab } from "./CredentialsTab";
 
-type Tab = "Listing" | "Reviews";
+type Tab = "Listing" | "Credentials" | "Reviews";
 
 /**
  * Two-tab wrapper for the dietitian profile page: the existing marketplace
@@ -22,7 +23,7 @@ export function ProfileTabs() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-1">
-        {(["Listing", "Reviews"] as Tab[]).map((t) => (
+        {(["Listing", "Credentials", "Reviews"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -42,7 +43,21 @@ export function ProfileTabs() {
       <div style={{ display: tab === "Listing" ? undefined : "none" }}>
         <ProviderListingProfile />
       </div>
+      {/* Mounted once opened, kept while switching, like the listing editor. */}
+      <CredentialsPane open={tab === "Credentials"} />
       {tab === "Reviews" && <ReviewsTab />}
+    </div>
+  );
+}
+
+/** Mounts the credentials editor on first open and keeps unsaved edits across tabs. */
+function CredentialsPane({ open }: { open: boolean }) {
+  const [opened, setOpened] = useState(open);
+  if (open && !opened) setOpened(true);
+  if (!opened) return null;
+  return (
+    <div style={{ display: open ? undefined : "none" }}>
+      <CredentialsTab />
     </div>
   );
 }

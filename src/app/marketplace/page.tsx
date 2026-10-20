@@ -11,6 +11,12 @@ import { formatCurrency } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
+import {
+  DIETITIAN_POPULATIONS,
+  DIETITIAN_SPECIALIZATIONS,
+  specializationLabel,
+  toggleCode,
+} from "@/lib/credentials/dietitian";
 
 /* ─── Types (from API response) ──────────────────────────── */
 
@@ -38,6 +44,10 @@ interface Listing {
   organization?: { _id: string; name: string } | null;
   professional?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
   published_at?: string;
+  /** Dietitians: codes (lib/credentials/dietitian). */
+  specializations?: string[];
+  populations?: string[];
+  licensed?: boolean;
 }
 
 interface Pagination {
@@ -63,7 +73,8 @@ function listingName(l: Listing): string {
 
 function listingSubline(l: Listing): string {
   const parts: string[] = [];
-  if (l.specialties?.length) parts.push(l.specialties[0]);
+  if (l.specializations?.length) parts.push(specializationLabel(l.specializations[0]));
+  else if (l.specialties?.length) parts.push(l.specialties[0]);
   if (l.city) parts.push(l.city);
   if (l.country_code) parts.push(l.country_code);
   return parts.join(" · ") || l.headline;
@@ -71,14 +82,16 @@ function listingSubline(l: Listing): string {
 
 function listingTags(l: Listing): string[] {
   const tags: string[] = [];
-  if (l.specialties) tags.push(...l.specialties.slice(0, 3));
+  if (l.specializations?.length) tags.push(...l.specializations.slice(0, 3).map(specializationLabel));
+  if (l.specialties) tags.push(...l.specialties.slice(0, 3 - tags.length));
   if (l.facilities) tags.push(...l.facilities.slice(0, 3 - tags.length));
   if (l.amenities) tags.push(...l.amenities.slice(0, 3 - tags.length));
   return tags.slice(0, 3);
 }
 
 function listingStatus(l: Listing): { text: string; muted: boolean } {
-  if (l.accepting_clients) return { text: "Accepting clients", muted: false };
+  if (l.accepting_clients) return { text: l.licensed ? "Licensed · accepting clients" : "Accepting clients", muted: false };
+  if (l.licensed) return { text: "Licensed", muted: false };
   if (l.verification_badge === "none") return { text: "Pending verification", muted: true };
   return { text: "", muted: true };
 }
@@ -152,6 +165,9 @@ export default function MarketplacePage() {
   const [activeTab, setActiveTab] = useState("");
   const [activeSort, setActiveSort] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  // Dietitian filters (codes), sent only on the Dietitians tab.
+  const [dietSpecs, setDietSpecs] = useState<string[]>([]);
+  const [dietPops, setDietPops] = useState<string[]>([]);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -160,6 +176,10 @@ export default function MarketplacePage() {
     const params: Record<string, string | number> = { page: currentPage, limit: 20 };
     if (activeTab) params.account_type = activeTab;
     if (sort) params.sort = sort;
+    if (activeTab === "dietitian") {
+      if (dietSpecs.length) params.specializations = dietSpecs.join(",");
+      if (dietPops.length) params.populations = dietPops.join(",");
+    }
 
     try {
       const res = await marketplaceService.searchListings(params);
@@ -177,7 +197,7 @@ export default function MarketplacePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, activeSort, currentPage]);
+  }, [activeTab, activeSort, currentPage, dietSpecs, dietPops]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -286,14 +306,6 @@ export default function MarketplacePage() {
             <div className="flex justify-between font-mono text-[11px]" style={{ color: "var(--fg-3)" }}><span>{formatAmount(5000)}</span><span>{`${formatAmount(200000)}+`}</span></div>
           </div>
           <div className="p-4.5 border-b border-border">
-            <h4 className="font-mono text-[12.5px] uppercase tracking-[0.04em] font-normal mb-3" style={{ color: "var(--fg-3)" }}>Specializations</h4>
-            <CheckRow label="Weight loss" count={3} on />
-            <CheckRow label="Strength & conditioning" count={2} />
-            <CheckRow label="Sports nutrition" count={2} />
-            <CheckRow label="PCOS" count={1} />
-            <CheckRow label="Muscle build" count={1} />
-          </div>
-          <div className="p-4.5 border-b border-border">
             <h4 className="font-mono text-[12.5px] uppercase tracking-[0.04em] font-normal mb-3" style={{ color: "var(--fg-3)" }}>Amenities</h4>
             <CheckRow label="Wifi" count={1} />
             <CheckRow label="Shower" count={1} />
@@ -322,6 +334,33 @@ export default function MarketplacePage() {
 
         {/* ─── RESULTS ─── */}
         <div>
+          {activeTab === "dietitian" && (
+            <div className="mb-5 flex flex-col gap-3" aria-label="Dietitian filters">
+              {[
+                { title: "Specializations", options: DIETITIAN_SPECIALIZATIONS, selected: dietSpecs, set: setDietSpecs },
+                { title: "Works with", options: DIETITIAN_POPULATIONS, selected: dietPops, set: setDietPops },
+              ].map((group) => (
+                <div key={group.title} role="group" aria-label={group.title} className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.04em] mr-1" style={{ color: "var(--fg-3)" }}>{group.title}</span>
+                  {group.options.map((o) => {
+                    const on = group.selected.includes(o.code);
+                    return (
+                      <button
+                        key={o.code}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => { group.set((prev) => toggleCode(prev, o.code)); setCurrentPage(1); }}
+                        className="h-7 px-2.5 rounded-full text-[12.5px] cursor-pointer"
+                        style={{ background: on ? "var(--ink)" : "var(--bg)", color: on ? "var(--bg)" : "var(--fg-2)", border: on ? "1px solid var(--ink)" : "1px solid var(--border-2)" }}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex justify-between items-baseline mb-4">
             <h2 className="text-[22px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
               {loading ? "Loading…" : "Featured · this week"}

@@ -341,6 +341,15 @@ export interface MarketplaceListing {
   review_count: number;
   created_at: string;
   updated_at: string;
+  /** Dietitians: specialization codes (labels in lib/credentials/dietitian). */
+  specializations?: string[];
+  /** Dietitians: population codes. */
+  populations?: string[];
+  pronouns?: string | null;
+  /** True while the dietitian has a licence on file that has not lapsed. */
+  licensed?: boolean;
+  /** Who issued each live licence, and where. Never the number or document. */
+  license_badges?: { issuing_body: string; country_code: string }[];
 }
 
 // ─── Facility & Amenity (gym Facilities & Amenities page) ──────────────
@@ -445,6 +454,10 @@ export interface MarketplaceSearchParams {
   lng?: number;
   radius_km?: number;
   specialties?: string;
+  /** Dietitian specialization codes, comma-separated (any match). */
+  specializations?: string;
+  /** Dietitian population codes, comma-separated (any match). */
+  populations?: string;
   q?: string;
   accepting_clients?: boolean;
   verified_only?: boolean;
