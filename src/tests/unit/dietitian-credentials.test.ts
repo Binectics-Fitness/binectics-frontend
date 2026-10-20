@@ -11,7 +11,7 @@ import {
   specializationLabel,
   toggleCode,
 } from "@/lib/credentials/dietitian";
-import { dietitianCredentialsPatch, dietitianLicenseDraft } from "@/app/onboarding/_config";
+import { dietitianCredentialsPatch, dietitianLicenseDraft, onboardingLicenseId, withOnboardingLicense } from "@/app/onboarding/_credentials";
 
 describe("dietitian credentials: the vocabularies", () => {
   it("keeps the onboarding chip labels and maps them to the API codes", () => {
@@ -112,5 +112,37 @@ describe("dietitian onboarding: what steps 1 to 3 save to the credentials", () =
 
   it("other steps save no credentials", () => {
     expect(dietitianCredentialsPatch(5, { pronouns: "x" })).toEqual({ body: null, error: null });
+  });
+});
+
+describe("onboarding step 2 never wipes licences on file", () => {
+  const onFile = (id: string, body = "DAN") => ({
+    _id: id, name: "RD", issuing_body: body, number: null, country_code: "NG",
+    expires_at: "2027-01-31T00:00:00.000Z", is_current: true, has_document: true, document_url: "https://signed/x",
+  });
+  const draft = { name: "RD", issuing_body: "KNDI", country_code: "KE", expires_at: "2028-01-01" };
+
+  it("keeps every licence on file, by id with its document, and adds the onboarding one", () => {
+    expect(withOnboardingLicense([onFile("a")], draft, undefined)).toEqual([
+      { _id: "a", name: "RD", issuing_body: "DAN", country_code: "NG", expires_at: "2027-01-31" },
+      draft,
+    ]);
+  });
+
+  it("on Back + Continue, edits the licence onboarding saved instead of adding another", () => {
+    expect(withOnboardingLicense([onFile("a"), onFile("mine", "OLD")], draft, "mine")).toEqual([
+      { _id: "a", name: "RD", issuing_body: "DAN", country_code: "NG", expires_at: "2027-01-31" },
+      { ...draft, _id: "mine" },
+    ]);
+    // Removed from the profile meanwhile: added again rather than refused.
+    expect(withOnboardingLicense([onFile("a")], draft, "gone")).toEqual([
+      expect.objectContaining({ _id: "a" }),
+      draft,
+    ]);
+  });
+
+  it("finds the id the API gave the onboarding licence", () => {
+    expect(onboardingLicenseId([onFile("a")], [onFile("a"), onFile("new")], undefined)).toBe("new");
+    expect(onboardingLicenseId([onFile("a"), onFile("mine")], [onFile("a"), onFile("mine")], "mine")).toBe("mine");
   });
 });

@@ -12,9 +12,10 @@ import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
 import { credentialsService } from "@/lib/api/credentials";
+import { dietitianCredentialsPatch, ONBOARDING_LICENSE_ID, onboardingLicenseId, withOnboardingLicense } from "./_credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, dietitianCredentialsPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -477,8 +478,23 @@ function OnboardingContent() {
     if (credentials.error) return credentials.error;
     if (credentials.body) {
       try {
-        const res = await credentialsService.updateMine(credentials.body);
+        let body = credentials.body;
+        const ownId = stepData[ONBOARDING_LICENSE_ID] as string | undefined;
+        let before: Awaited<ReturnType<typeof credentialsService.getMine>>["data"] | undefined;
+        if (body.licenses) {
+          // The list is replaced on save: keep every licence already on file.
+          const mine = await credentialsService.getMine();
+          if (!mine.success || !mine.data) return mine.message || "We couldn't save this step. Try again.";
+          before = mine.data;
+          body = { licenses: withOnboardingLicense(mine.data.licenses, body.licenses[0], ownId) };
+        }
+        const res = await credentialsService.updateMine(body);
         if (!res.success) return res.message || "We couldn't save this step. Try again.";
+        if (before && res.data) {
+          // Back + Continue edits the same licence instead of adding another.
+          const id = onboardingLicenseId(before.licenses, res.data.licenses, ownId);
+          if (id) setField(ONBOARDING_LICENSE_ID, id);
+        }
       } catch {
         return "We couldn't save this step. Check your connection and try again.";
       }
@@ -513,7 +529,7 @@ function OnboardingContent() {
       }
     } catch { /* non-blocking */ }
     return null;
-  }, []);
+  }, [setField]);
 
   /**
    * Persists the current step. Every save is best effort except the session

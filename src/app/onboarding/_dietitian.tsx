@@ -2,7 +2,8 @@
 
 import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
-import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency, dietitianLicenseDraft } from "./_config";
+import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
+import { dietitianLicenseDraft } from "./_credentials";
 import {
   DIETITIAN_POPULATIONS,
   DIETITIAN_SPECIALIZATIONS,
