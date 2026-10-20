@@ -353,6 +353,8 @@ describe("single member page: holds", () => {
     const resumeBtn = screen.getByRole("button", { name: "Resume" });
     expect(resumeBtn).toBeDisabled();
     expect(resumeBtn).toHaveAccessibleDescription("Tunde Bakare paused this themselves. Only they can resume it.");
+    // Said once, next to the button, not again in the details.
+    expect(screen.getAllByText(/Only they can resume it\./)).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Pause" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Suspend" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Lift suspension" })).toBeNull();

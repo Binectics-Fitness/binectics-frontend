@@ -150,7 +150,9 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   // Pause and resume for the member: marketplace:manage_listing (api #282).
   const canManageMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
 
-  const holdLine = holdDetailLine(subscription, fmtDate);
+  // Staff who can manage members see the disabled Resume with its note,
+  // so the details line doesn't say it again.
+  const holdLine = holdDetailLine(subscription, fmtDate, new Date(), !canManageMembers);
 
   const kpis = [
     { label: "Plan", value: planName },

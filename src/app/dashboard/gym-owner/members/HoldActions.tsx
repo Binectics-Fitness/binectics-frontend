@@ -470,11 +470,13 @@ export function holdDetailLine(
   sub: MembershipSubscription,
   fmtDate: (d: string | Date) => string,
   now: Date = new Date(),
+  /** False where the page already says why next to a disabled Resume. */
+  sayWhoResumes = true,
 ): string | null {
   if (sub.status === MembershipSubscriptionStatus.PAUSED) {
     const line = pausedLine(sub, fmtDate, now, "gym");
     // Theirs to end, so say why there is no Resume.
-    return pausedByMember(sub) ? `${line} Only they can resume it.` : line;
+    return sayWhoResumes && pausedByMember(sub) ? `${line} Only they can resume it.` : line;
   }
   if (sub.status === MembershipSubscriptionStatus.SUSPENDED) {
     const since = sub.suspended_at ? `Suspended since ${fmtDate(sub.suspended_at)}` : "Suspended";

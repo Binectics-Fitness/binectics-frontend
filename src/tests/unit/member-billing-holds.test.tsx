@@ -278,10 +278,10 @@ describe("the gym's yearly limit on pauses", () => {
   it("shows the pauses left, and what this pause uses", async () => {
     getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(3, 1) })] });
     renderPage();
-    expect(await screen.findByTestId("pause-allowance-line")).toHaveTextContent("2 of 3 pauses left this year.");
+    expect(await screen.findByTestId("pause-allowance-line")).toHaveTextContent("2 of 3 pauses left in the last 12 months.");
     await userEvent.click(screen.getByRole("button", { name: "Pause Monthly" }));
     const dialog = await screen.findByRole("dialog", { name: "Pause this membership?" });
-    expect(dialog).toHaveTextContent("This uses 1 of the 2 pauses you have left this year.");
+    expect(dialog).toHaveTextContent("This uses 1 of the 2 pauses you have left in the last 12 months.");
   });
 
   it("with none left, offers no Pause and says when they can pause again", async () => {
@@ -289,7 +289,7 @@ describe("the gym's yearly limit on pauses", () => {
     getSubs.mockResolvedValue({ success: true, data: [sub({ pause_allowance: allowance(3, 3, next) })] });
     renderPage();
     expect(await screen.findByTestId("pause-allowance-line")).toHaveTextContent(
-      `You've used all 3 pauses for this year. You can pause again on ${formatDate(next)}.`,
+      `You've used all 3 pauses in the last 12 months. You can pause again on ${formatDate(next)}.`,
     );
     expect(screen.queryByRole("button", { name: "Pause Monthly" })).toBeNull();
   });

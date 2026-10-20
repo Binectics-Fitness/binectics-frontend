@@ -264,13 +264,13 @@ describe("pause rules (owner ruling, Oct 20 2026)", () => {
   it("says how many pauses are left, or why there are none", () => {
     expect(pauseAllowanceLine(sub(), fmt)).toBeNull();
     expect(pauseAllowanceLine(sub({ pause_allowance: allowance(null, 4) }), fmt)).toBeNull();
-    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(3, 1) }), fmt)).toBe("2 of 3 pauses left this year.");
-    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(1, 0) }), fmt)).toBe("1 of 1 pause left this year.");
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(3, 1) }), fmt)).toBe("2 of 3 pauses left in the last 12 months.");
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(1, 0) }), fmt)).toBe("1 of 1 pause left in the last 12 months.");
     expect(pauseAllowanceLine(sub({ pause_allowance: allowance(3, 3, "2027-02-10T08:00:00Z") }), fmt)).toBe(
-      "You've used all 3 pauses for this year. You can pause again on 2027-02-10.",
+      "You've used all 3 pauses in the last 12 months. You can pause again on 2027-02-10.",
     );
     expect(pauseAllowanceLine(sub({ pause_allowance: allowance(1, 1, "2027-02-10T08:00:00Z") }), fmt)).toBe(
-      "You've used your 1 pause for this year. You can pause again on 2027-02-10.",
+      "You've used your 1 pause in the last 12 months. You can pause again on 2027-02-10.",
     );
     expect(pauseAllowanceLine(sub({ pause_allowance: allowance(0, 0) }), fmt)).toBe(
       "Iron Temple doesn't let members pause their own membership. Ask them if you need a break.",
@@ -287,10 +287,10 @@ describe("pause rules (owner ruling, Oct 20 2026)", () => {
 
   it("the pause dialog says what this pause uses", () => {
     expect(pauseEffectLines(sub({ pause_allowance: allowance(3, 1) }), fmt)).toContain(
-      "This uses 1 of the 2 pauses you have left this year.",
+      "This uses 1 of the 2 pauses you have left in the last 12 months.",
     );
     expect(pauseEffectLines(sub({ pause_allowance: allowance(3, 2) }), fmt)).toContain(
-      "This is your last pause for this year.",
+      "This is the last pause you have left in the last 12 months.",
     );
     expect(pauseEffectLines(sub({ pause_allowance: allowance(null, 2) }), fmt).join(" ")).not.toMatch(/pauses? (you have )?left/);
   });

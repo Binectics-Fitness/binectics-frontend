@@ -92,13 +92,19 @@ describe("Settings: member pauses per year", () => {
     });
   });
 
-  it("says why an out-of-range number isn't saved", async () => {
+  it("an out-of-range number blocks the whole save, and says why", async () => {
+    h.org = { ...h.org, tax_rate: 5 };
     render(<SettingsClient />);
+    // Another field changed too: it must not be saved without the limit.
+    await userEvent.type(screen.getByDisplayValue("5"), "7");
     await userEvent.type(field(), "60");
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Enter a whole number from 0 to 52, or leave it blank for no limit.",
     );
-    expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
+    const save = screen.getByRole("button", { name: "Save changes" });
+    expect(save).toBeDisabled();
+    await userEvent.click(save);
+    expect(h.mutateAsync).not.toHaveBeenCalled();
   });
 
   it("is read-only for staff who can't manage the organization", () => {

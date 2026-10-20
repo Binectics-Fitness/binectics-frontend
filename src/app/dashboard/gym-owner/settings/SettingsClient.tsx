@@ -258,7 +258,10 @@ export function SettingsClient() {
     () => (baseline && form ? diff(baseline, form) : {}),
     [baseline, form],
   );
-  const dirty = Object.keys(payload).length > 0;
+  // An invalid pause limit blocks the whole save: saving the other fields
+  // and quietly dropping it would read as saved.
+  const pauseLimitInvalid = !!form && parsePauseLimitInput(form.pause_limit) === undefined;
+  const dirty = Object.keys(payload).length > 0 || pauseLimitInvalid;
 
   const set = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -280,7 +283,7 @@ export function SettingsClient() {
     setPayout({ frequency, payout_day: frequency === "daily" ? undefined : 1 });
 
   const onSave = async () => {
-    if (!orgId || !dirty || !form) return;
+    if (!orgId || !dirty || !form || pauseLimitInvalid) return;
     setSavedFlash(false);
     const res = await updateOrg.mutateAsync({ orgId, data: payload });
     if (res.success) {
@@ -302,6 +305,12 @@ export function SettingsClient() {
       return (
         <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
           Save failed, retry
+        </button>
+      );
+    if (pauseLimitInvalid)
+      return (
+        <button className="btn-primary-v2 sm" disabled title="Fix Member pauses per year to save">
+          Save changes
         </button>
       );
     if (dirty)

@@ -65,14 +65,14 @@ export function pauseLimitReached(sub: MembershipSubscription): boolean {
   return sub.pause_allowance?.remaining === 0;
 }
 
-/** The member may pause it now: pausable, with a pause left this year. */
+/** The member may pause it now: pausable, with a pause left in the last 12 months. */
 export function memberCanPause(sub: MembershipSubscription, now: Date = new Date()): boolean {
   return canPause(sub, now) && !pauseLimitReached(sub);
 }
 
 /**
  * The member's pauses left, for their memberships screen: "2 of 3 pauses
- * left this year", or why they can't pause. Null when the gym sets no limit.
+ * left in the last 12 months", or why they can't pause. Null when the gym sets no limit.
  */
 export function pauseAllowanceLine(
   sub: MembershipSubscription,
@@ -85,12 +85,12 @@ export function pauseAllowanceLine(
   }
   const noun = (n: number) => (n === 1 ? "pause" : "pauses");
   if (a.remaining > 0) {
-    return `${a.remaining} of ${a.limit} ${noun(a.limit)} left this year.`;
+    return `${a.remaining} of ${a.limit} ${noun(a.limit)} left in the last 12 months.`;
   }
   const again = a.next_available_at ? ` You can pause again on ${fmt(a.next_available_at)}.` : "";
   return a.limit === 1
-    ? `You've used your 1 pause for this year.${again}`
-    : `You've used all ${a.limit} pauses for this year.${again}`;
+    ? `You've used your 1 pause in the last 12 months.${again}`
+    : `You've used all ${a.limit} pauses in the last 12 months.${again}`;
 }
 
 /** The gym may suspend: active or past due. */
@@ -160,8 +160,8 @@ export function pauseEffectLines(
   if (a && a.limit !== null && a.remaining !== null && a.remaining > 0) {
     lines.push(
       a.remaining === 1
-        ? "This is your last pause for this year."
-        : `This uses 1 of the ${a.remaining} pauses you have left this year.`,
+        ? "This is the last pause you have left in the last 12 months."
+        : `This uses 1 of the ${a.remaining} pauses you have left in the last 12 months.`,
     );
   }
   lines.push("Resume it here any time.");
