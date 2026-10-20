@@ -43,7 +43,8 @@ const RESOLVE_DEBOUNCE_MS = 400;
 export function AddBankAccountModal({ open, onClose, organizationId, replacing = false, onSaved }: AddBankAccountModalProps) {
   const orgId = organizationId ?? undefined;
   const banks = usePayoutBanks(orgId, open);
-  const { mutateAsync: resolveAccount } = useResolvePayoutAccount(orgId);
+  const resolveMutation = useResolvePayoutAccount(orgId);
+  const { mutateAsync: resolveAccount } = resolveMutation;
   const save = useSavePayoutAccount(orgId);
 
   const [bankCode, setBankCode] = useState("");
@@ -55,6 +56,12 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
   const answered = useRef(new Map<string, Omit<Lookup, "pair">>());
   const asking = useRef<string | null>(null);
   const saving = useRef(false);
+  // Bumped by reset(): an answer that arrives after the form closed belongs
+  // to an earlier generation and is dropped, so the number is never written
+  // back into state or refs.
+  const generation = useRef(0);
+  // Lookups in flight (two pairs can overlap): "checking" until all end.
+  const pendingChecks = useRef(0);
 
   const currency = banks.data?.currency;
   const pair = `${bankCode}:${accountNumber}`;
@@ -74,15 +81,20 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
       return;
     }
     if (asking.current === key) return;
+    const gen = generation.current;
     asking.current = key;
+    pendingChecks.current += 1;
     setChecking(true);
     const res = await resolveAccount({
       bank_code: bankCode,
       account_number: accountNumber,
       ...(currency ? { currency } : {}),
     });
-    asking.current = null;
-    setChecking(false);
+    // The form was closed or reset meanwhile: drop the answer.
+    if (gen !== generation.current) return;
+    if (asking.current === key) asking.current = null;
+    pendingChecks.current = Math.max(0, pendingChecks.current - 1);
+    setChecking(pendingChecks.current > 0);
     // Paystack's answer (found, no such account, unknown bank) is final for
     // this pair; a lookup that couldn't reach it (502, 429) may be retried.
     const final = res.success || res.code === "PAYOUT_ACCOUNT_NOT_RESOLVED" || res.code === "PAYOUT_BANK_UNKNOWN";
@@ -100,11 +112,18 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
   }, [open, bankCode, accountNumber, currency, check]);
 
   const reset = () => {
+    generation.current += 1;
+    asking.current = null;
+    pendingChecks.current = 0;
+    setChecking(false);
     setBankCode("");
     setAccountNumber("");
     setLookup(null);
     setSaveError(null);
     answered.current.clear();
+    // The mutations hold the last request's variables (the full number).
+    resolveMutation.reset();
+    save.reset();
   };
 
   const close = () => {
@@ -116,6 +135,7 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
     if (!resolved || saving.current) return;
     saving.current = true;
     setSaveError(null);
+    const gen = generation.current;
     // Never an account name: the server resolves again and keeps Paystack's.
     const res = await save.mutateAsync({
       bank_code: bankCode,
@@ -123,6 +143,14 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
       ...(currency ? { currency } : {}),
     });
     saving.current = false;
+    if (gen !== generation.current) {
+      // Closed while saving: the saved (masked) status still reaches the
+      // page, but nothing goes back into the form, and the mutation forgets
+      // the number.
+      save.reset();
+      if (res.success && res.data) onSaved?.(res.data);
+      return;
+    }
     if (!res.success || !res.data) {
       setSaveError(payoutAccountErrorMessage(res));
       return;
@@ -184,9 +212,14 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
             <label htmlFor="payout-account-number" className={LABEL}>Account number</label>
             <input
               id="payout-account-number"
+              name="bnx-payout-ref"
               type="text"
               inputMode="numeric"
               autoComplete="off"
+              // Keep password managers and autofill from saving or offering it.
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
               maxLength={20}
               value={accountNumber}
               onChange={(e) => {

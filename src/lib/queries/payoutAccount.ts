@@ -40,17 +40,24 @@ export function usePayoutBanks(organizationId: string | undefined, enabled = tru
   });
 }
 
-/** Looks an account up at Paystack. Stores nothing, caches nothing. */
+/**
+ * Looks an account up at Paystack. The server stores nothing. On the client
+ * the mutation's variables hold the full account number, so it is never kept
+ * in the query cache (gcTime 0) and the form calls reset() when it closes.
+ */
 export function useResolvePayoutAccount(organizationId: string | undefined) {
   return useMutation({
     mutationFn: (input: PayoutAccountInput) => payoutAccountService.resolve(organizationId!, input),
+    gcTime: 0,
   });
 }
 
+/** Saves the account. Same rule as resolve: the variables carry the full number (gcTime 0, reset on close). */
 export function useSavePayoutAccount(organizationId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: PayoutAccountInput) => payoutAccountService.save(organizationId!, input),
+    gcTime: 0,
     onSuccess: (res) => {
       if (res.success && res.data && organizationId) {
         queryClient.setQueryData(queryKeys.payoutAccount.status(organizationId), res.data);

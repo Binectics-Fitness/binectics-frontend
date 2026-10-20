@@ -171,6 +171,64 @@ describe("AddBankAccountModal", () => {
   });
 });
 
+describe("AddBankAccountModal: the number never outlives the form (review SF-1, C-1, C-2)", () => {
+  it("drops a resolve answer that arrives after the form was closed", async () => {
+    let finish: (v: unknown) => void = () => {};
+    svc.resolve.mockReturnValueOnce(new Promise((r) => (finish = r)));
+    const { onClose } = renderModal();
+    await chooseBank("Access Bank");
+    const input = screen.getByLabelText("Account number");
+    await userEvent.type(input, FULL_NUMBER);
+    await waitFor(() => expect(svc.resolve).toHaveBeenCalledTimes(1));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose).toHaveBeenCalled();
+    expect(input).toHaveValue("");
+
+    // The late answer is ignored: nothing shown, nothing remembered.
+    finish({ success: true, data: resolved });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByRole("status", { name: "Account found" })).toBeNull();
+    expect(screen.queryByText(/Checking with your bank/)).toBeNull();
+
+    // Had it been remembered, the same pair would not be asked again.
+    svc.resolve.mockResolvedValueOnce({ success: true, data: resolved });
+    await chooseBank("Access Bank");
+    await userEvent.type(input, FULL_NUMBER);
+    await screen.findByRole("status", { name: "Account found" });
+    expect(svc.resolve).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps password managers and autofill away from the number", async () => {
+    renderModal();
+    const input = await screen.findByLabelText("Account number");
+    expect(input).toHaveAttribute("autocomplete", "off");
+    expect(input).toHaveAttribute("data-1p-ignore");
+    expect(input).toHaveAttribute("data-lpignore", "true");
+    expect(input).toHaveAttribute("data-form-type", "other");
+    expect(input.getAttribute("name")).not.toMatch(/account|bank|card/i);
+  });
+
+  it("stays 'checking' until every overlapping lookup has answered", async () => {
+    const finishers: ((v: unknown) => void)[] = [];
+    svc.resolve.mockImplementation(() => new Promise((r) => finishers.push(r)));
+    renderModal();
+    await chooseBank("Access Bank");
+    const input = screen.getByLabelText("Account number");
+    await userEvent.type(input, FULL_NUMBER);
+    await waitFor(() => expect(svc.resolve).toHaveBeenCalledTimes(1));
+    // A second pair while the first is still out.
+    await userEvent.clear(input);
+    await userEvent.type(input, "1111111111");
+    await waitFor(() => expect(svc.resolve).toHaveBeenCalledTimes(2));
+    finishers[0]({ success: true, data: resolved });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.getByText(/Checking with your bank/)).toBeInTheDocument();
+    finishers[1]({ success: true, data: { ...resolved, bank_code: "058", bank_name: "GTBank" } });
+    await screen.findByRole("status", { name: "Account found" });
+    expect(screen.queryByText(/Checking with your bank/)).toBeNull();
+  });
+});
+
 describe("the payouts page's bank account", () => {
   it("shows the saved account with only its masked number, the verified mark, and the KYC line", async () => {
     svc.getStatus.mockResolvedValue({ success: true, data: savedStatus });
