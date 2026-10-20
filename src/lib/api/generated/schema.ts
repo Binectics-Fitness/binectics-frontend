@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/credentials/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A provider's credentials, with short-lived links to licence documents */
+        get: operations["AdminCredentialsController_getForUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/currencies": {
         parameters: {
             query?: never;
@@ -1821,6 +1838,41 @@ export interface paths {
         head?: never;
         /** Update a platform default consultation type (admin) */
         patch: operations["ConsultationsController_updateType"];
+        trace?: never;
+    };
+    "/api/v1/credentials/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My credentials (dietitians): pronouns, specializations, populations and licences, with short-lived links to licence documents */
+        get: operations["CredentialsController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update my credentials (dietitians). Fields sent replace what is stored; licenses replaces the list. Specializations, populations, pronouns and each licence issuing body and country are shown on your listing; licence numbers and documents never are. */
+        patch: operations["CredentialsController_updateMine"];
+        trace?: never;
+    };
+    "/api/v1/credentials/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The dietitian specializations and populations, as codes with their labels */
+        get: operations["CredentialsController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/currencies": {
@@ -4977,7 +5029,7 @@ export interface paths {
         delete: operations["ProgramsController_archive"];
         options?: never;
         head?: never;
-        /** Edit the draft (forks a new version if the latest is published) */
+        /** Edit the draft (forks a new version if the latest is published). 409 PROGRAM_ARCHIVED when it was archived meanwhile */
         patch: operations["ProgramsController_update"];
         trace?: never;
     };
@@ -5041,7 +5093,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed */
+        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed; 409 PROGRAM_ARCHIVED when it was archived meanwhile */
         post: operations["ProgramsController_publish"];
         delete?: never;
         options?: never;
@@ -9161,6 +9213,28 @@ export interface components {
             /** @enum {string} */
             side: "mine" | "theirs";
         };
+        LicenseInputDto: {
+            /** @description The id of a licence already on file, to keep it. Leave out for a new one. */
+            _id?: string;
+            /**
+             * @description ISO 3166-1 alpha-2
+             * @example NG
+             */
+            country_code: string;
+            /** @description The url POST /upload/document returned (folder teams/documents). Private: only you and Binectics admins can open it. null removes it. */
+            document_url?: string | null;
+            /**
+             * @description ISO date
+             * @example 2027-12-31
+             */
+            expires_at: string;
+            /** @example Dietitians Association of Nigeria */
+            issuing_body: string;
+            /** @example Registered Dietitian */
+            name: string;
+            /** @description Registration number. Private: never shown publicly. */
+            number?: string;
+        };
         ListingClassDto: {
             _id: string;
             capacity: number;
@@ -10246,6 +10320,16 @@ export interface components {
             /** @enum {string} */
             providerRole?: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
         };
+        UpdateCredentialsDto: {
+            licenses?: components["schemas"]["LicenseInputDto"][];
+            populations?: ("adults" | "athletes" | "children" | "pre_post_natal" | "seniors")[];
+            /**
+             * @description Free text. Empty clears it.
+             * @example she/her
+             */
+            pronouns?: string;
+            specializations?: ("pcos" | "diabetes" | "sport_performance" | "gestational" | "ibs_fodmap" | "pre_post_natal" | "weight_management" | "cardiovascular" | "renal" | "paediatric" | "eating_disorders")[];
+        };
         UpdateCurrencyDto: {
             gateways?: components["schemas"]["UpdateCurrencyGatewayDto"][];
             /** @example Nigerian Naira */
@@ -10910,6 +10994,25 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminCredentialsController_getForUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -13365,6 +13468,61 @@ export interface operations {
             };
         };
     };
+    CredentialsController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CredentialsController_updateMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCredentialsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CredentialsController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CurrenciesController_list: {
         parameters: {
             query?: never;
@@ -14888,6 +15046,10 @@ export interface operations {
                 radius_km?: number;
                 /** @description Comma-separated specialties */
                 specialties?: string;
+                /** @description Dietitian specializations: comma-separated DietitianSpecialization codes, any match. Codes and labels: GET /credentials/options. */
+                specializations?: string;
+                /** @description Dietitian populations: comma-separated DietitianPopulation codes, any match. Codes and labels: GET /credentials/options. */
+                populations?: string;
                 /** @description Full-text search query */
                 q?: string;
                 accepting_clients?: boolean;
@@ -22437,7 +22599,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 /** @description Only this event type */
-                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED";
+                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED" | "MEMBERSHIP_PAUSED_BY_GYM" | "MEMBERSHIP_RESUMED_BY_GYM" | "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER";
                 /** @description Only changes made by this user (a team member or the owner) */
                 actor_id?: string;
                 /** @description ISO date lower bound */

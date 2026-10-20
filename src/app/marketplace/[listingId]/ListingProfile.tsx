@@ -17,6 +17,7 @@ import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import { ConnectRequestButton } from "@/components/marketplace/ConnectRequestButton";
 import { ListingReviews, useListingRating } from "@/components/marketplace/ListingReviews";
 import type { MarketplaceMembershipPlan, MembershipPlanType } from "@/lib/types";
+import { licenseBadgeSummary, populationLabel, specializationLabel } from "@/lib/credentials/dietitian";
 
 /* ─── Icons ──────────────────────────────────────────────── */
 
@@ -69,6 +70,12 @@ interface Listing {
   professional?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
   organization_id?: { _id: string; name: string } | null;
   professional_id?: { _id: string; first_name: string; last_name: string } | null;
+  /** Dietitians: codes, labelled through lib/credentials/dietitian. */
+  specializations?: string[];
+  populations?: string[];
+  pronouns?: string | null;
+  licensed?: boolean;
+  license_badges?: { issuing_body: string; country_code: string }[];
 }
 
 interface Plan {
@@ -126,6 +133,9 @@ export function ListingProfile({
   const phBg = PH_BG[listing.account_type] || PH_BG.gym_owner;
   const allAmenities = [...(listing.amenities || []), ...(listing.facilities || [])];
   const specialties = listing.specialties || [];
+  const specializations = (listing.specializations || []).map(specializationLabel);
+  const populations = (listing.populations || []).map(populationLabel);
+  const licenseIssuers = licenseBadgeSummary(listing.license_badges);
   // The headline is only worth a line of its own when it isn't the name.
   const headline = listing.headline?.trim() && listing.headline.trim() !== name ? listing.headline.trim() : null;
   const priceFrom = listingPriceFrom(publicListing, currencyList);
@@ -205,8 +215,16 @@ export function ListingProfile({
               {isVerified && (
                 <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-signal-soft border border-[oklch(0.88_0.05_148)]" style={{ color: "var(--signal-ink)" }}><span className="w-1.5 h-1.5 rounded-full bg-current" />Verified provider</span>
               )}
+              {listing.licensed && (
+                <span className="inline-flex items-center gap-1.25 h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--ink)" }} title={licenseIssuers ? `Licensed by ${licenseIssuers}` : "Licensed"}>
+                  Licensed{licenseIssuers ? ` · ${licenseIssuers}` : ""}
+                </span>
+              )}
             </div>
-            <h1 className="text-[28px] sm:text-[36px] lg:text-[44px] font-medium leading-none" style={{ letterSpacing: "-0.03em", color: "var(--ink)" }}>{name}</h1>
+            <h1 className="text-[28px] sm:text-[36px] lg:text-[44px] font-medium leading-none" style={{ letterSpacing: "-0.03em", color: "var(--ink)" }}>
+              {name}
+              {listing.pronouns && <span className="ml-3 align-middle text-[14px] sm:text-[15px] font-normal" style={{ letterSpacing: 0, color: "var(--fg-3)" }}>({listing.pronouns})</span>}
+            </h1>
             {headline && <p className="text-[16px] sm:text-[18px] max-w-[720px]" style={{ color: "var(--fg-2)" }}>{headline}</p>}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4.5 text-[13px] sm:text-[14px]" style={{ color: "var(--fg-2)" }}>
               <span className="flex items-center gap-2">
@@ -265,6 +283,26 @@ export function ListingProfile({
                   <li key={s} className="px-3 py-1.5 border border-border rounded-(--r-2) text-[13px]" style={{ color: "var(--ink)" }}>{s}</li>
                 ))}
               </ul>
+            )}
+            {specializations.length > 0 && (
+              <div className="mt-5">
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>Specializations</div>
+                <ul className="flex flex-wrap gap-2 list-none p-0" aria-label="Specializations">
+                  {specializations.map((s) => (
+                    <li key={s} className="px-3 py-1.5 border border-border rounded-(--r-2) text-[13px]" style={{ color: "var(--ink)" }}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {populations.length > 0 && (
+              <div className="mt-4">
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>Works with</div>
+                <ul className="flex flex-wrap gap-2 list-none p-0" aria-label="Works with">
+                  {populations.map((s) => (
+                    <li key={s} className="px-3 py-1.5 border border-border rounded-(--r-2) text-[13px]" style={{ color: "var(--ink)" }}>{s}</li>
+                  ))}
+                </ul>
+              </div>
             )}
             <div className="grid grid-cols-2 sm:grid-cols-3 border-t border-l border-border mt-6">
               {[

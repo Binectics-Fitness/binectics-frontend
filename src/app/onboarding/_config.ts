@@ -1,4 +1,13 @@
 import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
+import {
+  isBlankLicense,
+  licenseDraftError,
+  licenseInputFrom,
+  MAX_PRONOUNS,
+  MAX_SPECIALIZATIONS,
+  type LicenseDraft,
+  type UpdateCredentialsRequest,
+} from "@/lib/credentials/dietitian";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
@@ -206,6 +215,52 @@ export function dietitianLocationPatch(data: Record<string, unknown>): {
   const code = COUNTRY_NAME_TO_CODE[dietitianCountry(data)];
   if (code) profile.country_code = code;
   return { profile, currency: dietitianCurrency(data) };
+}
+
+/** The licence step 2 collects, as a form draft; its country defaults to step 1's. */
+export function dietitianLicenseDraft(data: Record<string, unknown>): LicenseDraft {
+  return {
+    name: (data.licName as string) || "",
+    issuingBody: (data.licBody as string) || "",
+    number: (data.licNumber as string) || "",
+    countryCode: (data.licCountry as string) || COUNTRY_NAME_TO_CODE[dietitianCountry(data)] || "",
+    expiresAt: (data.licExpiry as string) || "",
+    newDocumentUrl: (data.doc_license as string) || undefined,
+  };
+}
+
+/**
+ * What a dietitian step saves to /credentials/me: pronouns on step 1, the
+ * licence on step 2, specializations and populations on step 3. `error`
+ * keeps the person on the step: a half-filled licence can't be saved, and
+ * leaving it blank is fine (it can be added from the profile later).
+ * Until these were saved the steps collected the answers and dropped them.
+ */
+export function dietitianCredentialsPatch(
+  step: number,
+  data: Record<string, unknown>,
+): { body: UpdateCredentialsRequest | null; error: string | null } {
+  if (step === 1) {
+    const pronouns = ((data.pronouns as string) || "").trim();
+    return { body: pronouns ? { pronouns: pronouns.slice(0, MAX_PRONOUNS) } : null, error: null };
+  }
+  if (step === 2) {
+    const draft = dietitianLicenseDraft(data);
+    if (isBlankLicense(draft)) return { body: null, error: null };
+    const error = licenseDraftError(draft);
+    if (error) return { body: null, error: `${error} Or clear the licence to add it later.` };
+    return { body: { licenses: [licenseInputFrom(draft)] }, error: null };
+  }
+  if (step === 3) {
+    return {
+      body: {
+        specializations: ((data.specializations as string[]) || []).slice(0, MAX_SPECIALIZATIONS),
+        populations: (data.populations as string[]) || [],
+      },
+      error: null,
+    };
+  }
+  return { body: null, error: null };
 }
 
 /**

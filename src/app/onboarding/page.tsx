@@ -11,9 +11,10 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { onboardingService } from "@/lib/api/onboarding";
 import { authService } from "@/lib/api/auth";
 import { consultationsService } from "@/lib/api/consultations";
+import { credentialsService } from "@/lib/api/credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, dietitianCredentialsPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -469,6 +470,19 @@ function OnboardingContent() {
    * or the consultation the dietitian answered could not be saved, else null.
    */
   const persistDietitianStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
+    // Pronouns (1), the licence (2), specializations and populations (3).
+    // Not best effort: a refused licence document or a lost save would
+    // otherwise vanish as it did before the API stored them.
+    const credentials = dietitianCredentialsPatch(currentStep, stepData);
+    if (credentials.error) return credentials.error;
+    if (credentials.body) {
+      try {
+        const res = await credentialsService.updateMine(credentials.body);
+        if (!res.success) return res.message || "We couldn't save this step. Try again.";
+      } catch {
+        return "We couldn't save this step. Check your connection and try again.";
+      }
+    }
     try {
       if (currentStep === 1) {
         const { profile, currency } = dietitianLocationPatch(stepData);
