@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Multi-Currency Payments",
   description:
-    "Get paid in your local currency. Clients pay at your price, in your currency, and the money settles to your own payment account.",
+    "Get paid in your local currency. Clients pay at your price, in your currency, with membership payments settling to your own Paystack account once you connect it.",
   keywords:
     "multi-currency payments, fitness payments, gym payment processing, local currency payments",
 };
@@ -30,8 +30,8 @@ const WORKFLOW = [
   },
   {
     step: "03",
-    title: "It settles to your account",
-    desc: "The money goes to your own payment account, in the currency it was charged in. Binectics never holds it and takes no cut.",
+    title: "It reaches you, in full",
+    desc: "Membership payments go to your own Paystack account once you connect it, in the currency they were charged in. 1:1 sessions, and memberships before you connect, are collected by Binectics and paid out to you after verification. Binectics takes no cut.",
   },
 ];
 

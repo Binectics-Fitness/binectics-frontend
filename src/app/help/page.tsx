@@ -18,14 +18,14 @@ export const metadata: Metadata = {
 
 const MEMBER_ANSWERS = [
   { q: "How do I check in at my gym?", a: "Open the Binectics app and scan the QR code on the screen at the gym\u2019s door. You need an active membership with that gym; the code keeps changing, so scan it there rather than from a photo." },
-  { q: "How do I pay a provider?", a: "Pay in the app by card or bank transfer when you subscribe to a plan or book a session. Payments go through Paystack, straight to your provider. Binectics doesn\u2019t add a fee." },
+  { q: "How do I pay a provider?", a: "Pay in the app by card or bank transfer when you subscribe to a plan or book a session. Payments go through Paystack, either to your provider\u2019s own account or to Binectics, which pays your provider. Binectics doesn\u2019t add a fee." },
   { q: "How do I cancel a booking or get a refund?", a: "Open the booking from your bookings list. Each provider sets their own cancellation and refund policy, and refunds come from the provider you paid. If you can\u2019t sort it out with them, email help@binectics.com." },
   { q: "What does the verified badge mean?", a: "Our team has reviewed the provider\u2019s documents, such as their business registration, certifications, and identity, before the badge appears on their listing." },
   { q: "I forgot my password.", a: "Choose \u201cForgot password\u201d on the sign-in page and we\u2019ll email you a link to set a new one." },
 ];
 
 const PROVIDER_ANSWERS = [
-  { q: "How do I get paid?", a: "Connect your own Paystack account in your workspace\u2019s payment settings. Member payments then settle directly into it, and Binectics takes no cut. You pay Binectics only for your plan\u2019s seats." },
+  { q: "How do I get paid?", a: "Connect your own Paystack account in your workspace\u2019s payment settings. Membership payments then settle directly into it. 1:1 session payments, and memberships taken before you connect, are collected by Binectics and paid out to you after verification. Binectics takes no cut. You pay Binectics only for your plan\u2019s seats." },
   { q: "How do I get verified?", a: "Upload your documents from your dashboard. Our team reviews them and adds the verified badge to your listing, or tells you what to fix." },
   { q: "How do I set up check-in at my gym?", a: "Open the kiosk page from your gym dashboard on a tablet or phone at the door. It shows a rotating QR code that members scan from the app." },
   { q: "How do I bring my existing clients?", a: "Invite them by email from your clients page. They join your roster without going through the marketplace." },

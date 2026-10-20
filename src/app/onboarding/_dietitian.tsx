@@ -180,7 +180,7 @@ export function DietStep5({ data, setField }: StepProps) {
 export function DietStep6({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 06 of 07, dietitian track" title="Connect your payout." desc="Direct to your bank account. Binectics never holds your money." />
+      <StageHead crumb="Step 06 of 07, dietitian track" title="Connect your payout." desc="Plan payments go to your own Paystack account once you connect it. Binectics collects 1:1 consultation payments and pays them out to you after verification." />
       <PayoutChoice data={data} setField={setField} />
     </>
   );

@@ -37,16 +37,16 @@ const EXPECTED: Record<string, string[]> = {
   owner: SIDEBAR.flatMap((s) => s.items.map((i) => i.name)),
   admin: [
     "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
-    "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
+    "My listing", "Loyalty", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
   ],
   manager: [
     "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
-    "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
+    "My listing", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
   ],
   assistant: ["Schedule", "Requests", "Team & roles", "Locations", "Staff"],
   front_desk: ["Schedule", "Team & roles", "Locations", "Staff", "Messages"],
 };
-const OWNER_ONLY = ["Payouts", "Refunds", "Billing", "My listing", "Forms", "Loyalty"];
+const OWNER_ONLY = ["Payouts", "Refunds", "Billing", "Forms"];
 
 const staffOrg = (role: string) => ({
   _id: "gym",
@@ -97,6 +97,26 @@ describe("the gym nav for each role", () => {
     expect(gymPageRule("/dashboard/gym-owner/card-renewals")).toEqual({ owner: true });
     expect(gymPageRule("/dashboard/gym-owner/something-new")).toBeUndefined();
     expect(gymPageRule("/dashboard/gym-owner/")).toEqual(GYM_NAV_ACCESS.Overview);
+  });
+
+  it("opens the gym's listing to manage_listing and its loyalty program to manage_organization (owner rulings, Oct 20)", () => {
+    expect(GYM_NAV_ACCESS["My listing"]).toEqual({ all: [P.MARKETPLACE_MANAGE_LISTING] });
+    expect(gymPageRule("/dashboard/profile-edit")).toEqual({ all: [P.MARKETPLACE_MANAGE_LISTING] });
+    expect(gymPageRule("/dashboard/gym-owner/loyalty")).toEqual({ all: [P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS] });
+    expect(gymPageRule("/dashboard/loyalty")).toEqual({ all: [P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS] });
+    const listingOnly = gymViewer({ ...staffOrg("custom"), my_permissions: [P.MARKETPLACE_MANAGE_LISTING] }, "u1");
+    expect(names(gymSidebarFor(SIDEBAR, listingOnly))).toContain("My listing");
+    expect(names(gymSidebarFor(SIDEBAR, listingOnly))).not.toContain("Loyalty");
+    const orgManager = gymViewer({ ...staffOrg("custom"), my_permissions: [P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS] }, "u1");
+    expect(names(gymSidebarFor(SIDEBAR, orgManager))).toContain("Loyalty");
+    expect(names(gymSidebarFor(SIDEBAR, orgManager))).not.toContain("My listing");
+    // Forms still lists the signed-in person's own forms: owner only.
+    expect(GYM_NAV_ACCESS.Forms).toEqual({ owner: true });
+  });
+
+  it("links the gym's Loyalty to the gym's own page", () => {
+    const item = SIDEBAR.flatMap((s) => s.items).find((i) => i.name === "Loyalty");
+    expect(item?.href).toBe("/dashboard/gym-owner/loyalty");
   });
 
   it("starts an assistant on the first page their role covers", () => {
@@ -272,6 +292,27 @@ describe("GymDashboardShell for a gym's staff", () => {
     renderShell("Members");
     expect(screen.getByText("page body")).toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("opens the gym's listing to a manager, and its loyalty program only to a role that manages the organization", () => {
+    mockUser = { id: "u1", role: "USER", first_name: "Tobi", last_name: "B" };
+    mockOrg = staffOrg("manager");
+    mockPath = "/dashboard/profile-edit";
+    const { unmount } = renderShell("My listing");
+    expect(screen.getByText("page body")).toBeInTheDocument();
+    unmount();
+    act(() => resetShellNav());
+
+    mockPath = "/dashboard/gym-owner/loyalty";
+    const second = renderShell("Loyalty");
+    expect(screen.queryByText("page body")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    second.unmount();
+    act(() => resetShellNav());
+
+    mockOrg = staffOrg("admin");
+    renderShell("Loyalty");
+    expect(screen.getByText("page body")).toBeInTheDocument();
   });
 
   it("sends an assistant from the dashboard root to the first page their role covers", () => {

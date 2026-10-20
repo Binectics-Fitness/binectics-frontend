@@ -115,7 +115,7 @@ export function GymStep4({ data, setField, onUploadStart, onUploadEnd }: StepPro
 export function GymStep5({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 05 of 08, gym track" title="Connect your payments." desc="Payouts go straight to your account. Binectics never holds funds." />
+      <StageHead crumb="Step 05 of 08, gym track" title="Connect your payments." desc="Membership payments go straight to your own Paystack account once you connect it. Until then, Binectics collects them and pays you out after verification." />
       <PayoutChoice data={data} setField={setField} />
     </>
   );

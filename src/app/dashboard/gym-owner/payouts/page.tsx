@@ -40,7 +40,7 @@ export default function GymPayoutsPage() {
       }
     >
       {/* The shell's <main> already spaces its children (gap-5). */}
-      <PageHeader className="mb-0!" title="Payouts" subtitle="Funds settle directly to your bank · Binectics never holds money" />
+      <PageHeader className="mb-0!" title="Payouts" subtitle="Membership payments go straight to your own Paystack account once you connect it. 1:1 sessions, and memberships before you connect, are collected by Binectics and paid out to you after verification." />
 
       {/* Configured schedule — real data from org.payout_schedule */}
       <DSCard className="p-5.5">
