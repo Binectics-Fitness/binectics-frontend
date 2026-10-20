@@ -106,6 +106,33 @@ describe("GatewaysSection", () => {
     expect(screen.queryByRole("button", { name: "+ Add gateway" })).toBeNull();
   });
 
+  it("replaces a connected gateway's keys in place after a warning, never by removing it", async () => {
+    h.configs = [{ gateway: "paystack", public_key: "pk_live_1234567890abcdef", is_active: true, currencies: [] }];
+    h.upsert.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<GatewaysSection />);
+
+    await user.click(screen.getByRole("button", { name: "Replace your Paystack keys" }));
+    expect(screen.getByText("New Paystack keys")).toBeInTheDocument();
+    // The gateway is fixed: no picker.
+    expect(screen.queryByLabelText("Gateway")).toBeNull();
+    await user.type(screen.getByLabelText("Public key"), "pk_live_new0001");
+    // Test value only, not a real key.
+    await user.type(screen.getByLabelText("Secret key"), "sk_test_notarealkey0000");
+    await user.click(screen.getByRole("button", { name: "Replace keys" }));
+    expect(h.upsert).not.toHaveBeenCalled();
+    const dialog = await confirmInDialog(user, "Replace your Paystack keys?", "Replace keys");
+    expect(dialog).toHaveTextContent("Your webhook and checked currencies stay");
+    expect(h.upsert).toHaveBeenCalledWith({
+      gateway: "paystack",
+      public_key: "pk_live_new0001",
+      secret_key: "sk_test_notarealkey0000",
+      is_active: true,
+    });
+    expect(h.remove).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Secret key")).toBeNull();
+  });
+
   it("shows the server's message when the gateway is refused", async () => {
     h.upsert.mockResolvedValue({
       success: false,

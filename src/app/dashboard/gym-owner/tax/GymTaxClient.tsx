@@ -39,6 +39,8 @@ export function GymTaxClient() {
 
   const taxRate = org?.tax_rate;
   const taxLabel = org?.tax_label || "VAT";
+  // Unset reads as tax-included, as Settings seeds it and the app reads it.
+  const inclusive = org?.tax_inclusive ?? true;
   const currency = revenue?.currency ?? org?.currency;
 
   // 30-day gross from the recorded timeseries (minor units → major).
@@ -57,7 +59,7 @@ export function GymTaxClient() {
   // is gross × r/(100+r). Exclusive prices add it on top: gross × r/100.
   const estimate =
     taxRate != null
-      ? org?.tax_inclusive
+      ? inclusive
         ? (gross * taxRate) / (100 + taxRate)
         : (gross * taxRate) / 100
       : null;
@@ -67,7 +69,7 @@ export function GymTaxClient() {
     ...(estimate != null
       ? [
           {
-            label: `Estimated ${taxLabel} at ${taxRate}%${org?.tax_inclusive ? " (included in prices)" : " (added on top)"}`,
+            label: `Estimated ${taxLabel} at ${taxRate}%${inclusive ? " (included in prices)" : " (added on top)"}`,
             value: fmtMoney(estimate, currency),
             bold: false,
           },
@@ -92,7 +94,7 @@ export function GymTaxClient() {
             {taxRate != null ? (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
                 {taxLabel} at <strong style={{ color: "var(--ink)" }}>{taxRate}%</strong> ·{" "}
-                {org?.tax_inclusive ? "listed prices include tax" : "tax added on top of listed prices"}
+                {inclusive ? "listed prices include tax" : "tax added on top of listed prices"}
               </p>
             ) : (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>

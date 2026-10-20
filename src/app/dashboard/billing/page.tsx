@@ -646,13 +646,13 @@ export default function ProviderBillingPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleCheckout(plan.code)}
-                                  disabled={checkoutLoading === plan.code}
+                                  disabled={checkoutLoading === plan.code || awaitingActivation}
                                   className="w-full rounded-(--r-2) px-4 py-2 text-sm font-medium"
                                   style={{
                                     background: "var(--ink)",
                                     color: "var(--bg)",
-                                    cursor: checkoutLoading === plan.code ? "not-allowed" : "pointer",
-                                    opacity: checkoutLoading === plan.code ? 0.7 : 1,
+                                    cursor: checkoutLoading === plan.code || awaitingActivation ? "not-allowed" : "pointer",
+                                    opacity: checkoutLoading === plan.code || awaitingActivation ? 0.7 : 1,
                                   }}
                                 >
                                   {checkoutLoading === plan.code ? "Loading..." : `Upgrade to ${plan.name}`}
