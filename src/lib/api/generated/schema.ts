@@ -4977,7 +4977,7 @@ export interface paths {
         delete: operations["ProgramsController_archive"];
         options?: never;
         head?: never;
-        /** Edit the draft (forks a new version if the latest is published) */
+        /** Edit the draft (forks a new version if the latest is published). 409 PROGRAM_ARCHIVED when it was archived meanwhile */
         patch: operations["ProgramsController_update"];
         trace?: never;
     };
@@ -5041,7 +5041,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed */
+        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed; 409 PROGRAM_ARCHIVED when it was archived meanwhile */
         post: operations["ProgramsController_publish"];
         delete?: never;
         options?: never;
@@ -5828,6 +5828,24 @@ export interface paths {
         post?: never;
         /** Delete a meal feedback entry */
         delete: operations["ProgressController_deleteMealFeedback"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/progress/meals/{feedbackId}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reply to a member's logged meal, or edit your reply (the member's current dietitian only; one reply per meal) */
+        put: operations["ProgressController_replyToMeal"];
+        post?: never;
+        /** Remove your reply to a meal (its author, while still the dietitian) */
+        delete: operations["ProgressController_deleteMealReply"];
         options?: never;
         head?: never;
         patch?: never;
@@ -9841,6 +9859,10 @@ export interface components {
             excerpt: string | null;
             message_id: string;
             seq: number;
+        };
+        ReplyToMealDto: {
+            /** @example Great balance. Try adding a portion of greens at dinner. */
+            text: string;
         };
         ReportAttendance: {
             checkins?: components["schemas"]["ReportCheckins"] | null;
@@ -18619,7 +18641,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "CONNECTION_ENDED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "CONNECTION_ENDED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "MEAL_REPLY" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -20566,6 +20588,48 @@ export interface operations {
             };
         };
     };
+    ProgressController_replyToMeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyToMealDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgressController_deleteMealReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedbackId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgressController_getMyDietPlans: {
         parameters: {
             query?: {
@@ -22437,7 +22501,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 /** @description Only this event type */
-                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED";
+                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED" | "MEMBERSHIP_PAUSED_BY_GYM" | "MEMBERSHIP_RESUMED_BY_GYM" | "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER";
                 /** @description Only changes made by this user (a team member or the owner) */
                 actor_id?: string;
                 /** @description ISO date lower bound */
