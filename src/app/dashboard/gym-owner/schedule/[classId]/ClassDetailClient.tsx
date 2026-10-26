@@ -19,6 +19,7 @@ import {
 import {
   classBookingsService,
   nextOccurrences,
+  previousOccurrences,
   type ClassAttendance,
   type ClassBooking,
 } from "@/lib/api/classBookings";
@@ -37,8 +38,10 @@ function memberName(b: ClassBooking): string {
 function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classId: string; dayOfWeek: number }) {
   const { prefs } = useOrgFormat();
   const dateLocale = localeForDateFormat(prefs);
-  const dates = nextOccurrences(dayOfWeek, 4);
-  const [date, setDate] = useState(dates[0]);
+  const upcoming = nextOccurrences(dayOfWeek, 4);
+  // Recent past occurrences too, so attendance can still be recorded or checked the day after.
+  const dates = [...previousOccurrences(dayOfWeek, 3).reverse(), ...upcoming];
+  const [date, setDate] = useState(upcoming[0]);
   const { data: roster = [], isLoading } = useQuery<ClassBooking[]>({
     queryKey: ["classRoster", orgId, classId, date],
     queryFn: async () => {

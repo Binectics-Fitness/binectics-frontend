@@ -184,3 +184,20 @@ export function nextOccurrences(dayOfWeek: number, count = 4): string[] {
   }
   return out;
 }
+
+/**
+ * The last N occurrence dates ("YYYY-MM-DD") of a weekly class before today,
+ * newest first. A roster stays useful after the day (attendance is recorded
+ * once a class has started), so staff can look back at the latest few.
+ */
+export function previousOccurrences(dayOfWeek: number, count = 3): string[] {
+  const out: string[] = [];
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() - 1);
+  while (out.length < count) {
+    if (d.getDay() === dayOfWeek) out.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() - 1);
+  }
+  return out;
+}

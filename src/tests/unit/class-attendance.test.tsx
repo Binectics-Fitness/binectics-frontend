@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AttendanceControl } from "@/app/dashboard/gym-owner/schedule/[classId]/AttendanceControl";
-import { classBookingsService } from "@/lib/api/classBookings";
+import { classBookingsService, previousOccurrences } from "@/lib/api/classBookings";
 import { apiClient } from "@/lib/api/client";
 
 const started = { attendance_open: true } as const;
@@ -69,5 +69,15 @@ describe("classBookingsService.setAttendance", () => {
     expect(put).toHaveBeenCalledWith("/teams/organizations/o1/classes/c1/bookings/b1/attendance", { attendance: "attended" });
     await classBookingsService.setAttendance("o1", "c1", "b1", null);
     expect(put).toHaveBeenLastCalledWith("/teams/organizations/o1/classes/c1/bookings/b1/attendance", { attendance: null });
+  });
+});
+
+describe("previousOccurrences", () => {
+  it("returns earlier dates of the weekday, all before today and newest first", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const dates = previousOccurrences(new Date().getDay(), 3);
+    expect(dates).toHaveLength(3);
+    expect(dates.every((d) => d < today)).toBe(true);
+    expect([...dates].sort().reverse()).toEqual(dates);
   });
 });
