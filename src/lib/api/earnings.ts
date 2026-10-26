@@ -65,6 +65,40 @@ export interface SessionEarnings {
   };
 }
 
+/** One month of a provider's income summary (minor units, one currency). */
+export interface IncomeSummaryMonth {
+  /** YYYY-MM, in UTC. */
+  month: string;
+  gross_minor: number;
+  refunds_minor: number;
+  adjustments_minor: number;
+  net_minor: number;
+  transaction_count: number;
+}
+
+export interface IncomeSummaryCurrency {
+  currency: string;
+  gross_minor: number;
+  refunds_minor: number;
+  adjustments_minor: number;
+  net_minor: number;
+  transaction_count: number;
+  months: IncomeSummaryMonth[];
+}
+
+/**
+ * Informational income by year, month and currency, from settled ledger
+ * rows. Payouts are excluded; no tax is computed. Currencies are never
+ * added together.
+ */
+export interface IncomeSummary {
+  year: number;
+  time_zone: "UTC";
+  /** Years with any settled row, newest first. */
+  years: number[];
+  currencies: IncomeSummaryCurrency[];
+}
+
 export const earningsService = {
   getOrgSummary(orgId: string): Promise<ApiResponse<OrgEarningsSummary>> {
     return apiClient.get<OrgEarningsSummary>(
@@ -93,6 +127,13 @@ export const earningsService = {
     const query = search.toString();
     return apiClient.get<LedgerPage>(
       `/transactions/organizations/${orgId}/transactions${query ? `?${query}` : ""}`,
+    );
+  },
+
+  getIncomeSummary(orgId: string, year?: number): Promise<ApiResponse<IncomeSummary>> {
+    const query = year ? `?year=${year}` : "";
+    return apiClient.get<IncomeSummary>(
+      `/transactions/organizations/${orgId}/income-summary${query}`,
     );
   },
 
