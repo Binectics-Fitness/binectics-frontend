@@ -9,6 +9,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
@@ -38,6 +39,8 @@ export function GymTaxClient() {
   const gate = data?.gate ?? null;
 
   const taxRate = org?.tax_rate;
+  // An organization that never saved the flag is inclusive, as Settings shows.
+  const inclusive = taxIsInclusive(org);
   const taxLabel = org?.tax_label || "VAT";
   const currency = revenue?.currency ?? org?.currency;
 
@@ -57,7 +60,7 @@ export function GymTaxClient() {
   // is gross × r/(100+r). Exclusive prices add it on top: gross × r/100.
   const estimate =
     taxRate != null
-      ? org?.tax_inclusive
+      ? inclusive
         ? (gross * taxRate) / (100 + taxRate)
         : (gross * taxRate) / 100
       : null;
@@ -67,7 +70,7 @@ export function GymTaxClient() {
     ...(estimate != null
       ? [
           {
-            label: `Estimated ${taxLabel} at ${taxRate}%${org?.tax_inclusive ? " (included in prices)" : " (added on top)"}`,
+            label: `Estimated ${taxLabel} at ${taxRate}%${inclusive ? " (included in prices)" : " (added on top)"}`,
             value: fmtMoney(estimate, currency),
             bold: false,
           },
@@ -92,7 +95,7 @@ export function GymTaxClient() {
             {taxRate != null ? (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
                 {taxLabel} at <strong style={{ color: "var(--ink)" }}>{taxRate}%</strong> ·{" "}
-                {org?.tax_inclusive ? "listed prices include tax" : "tax added on top of listed prices"}
+                {inclusive ? "listed prices include tax" : "tax added on top of listed prices"}
               </p>
             ) : (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>

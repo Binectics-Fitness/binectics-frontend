@@ -22,6 +22,7 @@ import { utilityService } from "@/lib/api/utility";
 import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import { orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
+import { taxIsInclusive, TAX_INCLUSIVE_DEFAULT } from "@/lib/tax/taxInclusive";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -117,7 +118,7 @@ function seedForm(org: Organization): SettingsForm {
     time_format: org.time_format ?? LOCALE_DEFAULTS.time_format,
     number_format: org.number_format ?? LOCALE_DEFAULTS.number_format,
     tax_rate: org.tax_rate != null ? String(org.tax_rate) : "",
-    tax_inclusive: org.tax_inclusive ?? true,
+    tax_inclusive: taxIsInclusive(org),
     tax_label: org.tax_label ?? "VAT",
     booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
     payout_schedule: { ...DEFAULT_PAYOUT_SCHEDULE, ...(org.payout_schedule ?? {}) },
@@ -383,9 +384,9 @@ export function SettingsClient() {
                 <div className="flex flex-col gap-1.5">
                   <Eyebrow as="label">Prices include tax</Eyebrow>
                   <div className="flex items-center gap-2.5 py-2.75">
-                    <Toggle on={form?.tax_inclusive ?? true} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? true))} />
+                    <Toggle on={form?.tax_inclusive ?? TAX_INCLUSIVE_DEFAULT} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? TAX_INCLUSIVE_DEFAULT))} />
                     <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                      {form?.tax_inclusive ?? true ? "Listed prices already include tax" : "Tax is added on top of listed prices"}
+                      {form?.tax_inclusive ?? TAX_INCLUSIVE_DEFAULT ? "Listed prices already include tax" : "Tax is added on top of listed prices"}
                     </span>
                   </div>
                 </div>
