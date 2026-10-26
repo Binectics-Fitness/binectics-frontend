@@ -39,12 +39,17 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
     },
   });
 
+  // A second currency gets its code in the label so rows never look like duplicates.
+  const many = (overview.data?.currencies.length ?? 0) > 1;
   const rows =
-    overview.data?.currencies.flatMap((c) => [
-      { key: `${c.currency}-own`, label: "Your own Paystack account", currency: c.currency, minor: c.provider_account_net_minor },
-      { key: `${c.currency}-platform`, label: "Collected by Binectics for you", currency: c.currency, minor: c.platform_account_net_minor },
-      { key: `${c.currency}-old`, label: "Earlier payments (account not recorded)", currency: c.currency, minor: c.unattributed_net_minor },
-    ]).filter((r) => r.minor !== 0) ?? [];
+    overview.data?.currencies.flatMap((c) => {
+      const tag = many ? ` (${c.currency})` : "";
+      return [
+        { key: `${c.currency}-own`, label: `Your own Paystack account${tag}`, currency: c.currency, minor: c.provider_account_net_minor },
+        { key: `${c.currency}-platform`, label: `Collected by Binectics for you${tag}`, currency: c.currency, minor: c.platform_account_net_minor },
+        { key: `${c.currency}-old`, label: `Earlier payments, account not recorded${tag}`, currency: c.currency, minor: c.unattributed_net_minor },
+      ];
+    }).filter((r) => r.minor !== 0) ?? [];
 
   return (
     <>

@@ -46,10 +46,20 @@ describe("PayoutHistory", () => {
     expect(await screen.findByText("NGN 7500")).toBeInTheDocument();
     expect(screen.getByText("NGN 4000")).toBeInTheDocument();
     expect(screen.getByText("Collected by Binectics for you")).toBeInTheDocument();
-    expect(screen.queryByText("Earlier payments (account not recorded)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Earlier payments, account not recorded")).not.toBeInTheDocument();
     expect(await screen.findByText("No payouts recorded yet.")).toBeInTheDocument();
     expect(tx).toHaveBeenCalledWith("o1", { type: "payout", status: "succeeded", limit: 25 });
     expect(screen.queryByText(/balance:/i)).not.toBeInTheDocument();
+  });
+
+  it("names the currency on each row when there is more than one", async () => {
+    vi.spyOn(earningsService, "getPayoutOverview").mockResolvedValue(
+      ok({ currencies: [overview().currencies[0], { ...overview().currencies[0], currency: "USD", provider_account_net_minor: 0, platform_account_net_minor: 2_500 }] }),
+    );
+    vi.spyOn(earningsService, "getOrgTransactions").mockResolvedValue(ok({ items: [], total: 0, page: 1, limit: 25 }));
+    renderIt();
+    expect(await screen.findByText("Collected by Binectics for you (USD)")).toBeInTheDocument();
+    expect(screen.getByText("Collected by Binectics for you (NGN)")).toBeInTheDocument();
   });
 
   it("lists payouts that exist", async () => {
