@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function DietitianTaxPage() {
   return (
     <DietitianDashboardShell activeItem="Earnings" crumb="Tax">
-      <ProviderIncomeSummary />
+      <ProviderIncomeSummary settingsHref="/dashboard/dietitian/settings" />
     </DietitianDashboardShell>
   );
 }

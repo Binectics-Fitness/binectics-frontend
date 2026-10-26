@@ -9,7 +9,8 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { minorToMajor } from "@/lib/money/minorMoney";
-import { incomeSummaryCsv } from "@/lib/money/incomeSummaryCsv";
+import Link from "next/link";
+import { incomeSummaryCsv, incomeTaxNote } from "@/lib/money/incomeSummaryCsv";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -32,11 +33,12 @@ function downloadCsv(summary: IncomeSummary) {
 
 /**
  * Informational income summary for a trainer's or dietitian's workspace: the
- * money recorded through Binectics by year, month and currency. It computes
- * no tax and says so; rates, deductions and filing are the provider's own
- * business. Render as the sole child of a provider dashboard shell.
+ * money recorded through Binectics by year, month and currency, with an
+ * ESTIMATE of tax from the provider's own saved rate, label and inclusive
+ * setting (none when no rate is saved). Not tax advice; nothing is filed.
+ * Render as the sole child of a provider dashboard shell.
  */
-export function ProviderIncomeSummary() {
+export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }) {
   const coachingGym = useCoachingGym();
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const { fmtMoney, fmtNumber } = useOrgFormat();
@@ -62,8 +64,8 @@ export function ProviderIncomeSummary() {
         title="Tax"
         subtitle={
           <span className="block max-w-[62ch]">
-            Money recorded through Binectics, by month. An informational summary only, not tax advice. Binectics does not
-            calculate or file tax for you.
+            Money recorded through Binectics, by month. An informational summary only, not tax advice. Any tax figure is an
+            estimate from the rate you set; Binectics does not file tax for you.
           </span>
         }
         actions={
@@ -123,7 +125,7 @@ export function ProviderIncomeSummary() {
                   <table className="w-full text-[13px]" style={{ borderCollapse: "collapse" }}>
                     <thead>
                       <tr>
-                        {["Month", "Payments received", "Refunds", "Adjustments", "Net"].map((h, i) => (
+                        {["Month", "Payments received", "Refunds", "Adjustments", "Net", ...(data.tax ? [`Estimated ${data.tax.label}`] : [])].map((h, i) => (
                           <th
                             key={h}
                             className={`font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 whitespace-nowrap ${i === 0 ? "text-left" : "text-right"}`}
@@ -138,7 +140,7 @@ export function ProviderIncomeSummary() {
                       {c.months.map((m) => (
                         <tr key={m.month}>
                           <td className="py-3 px-4.5 whitespace-nowrap" style={{ borderBottom: "1px solid var(--border)", color: "var(--ink)" }}>{monthLabel(m.month)}</td>
-                          {[m.gross_minor, m.refunds_minor, m.adjustments_minor, m.net_minor].map((v, i) => (
+                          {[m.gross_minor, m.refunds_minor, m.adjustments_minor, m.net_minor, ...(data.tax ? [m.estimated_tax_minor ?? 0] : [])].map((v, i) => (
                             <td
                               key={i}
                               className="py-3 px-4.5 text-right font-mono whitespace-nowrap"
@@ -151,7 +153,7 @@ export function ProviderIncomeSummary() {
                       ))}
                       <tr>
                         <td className="py-3 px-4.5 font-medium" style={{ color: "var(--ink)" }}>Year total</td>
-                        {[c.gross_minor, c.refunds_minor, c.adjustments_minor, c.net_minor].map((v, i) => (
+                        {[c.gross_minor, c.refunds_minor, c.adjustments_minor, c.net_minor, ...(data.tax ? [c.estimated_tax_minor ?? 0] : [])].map((v, i) => (
                           <td key={i} className="py-3 px-4.5 text-right font-mono font-semibold whitespace-nowrap" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                             {money(v, c.currency)}
                           </td>
@@ -162,6 +164,20 @@ export function ProviderIncomeSummary() {
                 </div>
               </DSCard>
             ))
+          )}
+
+          {data.tax ? (
+            <p className="text-[12.5px] max-w-[70ch]" style={{ color: "var(--fg-2)" }}>
+              {incomeTaxNote(data.tax)}{" "}
+              <Link href={`${settingsHref}#tax`} className="underline" style={{ color: "var(--ink)" }}>Change tax settings</Link>
+            </p>
+          ) : (
+            <DSCard className="p-4.5">
+              <p className="text-[13px] max-w-[70ch]" style={{ color: "var(--fg-2)" }}>
+                No tax estimate yet. Set the tax rate that applies to you to see an estimate beside each month.{" "}
+                <Link href={`${settingsHref}#tax`} className="underline" style={{ color: "var(--ink)" }}>Set your tax rate</Link>
+              </p>
+            </DSCard>
           )}
 
           <p className="text-[12.5px] max-w-[70ch]" style={{ color: "var(--fg-3)" }}>

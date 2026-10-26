@@ -23,6 +23,7 @@ vi.mock("@/lib/format/useOrgFormat", () => ({
 const summary = (over: Partial<IncomeSummary> = {}): IncomeSummary => ({
   year: 2026,
   time_zone: "UTC",
+  tax: null,
   years: [2026, 2025],
   currencies: [
     {
@@ -31,21 +32,41 @@ const summary = (over: Partial<IncomeSummary> = {}): IncomeSummary => ({
       refunds_minor: 200_000,
       adjustments_minor: 0,
       net_minor: 2_000_000,
+      estimated_tax_minor: null,
       transaction_count: 4,
       months: [
-        { month: "2026-03", gross_minor: 1_500_000, refunds_minor: 200_000, adjustments_minor: 0, net_minor: 1_300_000, transaction_count: 3 },
-        { month: "2026-05", gross_minor: 700_000, refunds_minor: 0, adjustments_minor: 0, net_minor: 700_000, transaction_count: 1 },
+        { month: "2026-03", gross_minor: 1_500_000, refunds_minor: 200_000, adjustments_minor: 0, net_minor: 1_300_000, estimated_tax_minor: null, transaction_count: 3 },
+        { month: "2026-05", gross_minor: 700_000, refunds_minor: 0, adjustments_minor: 0, net_minor: 700_000, estimated_tax_minor: null, transaction_count: 1 },
       ],
     },
   ],
   ...over,
 });
 
+const withTax = (inclusive: boolean): IncomeSummary => {
+  const base = summary();
+  return {
+    ...base,
+    tax: { rate_percent: 7.5, label: "VAT", inclusive },
+    currencies: [
+      {
+        ...base.currencies[0],
+        estimated_tax_minor: 150_000,
+        months: [
+          { ...base.currencies[0].months[0], estimated_tax_minor: 97_674 },
+          { ...base.currencies[0].months[1], estimated_tax_minor: 52_326 },
+        ],
+      },
+    ],
+  };
+};
+
+
 function renderIt() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <ProviderIncomeSummary />
+      <ProviderIncomeSummary settingsHref="/dashboard/trainer/settings" />
     </QueryClientProvider>,
   );
 }
@@ -120,5 +141,48 @@ describe("income summary CSV", () => {
       "2026,2026-05,NGN,7000.00,0.00,0.00,7000.00,1",
       "",
     ]);
+  });
+
+  it("adds the estimate column and the estimate columns and note to the CSV", () => {
+    const lines = incomeSummaryCsv(withTax(true)).split("\n");
+    expect(lines[0]).toBe("Year,Month,Currency,Payments received,Refunds,Adjustments,Net,Estimated VAT,Transactions");
+    expect(lines[1]).toBe("2026,2026-03,NGN,15000.00,2000.00,0.00,13000.00,976.74,3");
+    expect(lines[4]).toMatch(/^"Estimate only, not tax advice\. VAT at 7\.5%, taken as already included/);
+  });
+});
+
+describe("ProviderIncomeSummary tax estimate", () => {
+  it("shows the estimate column, the provider's own label and exactly how it was worked out", async () => {
+    vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({ success: true, data: withTax(false) } as never);
+    renderIt();
+    expect(await screen.findByRole("columnheader", { name: "Estimated VAT" })).toBeInTheDocument();
+    const mar = screen.getByText("Mar 2026").closest("tr")!;
+    expect(within(mar).getByText("NGN 976.74")).toBeInTheDocument();
+    expect(screen.getByText(/Estimate only, not tax advice\. VAT at 7\.5%, added on top of amounts/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Change tax settings" })).toHaveAttribute("href", "/dashboard/trainer/settings#tax");
+  });
+
+  it("says amounts are taken as included when the setting is inclusive", async () => {
+    vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({ success: true, data: withTax(true) } as never);
+    renderIt();
+    expect(await screen.findByText(/taken as already included in amounts/)).toBeInTheDocument();
+  });
+
+  it("shows no estimate column, only a prompt to set a rate, when none is saved", async () => {
+    vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({ success: true, data: summary() } as never);
+    renderIt();
+    expect(await screen.findByRole("link", { name: "Set your tax rate" })).toHaveAttribute("href", "/dashboard/trainer/settings#tax");
+    expect(screen.queryByRole("columnheader", { name: /Estimated/ })).not.toBeInTheDocument();
+  });
+
+  it("shows a real zero estimate for a saved rate of 0", async () => {
+    const zero = withTax(true);
+    zero.tax = { rate_percent: 0, label: "VAT", inclusive: true };
+    zero.currencies[0].months.forEach((m) => (m.estimated_tax_minor = 0));
+    zero.currencies[0].estimated_tax_minor = 0;
+    vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({ success: true, data: zero } as never);
+    renderIt();
+    expect(await screen.findByRole("columnheader", { name: "Estimated VAT" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Set your tax rate" })).not.toBeInTheDocument();
   });
 });

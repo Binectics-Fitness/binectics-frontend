@@ -73,7 +73,17 @@ export interface IncomeSummaryMonth {
   refunds_minor: number;
   adjustments_minor: number;
   net_minor: number;
+  /** Estimated tax on net_minor; null when no tax rate is saved. */
+  estimated_tax_minor: number | null;
   transaction_count: number;
+}
+
+/** The saved settings an estimate was made with. */
+export interface IncomeSummaryTaxSettings {
+  /** Percent, 0 to 100. */
+  rate_percent: number;
+  label: string;
+  inclusive: boolean;
 }
 
 export interface IncomeSummaryCurrency {
@@ -82,6 +92,8 @@ export interface IncomeSummaryCurrency {
   refunds_minor: number;
   adjustments_minor: number;
   net_minor: number;
+  /** Sum of the monthly estimates; null when no tax rate is saved. */
+  estimated_tax_minor: number | null;
   transaction_count: number;
   months: IncomeSummaryMonth[];
 }
@@ -94,6 +106,8 @@ export interface IncomeSummaryCurrency {
 export interface IncomeSummary {
   year: number;
   time_zone: "UTC";
+  /** The settings the estimates use; null when no rate is saved (no estimate is made). */
+  tax: IncomeSummaryTaxSettings | null;
   /** Years with any settled row, newest first. */
   years: number[];
   currencies: IncomeSummaryCurrency[];

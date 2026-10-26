@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function TrainerTaxPage() {
   return (
     <TrainerDashboardShell activeItem="Earnings" crumb="Tax">
-      <ProviderIncomeSummary />
+      <ProviderIncomeSummary settingsHref="/dashboard/trainer/settings" />
     </TrainerDashboardShell>
   );
 }
