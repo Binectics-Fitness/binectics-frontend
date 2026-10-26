@@ -6,6 +6,12 @@ import { earningsService } from "@/lib/api/earnings";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { minorToMajor } from "@/lib/money/minorMoney";
 
+class LoadError extends Error {
+  constructor(message: string, readonly status?: number) {
+    super(message);
+  }
+}
+
 /**
  * Where this gym's money was collected, and the payouts Binectics has sent.
  * Both come from the settled ledger. There is deliberately no balance or
@@ -20,7 +26,7 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
     queryKey: ["earnings", "payoutOverview", orgId],
     queryFn: async () => {
       const res = await earningsService.getPayoutOverview(orgId);
-      if (!res.success || !res.data) throw new Error(res.message ?? "Couldn't load");
+      if (!res.success || !res.data) throw new LoadError(res.message ?? "Couldn't load", res.status);
       return res.data;
     },
   });
@@ -28,7 +34,7 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
     queryKey: ["earnings", "payouts", orgId],
     queryFn: async () => {
       const res = await earningsService.getOrgTransactions(orgId, { type: "payout", status: "succeeded", limit: 25 });
-      if (!res.success || !res.data) throw new Error(res.message ?? "Couldn't load");
+      if (!res.success || !res.data) throw new LoadError(res.message ?? "Couldn't load", res.status);
       return res.data;
     },
   });
@@ -54,7 +60,9 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
           <div className="px-5.5 py-2"><AsyncSpinner label="Loading" /></div>
         ) : overview.isError ? (
           <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger)" }}>
-            We couldn&rsquo;t load this. Only the workspace owner can see payment records.
+            {overview.error instanceof LoadError && overview.error.status === 403
+              ? "Only the workspace owner can see payment records."
+              : "We couldn\u2019t load this. Try again shortly."}
           </div>
         ) : rows.length === 0 ? (
           <div className="px-5.5 py-5"><EmptySlate message="No payments recorded yet." mt="mt-0" /></div>

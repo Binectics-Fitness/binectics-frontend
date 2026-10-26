@@ -73,7 +73,15 @@ describe("PayoutHistory", () => {
     vi.spyOn(earningsService, "getPayoutOverview").mockResolvedValue({ success: false, message: "no" } as never);
     vi.spyOn(earningsService, "getOrgTransactions").mockResolvedValue({ success: false, message: "no" } as never);
     renderIt();
-    expect(await screen.findByText(/Only the workspace owner can see payment records/)).toBeInTheDocument();
+    expect(await screen.findByText(/We couldn.t load this/)).toBeInTheDocument();
+    expect(screen.queryByText(/Only the workspace owner/)).not.toBeInTheDocument();
     expect(await screen.findByText(/couldn.t load your payouts/i)).toBeInTheDocument();
+  });
+
+  it("says only the owner can see payment records on a 403", async () => {
+    vi.spyOn(earningsService, "getPayoutOverview").mockResolvedValue({ success: false, message: "no", status: 403 } as never);
+    vi.spyOn(earningsService, "getOrgTransactions").mockResolvedValue({ success: false, message: "no", status: 403 } as never);
+    renderIt();
+    expect(await screen.findByText(/Only the workspace owner can see payment records/)).toBeInTheDocument();
   });
 });
