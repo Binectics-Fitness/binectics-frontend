@@ -43,6 +43,8 @@ export interface MemberActivityItem {
   at: string;
   /** The location checked in at, or the class name. */
   label: string | null;
+  /** Class rows: staff's mark, or null when none was recorded (not the same as a no-show). */
+  attendance: "attended" | "no_show" | null;
 }
 
 /** A member's check-in and class-booking activity at one gym (gym owner's member page). */
@@ -57,6 +59,8 @@ export interface MemberActivity {
     last_30_days: number;
     next_upcoming: { at: string; name: string | null } | null;
   };
+  /** Classes staff marked attended, among those that started in the last 30 days. Recorded marks only. */
+  classes_attended: { last_30_days: number };
   /** Check-ins and past booked classes together, newest first, at most 20. */
   latest: MemberActivityItem[];
 }

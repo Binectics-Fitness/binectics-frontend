@@ -8,7 +8,8 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 /**
  * A member's activity at this gym: check-ins, and classes they BOOKED. A
  * booking is not attendance (nobody records who turns up), so classes are
- * labelled as bookings everywhere on this card. Only facts the records hold:
+ * labelled as bookings unless staff recorded that the member came, and then
+ * "attended" is shown apart from "booked" and counts only those marks. Only facts the records hold:
  * no score, streak or rating. Waitlisted and cancelled bookings, and
  * duplicate scans, are left out by the API.
  */
@@ -23,6 +24,10 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
     },
     enabled: !!memberUserId,
   });
+
+  // Attendance is a staff record; show its count only where marks exist, so a
+  // gym that never records it is not shown a misleading 0.
+  const hasMarks = !!data && (data.classes_attended.last_30_days > 0 || data.latest.some((v) => v.attendance !== null));
 
   const empty = !!data && data.total_visits === 0 && data.latest.length === 0 && !data.classes_booked.next_upcoming && data.classes_booked.last_30_days === 0;
 
@@ -51,6 +56,7 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
               { label: "Check-ins, all time", value: fmtNumber(data.total_visits) },
               { label: "Last check-in", value: data.last_visit_at ? fmtDate(data.last_visit_at) : "-" },
               { label: "Classes booked, last 30 days", value: fmtNumber(data.classes_booked.last_30_days) },
+              ...(hasMarks ? [{ label: "Classes attended, last 30 days", value: fmtNumber(data.classes_attended.last_30_days) }] : []),
             ].map((k) => (
               <div key={k.label} className="rounded-(--r-3) p-3.5 px-4" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                 <Eyebrow>{k.label}</Eyebrow>
@@ -79,6 +85,11 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
                       {v.kind === "check_in" ? "Check-in" : "Class booked"}
                     </span>
                     {v.label && <span className="truncate" style={{ color: "var(--fg-3)" }}>{v.label}</span>}
+                    {v.kind === "class_booked" && v.attendance && (
+                      <span className="shrink-0 text-[12px]" style={{ color: "var(--fg-2)" }}>
+                        {v.attendance === "attended" ? "Marked attended" : "Marked no-show"}
+                      </span>
+                    )}
                   </span>
                   <span className="font-mono text-[12px] shrink-0" style={{ color: "var(--fg-2)", fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(v.at)}</span>
                 </li>
@@ -86,7 +97,8 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
             </ul>
           )}
           <div className="px-5.5 py-3 text-[12.5px]" style={{ borderTop: "1px solid var(--border)", color: "var(--fg-3)" }}>
-            A booked class shows the member reserved a place, not that they came. Waitlisted and cancelled bookings are not counted.
+            A booked class shows the member reserved a place, not that they came; only classes staff marked are counted as attended.
+            Waitlisted and cancelled bookings are not counted.
             {data.latest.length >= 20 && (
               <> Showing the latest {fmtNumber(data.latest.length)} items.</>
             )}
