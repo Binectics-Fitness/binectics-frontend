@@ -35,22 +35,30 @@ export interface CheckInRejection {
   attempted_at: string;
 }
 
-/** One visit in a member's activity at a gym. */
-export interface MemberActivityVisit {
+/** A row of a member's activity: a check-in, or a class they BOOKED (a booking is not attendance). */
+export interface MemberActivityItem {
   _id: string;
-  checked_in_at: string;
-  /** The location checked in at; null when the check-in had none. */
-  listing_headline: string | null;
+  kind: "check_in" | "class_booked";
+  /** Check-in time, or the start of the booked class. */
+  at: string;
+  /** The location checked in at, or the class name. */
+  label: string | null;
 }
 
-/** A member's check-in activity at one gym (gym owner's member page). */
+/** A member's check-in and class-booking activity at one gym (gym owner's member page). */
 export interface MemberActivity {
   total_visits: number;
   visits_last_30_days: number;
   /** Null when the member has never checked in here. */
   last_visit_at: string | null;
-  /** Newest first, at most 20. */
-  recent: MemberActivityVisit[];
+  /** Confirmed bookings only (not waitlisted, not cancelled). */
+  classes_booked: {
+    /** Booked classes that started in the last 30 days. */
+    last_30_days: number;
+    next_upcoming: { at: string; name: string | null } | null;
+  };
+  /** Check-ins and past booked classes together, newest first, at most 20. */
+  latest: MemberActivityItem[];
 }
 
 export const checkinsService = {
