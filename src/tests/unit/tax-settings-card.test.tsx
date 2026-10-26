@@ -73,4 +73,33 @@ describe("TaxSettingsCard", () => {
     expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
     expect(screen.getByRole("button", { name: "Save tax settings" })).toBeDisabled();
   });
+
+  it("offers No tax rate only when a rate is saved", async () => {
+    render(<TaxSettingsCard />);
+    expect(screen.queryByRole("button", { name: "No tax rate" })).not.toBeInTheDocument();
+  });
+
+  it("clears a saved rate by sending null and nothing else", async () => {
+    mockOrgDetails = { tax_rate: 7.5, tax_inclusive: true, tax_label: "VAT" };
+    render(<TaxSettingsCard />);
+    await userEvent.click(screen.getByRole("button", { name: "No tax rate" }));
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: null } }));
+  });
+
+  it("shows a saved rate of 0 as 0 and lets it be cleared", () => {
+    mockOrgDetails = { tax_rate: 0, tax_inclusive: true, tax_label: "VAT" };
+    render(<TaxSettingsCard />);
+    expect(screen.getByLabelText("Tax rate %")).toHaveValue(0);
+    expect(screen.getByRole("button", { name: "No tax rate" })).toBeInTheDocument();
+  });
+
+  it("changes a saved rate", async () => {
+    mockOrgDetails = { tax_rate: 7.5, tax_inclusive: true, tax_label: "VAT" };
+    render(<TaxSettingsCard />);
+    const rate = screen.getByLabelText("Tax rate %");
+    await userEvent.clear(rate);
+    await userEvent.type(rate, "10");
+    await userEvent.click(screen.getByRole("button", { name: "Save tax settings" }));
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 10, tax_inclusive: true, tax_label: "VAT" } }));
+  });
 });

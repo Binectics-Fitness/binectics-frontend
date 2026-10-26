@@ -6,6 +6,7 @@ import { toast } from "@/components/Toast";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails, useUpdateOrganization } from "@/lib/queries/teams";
 import { writeErrorMessage } from "@/lib/currencies/helpers";
+import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 
 const INPUT_STYLE = { background: "var(--bg)", border: "1px solid var(--border)", color: "var(--ink)" } as const;
 const INPUT_CLASS = "rounded-(--r-2) px-3.5 py-2.75 text-[14px] w-full";
@@ -39,7 +40,7 @@ export function TaxSettingsCard() {
   const initial: TaxValues = {
     label: org.tax_label ?? "",
     rate: org.tax_rate != null ? String(org.tax_rate) : "",
-    inclusive: org.tax_inclusive ?? true,
+    inclusive: taxIsInclusive(org),
   };
   // Re-keyed on the saved values so the form restarts from what was saved.
   return <TaxSettingsForm key={JSON.stringify(initial)} orgId={currentOrg._id} initial={initial} />;
@@ -56,6 +57,16 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
   const parsed = parseTaxRate(rate);
   const rateInvalid = Number.isNaN(parsed);
   const unchanged = label === initial.label && rate === initial.rate && inclusive === initial.inclusive;
+
+  const clear = async () => {
+    const res = await updateOrg.mutateAsync({ orgId, data: { tax_rate: null } });
+    if (res.success) {
+      toast.success("Tax rate removed");
+      void refreshOrganizations();
+    } else {
+      toast.error(writeErrorMessage(res, "We couldn't remove your tax rate. Try again."));
+    }
+  };
 
   const save = async () => {
     if (rateInvalid || parsed === null) return;
@@ -76,7 +87,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
       <section id="tax" aria-labelledby="tax-settings-heading">
         <h2 id="tax-settings-heading" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Tax</h2>
         <p className="text-[13px] mt-1 max-w-[62ch]" style={{ color: "var(--fg-3)" }}>
-          Used only for the estimate on your Tax page. Enter the rate that applies to you. Until you save one, no estimate is shown.
+          Used only for the estimate on your Tax page. Enter the rate that applies to you. Until you save one, no estimate is shown. Choose "No tax rate" to remove a saved rate and its estimate.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
           <div className="flex flex-col gap-1.5">
@@ -116,6 +127,11 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
         >
           {updateOrg.isPending ? "Saving…" : "Save tax settings"}
         </button>
+        {initial.rate !== "" && (
+          <button type="button" className="btn-ghost-v2 sm mt-4 ml-2" onClick={() => void clear()} disabled={updateOrg.isPending}>
+            No tax rate
+          </button>
+        )}
       </section>
     </DSCard>
   );
