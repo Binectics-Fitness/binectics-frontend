@@ -94,7 +94,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label" htmlFor="tax-label">Tax name</Eyebrow>
-            <input id="tax-label" value={label} maxLength={32} placeholder="VAT" onChange={(e) => setLabel(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+            <input id="tax-label" value={label} maxLength={32} placeholder="Tax" onChange={(e) => setLabel(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label" htmlFor="tax-rate">Tax rate %</Eyebrow>
