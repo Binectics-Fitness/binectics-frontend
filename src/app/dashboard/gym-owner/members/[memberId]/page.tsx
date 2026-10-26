@@ -15,6 +15,7 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
+import { MemberActivityCard } from "./MemberActivityCard";
 import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
 import {
   LiftSuspensionModal,
@@ -331,13 +332,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
         </>
       )}
 
-      {/* Activity — not yet available */}
-      <DSCard className="p-5.5 flex flex-col items-center justify-center gap-2 min-h-[120px]">
-        <p className="text-[14px] font-medium" style={{ color: "var(--fg-2)" }}>Activity</p>
-        <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-          Activity tracking coming soon.
-        </p>
-      </DSCard>
+      {currentOrg && <MemberActivityCard orgId={currentOrg._id} memberUserId={memberUserId} />}
     </GymDashboardShell>
   );
 }

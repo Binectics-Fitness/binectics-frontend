@@ -35,6 +35,24 @@ export interface CheckInRejection {
   attempted_at: string;
 }
 
+/** One visit in a member's activity at a gym. */
+export interface MemberActivityVisit {
+  _id: string;
+  checked_in_at: string;
+  /** The location checked in at; null when the check-in had none. */
+  listing_headline: string | null;
+}
+
+/** A member's check-in activity at one gym (gym owner's member page). */
+export interface MemberActivity {
+  total_visits: number;
+  visits_last_30_days: number;
+  /** Null when the member has never checked in here. */
+  last_visit_at: string | null;
+  /** Newest first, at most 20. */
+  recent: MemberActivityVisit[];
+}
+
 export const checkinsService = {
   /**
    * Record a QR check-in for the authenticated member.
@@ -99,6 +117,14 @@ export const checkinsService = {
   ): Promise<ApiResponse<OrgCheckInDashboardStats>> =>
     apiClient.get<OrgCheckInDashboardStats>(
       `/checkins/organizations/${organizationId}/dashboard-stats`,
+    ),
+
+  getMemberActivity: (
+    organizationId: string,
+    memberUserId: string,
+  ): Promise<ApiResponse<MemberActivity>> =>
+    apiClient.get<MemberActivity>(
+      `/checkins/organizations/${organizationId}/members/${memberUserId}/activity`,
     ),
 
   getOrgRevenueStats: (
