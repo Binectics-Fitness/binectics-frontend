@@ -68,11 +68,13 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
     }
   };
 
+  // An empty name is sent as "" (not left out) so it clears a saved name; the
+  // API shows "Tax" when the name is blank.
   const save = async () => {
     if (rateInvalid || parsed === null) return;
     const res = await updateOrg.mutateAsync({
       orgId,
-      data: { tax_rate: parsed, tax_inclusive: inclusive, tax_label: label.trim() || undefined },
+      data: { tax_rate: parsed, tax_inclusive: inclusive, tax_label: label.trim() },
     });
     if (res.success) {
       toast.success("Tax settings saved");

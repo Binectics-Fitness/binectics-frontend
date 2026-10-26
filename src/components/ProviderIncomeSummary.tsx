@@ -55,6 +55,8 @@ export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }
   });
 
   const money = (minor: number, currency: string) => fmtMoney(minorToMajor(minor, currency), currency);
+  // The year being shown is always a choice, even when it has no rows yet (the API lists only years with rows).
+  const yearChoices = data ? Array.from(new Set([...data.years, data.year])).sort((a, b) => b - a) : [];
   const hasRows = !!data && data.currencies.some((c) => c.transaction_count > 0);
 
   return (
@@ -99,7 +101,7 @@ export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }
           {data.years.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <Eyebrow>Year</Eyebrow>
-              {data.years.map((y) => (
+              {yearChoices.map((y) => (
                 <FilterPill key={y} label={String(y)} active={y === data.year} onClick={() => setYear(y)} />
               ))}
             </div>

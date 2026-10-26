@@ -54,7 +54,15 @@ describe("TaxSettingsCard", () => {
     render(<TaxSettingsCard />);
     await userEvent.type(screen.getByLabelText("Tax rate %"), "0");
     await userEvent.click(screen.getByRole("button", { name: "Save tax settings" }));
-    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 0, tax_inclusive: true, tax_label: undefined } }));
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 0, tax_inclusive: true, tax_label: "" } }));
+  });
+
+  it("clears a saved name by sending an empty one", async () => {
+    mockOrgDetails = { tax_rate: 7.5, tax_inclusive: true, tax_label: "GST" };
+    render(<TaxSettingsCard />);
+    await userEvent.clear(screen.getByLabelText("Tax name"));
+    await userEvent.click(screen.getByRole("button", { name: "Save tax settings" }));
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 7.5, tax_inclusive: true, tax_label: "" } }));
   });
 
   it("refuses a rate over 100 with a message and does not call the API", async () => {
