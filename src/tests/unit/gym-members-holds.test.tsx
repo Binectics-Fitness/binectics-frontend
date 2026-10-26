@@ -461,3 +461,21 @@ describe("messaging a member from the list", () => {
     }
   });
 });
+
+describe("gym members list: resend invite for a claimed member", () => {
+  it("shows the API message, hides the action and reloads the roster on 409 MEMBER_ALREADY_CLAIMED", async () => {
+    const resend = vi.spyOn(marketplaceService, "resendMemberInvite").mockResolvedValue({
+      success: false,
+      code: "MEMBER_ALREADY_CLAIMED",
+      status: 409,
+      message: "Ngozi has already set up their account",
+    });
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    await userEvent.click(screen.getByRole("button", { name: "Resend invite email" }));
+    await waitFor(() => expect(resend).toHaveBeenCalled());
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    await openMenu("Ngozi Okafor");
+    expect(screen.queryByRole("button", { name: "Resend invite email" })).toBeNull();
+  });
+});
