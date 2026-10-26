@@ -87,7 +87,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
       <section id="tax" aria-labelledby="tax-settings-heading">
         <h2 id="tax-settings-heading" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Tax</h2>
         <p className="text-[13px] mt-1 max-w-[62ch]" style={{ color: "var(--fg-3)" }}>
-          Used only for the estimate on your Tax page. Enter the rate that applies to you. Until you save one, no estimate is shown. Choose "No tax rate" to remove a saved rate and its estimate.
+          Used only for the estimate on your Tax page. Enter the rate that applies to you. Until you save one, no estimate is shown. Choose &ldquo;No tax rate&rdquo; to remove a saved rate and its estimate.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
           <div className="flex flex-col gap-1.5">
