@@ -68,11 +68,13 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
     }
   };
 
+  // An empty name is sent as "" (not left out) so it clears a saved name; the
+  // API shows "Tax" when the name is blank.
   const save = async () => {
     if (rateInvalid || parsed === null) return;
     const res = await updateOrg.mutateAsync({
       orgId,
-      data: { tax_rate: parsed, tax_inclusive: inclusive, tax_label: label.trim() || undefined },
+      data: { tax_rate: parsed, tax_inclusive: inclusive, tax_label: label.trim() },
     });
     if (res.success) {
       toast.success("Tax settings saved");
@@ -92,7 +94,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label" htmlFor="tax-label">Tax name</Eyebrow>
-            <input id="tax-label" value={label} maxLength={32} placeholder="VAT" onChange={(e) => setLabel(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+            <input id="tax-label" value={label} maxLength={32} placeholder="Tax" onChange={(e) => setLabel(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label" htmlFor="tax-rate">Tax rate %</Eyebrow>

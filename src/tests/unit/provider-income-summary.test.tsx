@@ -110,6 +110,17 @@ describe("ProviderIncomeSummary", () => {
     expect(screen.queryByText(/NGN/)).not.toBeInTheDocument();
   });
 
+  it("keeps the shown year selectable when only earlier years have rows", async () => {
+    vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({
+      success: true,
+      data: summary({ years: [2025], currencies: [] }),
+    } as never);
+    renderIt();
+    expect(await screen.findByText("Nothing recorded in 2026.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2026" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2025" })).toBeInTheDocument();
+  });
+
   it("shows an error rather than zeros when the request fails", async () => {
     vi.spyOn(earningsService, "getIncomeSummary").mockResolvedValue({ success: false, message: "no" } as never);
     renderIt();
