@@ -127,6 +127,16 @@ export interface MealFeedback {
   calories?: number;
   feedback?: string;
   logged_by: string | { _id: string; first_name: string; last_name: string };
+  /** The member's dietitian's reply, author populated on reads. */
+  reply?: MealReply | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A dietitian's reply to a logged meal: one per meal, its author's to edit. */
+export interface MealReply {
+  text: string;
+  author_id: string | { _id: string; first_name?: string; last_name?: string; profile_picture?: string };
   created_at: string;
   updated_at: string;
 }
@@ -793,6 +803,19 @@ export const progressService = {
 
   async deleteMealFeedback(feedbackId: string): Promise<ApiResponse<void>> {
     return await apiClient.delete<void>(`/progress/meals/${feedbackId}`);
+  },
+
+  /**
+   * Reply to a member's meal, or edit your reply. Only the member's current
+   * dietitian may; the API answers 403 for anyone else (an ended link
+   * included) and 409 when another dietitian already replied.
+   */
+  async replyToMeal(feedbackId: string, text: string): Promise<ApiResponse<MealFeedback>> {
+    return await apiClient.put<MealFeedback>(`/progress/meals/${feedbackId}/reply`, { text });
+  },
+
+  async deleteMealReply(feedbackId: string): Promise<ApiResponse<void>> {
+    return await apiClient.delete<void>(`/progress/meals/${feedbackId}/reply`);
   },
 
   // ==================== ACTIVITY REPORTS ====================

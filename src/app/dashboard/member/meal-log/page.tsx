@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, DSStatCard, EmptySlate, Eyebrow, ListRow, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
@@ -15,6 +16,7 @@ import { useClientNow } from "@/lib/ui/useClientNow";
 import { mealsToday } from "../_lib/logStats";
 import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
+import { mealReplyAuthorName } from "@/lib/progress/mealReplies";
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
   [MealType.BREAKFAST]: "Breakfast",
@@ -61,7 +63,16 @@ const fieldInputStyle = {
   color: "var(--ink)",
 };
 
+/** useSearchParams needs a Suspense boundary for the static build. */
 export default function MealLogPage() {
+  return (
+    <Suspense fallback={null}>
+      <MealLog />
+    </Suspense>
+  );
+}
+
+function MealLog() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   // null until the list has loaded: a failed load must not read as "no meals".
   const [meals, setMeals] = useState<MealFeedback[] | null>(null);
@@ -179,7 +190,17 @@ export default function MealLogPage() {
   // On a failed load only the error shows, never zeros.
   const showData = !loading && meals !== null;
   const [openId, setOpenId] = useState<string | null>(null);
-  const opened = meals?.find((m) => m._id === openId) ?? null;
+  // A reply notification links here with ?mealId=: that meal opens once
+  // the list has it, and again when another one is opened while the page
+  // is open. Closing it keeps it closed until the link names another.
+  const linkedMealId = useSearchParams()?.get("mealId") ?? null;
+  const [closedLink, setClosedLink] = useState<string | null>(null);
+  const shownId = openId ?? (linkedMealId && linkedMealId !== closedLink ? linkedMealId : null);
+  const opened = meals?.find((m) => m._id === shownId) ?? null;
+  const closeDetail = () => {
+    setOpenId(null);
+    setClosedLink(linkedMealId);
+  };
 
   return (
     <MemberDashboardShell activeLabel="Activity">
@@ -435,6 +456,7 @@ export default function MealLogPage() {
                       mealTypeLabel(meal.meal_type),
                       meal.calories ? `${meal.calories} kcal` : null,
                       meal.rating ? MEAL_RATING_LABELS[meal.rating] : null,
+                      meal.reply ? `${mealReplyAuthorName(meal.reply)} replied` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -449,7 +471,7 @@ export default function MealLogPage() {
 
       <LogDetailDrawer
         open={opened !== null}
-        onClose={() => setOpenId(null)}
+        onClose={closeDetail}
         title={opened ? mealTypeLabel(opened.meal_type) : "Meal"}
         fields={
           opened
@@ -459,6 +481,10 @@ export default function MealLogPage() {
                 { label: "Calories", value: opened.calories ? `${opened.calories} kcal` : null },
                 { label: "How it felt", value: opened.rating ? MEAL_RATING_LABELS[opened.rating] : null },
                 { label: "Notes", value: opened.feedback },
+                {
+                  label: opened.reply ? `Reply from ${mealReplyAuthorName(opened.reply)}` : "Reply",
+                  value: opened.reply?.text ?? null,
+                },
               ]
             : []
         }
