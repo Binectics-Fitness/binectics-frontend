@@ -23,6 +23,7 @@ import { utilityService } from "@/lib/api/utility";
 import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import { orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
+import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -96,7 +97,8 @@ interface SettingsForm {
   number_format: NumberFormat;
   /** Kept as the raw input string; converted to a number when saving. */
   tax_rate: string;
-  tax_inclusive: boolean;
+  /** null = never answered: nothing is pre-selected and a rate cannot be saved. */
+  tax_inclusive: boolean | null;
   tax_label: string;
   booking_rules: BookingRules;
   /**
@@ -123,7 +125,7 @@ function seedForm(org: Organization): SettingsForm {
     time_format: org.time_format ?? LOCALE_DEFAULTS.time_format,
     number_format: org.number_format ?? LOCALE_DEFAULTS.number_format,
     tax_rate: org.tax_rate != null ? String(org.tax_rate) : "",
-    tax_inclusive: org.tax_inclusive ?? true,
+    tax_inclusive: taxIsInclusive(org) ?? null,
     tax_label: org.tax_label ?? "VAT",
     booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
     pause_limit:
@@ -150,6 +152,7 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
         ? JSON.stringify(b) !== JSON.stringify(n)
         : b !== n;
     if (!changed) return;
+    if (k === "tax_inclusive" && next.tax_inclusive === null) return;
     if (k === "tax_rate") {
       const parsed = Number(next.tax_rate);
       if (next.tax_rate !== "" && !Number.isNaN(parsed)) out.tax_rate = parsed;
@@ -262,6 +265,8 @@ export function SettingsClient() {
   // and quietly dropping it would read as saved.
   const pauseLimitInvalid = !!form && parsePauseLimitInput(form.pause_limit) === undefined;
   const dirty = Object.keys(payload).length > 0 || pauseLimitInvalid;
+  // Saving a rate needs the explicit answer to "Do your prices already include tax?".
+  const taxNeedsChoice = !!form && form.tax_rate.trim() !== "" && form.tax_inclusive === null;
 
   const set = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -283,7 +288,7 @@ export function SettingsClient() {
     setPayout({ frequency, payout_day: frequency === "daily" ? undefined : 1 });
 
   const onSave = async () => {
-    if (!orgId || !dirty || !form || pauseLimitInvalid) return;
+    if (!orgId || !dirty || !form || taxNeedsChoice || pauseLimitInvalid) return;
     setSavedFlash(false);
     const res = await updateOrg.mutateAsync({ orgId, data: payload });
     if (res.success) {
@@ -315,7 +320,12 @@ export function SettingsClient() {
       );
     if (dirty)
       return (
-        <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
+        <button
+          className="btn-primary-v2 sm"
+          onClick={() => void onSave()}
+          disabled={taxNeedsChoice}
+          title={taxNeedsChoice ? "Choose whether your prices include tax first" : undefined}
+        >
           Save changes
         </button>
       );
@@ -405,15 +415,25 @@ export function SettingsClient() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
                 <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
-                <div className="flex flex-col gap-1.5">
-                  <Eyebrow as="label">Prices include tax</Eyebrow>
-                  <div className="flex items-center gap-2.5 py-2.75">
-                    <Toggle on={form?.tax_inclusive ?? true} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? true))} />
-                    <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                      {form?.tax_inclusive ?? true ? "Listed prices already include tax" : "Tax is added on top of listed prices"}
-                    </span>
+                <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
+                  <legend className="mb-1.5"><Eyebrow>Do your prices already include tax?</Eyebrow></legend>
+                  <div role="radiogroup" aria-label="Do your prices already include tax?" className="flex flex-col gap-2 py-1">
+                    {([
+                      [true, "Yes, prices include tax"],
+                      [false, "No, tax is added on top"],
+                    ] as const).map(([value, text]) => (
+                      <label key={String(value)} className="flex items-center gap-2 text-[13px] cursor-pointer" style={{ color: "var(--ink)" }}>
+                        <input type="radio" name="tax-inclusive" disabled={!form} checked={form?.tax_inclusive === value} onChange={() => set("tax_inclusive", value)} />
+                        {text}
+                      </label>
+                    ))}
                   </div>
-                </div>
+                  {form?.tax_inclusive === null && (
+                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger)" : "var(--fg-3)" }}>
+                      Choose one to save a tax rate.
+                    </span>
+                  )}
+                </fieldset>
               </div>
             </DSCard>
           </section>
