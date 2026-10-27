@@ -12,7 +12,13 @@ import {
   pausedLine,
   suspendedLine,
 } from "@/lib/billing/membershipHolds";
-import { holdDetailLine, holdErrorCopy, mergeHoldChange } from "@/app/dashboard/gym-owner/members/HoldActions";
+import {
+  gymPauseEffectLines,
+  gymResumeCopy,
+  holdDetailLine,
+  holdErrorCopy,
+  mergeHoldChange,
+} from "@/app/dashboard/gym-owner/members/HoldActions";
 import { MembershipSubscriptionStatus as S, type MembershipSubscription } from "@/lib/types";
 
 const DAY = 86_400_000;
@@ -78,8 +84,15 @@ describe("paused dates", () => {
 
   it("says since when, and the new end, to the member and to the gym", () => {
     expect(pausedLine(paused, fmt, NOW)).toBe("Paused since 2026-10-04 (10 days). Resume today and it runs to 2026-11-10.");
-    expect(pausedLine(paused, fmt, NOW, "gym")).toBe("Paused since 2026-10-04 (10 days). Ends 2026-11-10 if they resume today.");
-    expect(holdDetailLine(paused, fmt, NOW)).toBe("Paused since 2026-10-04 (10 days). Ends 2026-11-10 if they resume today.");
+    expect(pausedLine(paused, fmt, NOW, "gym")).toBe("Paused by the member since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today.");
+    expect(holdDetailLine(paused, fmt, NOW)).toBe("Paused by the member since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today.");
+  });
+
+  it("says who paused it: the gym, or the member (older pauses carry no paused_by)", () => {
+    const byGym = { ...paused, paused_by: "gym" as const };
+    expect(holdDetailLine(byGym, fmt, NOW)).toBe("Paused by the gym since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today.");
+    expect(holdDetailLine({ ...paused, paused_by: "member" }, fmt, NOW)).toMatch(/^Paused by the member since/);
+    expect(pausedLine(byGym, fmt, NOW)).toBe("Paused by Iron Temple since 2026-10-04 (10 days). Resume today and it runs to 2026-11-10.");
   });
 });
 
@@ -149,6 +162,42 @@ describe("explaining a refused check-in or booking", () => {
       title: "Your membership is paused.",
       body: "You paused it on 2026-10-04, so you can't book classes at Iron Temple until you resume it.",
     });
+    expect(holdRefusalCopy({ kind: "paused", sub: { ...paused, paused_by: "gym" } }, fmt, "check in").body).toBe(
+      "Iron Temple paused it on 2026-10-04, so you can't check in at Iron Temple until you resume it.",
+    );
+  });
+});
+
+describe("the gym pausing and resuming for the member", () => {
+  it("says the days are given back, and that either side can resume", () => {
+    expect(gymPauseEffectLines(sub(), fmt)).toEqual([
+      "They can't check in or book classes while it's paused.",
+      "The days it's paused are given back: it's due to end on 2026-10-31, and that moves later by every day it stays paused.",
+      "You or they can resume it any time. We'll let them know it's paused.",
+    ]);
+    expect(gymPauseEffectLines(sub({ end_date: undefined }), fmt)[1]).toBe("The days it's paused are given back when it resumes.");
+    expect(gymPauseEffectLines(sub({ auto_renew: true, collection_method: "card_auto" }), fmt)).toContain(
+      "Their card isn't charged while it's paused. Auto-renew carries on for the new end date.",
+    );
+  });
+
+  it("resuming names the new end date", () => {
+    const paused = sub({ status: S.PAUSED, paused_at: new Date(NOW.getTime() - 10 * DAY).toISOString() });
+    expect(gymResumeCopy(paused, fmt, NOW)).toBe(
+      "They can check in and book again straight away. The paused days are added back, so it now runs to 2026-11-10. We'll let them know.",
+    );
+    expect(gymResumeCopy({ ...paused, end_date: undefined }, fmt, NOW)).toBe(
+      "They can check in and book again straight away. We'll let them know.",
+    );
+  });
+
+  it("a resume clears the pause fields and takes the moved end date", () => {
+    const shown = sub({ status: S.PAUSED, paused_at: "2026-10-04T12:00:00Z", paused_by: "gym" });
+    const merged = mergeHoldChange(shown, sub({ status: S.ACTIVE, end_date: "2026-11-10T00:00:00Z", paused_at: null }));
+    expect(merged.status).toBe(S.ACTIVE);
+    expect(merged.paused_at).toBeNull();
+    expect(merged.paused_by).toBeNull();
+    expect(merged.end_date).toBe("2026-11-10T00:00:00Z");
   });
 });
 

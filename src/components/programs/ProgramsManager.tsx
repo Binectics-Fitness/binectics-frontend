@@ -920,6 +920,7 @@ function ProgramCard({
   onAssign,
   onViewClients,
   onArchive,
+  onRestore,
   fmtDate,
 }: {
   template: ProgramTemplate;
@@ -928,6 +929,7 @@ function ProgramCard({
   onAssign: () => void;
   onViewClients: () => void;
   onArchive: () => void;
+  onRestore: () => void;
   fmtDate: (d: string | Date) => string;
 }) {
   const STATUS_LABEL: Record<ProgramTemplate["status"], string> = {
@@ -990,6 +992,11 @@ function ProgramCard({
               Archive
             </button>
           )}
+          {template.status === "archived" && (
+            <button type="button" onClick={onRestore} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}>
+              Restore
+            </button>
+          )}
         </div>
         <span className="font-mono text-[10.5px]" style={{ color: "var(--fg-4)" }}>{fmtDate(template.updated_at)}</span>
       </div>
@@ -999,7 +1006,7 @@ function ProgramCard({
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
-type Filter = "All" | "Draft" | "Published";
+type Filter = "All" | "Draft" | "Published" | "Archived";
 
 export default function ProgramsManager({
   config,
@@ -1071,7 +1078,9 @@ export default function ProgramsManager({
   useEffect(() => {
     let active = true;
     void (async () => {
-      const res = await programsService.listTemplates();
+      // Archived programs load too, behind their own filter, so they can be
+      // restored. "All" stays the live programs.
+      const res = await programsService.listTemplates(true);
       if (!active) return;
       if (res.success && res.data) {
         setTemplates(res.data);
@@ -1100,18 +1109,24 @@ export default function ProgramsManager({
 
   const counts = useMemo(
     () => ({
-      All: templates.length,
+      All: templates.filter((t) => t.status !== "archived").length,
       Draft: templates.filter((t) => t.status === "draft").length,
       Published: templates.filter((t) => t.status === "published").length,
+      Archived: templates.filter((t) => t.status === "archived").length,
     }),
     [templates],
   );
 
+  // Restoring the last archived program hides that filter; don't leave the
+  // list on an empty view whose chip is gone.
+  const activeFilter: Filter = filter === "Archived" && counts.Archived === 0 ? "All" : filter;
+
   const filtered = useMemo(() => {
-    if (filter === "Draft") return templates.filter((t) => t.status === "draft");
-    if (filter === "Published") return templates.filter((t) => t.status === "published");
-    return templates;
-  }, [templates, filter]);
+    if (activeFilter === "Draft") return templates.filter((t) => t.status === "draft");
+    if (activeFilter === "Published") return templates.filter((t) => t.status === "published");
+    if (activeFilter === "Archived") return templates.filter((t) => t.status === "archived");
+    return templates.filter((t) => t.status !== "archived");
+  }, [templates, activeFilter]);
 
   // Each open and each attempt starts without the last refusal: a gate is
   // about the thing just tried, never a stale one (a publish's in the builder).
@@ -1183,13 +1198,13 @@ export default function ProgramsManager({
     requestConfirmation({
       title: `Archive "${t.name}"?`,
       description:
-        "It leaves this list and can't be published or edited again. Clients already on it keep their programs.",
+        "It moves to Archived, where you can restore it later. Clients already on it keep their programs.",
       confirmLabel: "Archive program",
       confirmVariant: "danger",
       onConfirm: async () => {
         const res = await programsService.archiveTemplate(t._id);
         if (res.success) {
-          setTemplates((list) => list.filter((x) => x._id !== t._id));
+          setTemplates((list) => list.map((x) => (x._id === t._id ? { ...x, status: "archived" } : x)));
           toast.success("Program archived.");
         } else {
           toast.error(res.message ?? "Failed to archive program.");
@@ -1198,8 +1213,32 @@ export default function ProgramsManager({
     });
   };
 
-  const FILTERS: Filter[] = ["All", "Draft", "Published"];
+  const handleRestore = (t: ProgramTemplate) => {
+    setGate(null);
+    requestConfirmation({
+      title: `Restore "${t.name}"?`,
+      description:
+        t.latest_version_no === t.latest_published_version_no
+          ? "It goes back to your programs as published, ready to assign."
+          : "It goes back to your programs as a draft, ready to edit and publish.",
+      confirmLabel: "Restore program",
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        const res = await programsService.restoreTemplate(t._id);
+        if (res.success && res.data) {
+          const restored = res.data.template;
+          // Keep the card's summary (task counts) the list read gave it.
+          setTemplates((list) => list.map((x) => (x._id === t._id ? { ...x, ...restored } : x)));
+          toast.success("Program restored.");
+        } else {
+          toast.error(res.message ?? "Failed to restore program.");
+        }
+      },
+    });
+  };
 
+  // Archived only appears once there is something in it.
+  const FILTERS: Filter[] = counts.Archived > 0 ? ["All", "Draft", "Published", "Archived"] : ["All", "Draft", "Published"];
   return (
     <Shell activeItem={navItem} crumb={navItem}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-1">
@@ -1246,12 +1285,12 @@ export default function ProgramsManager({
               onClick={() => setFilter(f)}
               className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
               style={{
-                background: filter === f ? "var(--ink)" : "var(--bg)",
-                color: filter === f ? "var(--bg)" : "var(--fg-3)",
-                border: filter === f ? "1px solid var(--ink)" : "1px solid var(--border)",
+                background: activeFilter === f ? "var(--ink)" : "var(--bg)",
+                color: activeFilter === f ? "var(--bg)" : "var(--fg-3)",
+                border: activeFilter === f ? "1px solid var(--ink)" : "1px solid var(--border)",
               }}
             >
-              {f} <span style={{ color: filter === f ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{counts[f]}</span>
+              {f} <span style={{ color: activeFilter === f ? "oklch(0.75 0.005 85)" : "var(--fg-4)", marginLeft: 4 }}>{counts[f]}</span>
             </button>
           ))}
         </div>
@@ -1271,7 +1310,10 @@ export default function ProgramsManager({
           </button>
         </div>
       ) : !error && filtered.length === 0 ? (
-        <EmptySlate message={`No ${filter.toLowerCase()} programs.`} mt="mt-2" />
+        <EmptySlate
+          message={activeFilter === "All" ? "No live programs. Restore one from Archived, or create a new one." : `No ${activeFilter.toLowerCase()} programs.`}
+          mt="mt-2"
+        />
       ) : !error ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((t) => (
@@ -1284,6 +1326,7 @@ export default function ProgramsManager({
               onAssign={() => setAssignTemplate(t)}
               onViewClients={() => setClientsTemplate(t)}
               onArchive={() => handleArchive(t)}
+              onRestore={() => handleRestore(t)}
             />
           ))}
         </div>

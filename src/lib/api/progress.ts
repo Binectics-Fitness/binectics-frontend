@@ -666,8 +666,15 @@ export const progressService = {
 
   // ==================== CLIENT PROFILES (SOLO) ====================
 
-  async getMyClientProfiles(): Promise<ApiResponse<ClientProfile[]>> {
-    return await apiClient.get<ClientProfile[]>("/progress/clients");
+  /**
+   * The professional's client profiles. includeEnded adds former clients
+   * (ended links, is_active false) after the active ones: who they were and
+   * none of their progress. Their profile pages stay closed to the coach.
+   */
+  async getMyClientProfiles(options: { includeEnded?: boolean } = {}): Promise<ApiResponse<ClientProfile[]>> {
+    return await apiClient.get<ClientProfile[]>(
+      options.includeEnded ? "/progress/clients?include_ended=true" : "/progress/clients",
+    );
   },
 
   async getMyClientSummaries(): Promise<

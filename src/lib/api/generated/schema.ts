@@ -2461,7 +2461,10 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Cancel my booking (late cancellations record the org’s fee; a waitlisted member is promoted) */
+        /**
+         * Cancel my booking (late cancellations record the gym’s fee; a waitlisted member is promoted)
+         * @description Inside the gym’s cancellation window with a fee set, the fee is recorded on the booking (cancellation_fee_applied). It is the gym’s policy, shown to members beforehand; Binectics never charges it.
+         */
         delete: operations["ClassBookingsController_cancelBooking"];
         options?: never;
         head?: never;
@@ -2704,7 +2707,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Public weekly class timetable for a listing */
+        /**
+         * Public weekly class timetable for a listing
+         * @description Active classes, plus the gym’s class cancellation policy (window, fee percent, note) to show before booking. The late-cancellation fee is a policy the gym sets: it is recorded on a late cancellation and never charged by Binectics.
+         */
         get: operations["ClassBookingsController_getListingClasses"];
         put?: never;
         post?: never;
@@ -2755,7 +2761,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My upcoming class bookings */
+        /** My upcoming class bookings, plus the ones the gym recently cancelled */
         get: operations["ClassBookingsController_getMyBookings"];
         put?: never;
         post?: never;
@@ -4022,6 +4028,23 @@ export interface paths {
         patch: operations["MarketplaceOrgController_setNextPlan"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Pause a member's membership for them. Access stops; the remaining days are held and added back to end_date on resume (by the gym or the member). Active, unexpired memberships only; refused (409 RENEWAL_CHARGE_IN_PROGRESS) while a card renewal is processing. paused_by is 'gym'. */
+        patch: operations["MarketplaceOrgController_pauseOrgSubscription"];
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/record-renewal": {
         parameters: {
             query?: never;
@@ -4054,6 +4077,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resume a paused membership, whoever paused it. end_date moves out by exactly how long the pause lasted. */
+        patch: operations["MarketplaceOrgController_resumeOrgSubscription"];
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/subscriptions/{subscriptionId}/suspend": {
@@ -5003,6 +5043,23 @@ export interface paths {
         put?: never;
         /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed */
         post: operations["ProgramsController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore an archived program template to published (if its latest version is published) or draft. A program that is not archived is returned unchanged */
+        post: operations["ProgramsController_restore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7215,7 +7272,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List locations for the organization */
+        /**
+         * List locations for the organization
+         * @description Active locations only, unless include_inactive=true, which also returns deactivated ones. Each location carries is_active.
+         */
         get: operations["TeamsController_getLocations"];
         put?: never;
         /** Add a location to the organization */
@@ -7819,12 +7879,17 @@ export interface components {
              */
             booking_lead_time_hours: number;
             /**
-             * @description 0–100; 0 disables the fee.
+             * @description Class late-cancellation fee, 0–100; 0 means no fee. A policy only: the fee is recorded on a booking cancelled inside the window and shown to members, never charged by Binectics.
              * @example 50
              */
             cancellation_fee_percent: number;
             /**
-             * @description Cancellations inside this window incur the fee.
+             * @description The provider’s own words on the class cancellation policy, shown to members next to the window and fee. Omit or send an empty string for none.
+             * @example Late cancellations are settled at the front desk.
+             */
+            cancellation_policy_note?: string;
+            /**
+             * @description Hours before a class inside which a cancellation incurs the fee (recorded, not charged). 0 means no window, so no fee.
              * @example 24
              */
             cancellation_window_hours: number;
@@ -7866,6 +7931,24 @@ export interface components {
             name: string;
             /** @example NY */
             stateCode: string;
+        };
+        /** @enum {string} */
+        ClassBookingStatus: "confirmed" | "waitlisted" | "cancelled_by_member" | "cancelled_by_gym";
+        ClassCancellationPolicyDto: {
+            /**
+             * @description Late-cancellation fee, 0–100 percent. Recorded on the booking, never charged by Binectics. 0 when the gym has no fee.
+             * @example 50
+             */
+            fee_percent: number;
+            /** @description The gym’s own words on the policy, or null. */
+            note: string | null;
+            /** @description The gym’s trading name, for "under <gym>’s policy". */
+            provider_name: string;
+            /**
+             * @description Hours before the class inside which cancelling incurs the fee. 0 when the gym has no fee.
+             * @example 24
+             */
+            window_hours: number;
         };
         ClonePlanForAudienceDto: Record<string, never>;
         CompleteBookingDto: {
@@ -8452,6 +8535,8 @@ export interface components {
             primary_email?: string;
             /** @example 2018/123456/07 */
             registration_number?: string;
+            /** @description Return the live workspace of this type the caller already owns instead of opening another (onboarding retries). Trainer and dietitian workspaces always behave this way. */
+            reuse_existing?: boolean;
             /**
              * @description Whether listed prices already include tax.
              * @example true
@@ -8823,7 +8908,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED" | "CLASS_REMOVED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -9076,6 +9161,28 @@ export interface components {
             /** @enum {string} */
             side: "mine" | "theirs";
         };
+        ListingClassDto: {
+            _id: string;
+            capacity: number;
+            /** @description 0 = Sunday */
+            day_of_week: number;
+            description?: string;
+            duration_minutes: number;
+            instructor_name?: string;
+            is_active: boolean;
+            location_id?: string | null;
+            name: string;
+            organization_id: string;
+            /** @description "HH:mm" in the gym’s time zone */
+            start_time: string;
+            waitlist_enabled: boolean;
+        };
+        ListingClassesResponseDto: {
+            /** @description The gym’s class cancellation policy, to show before booking, or null when it has none (show no fee wording then). The fee is recorded on a late cancellation, never charged by Binectics. */
+            cancellation_policy: components["schemas"]["ClassCancellationPolicyDto"] | null;
+            data: components["schemas"]["ListingClassDto"][];
+            success: boolean;
+        };
         LoginDto: {
             /**
              * @description User email address
@@ -9195,6 +9302,51 @@ export interface components {
         };
         MuteResponseDto: {
             muted: boolean;
+        };
+        MyClassBookingClassDto: {
+            _id: string;
+            /** @description Only on live bookings (data) */
+            capacity?: number;
+            /** @description 0 = Sunday */
+            day_of_week: number;
+            duration_minutes: number;
+            instructor_name?: string;
+            /** @description Only on live bookings (data) */
+            is_active?: boolean;
+            name: string;
+            /** @description "HH:mm" in the gym’s time zone */
+            start_time: string;
+        };
+        MyClassBookingDto: {
+            _id: string;
+            /** @description "YYYY-MM-DD" in the gym’s time zone */
+            booking_date: string;
+            /** @description The member cancelled inside the gym’s window while it had a fee: the fee is recorded here for the gym to act on. Binectics never charges it. */
+            cancellation_fee_applied: boolean;
+            /** @description Live bookings (data) only: the gym’s class cancellation policy as it stands now, or null when it has none (show no fee wording then). */
+            cancellation_policy?: components["schemas"]["ClassCancellationPolicyDto"] | null;
+            /** @description Why the gym cancelled it (status cancelled_by_gym). Null otherwise. */
+            cancellation_reason?: string | null;
+            /** Format: date-time */
+            cancelled_at?: string | null;
+            class_id: components["schemas"]["MyClassBookingClassDto"] | null;
+            /** Format: date-time */
+            created_at: string;
+            listing_id?: string | null;
+            member_user_id: string;
+            organization_id: string;
+            /** @description Waitlisted only: the occurrence has a free spot and can still be booked. A hint. */
+            spot_open?: boolean;
+            status: components["schemas"]["ClassBookingStatus"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        MyClassBookingsResponseDto: {
+            /** @description Bookings and waitlist places the gym cancelled (status cancelled_by_gym, with cancellation_reason), for an occurrence in the last 14 days or still to come, soonest first. Kept out of data so a client that treats every row there as live does not show them as held. */
+            cancelled_by_gym: components["schemas"]["MyClassBookingDto"][];
+            /** @description Live bookings and waitlist places (status confirmed or waitlisted), soonest first. */
+            data: components["schemas"]["MyClassBookingDto"][];
+            success: boolean;
         };
         MyDashboardStatsDto: {
             /**
@@ -10156,23 +10308,23 @@ export interface components {
             /** @example 52 */
             carbsG?: number;
             /** @example Grains */
-            category?: string;
+            category?: string | null;
             /** @example 11 */
             fatG?: number;
             /** @example 2.4 */
-            fiberG?: number;
+            fiberG?: number | null;
             /** @example Jollof rice */
             name?: string;
             /** @example Prepared with minimal oil. */
-            notes?: string;
+            notes?: string | null;
             /** @example 7.5 */
             proteinG?: number;
             /** @example 1 cup (200 g) */
             servingLabel?: string;
             /** @example 520 */
-            sodiumMg?: number;
+            sodiumMg?: number | null;
             /** @example 3.1 */
-            sugarG?: number;
+            sugarG?: number | null;
         };
         UpdateFormDto: {
             /**
@@ -14976,7 +15128,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ListingClassesResponseDto"];
+                };
             };
             /** @description Gym not found */
             404: {
@@ -15040,6 +15194,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description CLASS_REMOVED: the gym took the class off its timetable while the booking was being made */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     MarketplaceController_getListingBySlug: {
@@ -15077,7 +15238,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MyClassBookingsResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
@@ -16931,6 +17094,26 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_pauseOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_recordRenewalPayment: {
         parameters: {
             query?: never;
@@ -16968,6 +17151,26 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceOrgController_resumeOrgSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                subscriptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19093,6 +19296,25 @@ export interface operations {
             };
         };
     };
+    ProgramsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgramsController_clientOverview: {
         parameters: {
             query?: never;
@@ -19330,7 +19552,10 @@ export interface operations {
     };
     ProgressController_getMyClientProfiles: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description true: also list former clients (ended links), after the active ones: who they were, with is_active false and none of their progress. */
+                include_ended?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -20031,7 +20256,10 @@ export interface operations {
     };
     ProgressController_getClientSummaries: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description true: also list former clients (ended links), after the active ones, with is_active false and summary null: none of their progress. */
+                include_ended?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -22613,7 +22841,10 @@ export interface operations {
     };
     TeamsController_getLocations: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Also return deactivated locations (is_active: false). Only the string "true" turns it on. */
+                include_inactive?: boolean;
+            };
             header?: never;
             path: {
                 organizationId: string;

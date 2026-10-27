@@ -9,9 +9,10 @@ import {
  * decides them (marketplace.service.ts, SEAT_MODEL.md §4.9). Pure functions so
  * every state can be tested without a page.
  *
- * - Pause: the member only, from `active` while the term is still running.
- *   Access stops; the days are credited back on resume, so `end_date` moves
- *   later by exactly how long the pause lasted. Auto-renew stays on but
+ * - Pause: the member, or the gym for them (api #282), from `active` while
+ *   the term is still running. Access stops; the days are credited back on
+ *   resume, so `end_date` moves later by exactly how long the pause lasted.
+ *   Either side may resume it, whoever started it. Auto-renew stays on but
  *   nothing is charged while paused. No limit on length or how often.
  * - Suspend: the gym only, from `active` or `past_due`. Access stops; the
  *   days are NOT credited back. A saved-card auto-renew is switched off.
@@ -26,13 +27,14 @@ const time = (iso: string | null | undefined): number | null => {
   return Number.isNaN(t) ? null : t;
 };
 
-/** The member may pause: active, with a term that hasn't ended. */
+/** The member (or the gym, for them) may pause: active, with a term that hasn't ended. */
 export function canPause(sub: MembershipSubscription, now: Date = new Date()): boolean {
   if (sub.status !== MembershipSubscriptionStatus.ACTIVE) return false;
   const end = time(sub.end_date);
   return end === null || end >= now.getTime();
 }
 
+/** Either side resumes a pause, whoever started it. */
 export function canResume(sub: MembershipSubscription): boolean {
   return sub.status === MembershipSubscriptionStatus.PAUSED;
 }
@@ -104,21 +106,37 @@ export function pauseEffectLines(
   return lines;
 }
 
-/** One line for a paused row: since when, and the end date if resumed now. */
+/** The gym started this pause. Older pauses carry no paused_by: the member's. */
+export function pausedByGym(sub: MembershipSubscription): boolean {
+  return sub.paused_by === "gym";
+}
+
+/**
+ * One line for a paused row: who paused it and since when, and the end date
+ * if resumed now. `who` is the reader: the member, or the gym.
+ */
 export function pausedLine(
   sub: MembershipSubscription,
   fmt: (d: string | Date) => string,
   now: Date = new Date(),
   who: "member" | "gym" = "member",
 ): string {
-  const since = sub.paused_at ? `Paused since ${fmt(sub.paused_at)}` : "Paused";
+  const head =
+    who === "gym"
+      ? pausedByGym(sub)
+        ? "Paused by the gym"
+        : "Paused by the member"
+      : pausedByGym(sub)
+        ? `Paused by ${providerNameOf(sub)}`
+        : "Paused";
+  const since = sub.paused_at ? `${head} since ${fmt(sub.paused_at)}` : head;
   const days = daysPaused(sub, now);
   const span = sub.paused_at ? ` (${days} day${days === 1 ? "" : "s"})` : "";
   const end = endIfResumedAt(sub, now);
   const endPart = end
     ? who === "member"
       ? `. Resume today and it runs to ${fmt(end)}.`
-      : `. Ends ${fmt(end)} if they resume today.`
+      : `. Ends ${fmt(end)} if it resumes today.`
     : ".";
   return `${since}${span}${endPart}`;
 }
@@ -185,6 +203,6 @@ export function holdRefusalCopy(
   const end = endIfResumedAt(hold.sub);
   return {
     title: "Your membership is paused.",
-    body: `You paused it${hold.sub.paused_at ? ` on ${fmt(hold.sub.paused_at)}` : ""}, so you can't ${action} at ${providerNameOf(hold.sub)} until you resume it.${end ? ` Resume today and it runs to ${fmt(end)}.` : ""}`,
+    body: `${pausedByGym(hold.sub) ? `${providerNameOf(hold.sub)} paused it` : "You paused it"}${hold.sub.paused_at ? ` on ${fmt(hold.sub.paused_at)}` : ""}, so you can't ${action} at ${providerNameOf(hold.sub)} until you resume it.${end ? ` Resume today and it runs to ${fmt(end)}.` : ""}`,
   };
 }

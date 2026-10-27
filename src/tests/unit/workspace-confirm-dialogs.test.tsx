@@ -134,12 +134,62 @@ describe("programs: archive", () => {
     wrap(<ProgramsManager config={config} />);
     await user.click(await screen.findByRole("button", { name: "Archive" }));
     const dialog = await findConfirmDialog('Archive "Couch to 5k"?');
-    expect(dialog).toHaveTextContent("can't be published or edited again. Clients already on it keep their programs.");
+    expect(dialog).toHaveTextContent("It moves to Archived, where you can restore it later. Clients already on it keep their programs.");
     expect(archive).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Archive program" }));
     await waitFor(() => expect(archive).toHaveBeenCalledWith("t1"));
     expect(toast.success).toHaveBeenCalledWith("Program archived.");
     expect(nativeConfirm).not.toHaveBeenCalled();
+    // It leaves the live list for the Archived filter, where it can be restored.
+    expect(screen.queryByRole("button", { name: "Archive" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^Archived/ }));
+    expect(await screen.findByRole("button", { name: "Restore" })).toBeInTheDocument();
+  });
+});
+
+describe("programs: restore", () => {
+  const archived = {
+    _id: "t2", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "archived",
+    latest_version_no: 1, latest_published_version_no: 1, created_at: "", updated_at: "",
+    phase_count: 1, task_count: 3, duration_days: 28,
+  };
+
+  it("lists archived programs behind their own filter, and restores only after the dialog", async () => {
+    const list = vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [archived] } as never);
+    const restore = vi.spyOn(programsService, "restoreTemplate").mockResolvedValue({
+      success: true,
+      data: { template: { ...archived, status: "published" }, version: {} },
+    } as never);
+    const user = userEvent.setup();
+    wrap(<ProgramsManager config={config} />);
+    expect(await screen.findByText("No live programs. Restore one from Archived, or create a new one.")).toBeInTheDocument();
+    expect(list).toHaveBeenCalledWith(true);
+
+    await user.click(screen.getByRole("button", { name: /^Archived/ }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
+    const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
+    expect(dialog).toHaveTextContent("It goes back to your programs as published, ready to assign.");
+    expect(restore).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Restore program" }));
+    await waitFor(() => expect(restore).toHaveBeenCalledWith("t2"));
+    expect(toast.success).toHaveBeenCalledWith("Program restored.");
+    expect(nativeConfirm).not.toHaveBeenCalled();
+    // Back in the live list, assignable, and the empty Archived filter is gone.
+    expect(await screen.findByRole("button", { name: "Assign" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Archived/ })).not.toBeInTheDocument();
+  });
+
+  it("says a program with unpublished edits comes back as a draft", async () => {
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({
+      success: true,
+      data: [{ ...archived, latest_version_no: 2 }],
+    } as never);
+    const user = userEvent.setup();
+    wrap(<ProgramsManager config={config} />);
+    await user.click(await screen.findByRole("button", { name: /^Archived/ }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
+    const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
+    expect(dialog).toHaveTextContent("It goes back to your programs as a draft, ready to edit and publish.");
   });
 });
 

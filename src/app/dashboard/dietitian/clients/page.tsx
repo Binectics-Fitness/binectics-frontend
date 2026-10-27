@@ -16,7 +16,10 @@ import {
   type InviteClientResult,
 } from "@/components/clients/InviteClientModal";
 
-type Filter = "All" | "Active" | "Paused";
+// A client whose is_active is false has an ENDED coaching link: ended by
+// the coach, the client, the gym or a transfer. It can't be reopened (a new
+// request starts a new one), and there is no "pause" for a client.
+type Filter = "All" | "Active" | "Ended";
 
 /* ─── Helpers (same shapes as the trainer clients page) ───── */
 
@@ -33,7 +36,7 @@ function clientInitials(c: ClientProfile): string {
   return parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
 }
 
-function StatusBadge({ status }: { status: "Active" | "Paused" }) {
+function StatusBadge({ status }: { status: "Active" | "Ended" }) {
   return <StatusPill tone={status === "Active" ? "success" : "neutral"} label={status} />;
 }
 
@@ -50,9 +53,11 @@ export default function DietitianClientsPage() {
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading: loading, isError } = useQuery<ClientProfile[]>({
-    queryKey: ["progress", "myClientProfiles"],
+    // Former clients too, for the Ended filter: its own key, since the
+    // other readers of the client list want the active links only.
+    queryKey: ["progress", "myClientProfiles", "includeEnded"],
     queryFn: async () => {
-      const res = await progressService.getMyClientProfiles();
+      const res = await progressService.getMyClientProfiles({ includeEnded: true });
       if (!res.success || !res.data) throw new Error(res.message || "Failed to load clients");
       return res.data;
     },
@@ -65,7 +70,7 @@ export default function DietitianClientsPage() {
       const matchesFilter =
         activeFilter === "All" ||
         (activeFilter === "Active" && c.is_active) ||
-        (activeFilter === "Paused" && !c.is_active);
+        (activeFilter === "Ended" && !c.is_active);
       return matchesSearch && matchesFilter;
     });
   }, [clients, search, activeFilter]);
@@ -73,10 +78,10 @@ export default function DietitianClientsPage() {
   const counts = useMemo(() => ({
     All: clients.length,
     Active: clients.filter((c) => c.is_active).length,
-    Paused: clients.filter((c) => !c.is_active).length,
+    Ended: clients.filter((c) => !c.is_active).length,
   }), [clients]);
 
-  const FILTERS: { label: Filter }[] = [{ label: "All" }, { label: "Active" }, { label: "Paused" }];
+  const FILTERS: { label: Filter }[] = [{ label: "All" }, { label: "Active" }, { label: "Ended" }];
 
   const onInvited = (result: InviteClientResult) => {
     setInvited(result);
@@ -123,7 +128,7 @@ export default function DietitianClientsPage() {
         {[
           { label: "Total clients", value: loading ? "-" : String(clients.length), delta: "All time" },
           { label: "Active", value: loading ? "-" : String(counts.Active), delta: "Currently active" },
-          { label: "Paused", value: loading ? "-" : String(counts.Paused), delta: "Inactive / paused" },
+          { label: "Ended", value: loading ? "-" : String(counts.Ended), delta: "Former clients" },
         ].map((kpi) => (
           <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={kpi.delta} />
         ))}
@@ -205,20 +210,31 @@ export default function DietitianClientsPage() {
                 <tr><td colSpan={4} className="px-4.5 py-6"><EmptySlate message={search.trim() ? "No clients match your search." : "No clients in this view."} mt="mt-0" /></td></tr>
               ) : (
                 filtered.map((c) => (
-                  <tr key={c._id} className="hover:bg-[var(--bg-2)] cursor-pointer">
+                  <tr key={c._id} className={c.is_active ? "hover:bg-[var(--bg-2)] cursor-pointer" : undefined}>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <Link href={`/dashboard/dietitian/clients/${c._id}`} className="flex gap-2.5 items-center no-underline" style={{ color: "inherit" }}>
-                        <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
-                          {clientInitials(c)}
+                      {c.is_active ? (
+                        <Link href={`/dashboard/dietitian/clients/${c._id}`} className="flex gap-2.5 items-center no-underline" style={{ color: "inherit" }}>
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+                            {clientInitials(c)}
+                          </span>
+                          <span className="font-medium" style={{ color: "var(--ink)" }}>{clientName(c)}</span>
+                        </Link>
+                      ) : (
+                        // A former client: the ended link gives the coach none
+                        // of their progress, so there is no profile to open.
+                        <span className="flex gap-2.5 items-center" title="Coaching ended. Their progress is theirs now.">
+                          <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+                            {clientInitials(c)}
+                          </span>
+                          <span className="font-medium" style={{ color: "var(--fg-2)" }}>{clientName(c)}</span>
                         </span>
-                        <span className="font-medium" style={{ color: "var(--ink)" }}>{clientName(c)}</span>
-                      </Link>
+                      )}
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <ClientGoalsCell goals={c.goals} />
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                      <StatusBadge status={c.is_active ? "Active" : "Paused"} />
+                      <StatusBadge status={c.is_active ? "Active" : "Ended"} />
                     </td>
                     <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                       <span className="font-mono text-[11.5px]" style={{ color: "var(--fg-3)" }}>

@@ -179,7 +179,7 @@ export default function ClientDetailPage() {
           <div>
             <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{name}</h1>
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <StatusPill tone={profile.is_active ? "success" : "neutral"} label={profile.is_active ? "Active client" : "Paused client"} />
+              <StatusPill tone={profile.is_active ? "success" : "neutral"} label={profile.is_active ? "Active client" : "Former client"} />
               <span className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-2)", background: "var(--bg-3)", border: "1px solid var(--border)" }}>
                 Client since {fmtDate(profile.created_at)}
               </span>
