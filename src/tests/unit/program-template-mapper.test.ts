@@ -274,3 +274,68 @@ describe("catch-up window", () => {
     expect(form.catch_up_days).toBe("1");
   });
 });
+
+describe("workout task with inline exercises", () => {
+  const ex = (name: string, extra = {}) => ({ name, sets: "", reps: "", seconds: "", rest_seconds: "", cues: "", ...extra });
+  const phase = (blocks: PhaseFormRow["blocks"]): PhaseFormRow[] => [{ name: "Build", duration_days: "", blocks }];
+
+  it("sends library fields for a pick and none for a custom exercise", () => {
+    const blocks = phaseRowsToPayload(
+      phase([
+        {
+          ...emptyBlockRow("workout_plan"),
+          title: "Lower body",
+          exercises: [
+            ex("Goblet Squat", { sets: "3", reps: "10", rest_seconds: "45", cues: "Chest tall\n\n Heels down ", library_exercise_id: "goblet-squat", library_variant: "front", media_id: "goblet-squat--front" }),
+            ex("Farmer walk", { seconds: "40" }),
+            ex("   "),
+          ],
+        },
+      ]),
+    )[0].blocks;
+    expect(blocks[0].exercises).toEqual([
+      { name: "Goblet Squat", sets: 3, reps: 10, rest_seconds: 45, cues: ["Chest tall", "Heels down"], library_exercise_id: "goblet-squat", library_variant: "front", media_id: "goblet-squat--front" },
+      { name: "Farmer walk", seconds: 40 },
+    ]);
+  });
+
+  it("truncates a long library name to the 80 character program cap", () => {
+    const long = "L".repeat(120);
+    const out = phaseRowsToPayload(phase([{ ...emptyBlockRow("workout_plan"), exercises: [ex(long, { library_exercise_id: "squat", media_id: "squat" })] }]))[0].blocks[0];
+    expect(out.exercises![0].name).toHaveLength(80);
+  });
+
+  it("keeps a block with only exercises (no title) and does not flag it as unlinked", () => {
+    const rows = phase([{ ...emptyBlockRow("workout_plan"), exercises: [ex("Squat")] }]);
+    expect(phaseRowsToPayload(rows)[0].blocks).toHaveLength(1);
+    expect(blocksMissingContent(rows)).toEqual([]);
+  });
+
+  it("flags a titled workout task that has neither a plan nor exercises", () => {
+    const rows = phase([{ ...emptyBlockRow("workout_plan"), title: "Legs" }]);
+    expect(blocksMissingContent(rows)).toEqual(["phase 1, task 1"]);
+  });
+
+  it("never sends exercises alongside a linked plan", () => {
+    const rows = phase([{ ...emptyBlockRow("workout_plan"), workout_plan_id: "665f000000000000000000a1", exercises: [ex("Squat")] }]);
+    const b = phaseRowsToPayload(rows)[0].blocks[0];
+    expect(b.workout_plan_id).toBe("665f000000000000000000a1");
+    expect(b.exercises).toBeUndefined();
+  });
+
+  it("caps at 30 exercises", () => {
+    const many = Array.from({ length: 35 }, (_, i) => ex(`E${i}`));
+    const b = phaseRowsToPayload(phase([{ ...emptyBlockRow("workout_plan"), exercises: many }]))[0].blocks[0];
+    expect(b.exercises).toHaveLength(30);
+  });
+
+  it("round-trips saved inline exercises into the form and back", () => {
+    const version = {
+      name: "S", goals: [],
+      phases: [{ name: "P", order: 0, blocks: [{ type: "workout_plan", order: 0, cadence: "daily", title: "Day A", exercises: [{ name: "Push Up", sets: 3, reps: 8, cues: ["Straight line"], library_exercise_id: "push-up", media_id: "push-up" }, { name: "Plank hold", seconds: 30 }] }] }],
+    } as unknown as ProgramTemplateVersion;
+    const form = versionToForm(version);
+    expect(form.phases[0].blocks[0].exercises[0]).toMatchObject({ sets: "3", cues: "Straight line", library_exercise_id: "push-up" });
+    expect(formToPayload(form).phases![0].blocks[0].exercises).toEqual(version.phases[0].blocks[0].exercises);
+  });
+});

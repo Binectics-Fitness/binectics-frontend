@@ -15,8 +15,15 @@ import type {
   ProgramGoalDef,
   ProgramPhase,
   ProgramTemplateVersion,
+  ProgramExercise,
   GoalDirection,
 } from "@/lib/api/programs";
+import {
+  MAX_INLINE_EXERCISES,
+  PROGRAM_EXERCISE_NAME_MAX,
+  truncateName,
+  type LibraryRef,
+} from "@/lib/exercises/library";
 
 export const COMPONENT_TYPE_LABELS: Record<ProgramComponentType, string> = {
   instruction: "Instruction",
@@ -33,6 +40,7 @@ export const COMPONENT_TYPE_ORDER: ProgramComponentType[] = [
   "measurement",
   "meal_plan",
   "form",
+  "workout_plan",
 ];
 
 export const CADENCE_LABELS: Record<ProgramCadence, string> = {
@@ -66,6 +74,21 @@ export const INTENSITY_OPTIONS = ["gentle", "standard", "intensive"];
 
 // ── Form state (strings for free inputs) ─────────────────────────────
 
+/** One inline exercise as the builder holds it (numbers as strings). */
+export interface ExerciseFormRow extends LibraryRef {
+  name: string;
+  sets: string;
+  reps: string;
+  seconds: string;
+  rest_seconds: string;
+  /** One cue per line. */
+  cues: string;
+}
+
+export function emptyExerciseRow(name = "", ref: LibraryRef = {}): ExerciseFormRow {
+  return { name, sets: "", reps: "", seconds: "", rest_seconds: "", cues: "", ...ref };
+}
+
 export interface BlockFormRow {
   type: ProgramComponentType;
   cadence: ProgramCadence;
@@ -78,6 +101,8 @@ export interface BlockFormRow {
   form_id: string;
   /** Carried through untouched so editing a program never drops the link. */
   workout_plan_id: string;
+  /** Inline exercises of a workout_plan block (empty when a plan is linked). */
+  exercises: ExerciseFormRow[];
   start_offset_days: string;
   duration_days: string;
   times_per_week: string;
@@ -122,6 +147,7 @@ export function emptyBlockRow(
     meal_plan_id: "",
     form_id: "",
     workout_plan_id: "",
+    exercises: [],
     start_offset_days: "",
     duration_days: "",
     times_per_week: "",
@@ -171,6 +197,42 @@ function toNum(v: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+function exerciseRowToPayload(row: ExerciseFormRow): ProgramExercise | null {
+  const name = truncateName(row.name, PROGRAM_EXERCISE_NAME_MAX);
+  if (!name) return null;
+  const ex: ProgramExercise = { name };
+  const sets = toInt(row.sets);
+  if (sets !== undefined && sets >= 1) ex.sets = Math.min(20, sets);
+  const reps = toInt(row.reps);
+  if (reps !== undefined && reps >= 1) ex.reps = Math.min(100, reps);
+  const seconds = toInt(row.seconds);
+  if (seconds !== undefined && seconds >= 1) ex.seconds = Math.min(3600, seconds);
+  const rest = toInt(row.rest_seconds);
+  if (rest !== undefined) ex.rest_seconds = Math.min(600, rest);
+  const cues = row.cues
+    .split("\n")
+    .map((c) => c.trim().slice(0, 200))
+    .filter(Boolean)
+    .slice(0, 6);
+  if (cues.length > 0) ex.cues = cues;
+  // Library fields only travel together with a real pick; a custom exercise
+  // sends none of them.
+  if (row.library_exercise_id) {
+    ex.library_exercise_id = row.library_exercise_id;
+    if (row.library_variant) ex.library_variant = row.library_variant;
+    if (row.media_id) ex.media_id = row.media_id;
+  }
+  return ex;
+}
+
+/** Usable inline exercises (named), capped at what the API accepts. */
+export function exerciseRowsToPayload(rows: ExerciseFormRow[]): ProgramExercise[] {
+  return rows
+    .map(exerciseRowToPayload)
+    .filter((e): e is ProgramExercise => e !== null)
+    .slice(0, MAX_INLINE_EXERCISES);
+}
+
 function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
   const block: ProgramBlock = { type: row.type, order, cadence: row.cadence };
   const start = toInt(row.start_offset_days);
@@ -195,6 +257,12 @@ function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
   if (row.type === "workout_plan" && row.workout_plan_id.trim()) {
     block.workout_plan_id = row.workout_plan_id.trim();
   }
+  // A linked plan and inline exercises together are refused, so a linked plan
+  // wins and the exercises stay out of the payload.
+  if (row.type === "workout_plan" && !row.workout_plan_id.trim()) {
+    const exercises = exerciseRowsToPayload(row.exercises);
+    if (exercises.length > 0) block.exercises = exercises;
+  }
   return block;
 }
 
@@ -208,7 +276,8 @@ function blockHasContent(row: BlockFormRow): boolean {
     (row.type === "measurement" && row.metric.trim().length > 0) ||
     (row.type === "meal_plan" && row.meal_plan_id.trim().length > 0) ||
     (row.type === "form" && row.form_id.trim().length > 0) ||
-    (row.type === "workout_plan" && row.workout_plan_id.trim().length > 0)
+    (row.type === "workout_plan" && row.workout_plan_id.trim().length > 0) ||
+    (row.type === "workout_plan" && exerciseRowsToPayload(row.exercises).length > 0)
   );
 }
 
@@ -225,7 +294,9 @@ export function blocksMissingContent(rows: PhaseFormRow[]): string[] {
       const unlinked =
         (b.type === "form" && !b.form_id.trim()) ||
         (b.type === "meal_plan" && !b.meal_plan_id.trim()) ||
-        (b.type === "workout_plan" && !b.workout_plan_id.trim());
+        (b.type === "workout_plan" &&
+          !b.workout_plan_id.trim() &&
+          exerciseRowsToPayload(b.exercises).length === 0);
       if (unlinked) missing.push(`phase ${pi + 1}, task ${bi + 1}`);
     }),
   );
@@ -314,6 +385,17 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
           meal_plan_id: b.meal_plan_id ?? "",
           form_id: b.form_id ?? "",
           workout_plan_id: b.workout_plan_id ?? "",
+          exercises: [...(b.exercises ?? [])].map<ExerciseFormRow>((e) => ({
+            name: e.name,
+            sets: numToStr(e.sets),
+            reps: numToStr(e.reps),
+            seconds: numToStr(e.seconds),
+            rest_seconds: numToStr(e.rest_seconds),
+            cues: (e.cues ?? []).join("\n"),
+            ...(e.library_exercise_id ? { library_exercise_id: e.library_exercise_id } : {}),
+            ...(e.library_variant ? { library_variant: e.library_variant } : {}),
+            ...(e.media_id ? { media_id: e.media_id } : {}),
+          })),
           start_offset_days: numToStr(b.start_offset_days),
           duration_days: numToStr(b.duration_days),
           times_per_week: numToStr(b.times_per_week),

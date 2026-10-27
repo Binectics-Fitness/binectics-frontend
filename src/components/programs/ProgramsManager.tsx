@@ -16,6 +16,8 @@ import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/pr
 import { DietPlanDeliveryType } from "@/lib/types";
 import { formsService, type Form } from "@/lib/api/forms";
 import { nutritionService } from "@/lib/api/nutrition";
+import { libraryErrorMessage } from "@/lib/exercises/library";
+import WorkoutExercisesEditor from "./WorkoutExercisesEditor";
 import { leftoverProtocolsText } from "./protocol-retirement";
 import type { ProgramsRoleConfig } from "./config";
 import {
@@ -554,13 +556,17 @@ function ProgramFormModal({
                           </div>
                         )}
 
-                        {block.type === "workout_plan" && (
-                          <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-                            {block.workout_plan_id
-                              ? "Linked to a workout plan. Kept as it is when you save."
-                              : "No workout plan linked."}
-                          </div>
-                        )}
+                        {block.type === "workout_plan" &&
+                          (block.workout_plan_id ? (
+                            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                              Linked to a workout plan. Kept as it is when you save.
+                            </div>
+                          ) : (
+                            <WorkoutExercisesEditor
+                              exercises={block.exercises}
+                              onChange={(exercises) => setBlock(pi, bi, { exercises })}
+                            />
+                          ))}
 
                         <input
                           value={block.detail}
@@ -1155,7 +1161,7 @@ export default function ProgramsManager({
       setModal(null);
       toast.success("Program draft created.");
     } else if (!planRefused(res)) {
-      toast.error(res.message ?? "Failed to create program.");
+      toast.error(libraryErrorMessage(res) ?? res.message ?? "Failed to create program.");
     }
   };
 
@@ -1169,7 +1175,7 @@ export default function ProgramsManager({
       setModal(null);
       toast.success("Program updated.");
     } else if (!planRefused(res)) {
-      toast.error(res.message ?? "Failed to update program.");
+      toast.error(libraryErrorMessage(res) ?? res.message ?? "Failed to update program.");
     }
   };
 
@@ -1187,7 +1193,7 @@ export default function ProgramsManager({
           setTemplates((list) => list.map((x) => (x._id === t._id ? res.data!.template : x)));
           toast.success("Program published.");
         } else if (!planRefused(res)) {
-          toast.error(res.message ?? "Failed to publish program.");
+          toast.error(libraryErrorMessage(res) ?? res.message ?? "Failed to publish program.");
         }
       },
     });
