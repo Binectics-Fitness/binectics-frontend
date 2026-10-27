@@ -179,6 +179,39 @@ describe("programs: restore", () => {
     expect(screen.queryByRole("button", { name: /^Archived/ })).not.toBeInTheDocument();
   });
 
+  it("says why a refused (403) restore failed, and leaves the program archived", async () => {
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [archived] } as never);
+    const restore = vi.spyOn(programsService, "restoreTemplate").mockResolvedValue({
+      success: false,
+      status: 403,
+      message: "You do not own this program template",
+    } as never);
+    const user = userEvent.setup();
+    wrap(<ProgramsManager config={config} />);
+    await user.click(await screen.findByRole("button", { name: /^Archived/ }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
+    const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
+    await user.click(within(dialog).getByRole("button", { name: "Restore program" }));
+    await waitFor(() => expect(restore).toHaveBeenCalledWith("t2"));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("You do not own this program template"));
+    expect(toast.success).not.toHaveBeenCalled();
+    // Still archived: still behind the Archived filter, still restorable.
+    expect(await screen.findByRole("button", { name: "Restore" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Assign" })).not.toBeInTheDocument();
+  });
+
+  it("falls back to a generic message when the refusal carries none", async () => {
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [archived] } as never);
+    vi.spyOn(programsService, "restoreTemplate").mockResolvedValue({ success: false, status: 403 } as never);
+    const user = userEvent.setup();
+    wrap(<ProgramsManager config={config} />);
+    await user.click(await screen.findByRole("button", { name: /^Archived/ }));
+    await user.click(await screen.findByRole("button", { name: "Restore" }));
+    const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
+    await user.click(within(dialog).getByRole("button", { name: "Restore program" }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to restore program."));
+  });
+
   it("says a program with unpublished edits comes back as a draft", async () => {
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({
       success: true,
