@@ -123,7 +123,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>We observe</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch] mb-3.5" style={{ color: "var(--fg-2)" }}>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>How you use the product</strong>, pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Device & network</strong>, browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Device & network</strong>, browser, OS, IP, approximate city. Used for fraud detection and to localize the experience. The app also keeps a random install ID on your device, not linked to your name or any credential and regenerated if you reinstall, and sends it when you sign in to help prevent brute&#8209;force sign&#8209;in attempts.</li>
         </ul>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Others tell us</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
