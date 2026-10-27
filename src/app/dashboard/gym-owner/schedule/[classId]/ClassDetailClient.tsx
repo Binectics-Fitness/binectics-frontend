@@ -26,7 +26,6 @@ import {
 import { ClassForm, WEEKDAYS } from "../ClassForm";
 import SearchableSelect from "@/components/SearchableSelect";
 import { DSCard } from "@/components/ds";
-import { toast } from "@/components/Toast";
 
 function memberName(b: ClassBooking): string {
   if (typeof b.member_user_id === "object") {
