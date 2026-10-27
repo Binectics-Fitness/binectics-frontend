@@ -82,7 +82,7 @@ const INPUT_CLASS = "rounded-(--r-2) px-3.5 py-2.75 text-[14px]";
 // Form model — maps 1:1 to UpdateOrganizationRequest keys. The trading name
 // is the org's `name`; `legal_name` is the registered legal name.
 // ─────────────────────────────────────────────────────────────────────────
-interface SettingsForm {
+export interface SettingsForm {
   name: string;
   legal_name: string;
   registration_number: string;
@@ -109,7 +109,7 @@ interface SettingsForm {
   payout_schedule: PayoutSchedule;
 }
 
-function seedForm(org: Organization): SettingsForm {
+export function seedForm(org: Organization): SettingsForm {
   return {
     name: org.name ?? "",
     legal_name: org.legal_name ?? "",
@@ -136,13 +136,22 @@ function seedForm(org: Organization): SettingsForm {
   };
 }
 
+/** Why the typed tax rate can't be saved, or null when it can (empty clears it). */
+export function taxRateError(raw: string): string | null {
+  if (raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 && n <= 100 ? null : "The tax rate is a percent from 0 to 100.";
+}
+
 /**
  * Only the keys that differ from the baseline, as an update payload.
  * Sub-objects (booking_rules, …) compare deeply and send whole — the API
- * replaces them atomically. tax_rate converts back to a number; an empty
- * input means "leave unset" and is skipped.
+ * replaces them atomically. tax_rate converts back to a number, and an
+ * emptied one goes as null (unset); one that isn't a number stays as typed
+ * so the form still counts as changed and Save can say why (taxRateError).
+ * An emptied primary_email goes as null: the API refuses "" as an email.
  */
-function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest {
+export function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest {
   const out: UpdateOrganizationRequest = {};
   (Object.keys(next) as (keyof SettingsForm)[]).forEach((k) => {
     const b = base[k];
@@ -154,8 +163,13 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
     if (!changed) return;
     if (k === "tax_inclusive" && next.tax_inclusive === null) return;
     if (k === "tax_rate") {
-      const parsed = Number(next.tax_rate);
-      if (next.tax_rate !== "" && !Number.isNaN(parsed)) out.tax_rate = parsed;
+      const raw = next.tax_rate.trim();
+      const parsed = Number(raw);
+      (out as Record<string, unknown>).tax_rate = raw === "" ? null : Number.isFinite(parsed) ? parsed : next.tax_rate;
+      return;
+    }
+    if (k === "primary_email" && next.primary_email.trim() === "") {
+      out.primary_email = null;
       return;
     }
     if (k === "pause_limit") {
@@ -294,6 +308,11 @@ export function SettingsClient() {
 
   const onSave = async () => {
     if (!orgId || !dirty || !form || taxNeedsChoice || pauseLimitInvalid) return;
+    const taxProblem = taxRateError(form.tax_rate);
+    if (taxProblem) {
+      toast.error(taxProblem);
+      return;
+    }
     setSavedFlash(false);
     const res = await updateOrg.mutateAsync({ orgId, data: payload });
     if (res.success) {
@@ -419,7 +438,14 @@ export function SettingsClient() {
             <DSCard className="flex flex-col gap-4 p-5.5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
-                <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
+                <div className="flex flex-col gap-1.5">
+                  {/* Text, not type="number": a number input reports a typo ("1e", "7,5") as "",
+                      which would clear the saved rate; as text the typo stays and taxRateError refuses it. */}
+                  <TextField label="Tax rate %" inputMode="decimal" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
+                  {form && taxRateError(form.tax_rate) && (
+                    <span role="alert" className="text-[11px]" style={{ color: "var(--danger)" }}>{taxRateError(form.tax_rate)}</span>
+                  )}
+                </div>
                 <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
                   <legend className="mb-1.5"><Eyebrow>Do your prices already include tax?</Eyebrow></legend>
                   <div role="radiogroup" aria-label="Do your prices already include tax?" className="flex flex-col gap-2 py-1">
@@ -593,11 +619,11 @@ function SectionHeading({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-function TextField({ label, value, onChange, disabled, type = "text" }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string }) {
+function TextField({ label, value, onChange, disabled, type = "text", inputMode }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; type?: string; inputMode?: "decimal" }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Eyebrow as="label">{label}</Eyebrow>
-      <input type={type} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
+      <input type={type} inputMode={inputMode} aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
     </div>
   );
 }

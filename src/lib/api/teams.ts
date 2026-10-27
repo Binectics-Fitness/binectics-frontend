@@ -246,7 +246,8 @@ export interface UpdateOrganizationRequest {
   legal_name?: string;
   vat_registration_number?: string;
   country?: string;
-  primary_email?: string;
+  /** null clears it: the API refuses an empty string as an email. */
+  primary_email?: string | null;
   time_zone?: string;
   first_day_of_week?: FirstDayOfWeek;
   date_format?: DateFormat;
