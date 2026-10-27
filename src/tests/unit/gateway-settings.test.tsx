@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { GatewaysSection } from "@/components/provider/GatewaysSection";
+import { GatewaysSection, REPLACE_KEYS_COPY } from "@/components/provider/GatewaysSection";
 import { confirmInDialog } from "@/test/confirmDialog";
 import { payoutOptions } from "@/app/onboarding/_payout";
 import { normalizePaymentGateways, type PublicPaymentGateway } from "@/lib/api/paymentGateways";
@@ -72,6 +72,10 @@ describe("GatewaysSection", () => {
     expect(screen.getByLabelText("Public key")).toHaveAttribute("placeholder", "pk_live_…");
     const secret = screen.getByLabelText("Secret key");
     expect(secret).toHaveAttribute("type", "password");
+    // Browsers and password managers must not offer to save an sk_ key.
+    expect(secret).toHaveAttribute("autocomplete", "new-password");
+    expect(secret).toHaveAttribute("data-1p-ignore");
+    expect(secret).toHaveAttribute("data-lpignore", "true");
     expect(secret).toHaveAccessibleDescription("Stored encrypted. Never shown again.");
   });
 
@@ -104,6 +108,34 @@ describe("GatewaysSection", () => {
     expect(nativeConfirm).not.toHaveBeenCalled();
     // Paystack is connected and nothing else can be, so there is nothing to add.
     expect(screen.queryByRole("button", { name: "+ Add gateway" })).toBeNull();
+  });
+
+  it("replaces a connected gateway's keys in place after a warning, never by removing it", async () => {
+    h.configs = [{ gateway: "paystack", public_key: "pk_live_1234567890abcdef", is_active: true, currencies: [] }];
+    h.upsert.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<GatewaysSection />);
+
+    await user.click(screen.getByRole("button", { name: "Replace your Paystack keys" }));
+    expect(screen.getByText("New Paystack keys")).toBeInTheDocument();
+    // The gateway is fixed: no picker.
+    expect(screen.queryByLabelText("Gateway")).toBeNull();
+    await user.type(screen.getByLabelText("Public key"), "pk_live_new0001");
+    // Test value only, not a real key.
+    await user.type(screen.getByLabelText("Secret key"), "sk_test_notarealkey0000");
+    await user.click(screen.getByRole("button", { name: "Replace keys" }));
+    expect(h.upsert).not.toHaveBeenCalled();
+    const dialog = await confirmInDialog(user, "Replace your Paystack keys?", "Replace keys");
+    expect(dialog).toHaveTextContent(REPLACE_KEYS_COPY);
+    expect(dialog).toHaveTextContent("If the public key is unchanged");
+    expect(h.upsert).toHaveBeenCalledWith({
+      gateway: "paystack",
+      public_key: "pk_live_new0001",
+      secret_key: "sk_test_notarealkey0000",
+      is_active: true,
+    });
+    expect(h.remove).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Secret key")).toBeNull();
   });
 
   it("shows the server's message when the gateway is refused", async () => {
