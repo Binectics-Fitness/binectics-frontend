@@ -24,6 +24,7 @@ import {
 } from "@/lib/api/providerBilling";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { annualDiscountOf, annualToggleLabel } from "@/lib/billing/annualDiscount";
 import { invoiceStatusTone, subscriptionStatusTone } from "@/lib/ui/statusTones";
 import { toneColors } from "@/lib/ui/tones";
 
@@ -536,7 +537,7 @@ export default function ProviderBillingPage() {
                               cursor: "pointer",
                             }}
                           >
-                            {iv === "month" ? "Monthly" : "Annual (save 20%)"}
+                            {iv === "month" ? "Monthly" : annualToggleLabel(plans)}
                           </button>
                         ))}
                       </div>
@@ -602,6 +603,11 @@ export default function ProviderBillingPage() {
                                   <span className="text-sm" style={{ color: "var(--fg-3)" }}>
                                     /{interval}
                                   </span>
+                                  {interval === "year" && annualDiscountOf(price) !== null && (
+                                    <span className="text-sm block" style={{ color: "var(--fg-2)" }}>
+                                      Save {annualDiscountOf(price)}% with yearly billing
+                                    </span>
+                                  )}
                                 </div>
                               ) : (
                                 <div className="text-[22px] font-medium" style={{ color: "var(--ink)" }}>

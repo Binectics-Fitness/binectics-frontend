@@ -97,6 +97,33 @@ describe("Binectics billing page", () => {
     expect(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
   });
 
+  it("labels annual billing with the admin's discount, and no saving when none is set", async () => {
+    const { unmount } = render(<ProviderBillingPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "plans" }));
+    // No yearly discount set: no invented "save 20%".
+    expect(screen.getByRole("button", { name: "Annual" })).toBeInTheDocument();
+    expect(screen.queryByText(/save/i)).not.toBeInTheDocument();
+    unmount();
+
+    listPlansForOrganization.mockResolvedValue({
+      success: true,
+      data: [
+        {
+          ...proPlan,
+          prices: {
+            month: { amount_minor: 1_500_000, currency: "NGN" },
+            year: { amount_minor: 15_300_000, currency: "NGN", discount_percent: 15 },
+          },
+        },
+      ],
+    });
+    render(<ProviderBillingPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "plans" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Annual (save 15%)" }));
+    expect(screen.getByText("NGN 153000")).toBeInTheDocument();
+    expect(screen.getByText("Save 15% with yearly billing")).toBeInTheDocument();
+  });
+
   it("shows the empty invoice state, then a populated one", async () => {
     const { unmount } = render(<ProviderBillingPage />);
     fireEvent.click(await screen.findByRole("button", { name: "invoices" }));

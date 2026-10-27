@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import type { PublicProviderPlanOption } from "@/lib/api/providerBilling";
-import { ProviderPricing } from "@/components/pricing/ProviderPricing";
+import { ProviderPricing, toCards } from "@/components/pricing/ProviderPricing";
 import { MemberPricing } from "@/components/pricing/MemberPricing";
 import {
   hasYearlyPrices,
@@ -107,8 +107,21 @@ describe("planPriceView", () => {
     expect(planPriceView(CATALOGUE[2], "month").price).toBe("Custom");
   });
 
-  it("derives the yearly saving and limits from the plan itself", () => {
-    expect(yearlySavingPercent(CATALOGUE[1])).toBe(17);
+  it("shows the admin's annual discount, never a saving worked out from the amounts", () => {
+    // ₦5,000/month and ₦50,000/year imply 17%, but no admin set a discount.
+    expect(yearlySavingPercent(CATALOGUE[1])).toBeNull();
+    const discounted = plan({
+      prices: {
+        month: { amount_minor: 500_000, currency: "NGN", minor_unit: 2 },
+        year: { amount_minor: 5_000_000, currency: "NGN", minor_unit: 2, discount_percent: 20 },
+      },
+    });
+    expect(yearlySavingPercent(discounted)).toBe(20);
+    expect(toCards([discounted], "year")[0].badge).toBe("Save 20%");
+    expect(toCards([CATALOGUE[1]], "year")[0].badge).not.toMatch(/Save/);
+  });
+
+  it("derives the limits from the plan itself", () => {
     expect(hasYearlyPrices(CATALOGUE)).toBe(true);
     expect(planFeatureLines(CATALOGUE[1])).toContain("Up to 250 active members");
     expect(planFeatureLines(CATALOGUE[2])).toContain("Unlimited active members");

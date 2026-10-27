@@ -206,6 +206,8 @@ export interface AdminPlanPrice {
   _id: string;
   plan_code: string;
   market_code: string;
+  /** Provider type the price is for; absent or "ALL" is the shared price. */
+  audience?: string;
   currency: string;
   /** Minor units (kobo/cents). */
   amount_minor: number;
