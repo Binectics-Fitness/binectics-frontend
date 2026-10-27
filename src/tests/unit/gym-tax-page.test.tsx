@@ -36,12 +36,13 @@ function renderTax() {
 }
 
 describe("gym tax page", () => {
-  it("treats a flag that was never saved as inclusive, the same as the Settings switch", async () => {
+  it("does not guess when the flag was never saved: no estimate, a prompt to choose", async () => {
     mockOrg = { tax_rate: 7.5, tax_label: "VAT" };
     renderTax();
-    expect(await screen.findByText(/Estimated VAT at 7.5% \(included in prices\)/)).toBeInTheDocument();
-    // 10,750 x 7.5 / 107.5 = 750
-    expect(screen.getByText("NGN 750")).toBeInTheDocument();
+    expect(await screen.findByText(/Choose whether your prices already include tax/)).toBeInTheDocument();
+    expect(screen.queryByText(/Estimated VAT/)).not.toBeInTheDocument();
+    expect(screen.queryByText("NGN 750")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Choose in Settings" })).toHaveAttribute("href", "/dashboard/gym-owner/settings#tax");
   });
 
   it("adds the tax on top when the flag was saved as off", async () => {
