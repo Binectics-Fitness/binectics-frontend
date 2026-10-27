@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface SearchableSelectProps {
   value: string;
@@ -37,6 +38,11 @@ export default function SearchableSelect({
   // cut off at the card edge or the modal footer).
   const [panel, setPanel] = useState<React.CSSProperties | null>(null);
 
+  // Portalled to <body>: a modal's open animation leaves a transform on it,
+  // which would make "fixed" relative to the modal instead of the viewport.
+  const renderPanel = (node: React.ReactNode) =>
+    typeof document === "undefined" ? null : createPortal(node, document.body);
+
   const filtered = search.trim()
     ? options.filter((o) =>
         o.label.toLowerCase().includes(search.toLowerCase()),
@@ -51,7 +57,8 @@ export default function SearchableSelect({
     function handleClickOutside(e: MouseEvent) {
       if (
         wrapperRef.current &&
-        !wrapperRef.current.contains(e.target as Node)
+        !wrapperRef.current.contains(e.target as Node) &&
+        !panelRef.current?.contains(e.target as Node)
       ) {
         setOpen(false);
         setSearch("");
@@ -164,11 +171,11 @@ export default function SearchableSelect({
         </svg>
       </button>
 
-      {open && (
+      {open && renderPanel(
         <div
           ref={panelRef}
-          className="z-50 flex flex-col overflow-hidden rounded-(--r-2) border border-border bg-bg"
-          style={{ boxShadow: "var(--shadow-2)", ...(panel ?? { position: "absolute", width: "100%", marginTop: 4 }) }}
+          className="z-[60] flex flex-col overflow-hidden rounded-(--r-2) border border-border bg-bg"
+          style={{ boxShadow: "var(--shadow-2)", ...(panel ?? { position: "fixed", visibility: "hidden" }) }}
         >
           <div className="border-b border-border p-2">
             <input
