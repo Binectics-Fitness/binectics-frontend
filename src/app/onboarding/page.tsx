@@ -15,7 +15,7 @@ import { credentialsService } from "@/lib/api/credentials";
 import { dietitianCredentialsPatch, ONBOARDING_LICENSE_ID, onboardingLicenseId, withOnboardingLicense } from "./_credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -219,6 +219,7 @@ function OnboardingContent() {
         name: buildDefaultOrganizationName(role ?? "trainer", user.first_name, user.last_name),
         account_type: accountType,
         description: "Auto-created from onboarding",
+        ...workspaceCreateFlags(accountType),
       });
       if (!response.success || !response.data) {
         setWorkspaceError(workspaceCreateError(response, enrolledGymName));

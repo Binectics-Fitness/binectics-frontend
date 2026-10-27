@@ -42,9 +42,19 @@ export interface ClassBooking {
    * or null/absent when it has none (then no fee is mentioned).
    */
   cancellation_policy?: ClassCancellationPolicy | null;
+  /**
+   * Staff's record of whether the member came. Absent = not recorded (which
+   * is not the same as a no-show). Set from the roster, never by the member.
+   */
+  attendance?: ClassAttendance;
+  attendance_marked_at?: string;
+  /** Roster rows only: the class has started, so attendance can be recorded. */
+  attendance_open?: boolean;
   created_at: string;
   updated_at: string;
 }
+
+export type ClassAttendance = "attended" | "no_show";
 
 /** A booking or waitlist place the gym cancelled (it deleted the class). */
 export function isGymCancelled(b: Pick<ClassBooking, "status">): boolean {
@@ -135,6 +145,22 @@ export const classBookingsService = {
     );
   },
 
+  /**
+   * Staff record (or, with null, clear) whether a confirmed booking attended
+   * (bookings:manage). Data only: nothing is charged or sent to the member.
+   */
+  async setAttendance(
+    organizationId: string,
+    classId: string,
+    bookingId: string,
+    attendance: ClassAttendance | null,
+  ): Promise<ApiResponse<ClassBooking>> {
+    return apiClient.put<ClassBooking>(
+      `/teams/organizations/${organizationId}/classes/${classId}/bookings/${bookingId}/attendance`,
+      { attendance },
+    );
+  },
+
   /** Org-side roster for one occurrence (VIEW_MEMBERS). */
   async getRoster(
     organizationId: string,
@@ -155,6 +181,23 @@ export function nextOccurrences(dayOfWeek: number, count = 4): string[] {
   while (out.length < count) {
     if (d.getDay() === dayOfWeek) out.push(d.toISOString().slice(0, 10));
     d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+
+/**
+ * The last N occurrence dates ("YYYY-MM-DD") of a weekly class before today,
+ * newest first. A roster stays useful after the day (attendance is recorded
+ * once a class has started), so staff can look back at the latest few.
+ */
+export function previousOccurrences(dayOfWeek: number, count = 3): string[] {
+  const out: string[] = [];
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() - 1);
+  while (out.length < count) {
+    if (d.getDay() === dayOfWeek) out.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() - 1);
   }
   return out;
 }

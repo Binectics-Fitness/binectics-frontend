@@ -29,7 +29,9 @@ interface ToastProps {
 
 const STYLES: Record<ToastType, string> = {
   success: "bg-ink text-bg",
-  error: "bg-danger text-white",
+  // --danger-ink, not --danger: white on --danger is ~4.5:1, borderline for
+  // 13.5px text; the darker danger token clears it with room.
+  error: "bg-danger-ink text-white",
   warning: "bg-[oklch(0.72_0.14_75)] text-ink",
   info: "bg-ink text-bg",
 };
