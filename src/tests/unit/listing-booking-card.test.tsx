@@ -102,6 +102,24 @@ describe("listing booking card", () => {
     expect(within(group).getByText("Remote monthly").closest("label")).toHaveTextContent(/\$45(\.00)? \/ month/);
   });
 
+  it("shows the provider's \"Save N% vs <plan>\" from the API, with the price exactly as set", async () => {
+    const monthly = plan({ _id: "p-m", name: "Monthly", price_minor: 2_000_000 });
+    const annual = plan({
+      _id: "p-a",
+      name: "Annual",
+      duration_days: 365,
+      price_minor: 20_000_000,
+      comparison: { plan_id: "p-m", plan_name: "Monthly", discount_percent: 17 },
+    });
+    renderWithPlans([monthly, annual]);
+    const card = within(await bookingCard());
+    const row = within(card.getByRole("group", { name: "Plan" })).getByText("Annual").closest("label")!;
+    expect(row).toHaveTextContent("Save 17% vs Monthly");
+    expect(row).toHaveTextContent(/₦200,000(\.00)? \/ year/);
+    // Shown once in the Plans section and once in the booking card; never on Monthly.
+    expect(screen.getAllByText("Save 17% vs Monthly")).toHaveLength(2);
+  });
+
   it("says which currencies the prices are in from the plans, not the listing's stored default", async () => {
     renderWithPlans([reset, eightWeek, usdMonthly]);
     await bookingCard();

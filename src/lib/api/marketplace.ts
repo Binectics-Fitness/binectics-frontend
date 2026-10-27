@@ -273,6 +273,10 @@ export interface CreateOrgMembershipPlanRequest {
   features?: string[];
   is_active?: boolean;
   is_public?: boolean;
+  /** Another active plan of this provider, same currency; null clears it. */
+  compare_to_plan_id?: string | null;
+  /** Saving shown against compare_to_plan_id, whole percent 0–90. */
+  discount_percent?: number;
 }
 
 export type UpdateOrgMembershipPlanRequest =

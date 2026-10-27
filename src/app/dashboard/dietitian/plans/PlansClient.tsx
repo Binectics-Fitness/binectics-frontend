@@ -17,6 +17,7 @@ import {
 } from "@/lib/types";
 import { countMembersByPlan } from "@/lib/constants/membershipStatus";
 import { MoneyInput } from "@/components/ds/MoneyInput";
+import { PlanComparisonFields, comparisonFromPlan, comparisonPayload } from "@/components/plans/PlanComparisonFields";
 import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { minorToMajor } from "@/lib/money/minorMoney";
@@ -50,6 +51,8 @@ const EMPTY_FORM: CreateOrgMembershipPlanRequest = {
 function PlanModal({
   mode,
   initial,
+  plans,
+  planId,
   currencies,
   providerHint,
   onClose,
@@ -57,6 +60,10 @@ function PlanModal({
 }: {
   mode: ModalMode;
   initial: CreateOrgMembershipPlanRequest;
+  /** The provider's plans, for "Show a saving" against another of them. */
+  plans: MarketplaceMembershipPlan[];
+  /** The plan being edited; undefined while creating. */
+  planId?: string;
   /** The org's membership price currencies (platform plus its own account). */
   currencies: OrgPriceCurrency[] | undefined;
   providerHint: string;
@@ -65,6 +72,7 @@ function PlanModal({
   onSave: (data: CreateOrgMembershipPlanRequest) => Promise<string | null>;
 }) {
   const [form, setForm] = useState<CreateOrgMembershipPlanRequest>(initial);
+  const [comparison, setComparison] = useState(() => comparisonFromPlan(initial));
   /**
    * What the price field shows. Seeded from the incoming minor value, and the
    * minor value on `form` is kept verbatim until the user actually edits —
@@ -115,7 +123,7 @@ function PlanModal({
     }
     setFormError(null);
     setSaving(true);
-    const error = await onSave(form);
+    const error = await onSave({ ...form, ...comparisonPayload(comparison) });
     setSaving(false);
     if (error) setFormError(error);
   };
@@ -275,6 +283,14 @@ function PlanModal({
               </div>
             )}
           </div>
+
+          <PlanComparisonFields
+            plans={plans}
+            planId={planId}
+            currency={form.currency ?? ""}
+            value={comparison}
+            onChange={setComparison}
+          />
 
           <div className="flex gap-5">
             {(["is_active", "is_public"] as const).map((key) => (
@@ -625,6 +641,8 @@ export default function DietitianPlansClient() {
       {modal && (
         <PlanModal
           mode={modal.mode}
+          plans={plans}
+          planId={modal.plan?._id}
           currencies={currencies}
           providerHint={providerHint}
           initial={
@@ -639,6 +657,8 @@ export default function DietitianPlansClient() {
                   features: modal.plan.features ?? [],
                   is_active: modal.plan.is_active,
                   is_public: modal.plan.is_public,
+                  compare_to_plan_id: modal.plan.compare_to_plan_id ?? null,
+                  discount_percent: modal.plan.discount_percent ?? 0,
                 }
               : {
                   ...EMPTY_FORM,
