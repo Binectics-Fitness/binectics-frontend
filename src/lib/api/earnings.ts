@@ -65,6 +65,24 @@ export interface SessionEarnings {
   };
 }
 
+/** Where a workspace's money was collected, and what was paid out (minor units, one currency). */
+export interface PayoutOverviewCurrency {
+  currency: string;
+  /** Net collected on the provider's own gateway account. */
+  provider_account_net_minor: number;
+  /** Net collected by Binectics on the platform account, on the provider's behalf. */
+  platform_account_net_minor: number;
+  /** Net on older rows with no recorded collecting account. */
+  unattributed_net_minor: number;
+  /** Sum of settled payout rows. */
+  paid_out_minor: number;
+  payout_count: number;
+}
+
+export interface PayoutOverview {
+  currencies: PayoutOverviewCurrency[];
+}
+
 export const earningsService = {
   getOrgSummary(orgId: string): Promise<ApiResponse<OrgEarningsSummary>> {
     return apiClient.get<OrgEarningsSummary>(
@@ -93,6 +111,12 @@ export const earningsService = {
     const query = search.toString();
     return apiClient.get<LedgerPage>(
       `/transactions/organizations/${orgId}/transactions${query ? `?${query}` : ""}`,
+    );
+  },
+
+  getPayoutOverview(orgId: string): Promise<ApiResponse<PayoutOverview>> {
+    return apiClient.get<PayoutOverview>(
+      `/transactions/organizations/${orgId}/payout-overview`,
     );
   },
 
