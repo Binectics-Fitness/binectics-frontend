@@ -11,6 +11,7 @@ import { authService } from "@/lib/api/auth";
 import { getDashboardRoute } from "@/lib/constants/routes";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
 import { AccountType } from "@/lib/types";
+import { parseEmailParam } from "@/lib/login-email-param";
 
 /**
  * Maps the ?role= entry-point hint (provider CTAs like /for-dietitians,
@@ -45,6 +46,7 @@ function AuthContent() {
   const searchParams = useSearchParams();
   const { user, login, logout, register: authRegister, isLoading: authLoading } = useAuth();
   const initialMode = searchParams.get("mode");
+  const prefillEmail = parseEmailParam(searchParams.get("email"));
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -59,12 +61,12 @@ function AuthContent() {
 
   const { register: registerField, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: prefillEmail, password: "" },
   });
 
   const { register: signupField, control: signupControl, handleSubmit: handleSignup, setValue: setSignupValue, formState: { errors: signupErrors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "", acceptTos: false },
+    defaultValues: { firstName: "", lastName: "", email: prefillEmail, password: "", confirmPassword: "", acceptTos: false },
   });
 
   const [signupAcceptTos, setSignupAcceptTos] = useState(false);

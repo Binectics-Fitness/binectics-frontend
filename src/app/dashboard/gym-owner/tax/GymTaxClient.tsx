@@ -9,6 +9,7 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
@@ -38,9 +39,9 @@ export function GymTaxClient() {
   const gate = data?.gate ?? null;
 
   const taxRate = org?.tax_rate;
+  // undefined = the owner has not yet said whether prices include tax.
+  const inclusive = taxIsInclusive(org);
   const taxLabel = org?.tax_label || "VAT";
-  // Unset reads as tax-included, as Settings seeds it and the app reads it.
-  const inclusive = org?.tax_inclusive ?? true;
   const currency = revenue?.currency ?? org?.currency;
 
   // 30-day gross from the recorded timeseries (minor units → major).
@@ -58,11 +59,12 @@ export function GymTaxClient() {
   // Tax-inclusive prices already contain the tax: the tax portion of gross
   // is gross × r/(100+r). Exclusive prices add it on top: gross × r/100.
   const estimate =
-    taxRate != null
+    taxRate != null && inclusive !== undefined
       ? inclusive
         ? (gross * taxRate) / (100 + taxRate)
         : (gross * taxRate) / 100
       : null;
+  const needsChoice = taxRate != null && inclusive === undefined;
 
   const rows = [
     { label: "Gross recorded revenue · last 30 days", value: fmtMoney(gross, currency), bold: true },
@@ -94,7 +96,11 @@ export function GymTaxClient() {
             {taxRate != null ? (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
                 {taxLabel} at <strong style={{ color: "var(--ink)" }}>{taxRate}%</strong> ·{" "}
-                {inclusive ? "listed prices include tax" : "tax added on top of listed prices"}
+                {inclusive === undefined
+                  ? "not yet set whether listed prices include tax"
+                  : inclusive
+                    ? "listed prices include tax"
+                    : "tax added on top of listed prices"}
               </p>
             ) : (
               <p className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
@@ -133,6 +139,12 @@ export function GymTaxClient() {
               ))}
             </tbody>
           </table>
+        )}
+        {needsChoice && !loading && !gate && (
+          <div className="px-5.5 py-3 text-[13px]" style={{ borderTop: "1px solid var(--border)", color: "var(--ink)" }}>
+            Choose whether your prices already include tax to see the estimate.{" "}
+            <Link href="/dashboard/gym-owner/settings#tax" style={{ textDecoration: "underline" }}>Choose in Settings</Link>
+          </div>
         )}
       </DSCard>
     </GymDashboardShell>
