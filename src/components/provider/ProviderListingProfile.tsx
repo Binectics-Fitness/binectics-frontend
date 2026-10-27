@@ -140,7 +140,7 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
   const publishBusy = isGym ? publishOrg.isPending : publishSolo.isPending;
   const createBusy = isGym ? createOrg.isPending : createSolo.isPending;
 
-  const { data: countries = [] } = useCountries();
+  const { data: countries = [], isLoading: countriesLoading } = useCountries();
 
   const [seededId, setSeededId] = useState<string | null>(null);
   const [baseline, setBaseline] = useState<ListingForm | null>(null);
@@ -310,6 +310,7 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
               onChange={(v) => set("country_code", v)}
               options={countries.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.code }))}
               placeholder="Select country…"
+              loading={countriesLoading && !form?.country_code}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -333,9 +334,9 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
         <Field label="Headline" value={form?.headline ?? ""} maxLength={80} onChange={(v) => set("headline", v)} disabled={!form} />
         <div className="flex flex-col gap-1.5">
           <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Bio</label>
-          <textarea value={form?.bio ?? ""} maxLength={1000} disabled={!form} onChange={(e) => set("bio", e.target.value)}
+          <textarea value={form?.bio ?? ""} maxLength={3000} disabled={!form} onChange={(e) => set("bio", e.target.value)}
             className="rounded-(--r-2) px-3.5 py-3 text-[14px] resize-y" style={{ ...INPUT_STYLE, minHeight: 120 }} />
-          <span className="text-[11px] self-end" style={{ color: "var(--fg-4)" }}>{form?.bio.length ?? 0} / 1000</span>
+          <span className="text-[11px] self-end" style={{ color: "var(--fg-4)" }}>{form?.bio.length ?? 0} / 3000</span>
         </div>
       </Card>
 
@@ -406,6 +407,7 @@ function CreateListingCard({
   const [localError, setLocalError] = useState<string | null>(null);
 
   const canSubmit = headline.trim().length > 0 && bio.trim().length > 0 && !creating;
+  const missing = [!headline.trim() && "a headline", !bio.trim() && "a short bio"].filter(Boolean).join(" and ");
 
   const submit = async () => {
     if (!headline.trim()) return setLocalError("Add a headline.");
@@ -429,9 +431,9 @@ function CreateListingCard({
           : "Set up your public profile so clients can find and book you. You can refine every detail after it's created."
       }
     >
-      <Field label="Headline" value={headline} maxLength={200} onChange={setHeadline} />
+      <Field label="Headline (required)" value={headline} maxLength={200} onChange={setHeadline} />
       <div className="flex flex-col gap-1.5">
-        <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Bio</label>
+        <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Bio (required)</label>
         <textarea
           value={bio}
           maxLength={3000}
@@ -459,6 +461,9 @@ function CreateListingCard({
         <button className="btn-primary-v2 sm" disabled={!canSubmit} onClick={() => void submit()}>
           {creating ? "Creating…" : isGym ? "Create gym listing" : "Create listing"}
         </button>
+        {missing && !creating && (
+          <p className="text-[12.5px] mt-2" style={{ color: "var(--fg-3)" }}>Add {missing} to create your listing.</p>
+        )}
       </div>
     </Card>
   );

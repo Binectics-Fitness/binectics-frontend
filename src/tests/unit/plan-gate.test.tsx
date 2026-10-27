@@ -177,6 +177,14 @@ describe("Revenue on a plan without analytics", () => {
     expect(screen.getByText("Active members")).toBeInTheDocument();
   });
 
+  it("does not ask for the series at all once the billing status says analytics is out", async () => {
+    vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue(freeStatus({ analytics_enabled: false }));
+    const series = vi.spyOn(checkinsService, "getOrgRevenueStats");
+    renderWithQuery(<RevenueClient />);
+    expect(await screen.findByTestId("plan-gate")).toHaveTextContent("Your Free plan doesn't include analytics.");
+    expect(series).not.toHaveBeenCalled();
+  });
+
   it("tells staff to ask the owner", async () => {
     signInStaff(["marketplace:manage_listing"]);
     renderWithQuery(<RevenueClient />);
@@ -204,6 +212,17 @@ describe("Tax on a plan without analytics", () => {
     renderWithQuery(<GymTaxClient />);
     expect(await screen.findByTestId("plan-gate")).toHaveTextContent("Your Free plan doesn't include analytics.");
     expect(screen.queryByText(/Gross recorded revenue/)).toBeNull();
+  });
+});
+
+describe("Tax without analytics, from the billing status", () => {
+  it("shows the gate without calling the series the plan would refuse", async () => {
+    vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue(freeStatus({ analytics_enabled: false }));
+    vi.spyOn(teamsService, "getOrganization").mockResolvedValue({ success: true, data: { ...org, tax_rate: 7.5 } as never });
+    const series = vi.spyOn(checkinsService, "getOrgRevenueStats");
+    renderWithQuery(<GymTaxClient />);
+    expect(await screen.findByTestId("plan-gate")).toHaveTextContent("Your Free plan doesn't include analytics.");
+    expect(series).not.toHaveBeenCalled();
   });
 });
 

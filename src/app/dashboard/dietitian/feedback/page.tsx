@@ -163,9 +163,8 @@ export default function DietitianFeedbackPage() {
           const isEditing = editing === m._id;
           return (
           <DSCard key={m._id}>
-            {/* Image placeholder */}
-            <div className="aspect-[4/3]" style={{ background: "linear-gradient(135deg, var(--bg-2), var(--bg-3))" }} />
-            <div className="p-5.5 pt-3.5">
+            {/* Meal logs carry no photo, so there is no image slot to fill. */}
+            <div className="p-5.5">
               <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{m.clientLabel}</div>
               <Eyebrow className="mt-0.5 mb-2">
                 {m.meal_type.toLowerCase()} · {fmtDate(m.meal_date)}

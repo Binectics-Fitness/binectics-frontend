@@ -11,7 +11,7 @@ import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 import { minorToMajor } from "@/lib/money/minorMoney";
-import { PlanGate } from "@/components/ds/PlanGate";
+import { PlanGate, useFeatureGateState } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 /**
@@ -24,16 +24,20 @@ export function GymTaxClient() {
   const orgId = currentOrg?._id;
   const { data: org } = useOrganizationDetails(orgId);
   const { fmtMoney } = useOrgFormat();
+  // A plan without analytics is read from the billing status, so the series
+  // call (which it would refuse with a 403) is skipped, not made and ignored.
+  const { gate: planGate, ready: planKnown } = useFeatureGateState("analytics_enabled");
   const { data, isLoading: loading } = useQuery<{ revenue: OrgRevenueStats | null; gate: BillingError | null }>({
-    queryKey: ["checkins", "orgRevenueStats", orgId ?? ""],
+    queryKey: ["checkins", "orgRevenueStats", orgId ?? "", planGate ? "gated" : "open"],
     queryFn: async () => {
       if (!orgId) return { revenue: null, gate: null };
+      if (planGate) return { revenue: null, gate: planGate };
       const res = await checkinsService.getOrgRevenueStats(orgId);
       // A plan without analytics refuses the series: say so rather than
       // show an estimate of 0 (F4).
       return { revenue: res.success && res.data ? res.data : null, gate: parseBillingError(res) };
     },
-    enabled: !!orgId,
+    enabled: !!orgId && planKnown,
   });
   const revenue = data?.revenue ?? null;
   const gate = data?.gate ?? null;

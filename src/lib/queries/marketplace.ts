@@ -459,7 +459,11 @@ export function useCreateMyListing() {
   return useMutation({
     mutationFn: (data: Parameters<typeof marketplaceService.createMyListing>[0]) =>
       marketplaceService.createMyListing(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      // Put the created listing straight into the cache so the editor
+      // replaces the create form at once, then refetch for the server copy.
+      if (res.success && res.data)
+        queryClient.setQueryData(queryKeys.marketplace.myListing(), res.data);
       queryClient.invalidateQueries({
         queryKey: queryKeys.marketplace.myListing(),
       });
@@ -476,7 +480,9 @@ export function useCreateOrgListing(orgId: string | undefined) {
   return useMutation({
     mutationFn: (data: Parameters<typeof marketplaceService.createOrgListing>[1]) =>
       marketplaceService.createOrgListing(orgId!, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (orgId && res.success && res.data)
+        queryClient.setQueryData(queryKeys.marketplace.orgListing(orgId), res.data);
       if (orgId)
         queryClient.invalidateQueries({
           queryKey: queryKeys.marketplace.orgListing(orgId),
