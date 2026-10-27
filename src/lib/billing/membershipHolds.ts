@@ -12,8 +12,11 @@ import {
  * - Pause: the member, or the gym for them (api #282), from `active` while
  *   the term is still running. Access stops; the days are credited back on
  *   resume, so `end_date` moves later by exactly how long the pause lasted.
- *   Either side may resume it, whoever started it. Auto-renew stays on but
- *   nothing is charged while paused. No limit on length or how often.
+ *   The member may end either kind of pause; the gym only its own (owner
+ *   ruling, Oct 20 2026: 409 MEMBER_PAUSE otherwise). Auto-renew stays on
+ *   but nothing is charged while paused. No limit on length; the gym may
+ *   limit how often the member pauses themselves (`pause_allowance`, a
+ *   rolling 12 months; 409 PAUSE_LIMIT_REACHED past it).
  * - Suspend: the gym only, from `active` or `past_due`. Access stops; the
  *   days are NOT credited back. A saved-card auto-renew is switched off.
  * - Both keep the member's seat, and neither cancels bookings already made.
@@ -34,9 +37,60 @@ export function canPause(sub: MembershipSubscription, now: Date = new Date()): b
   return end === null || end >= now.getTime();
 }
 
-/** Either side resumes a pause, whoever started it. */
+/** The member resumes any pause, theirs or the gym's. */
 export function canResume(sub: MembershipSubscription): boolean {
   return sub.status === MembershipSubscriptionStatus.PAUSED;
+}
+
+/**
+ * The gym resumes only a pause it started. One the member started (or an
+ * older one with no paused_by, which was theirs) is the member's to end.
+ */
+export function gymCanResume(sub: MembershipSubscription): boolean {
+  return sub.status === MembershipSubscriptionStatus.PAUSED && sub.paused_by === "gym";
+}
+
+/** Paused by the member themselves, so the gym can't resume it. */
+export function pausedByMember(sub: MembershipSubscription): boolean {
+  return sub.status === MembershipSubscriptionStatus.PAUSED && sub.paused_by !== "gym";
+}
+
+/** Why the gym can't resume it, in the API's words (409 MEMBER_PAUSE). */
+export function memberPauseNote(name: string): string {
+  return `${name} paused this themselves. Only they can resume it.`;
+}
+
+/** The member has used up the gym's yearly allowance of their own pauses. */
+export function pauseLimitReached(sub: MembershipSubscription): boolean {
+  return sub.pause_allowance?.remaining === 0;
+}
+
+/** The member may pause it now: pausable, with a pause left in the last 12 months. */
+export function memberCanPause(sub: MembershipSubscription, now: Date = new Date()): boolean {
+  return canPause(sub, now) && !pauseLimitReached(sub);
+}
+
+/**
+ * The member's pauses left, for their memberships screen: "2 of 3 pauses
+ * left in the last 12 months", or why they can't pause. Null when the gym sets no limit.
+ */
+export function pauseAllowanceLine(
+  sub: MembershipSubscription,
+  fmt: (d: string | Date) => string,
+): string | null {
+  const a = sub.pause_allowance;
+  if (!a || a.limit === null || a.remaining === null) return null;
+  if (a.limit === 0) {
+    return `${providerNameOf(sub)} doesn't let members pause their own membership. Ask them if you need a break.`;
+  }
+  const noun = (n: number) => (n === 1 ? "pause" : "pauses");
+  if (a.remaining > 0) {
+    return `${a.remaining} of ${a.limit} ${noun(a.limit)} left in the last 12 months.`;
+  }
+  const again = a.next_available_at ? ` You can pause again on ${fmt(a.next_available_at)}.` : "";
+  return a.limit === 1
+    ? `You've used your 1 pause in the last 12 months.${again}`
+    : `You've used all ${a.limit} pauses in the last 12 months.${again}`;
 }
 
 /** The gym may suspend: active or past due. */
@@ -101,6 +155,14 @@ export function pauseEffectLines(
   ];
   if (renewsByCard(sub)) {
     lines.push("Auto-renew won't charge your card while paused. It carries on for the new end date once you resume.");
+  }
+  const a = sub.pause_allowance;
+  if (a && a.limit !== null && a.remaining !== null && a.remaining > 0) {
+    lines.push(
+      a.remaining === 1
+        ? "This is the last pause you have left in the last 12 months."
+        : `This uses 1 of the ${a.remaining} pauses you have left in the last 12 months.`,
+    );
   }
   lines.push("Resume it here any time.");
   return lines;
@@ -205,4 +267,20 @@ export function holdRefusalCopy(
     title: "Your membership is paused.",
     body: `${pausedByGym(hold.sub) ? `${providerNameOf(hold.sub)} paused it` : "You paused it"}${hold.sub.paused_at ? ` on ${fmt(hold.sub.paused_at)}` : ""}, so you can't ${action} at ${providerNameOf(hold.sub)} until you resume it.${end ? ` Resume today and it runs to ${fmt(end)}.` : ""}`,
   };
+}
+
+/** The most member pauses a year a gym can set (the API's own cap). */
+export const MAX_PAUSE_LIMIT = 52;
+
+/**
+ * The settings field "Member pauses per year", as typed, to what the API
+ * stores: blank is no limit (null), a whole number 0–52 is the limit, and
+ * anything else is invalid (undefined), so it isn't saved.
+ */
+export function parsePauseLimitInput(raw: string): number | null | undefined {
+  const t = raw.trim();
+  if (t === "") return null;
+  if (!/^\d+$/.test(t)) return undefined;
+  const n = Number(t);
+  return n <= MAX_PAUSE_LIMIT ? n : undefined;
 }

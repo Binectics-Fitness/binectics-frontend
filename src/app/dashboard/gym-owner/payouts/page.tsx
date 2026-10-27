@@ -11,15 +11,17 @@ import { useGymViewer } from "@/hooks/useGymViewer";
 import { useOrganizationDetails } from "@/lib/queries/teams";
 import { usePayoutAccount, useRemovePayoutAccount } from "@/lib/queries/payoutAccount";
 import { payoutAccountErrorMessage } from "@/lib/api/payoutAccount";
+import { PayoutHistory } from "./PayoutHistory";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { PAYOUT_WEEKDAYS } from "@/lib/constants/orgSettingsDefaults";
 import { minorToMajor } from "@/lib/money/minorMoney";
 
 /**
- * Payouts — the configured schedule is real (org payout_schedule) and so is
- * the payout bank account (verified with Paystack, shown masked; owner only
- * on the API). Payout HISTORY still awaits the payouts execution service,
- * and nothing is paid out before KYC verification (Oct 4 ruling).
+ * Payouts — the configured schedule (org payout_schedule), the payout bank
+ * account (verified with Paystack, shown masked; owner only on the API), and
+ * where money was collected and the payouts sent, all read from real records.
+ * No balance is shown: payout rules are not live. Nothing is paid out before
+ * KYC verification (Oct 4 ruling).
  */
 export default function GymPayoutsPage() {
   const [addBankOpen, setAddBankOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function GymPayoutsPage() {
       crumb="Payouts"
     >
       {/* The shell's <main> already spaces its children (gap-5). */}
-      <PageHeader className="mb-0!" title="Payouts" subtitle="Funds settle directly to your bank · Binectics never holds money" />
+      <PageHeader className="mb-0!" title="Payouts" subtitle="Where your money was collected and the payouts sent to your bank" />
 
       {/* Configured schedule — real data from org.payout_schedule */}
       <DSCard className="p-5.5">
@@ -122,15 +124,7 @@ export default function GymPayoutsPage() {
         </p>
       </DSCard>
 
-      <DSCard className="flex flex-col items-center text-center px-6 py-14">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" /><path d="M2 10h20" /></svg>
-        </div>
-        <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Payout history is coming soon</h2>
-        <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
-          Your scheduled and completed payouts will appear here once the payouts service is live.
-        </p>
-      </DSCard>
+      {currentOrg && <PayoutHistory orgId={currentOrg._id} />}
 
       <AddBankAccountModal
         open={addBankOpen}

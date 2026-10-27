@@ -1,4 +1,4 @@
-import { UserRole, MembershipSubscriptionStatus } from "@/lib/types";
+import { AccountType, UserRole, MembershipSubscriptionStatus } from "@/lib/types";
 export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
@@ -402,6 +402,19 @@ export interface WorkspaceError {
   message: string;
   /** Offer "Sign out": the fix is a different account, not a retry. */
   signOut?: boolean;
+}
+
+/**
+ * Extra fields for onboarding's create-workspace call. A gym asks for its
+ * gym back (reuse_existing) instead of a second one: a retry after a lost
+ * response, or a gym started on the phone and finished here, then returns
+ * the gym the owner already has, as the mobile app's gym sign-up does.
+ * Trainer and dietitian workspaces are one per person on the API anyway.
+ */
+export function workspaceCreateFlags(
+  accountType: AccountType,
+): { reuse_existing?: true } {
+  return accountType === AccountType.GYM_OWNER ? { reuse_existing: true } : {};
 }
 
 /**
