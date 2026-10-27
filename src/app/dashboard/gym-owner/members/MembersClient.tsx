@@ -43,13 +43,21 @@ import {
   type RecordRenewalMethod,
 } from "@/lib/api/memberBilling";
 import { formatMinor } from "@/lib/currencies/helpers";
-import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import {
+  canPause,
+  canSuspend,
+  canUnsuspend,
+  gymCanResume,
+  memberPauseNote,
+  pausedByMember,
+} from "@/lib/billing/membershipHolds";
 import {
   LiftSuspensionModal,
   PauseMemberModal,
   ResumeMemberModal,
   SuspendMemberModal,
   holdDetailLine,
+  memberNameOf,
 } from "./HoldActions";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -359,18 +367,29 @@ function RowActions({
             </button>
           )}
           {/* Gym-side holds. Pause gives the paused days back (the member's
-              break, started at the desk); suspend doesn't. Either side may
-              resume a pause, whoever started it. */}
+              break, started at the desk); suspend doesn't. The gym resumes
+              only its own pauses: one the member started is theirs to end
+              (owner ruling, Oct 20 2026), so it's shown disabled with why. */}
           {canManageMembers && canPause(sub) && (
             <button type="button" className={item} style={{ color: "var(--ink)" }}
               onClick={() => { setOpen(false); setPauseOpen(true); }}>
               Pause…
             </button>
           )}
-          {canManageMembers && canResume(sub) && (
+          {canManageMembers && gymCanResume(sub) && (
             <button type="button" className={item} style={{ color: "var(--ink)" }}
               onClick={() => { setOpen(false); setResumeOpen(true); }}>
               Resume…
+            </button>
+          )}
+          {canManageMembers && pausedByMember(sub) && (
+            <button type="button" className={item} disabled aria-disabled="true"
+              style={{ color: "var(--fg-3)", cursor: "not-allowed" }}
+              data-testid="resume-member-pause-disabled">
+              Resume…
+              <span className="block text-[11.5px]" style={{ color: "var(--fg-3)" }}>
+                {memberPauseNote(memberNameOf(sub))}
+              </span>
             </button>
           )}
           {canSuspend(sub) && (

@@ -81,11 +81,16 @@ export const classesService = {
     );
   },
 
+  /**
+   * Takes the class off the timetable for good (api #268): its upcoming
+   * bookings and waitlist places are cancelled and each member is told.
+   * `cancelled_bookings` counts them.
+   */
   async deleteClass(
     organizationId: string,
     classId: string,
-  ): Promise<ApiResponse<void>> {
-    return apiClient.delete<void>(
+  ): Promise<ApiResponse<{ cancelled_bookings: number }>> {
+    return apiClient.delete<{ cancelled_bookings: number }>(
       `/teams/organizations/${organizationId}/classes/${classId}`,
     );
   },
