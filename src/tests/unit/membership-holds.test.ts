@@ -3,6 +3,12 @@ import {
   canPause,
   canResume,
   canSuspend,
+  gymCanResume,
+  memberCanPause,
+  memberPauseNote,
+  parsePauseLimitInput,
+  pauseAllowanceLine,
+  pausedByMember,
   canUnsuspend,
   daysPaused,
   endIfResumedAt,
@@ -85,7 +91,9 @@ describe("paused dates", () => {
   it("says since when, and the new end, to the member and to the gym", () => {
     expect(pausedLine(paused, fmt, NOW)).toBe("Paused since 2026-10-04 (10 days). Resume today and it runs to 2026-11-10.");
     expect(pausedLine(paused, fmt, NOW, "gym")).toBe("Paused by the member since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today.");
-    expect(holdDetailLine(paused, fmt, NOW)).toBe("Paused by the member since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today.");
+    expect(holdDetailLine(paused, fmt, NOW)).toBe(
+      "Paused by the member since 2026-10-04 (10 days). Ends 2026-11-10 if it resumes today. Only they can resume it.",
+    );
   });
 
   it("says who paused it: the gym, or the member (older pauses carry no paused_by)", () => {
@@ -225,5 +233,74 @@ describe("gym-side plumbing", () => {
       "Only an active or past-due membership can be suspended. Refresh the page to see where it stands.",
     );
     expect(holdErrorCopy({ success: false }, "fallback")).toBe("fallback");
+  });
+});
+
+describe("pause rules (owner ruling, Oct 20 2026)", () => {
+  const allowance = (limit: number | null, used: number, next: string | null = null) => ({
+    limit,
+    used,
+    remaining: limit === null ? null : Math.max(0, limit - used),
+    window: "rolling_12_months" as const,
+    next_available_at: next,
+  });
+
+  it("the gym resumes only its own pause; the member resumes either", () => {
+    const byGym = sub({ status: S.PAUSED, paused_by: "gym" });
+    const byMember = sub({ status: S.PAUSED, paused_by: "member" });
+    const legacy = sub({ status: S.PAUSED, paused_by: null });
+    expect(gymCanResume(byGym)).toBe(true);
+    expect(gymCanResume(byMember)).toBe(false);
+    expect(gymCanResume(legacy)).toBe(false);
+    expect(gymCanResume(sub())).toBe(false);
+    expect(pausedByMember(byMember)).toBe(true);
+    expect(pausedByMember(legacy)).toBe(true);
+    expect(pausedByMember(byGym)).toBe(false);
+    expect(pausedByMember(sub())).toBe(false);
+    for (const s of [byGym, byMember, legacy]) expect(canResume(s)).toBe(true);
+    expect(memberPauseNote("Tunde Bakare")).toBe("Tunde Bakare paused this themselves. Only they can resume it.");
+  });
+
+  it("says how many pauses are left, or why there are none", () => {
+    expect(pauseAllowanceLine(sub(), fmt)).toBeNull();
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(null, 4) }), fmt)).toBeNull();
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(3, 1) }), fmt)).toBe("2 of 3 pauses left in the last 12 months.");
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(1, 0) }), fmt)).toBe("1 of 1 pause left in the last 12 months.");
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(3, 3, "2027-02-10T08:00:00Z") }), fmt)).toBe(
+      "You've used all 3 pauses in the last 12 months. You can pause again on 2027-02-10.",
+    );
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(1, 1, "2027-02-10T08:00:00Z") }), fmt)).toBe(
+      "You've used your 1 pause in the last 12 months. You can pause again on 2027-02-10.",
+    );
+    expect(pauseAllowanceLine(sub({ pause_allowance: allowance(0, 0) }), fmt)).toBe(
+      "Iron Temple doesn't let members pause their own membership. Ask them if you need a break.",
+    );
+  });
+
+  it("the member can pause only with a pause left", () => {
+    expect(memberCanPause(sub(), NOW)).toBe(true);
+    expect(memberCanPause(sub({ pause_allowance: allowance(2, 1) }), NOW)).toBe(true);
+    expect(memberCanPause(sub({ pause_allowance: allowance(2, 2) }), NOW)).toBe(false);
+    expect(memberCanPause(sub({ pause_allowance: allowance(0, 0) }), NOW)).toBe(false);
+    expect(memberCanPause(sub({ status: S.PAUSED, pause_allowance: allowance(null, 0) }), NOW)).toBe(false);
+  });
+
+  it("the pause dialog says what this pause uses", () => {
+    expect(pauseEffectLines(sub({ pause_allowance: allowance(3, 1) }), fmt)).toContain(
+      "This uses 1 of the 2 pauses you have left in the last 12 months.",
+    );
+    expect(pauseEffectLines(sub({ pause_allowance: allowance(3, 2) }), fmt)).toContain(
+      "This is the last pause you have left in the last 12 months.",
+    );
+    expect(pauseEffectLines(sub({ pause_allowance: allowance(null, 2) }), fmt).join(" ")).not.toMatch(/pauses? (you have )?left/);
+  });
+
+  it("reads the settings field: blank is no limit, 0 to 52 is a limit, anything else isn't saved", () => {
+    expect(parsePauseLimitInput("")).toBeNull();
+    expect(parsePauseLimitInput("  ")).toBeNull();
+    expect(parsePauseLimitInput("0")).toBe(0);
+    expect(parsePauseLimitInput("3")).toBe(3);
+    expect(parsePauseLimitInput("52")).toBe(52);
+    for (const bad of ["53", "-1", "1.5", "abc", "1e2"]) expect(parsePauseLimitInput(bad)).toBeUndefined();
   });
 });

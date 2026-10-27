@@ -23,14 +23,16 @@ import { lateCancelSentence, policyFromRules } from "@/lib/classes/cancellationP
 export function ScheduleClient() {
   const { currentOrg } = useOrganization();
   const orgId = currentOrg?._id;
-  const { data: classes = [], isLoading } = useGymClasses(orgId);
+  // Adding classes is team:manage_organization; the timetable is for all staff.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
+  // Those who can change classes also see deactivated ones, to reactivate them
+  // (the API's include_inactive; deleted classes never come back).
+  const { data: classes = [], isLoading } = useGymClasses(orgId, canManage);
   const create = useCreateGymClass(orgId);
   const { prefs, weekStartsOn } = useOrgFormat();
   const twelveHour = prefs.timeFormat === "12h";
 
   const [adding, setAdding] = useState(false);
-  // Adding classes is team:manage_organization; the timetable is for all staff.
-  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const [error, setError] = useState<string | null>(null);
   // A plan without classes: the owner is told when they reach for "+ New
   // class" (their plan is readable); staff learn it from the API's refusal.
@@ -126,7 +128,16 @@ export function ScheduleClient() {
 
 function ClassCard({ gymClass: c, twelveHour }: { gymClass: GymClass; twelveHour: boolean }) {
   return (
-    <Link href={`/dashboard/gym-owner/schedule/${c._id}`} className="block rounded-(--r-2) p-2.5" style={{ background: "var(--bg)", border: "1px solid var(--border)", textDecoration: "none" }}>
+    <Link
+      href={`/dashboard/gym-owner/schedule/${c._id}`}
+      className="block rounded-(--r-2) p-2.5"
+      style={{ background: c.is_active ? "var(--bg)" : "var(--bg-2)", border: c.is_active ? "1px solid var(--border)" : "1px dashed var(--border)", textDecoration: "none" }}
+    >
+      {!c.is_active && (
+        <span className="inline-block mb-1 font-mono text-[9.5px] uppercase tracking-[0.04em] px-1.5 py-0.5 rounded-full" style={{ background: "var(--bg)", color: "var(--fg-3)", border: "1px solid var(--border)" }}>
+          Inactive
+        </span>
+      )}
       <div className="font-mono text-[11px]" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
         {classTime(c.start_time, twelveHour)} · {c.duration_minutes}m
       </div>

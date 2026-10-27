@@ -641,6 +641,18 @@ export function isSeatBearingMembershipStatus(
   );
 }
 
+/** GET my-subscriptions: the member's own pauses against the gym's yearly limit. */
+export interface PauseAllowance {
+  /** Pauses allowed in any 12 months; null = no limit; 0 = members can't pause themselves. */
+  limit: number | null;
+  used: number;
+  /** limit - used, never below 0; null when there is no limit. */
+  remaining: number | null;
+  window: "rolling_12_months";
+  /** When remaining is 0 (and limit > 0): when the member can pause again. */
+  next_available_at: string | null;
+}
+
 export interface MembershipSubscription {
   _id: string;
   /**
@@ -739,6 +751,12 @@ export interface MembershipSubscription {
   paused_by?: "member" | "gym" | null;
   /** Total time spent paused, in ms, across all pauses. Credited to end_date. */
   accumulated_pause_ms?: number;
+  /**
+   * The member's own pauses against their gym's yearly limit (GET
+   * my-subscriptions only). Rolling 12 months, across all their memberships
+   * at that gym; pauses the gym started never count. `limit` null = no limit.
+   */
+  pause_allowance?: PauseAllowance;
   /**
    * When the gym suspended it. Null in every state except `suspended`, and
    * absent on suspensions made before the API recorded it.

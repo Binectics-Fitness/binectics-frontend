@@ -1,31 +1,20 @@
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
-import { DSCard } from "@/components/ds/DSCard";
-import { PageHeader } from "@/components/ds/PageHeader";
+import { ProviderIncomeSummary } from "@/components/ProviderIncomeSummary";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Tax",
-  description: "View tax summaries and download tax documents.",
+  description: "An informational summary of the money recorded through Binectics.",
 };
 
 /**
- * Tax — awaiting backend. There are no provider-level earnings or tax
- * reporting endpoints yet, so this shows an honest pending state instead of
- * the previous fabricated figures.
+ * Tax: an informational income summary read off the workspace ledger. It
+ * computes no tax and is not advice; nothing is filed on the provider's behalf.
  */
 export default function DietitianTaxPage() {
   return (
     <DietitianDashboardShell activeItem="Earnings" crumb="Tax">
-      <PageHeader className="mb-0!" title={{ emphasis: "Tax" }} subtitle="Summaries and documents for your practice" />
-      <DSCard className="flex flex-col items-center text-center px-6 py-14">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--bg-2)", color: "var(--fg-3)" }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
-        </div>
-        <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>Tax summaries are coming soon</h2>
-        <p className="text-[13.5px] mt-2 max-w-[440px]" style={{ color: "var(--fg-3)" }}>
-          Earnings-based tax summaries and downloadable documents will appear here once provider earnings reporting is live. Nothing is filed on your behalf.
-        </p>
-      </DSCard>
+      <ProviderIncomeSummary settingsHref="/dashboard/dietitian/settings" />
     </DietitianDashboardShell>
   );
 }

@@ -38,6 +38,7 @@ vi.mock("@/components/ds/AdminDashboardShell", () => ({
 vi.mock("@/components/ds/RoleShell", () => ({ RoleShell: ({ children }: { children: ReactNode }) => <>{children}</> }));
 vi.mock("@/components/ConsultationAvailabilityManager", () => ({ default: () => null }));
 vi.mock("@/components/provider/GatewaysSection", () => ({ GatewaysSection: () => null }));
+vi.mock("@/components/provider/TaxSettingsCard", () => ({ TaxSettingsCard: () => null }));
 vi.mock("@/components/provider/SetupChecklist", () => ({ ShowSetupChecklist: () => null }));
 vi.mock("@/components/activity/ActivityLogPanel", () => ({ ActivityLogSection: () => null, canSeeActivityLog: () => false }));
 vi.mock("@/lib/api/earnings", () => {
