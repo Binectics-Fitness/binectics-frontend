@@ -2,11 +2,11 @@ import { describe, it, expect } from "vitest";
 import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 
 describe("taxIsInclusive", () => {
-  it("is inclusive when the flag was never saved, like the Settings switch", () => {
-    expect(taxIsInclusive({})).toBe(true);
-    expect(taxIsInclusive({ tax_inclusive: null })).toBe(true);
-    expect(taxIsInclusive(undefined)).toBe(true);
-    expect(taxIsInclusive(null)).toBe(true);
+  it("does not guess when the flag was never saved: undefined, so callers prompt", () => {
+    expect(taxIsInclusive({})).toBeUndefined();
+    expect(taxIsInclusive({ tax_inclusive: null })).toBeUndefined();
+    expect(taxIsInclusive(undefined)).toBeUndefined();
+    expect(taxIsInclusive(null)).toBeUndefined();
   });
 
   it("follows a saved value either way", () => {

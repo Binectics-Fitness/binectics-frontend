@@ -39,11 +39,23 @@ describe("TaxSettingsCard", () => {
     expect(screen.getByRole("button", { name: "Save tax settings" })).toBeDisabled();
   });
 
+  it("asks whether prices include tax with nothing pre-selected, and will not save a rate until one is chosen", async () => {
+    render(<TaxSettingsCard />);
+    expect(screen.getByText("Do your prices already include tax?")).toBeInTheDocument();
+    expect(screen.getByLabelText("Yes, prices include tax")).not.toBeChecked();
+    expect(screen.getByLabelText("No, tax is added on top")).not.toBeChecked();
+    await userEvent.type(screen.getByLabelText("Tax rate %"), "7.5");
+    expect(screen.getByText("Choose one to save your tax settings.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save tax settings" })).toBeDisabled();
+    await userEvent.click(screen.getByLabelText("Yes, prices include tax"));
+    expect(screen.getByRole("button", { name: "Save tax settings" })).toBeEnabled();
+  });
+
   it("saves the same three fields the gym Settings page does, as a percent", async () => {
     render(<TaxSettingsCard />);
     await userEvent.type(screen.getByLabelText("Tax name"), "VAT");
     await userEvent.type(screen.getByLabelText("Tax rate %"), "7.5");
-    await userEvent.click(screen.getByRole("switch"));
+    await userEvent.click(screen.getByLabelText("No, tax is added on top"));
     await userEvent.click(screen.getByRole("button", { name: "Save tax settings" }));
     await waitFor(() =>
       expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 7.5, tax_inclusive: false, tax_label: "VAT" } }),
@@ -53,6 +65,7 @@ describe("TaxSettingsCard", () => {
   it("accepts a rate of 0", async () => {
     render(<TaxSettingsCard />);
     await userEvent.type(screen.getByLabelText("Tax rate %"), "0");
+    await userEvent.click(screen.getByLabelText("Yes, prices include tax"));
     await userEvent.click(screen.getByRole("button", { name: "Save tax settings" }));
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ orgId: "o1", data: { tax_rate: 0, tax_inclusive: true, tax_label: "" } }));
   });
@@ -78,7 +91,8 @@ describe("TaxSettingsCard", () => {
     render(<TaxSettingsCard />);
     expect(screen.getByLabelText("Tax name")).toHaveValue("GST");
     expect(screen.getByLabelText("Tax rate %")).toHaveValue(15);
-    expect(screen.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByLabelText("No, tax is added on top")).toBeChecked();
+    expect(screen.getByLabelText("Yes, prices include tax")).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Save tax settings" })).toBeDisabled();
   });
 
