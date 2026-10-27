@@ -53,9 +53,21 @@ export function usePlanOwner(): boolean {
  * API's refusal instead. Null while unknown, or when the feature is in.
  */
 export function useFeatureGate(feature: keyof ProviderBillingFeatures): BillingError | null {
+  return useFeatureGateState(feature).gate;
+}
+
+/**
+ * useFeatureGate plus whether the answer is in yet. A caller that wants to
+ * skip a call the plan would refuse (and so avoid a 403 in the console) must
+ * wait for `ready`; before that, `gate` is null only because it is unknown.
+ */
+export function useFeatureGateState(feature: keyof ProviderBillingFeatures): {
+  gate: BillingError | null;
+  ready: boolean;
+} {
   const isOwner = usePlanOwner();
   const orgId = useOptionalOrganization()?.currentOrg?._id;
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["providerBilling", "status", orgId ?? ""],
     queryFn: async () => {
       const res = await providerBillingApi.getStatus(orgId!);
@@ -66,14 +78,18 @@ export function useFeatureGate(feature: keyof ProviderBillingFeatures): BillingE
     retry: false,
   });
   // Only an explicit false gates: an older API without the flag allows it.
-  if (!data || data.features?.[feature] !== false) return null;
+  const ready = !(isOwner && !!orgId && isLoading);
+  if (!data || data.features?.[feature] !== false) return { gate: null, ready };
   return {
-    kind: "feature",
-    message: "",
-    resource: feature,
-    planTier: data.plan_tier ?? null,
-    limit: null,
-    currentUsage: null,
+    ready,
+    gate: {
+      kind: "feature",
+      message: "",
+      resource: feature,
+      planTier: data.plan_tier ?? null,
+      limit: null,
+      currentUsage: null,
+    },
   };
 }
 

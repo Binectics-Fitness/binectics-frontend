@@ -17,7 +17,7 @@ import {
   type OrgCheckInDashboardStats,
 } from "@/lib/types";
 import { minorToMajor } from "@/lib/money/minorMoney";
-import { PlanGate } from "@/components/ds/PlanGate";
+import { PlanGate, useFeatureGateState } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 
 const MIX_COLORS = ["var(--ink)", "var(--signal)", "var(--gym)", "var(--trainer)", "var(--dietitian)", "var(--fg-3)"];
@@ -42,16 +42,19 @@ export default function RevenueClient() {
   // Refunds and disputes are the owner's; a manager on Revenue doesn't get the link.
   const canSeeRefunds = allows(useGymViewer(), GYM_NAV_ACCESS.Refunds);
   const [error, setError] = useState<string | null>(null);
+  // A plan without analytics is known from the billing status: skip the
+  // series call it would refuse (a 403 in the console) and show the gate.
+  const { gate: planGate, ready: planKnown } = useFeatureGateState("analytics_enabled");
 
   useEffect(() => {
-    if (orgLoading || !currentOrg) return;
+    if (orgLoading || !currentOrg || !planKnown) return;
     let active = true;
     const run = async () => {
       setLoading(true);
       const [statsRes, subsRes, revRes] = await Promise.allSettled([
         checkinsService.getOrgDashboardStats(currentOrg._id),
         marketplaceService.getOrgMembershipSubscriptions(currentOrg._id),
-        checkinsService.getOrgRevenueStats(currentOrg._id),
+        planGate ? Promise.resolve(null) : checkinsService.getOrgRevenueStats(currentOrg._id),
       ]);
       if (!active) return;
       let ok = false;
@@ -62,10 +65,12 @@ export default function RevenueClient() {
       if (subsRes.status === "fulfilled" && subsRes.value.success && subsRes.value.data) {
         setSubs(subsRes.value.data);
       }
-      if (revRes.status === "fulfilled" && revRes.value.success && revRes.value.data) {
+      if (revRes.status === "fulfilled" && revRes.value?.success && revRes.value.data) {
         setRevenueStats(revRes.value.data);
       }
-      setAnalyticsGate(revRes.status === "fulfilled" ? parseBillingError(revRes.value) : null);
+      setAnalyticsGate(
+        planGate ?? (revRes.status === "fulfilled" && revRes.value ? parseBillingError(revRes.value) : null),
+      );
       setError(ok ? null : "We couldn't load revenue. Try again shortly.");
       setLoading(false);
     };
@@ -74,7 +79,7 @@ export default function RevenueClient() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, [currentOrg, orgLoading]);
+  }, [currentOrg, orgLoading, planKnown, planGate]);
 
   /** Subscriptions that can get in today — `active` plus the past-due grace window. */
   const activeSubs = useMemo(() => subs.filter((s) => isEntitlingMembershipStatus(s.status)), [subs]);

@@ -372,7 +372,9 @@ export function SettingsClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 lg:gap-10 items-start">
         {/* Section nav */}
-        <nav className="sticky top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
+        {/* Sticky only where it sits beside the content (lg): stuck above a
+            single column it covered the section being read. */}
+        <nav className="lg:sticky lg:top-22 flex flex-col sm:flex-row lg:flex-col gap-0.5 overflow-x-auto">
           {sections.map((s, si) => (
             <div key={s.group}>
               <Eyebrow className={`px-2.5 py-1 ${si > 0 ? "mt-3.5" : ""}`}>{s.group}</Eyebrow>

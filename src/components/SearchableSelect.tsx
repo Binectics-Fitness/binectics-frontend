@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface SearchableSelectProps {
   value: string;
@@ -31,6 +32,16 @@ export default function SearchableSelect({
   const inputRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Where the open list sits, in viewport coordinates. Fixed positioning lets
+  // it escape a card or modal body that clips overflow (the list used to be
+  // cut off at the card edge or the modal footer).
+  const [panel, setPanel] = useState<React.CSSProperties | null>(null);
+
+  // Portalled to <body>: a modal's open animation leaves a transform on it,
+  // which would make "fixed" relative to the modal instead of the viewport.
+  const renderPanel = (node: React.ReactNode) =>
+    typeof document === "undefined" ? null : createPortal(node, document.body);
 
   const filtered = search.trim()
     ? options.filter((o) =>
@@ -38,13 +49,16 @@ export default function SearchableSelect({
       )
     : options;
 
-  const selectedLabel = options.find((o) => o.value === value)?.label ?? "";
+  // A value the options don't (yet) contain still shows as itself, so a
+  // saved selection never reads as "nothing chosen" while options load.
+  const selectedLabel = options.find((o) => o.value === value)?.label ?? value;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
         wrapperRef.current &&
-        !wrapperRef.current.contains(e.target as Node)
+        !wrapperRef.current.contains(e.target as Node) &&
+        !panelRef.current?.contains(e.target as Node)
       ) {
         setOpen(false);
         setSearch("");
@@ -53,6 +67,37 @@ export default function SearchableSelect({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const r = wrapperRef.current?.getBoundingClientRect();
+      if (!r) return;
+      const below = window.innerHeight - r.bottom;
+      const above = r.top;
+      // The list is ~ 300px tall at most (search box + 15rem of options).
+      const flip = below < 300 && above > below;
+      setPanel({
+        position: "fixed",
+        left: r.left,
+        width: r.width,
+        ...(flip ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+        maxHeight: Math.max(160, (flip ? above : below) - 12),
+      });
+    };
+    place();
+    const onScroll = (e: Event) => {
+      // Scrolling the options themselves must not close the list.
+      if (panelRef.current?.contains(e.target as Node)) return;
+      place();
+    };
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (highlightIndex >= 0 && listRef.current) {
@@ -126,10 +171,11 @@ export default function SearchableSelect({
         </svg>
       </button>
 
-      {open && (
+      {open && renderPanel(
         <div
-          className="absolute z-30 mt-1 w-full rounded-(--r-2) border border-border bg-bg"
-          style={{ boxShadow: "var(--shadow-2)" }}
+          ref={panelRef}
+          className="z-[60] flex flex-col overflow-hidden rounded-(--r-2) border border-border bg-bg"
+          style={{ boxShadow: "var(--shadow-2)", ...(panel ?? { position: "fixed", visibility: "hidden" }) }}
         >
           <div className="border-b border-border p-2">
             <input
@@ -145,7 +191,7 @@ export default function SearchableSelect({
               className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
           </div>
-          <ul ref={listRef} className="max-h-60 overflow-auto py-1">
+          <ul ref={listRef} className="max-h-60 min-h-0 overflow-auto py-1">
             {filtered.length === 0 && (
               <li className="px-3 py-2 text-sm text-fg-4">
                 {loading ? "Loading…" : "No results found"}

@@ -27,3 +27,14 @@ describe("SearchableSelect Escape", () => {
     expect(document.activeElement).toBe(trigger);
   });
 });
+
+// A saved value must not read as "nothing chosen" while the options are still
+// loading (the listing editor's Country showed its placeholder for NG).
+describe("SearchableSelect saved value", () => {
+  it("shows the raw value until its option arrives, then the label", () => {
+    const { rerender } = render(<SearchableSelect value="NG" onChange={() => {}} options={[]} placeholder="Pick" />);
+    expect(screen.getByRole("button", { name: /NG/ })).toBeInTheDocument();
+    rerender(<SearchableSelect value="NG" onChange={() => {}} options={[{ label: "Nigeria · NG", value: "NG" }]} placeholder="Pick" />);
+    expect(screen.getByRole("button", { name: /Nigeria · NG/ })).toBeInTheDocument();
+  });
+});

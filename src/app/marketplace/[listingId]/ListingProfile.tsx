@@ -413,7 +413,7 @@ export function ListingProfile({
         </div>
 
         {/* ─── RIGHT: BOOKING CARD ─── */}
-        <aside id="booking-card" className="sticky" style={{ top: "88px" }}>
+        <aside id="booking-card" className="sticky min-w-0" style={{ top: "88px" }}>
           <div className="border border-border rounded-(--r-3) bg-bg overflow-hidden">
             <div className="px-5 pt-4.5 pb-3.5 border-b border-border flex justify-between items-start">
               <div>
@@ -442,7 +442,7 @@ export function ListingProfile({
               {plans.length === 0 ? (
                 <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No membership plans yet.</p>
               ) : (
-                <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0">
+                <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0 min-w-0">
                   <legend className="font-mono text-[12px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Plan</legend>
                   {plans.map((p) => {
                     const checked = selectedPlan?._id === p._id;
@@ -465,10 +465,10 @@ export function ListingProfile({
                           className="shrink-0"
                           style={{ accentColor: "var(--ink)" }}
                         />
-                        <span className="flex-1 min-w-0 truncate">
+                        <span className="flex-1 min-w-0 wrap-break-word">
                           {p.name}
                           {planSavingLabel(p) && (
-                            <small className="ml-1.5" style={{ color: "var(--signal-ink)" }}>{planSavingLabel(p)}</small>
+                            <small className="block text-[12px]" style={{ color: "var(--signal-ink)" }}>{planSavingLabel(p)}</small>
                           )}
                         </span>
                         <span className="font-mono shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
