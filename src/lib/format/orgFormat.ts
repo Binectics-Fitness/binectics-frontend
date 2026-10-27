@@ -20,6 +20,8 @@ import {
 /** The subset of Organization the formatters care about. */
 export interface OrgFormatSource {
   time_zone?: string;
+  /** ISO 3166-1 alpha-2; used to infer a zone when time_zone is unset. */
+  country?: string;
   first_day_of_week?: FirstDayOfWeek;
   date_format?: DateFormat;
   time_format?: TimeFormat;
@@ -72,6 +74,50 @@ export const WEEK_STARTS_ON: Record<FirstDayOfWeek, 0 | 1 | 6> = {
   saturday: 6,
 };
 
+/** Zone an org with no usable time_zone and no single-zone country is read in. */
+export const DEFAULT_ORG_TIME_ZONE = "Africa/Lagos";
+
+/**
+ * Countries with exactly one IANA zone (a subset of the API's
+ * country-state-city data, which `countryTimeZone` there reads). Multi-zone
+ * countries are deliberately absent: the API ignores them too.
+ */
+const SINGLE_ZONE_COUNTRIES: Record<string, string> = {
+  NG: "Africa/Lagos", GH: "Africa/Accra", KE: "Africa/Nairobi",
+  ZA: "Africa/Johannesburg", EG: "Africa/Cairo", UG: "Africa/Kampala",
+  TZ: "Africa/Dar_es_Salaam", RW: "Africa/Kigali", SN: "Africa/Dakar",
+  ET: "Africa/Addis_Ababa", MA: "Africa/Casablanca", CI: "Africa/Abidjan",
+  CM: "Africa/Douala", ZM: "Africa/Lusaka", ZW: "Africa/Harare",
+  BW: "Africa/Gaborone", NA: "Africa/Windhoek", DZ: "Africa/Algiers",
+  TN: "Africa/Tunis", AO: "Africa/Luanda", MZ: "Africa/Maputo",
+  MW: "Africa/Blantyre", GB: "Europe/London", IE: "Europe/Dublin",
+  IN: "Asia/Kolkata", AE: "Asia/Dubai", SA: "Asia/Riyadh",
+  JM: "America/Jamaica", TT: "America/Port_of_Spain",
+};
+
+function isTimeZone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Mirrors the API's orgTimeZone (src/common/date/org-time-zone.ts) so class
+ * times read the same on web and server: the stored zone if valid, else the
+ * single zone of the org's country, else Africa/Lagos.
+ */
+export function orgTimeZone(
+  org: { time_zone?: string | null; country?: string | null },
+): string {
+  const stored = org.time_zone;
+  if (stored && isTimeZone(stored)) return stored;
+  const country = org.country?.trim().toUpperCase();
+  return (country && SINGLE_ZONE_COUNTRIES[country]) || DEFAULT_ORG_TIME_ZONE;
+}
+
 /**
  * Merge an organization's saved settings with defaults (and the browser
  * time zone) into fully-resolved preferences. Accepts null/undefined so
@@ -81,7 +127,8 @@ export function resolveOrgFormatPrefs(
   org?: OrgFormatSource | null,
 ): OrgFormatPrefs {
   return {
-    timeZone: org?.time_zone || getClientTimezone(),
+    // No org at all: the browser zone. An org without a zone follows the API.
+    timeZone: org ? orgTimeZone(org) : getClientTimezone(),
     firstDayOfWeek: org?.first_day_of_week ?? LOCALE_DEFAULTS.first_day_of_week,
     dateFormat: org?.date_format ?? LOCALE_DEFAULTS.date_format,
     timeFormat: org?.time_format ?? LOCALE_DEFAULTS.time_format,
