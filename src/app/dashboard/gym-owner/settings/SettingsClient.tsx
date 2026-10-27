@@ -221,7 +221,7 @@ export function SettingsClient() {
     setForm(seeded);
   }
 
-  // New org with no saved country → suggest one from the caller's IP.
+  // New org with no saved country → pre-fill one from the caller's IP (see below).
   useEffect(() => {
     if (!org || org.country || geoAppliedFor.current === org._id) return;
     geoAppliedFor.current = org._id;
@@ -230,6 +230,11 @@ export function SettingsClient() {
       const res = await utilityService.resolveGeo();
       const detected = res.success && res.data?.country ? res.data.country.toUpperCase() : "";
       if (cancelled || !detected) return;
+      // A guess is a pre-fill, not an edit: put it in the baseline too, so the
+      // page does not open with "Save changes" lit and a wrong country (the
+      // tester's IP, not the gym's) can't be saved by accident. It is saved
+      // only once the owner changes the field themselves.
+      setBaseline((b) => (b && !b.country ? { ...b, country: detected } : b));
       setForm((f) => (f && !f.country ? { ...f, country: detected } : f));
     })();
     return () => {

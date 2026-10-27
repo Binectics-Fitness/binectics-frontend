@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SettingsClient } from "@/app/dashboard/gym-owner/settings/SettingsClient";
@@ -41,7 +41,8 @@ vi.mock("@/lib/queries/utility", () => ({ useCountries: () => ({ data: [] }) }))
 vi.mock("@/lib/queries/currencies", () => ({
   useOrgPriceCurrencies: () => ({ data: [], providerHint: null }),
 }));
-vi.mock("@/lib/api/utility", () => ({ utilityService: { resolveGeo: vi.fn(async () => ({ success: false })) } }));
+const geo = vi.hoisted(() => ({ resolveGeo: vi.fn() }));
+vi.mock("@/lib/api/utility", () => ({ utilityService: geo }));
 vi.mock("@/components/SearchableSelect", () => ({ default: () => null }));
 vi.mock("@/components/provider/GatewaysSection", () => ({ GatewaysSection: () => null }));
 vi.mock("@/components/provider/SetupChecklist", () => ({ ShowSetupChecklist: () => null }));
@@ -64,6 +65,7 @@ beforeEach(() => {
   h.org = { _id: "o1", name: "Iron Temple", owner_id: "owner1", account_type: "gym_owner", currency: "NGN", country: "NG", is_active: true };
   h.currentOrg = { ...h.org, is_owner: true };
   h.mutateAsync.mockResolvedValue({ success: true });
+  geo.resolveGeo.mockResolvedValue({ success: false });
 });
 
 const field = () => screen.getByLabelText("Member pauses per year") as HTMLInputElement;
@@ -112,5 +114,19 @@ describe("Settings: member pauses per year", () => {
     render(<SettingsClient />);
     expect(field()).toBeDisabled();
     expect(screen.getByText("Only people who can manage the organization can change this.")).toBeInTheDocument();
+  });
+});
+
+describe("Settings: country guessed from the IP", () => {
+  it("is a pre-fill, not an edit: the page opens clean and nothing is saved until the owner changes it", async () => {
+    h.org = { ...h.org, country: undefined };
+    h.currentOrg = { ...h.org, is_owner: true };
+    geo.resolveGeo.mockResolvedValue({ success: true, data: { country: "us" } });
+    render(<SettingsClient />);
+    await waitFor(() => expect(geo.resolveGeo).toHaveBeenCalled());
+    // Let the guess land in the form.
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
+    expect(h.mutateAsync).not.toHaveBeenCalled();
   });
 });

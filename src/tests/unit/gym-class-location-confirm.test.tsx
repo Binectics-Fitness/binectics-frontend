@@ -64,6 +64,22 @@ beforeEach(() => {
   vi.spyOn(teamsService, "getLocations").mockResolvedValue({ success: true, data: [main, annex] } as never);
 });
 
+describe("class detail: loading", () => {
+  it("never says the class is missing while the workspace is still loading", async () => {
+    const previous = { ...org };
+    org.currentOrg = undefined as never;
+    org.isLoading = true;
+    try {
+      wrap(<ClassDetailClient />);
+      expect(screen.getByText("Loading class…")).toBeInTheDocument();
+      expect(screen.queryByText(/Class not found/)).toBeNull();
+    } finally {
+      org.currentOrg = previous.currentOrg;
+      org.isLoading = previous.isLoading;
+    }
+  });
+});
+
 describe("class detail: delete", () => {
   it("deletes only after the dialog, which says upcoming bookings are cancelled and members told", async () => {
     const del = vi.spyOn(classesService, "deleteClass").mockResolvedValue({ success: true, data: { cancelled_bookings: 2 } } as never);
