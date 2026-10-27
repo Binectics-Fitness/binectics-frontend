@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   resolveOrgFormatPrefs,
+  orgTimeZone,
   formatOrgDate,
   formatOrgTime,
   formatOrgDateTime,
@@ -41,6 +42,27 @@ describe("resolveOrgFormatPrefs", () => {
     expect(p.dateFormat).toBe("YYYY-MM-DD");
     expect(p.timeFormat).toBe("12h");
     expect(p.timeZone).toBe("Africa/Johannesburg");
+  });
+});
+
+describe("orgTimeZone (mirrors the API)", () => {
+  it("uses a valid stored zone", () => {
+    expect(orgTimeZone({ time_zone: "Africa/Johannesburg", country: "NG" })).toBe("Africa/Johannesburg");
+  });
+  it("ignores an invalid stored zone", () => {
+    expect(orgTimeZone({ time_zone: "Mars/Olympus", country: "GH" })).toBe("Africa/Accra");
+  });
+  it("uses the single zone of the country when none is stored", () => {
+    expect(orgTimeZone({ country: "ke" })).toBe("Africa/Nairobi");
+  });
+  it("falls back to Lagos for multi-zone, unknown or missing country", () => {
+    expect(orgTimeZone({ country: "US" })).toBe("Africa/Lagos");
+    expect(orgTimeZone({})).toBe("Africa/Lagos");
+  });
+  it("resolveOrgFormatPrefs applies it to a zone-less org but keeps the browser zone with no org", () => {
+    expect(resolveOrgFormatPrefs({}).timeZone).toBe("Africa/Lagos");
+    expect(resolveOrgFormatPrefs({ country: "GH" }).timeZone).toBe("Africa/Accra");
+    expect(resolveOrgFormatPrefs(null).timeZone).not.toBe("");
   });
 });
 
