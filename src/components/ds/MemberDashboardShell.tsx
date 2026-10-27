@@ -10,6 +10,7 @@ import { openCommandBar } from "@/hooks/useCommandBar";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
+import { isStarterProgramEnabled } from "@/lib/starter/flag";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -23,7 +24,7 @@ function I({ children, d }: { children?: React.ReactNode; d?: string }) {
 /* ── Nav items ──
  * Billing is here so a member can find auto-renew, cards and Renew without
  * going through Settings (discoverability F8). */
-export const MEMBER_NAV_LINKS = [
+const BASE_MEMBER_NAV_LINKS = [
   { label: "Home",        href: "/dashboard/member" },
   { label: "Marketplace", href: "/marketplace" },
   { label: "Saved",       href: "/dashboard/saved-providers" },
@@ -35,6 +36,14 @@ export const MEMBER_NAV_LINKS = [
   { label: "Requests",    href: "/dashboard/member/requests" },
   { label: "Billing",     href: "/dashboard/member/billing" },
 ];
+
+/** The Starter Program link, shown only while its feature flag is on. */
+export const STARTER_NAV_LINK = { label: "Starter", href: "/dashboard/member/starter" };
+
+/** The member's nav links; "Starter" joins them while the feature is on. */
+export const MEMBER_NAV_LINKS = isStarterProgramEnabled()
+  ? [...BASE_MEMBER_NAV_LINKS.slice(0, 7), STARTER_NAV_LINK, ...BASE_MEMBER_NAV_LINKS.slice(7)]
+  : BASE_MEMBER_NAV_LINKS;
 
 /**
  * Whether a nav link is the current page: the page names its label, and a
