@@ -29,7 +29,7 @@ import { toneColors, type Tone } from "@/lib/ui/tones";
  * Pill colours come from the app-wide tone set (lib/ui/statusTones
  * membershipStatusTone): active is success; pending payment is waiting on
  * the member (warn); past due (a renewal that failed) and suspended
- * (blocked by the gym) are danger; paused is the member's own break and
+ * (blocked by the gym) are danger; paused is a break (the member's or the gym's) and
  * expired / cancelled are endings, so all three are neutral.
  * gym-members.html:204-210 already carries "Paused" and "Past-due" filter
  * pills, so the roster's filter row is design-led rather than a new invention.
@@ -76,7 +76,7 @@ const FACTS: Record<MembershipSubscriptionStatus, MetaFacts> = {
     label: "Paused",
     hasAccess: false,
     bearsSeat: true,
-    hint: "On their own break. Frozen days are credited back on resume, so they are coming back, not churned.",
+    hint: "Frozen days are credited back on resume, so they are coming back, not churned.",
   },
   [MembershipSubscriptionStatus.SUSPENDED]: {
     label: "Suspended",

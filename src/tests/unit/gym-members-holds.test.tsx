@@ -503,4 +503,24 @@ describe("gym members list: resend invite for a claimed member", () => {
     await openMenu("Ngozi Okafor");
     expect(screen.queryByRole("button", { name: "Resend invite email" })).toBeNull();
   });
+
+  it("keeps the action hidden after the roster reloads and the rows remount", async () => {
+    vi.spyOn(marketplaceService, "resendMemberInvite").mockResolvedValue({
+      success: false,
+      code: "MEMBER_ALREADY_CLAIMED",
+      status: 409,
+      message: "Ngozi has already set up their account",
+    });
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    // The reload is slow, so the table shows its loading state (rows unmount)
+    // before the same members come back.
+    const rows = { success: true, data: [ngozi(), tunde(), halima()] } as never;
+    list.mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve(rows), 30)));
+    await userEvent.click(screen.getByRole("button", { name: "Resend invite email" }));
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByText("Ngozi Okafor")).toBeInTheDocument());
+    await openMenu("Ngozi Okafor");
+    expect(screen.queryByRole("button", { name: "Resend invite email" })).toBeNull();
+  });
 });

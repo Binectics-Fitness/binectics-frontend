@@ -124,9 +124,12 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
 export function ClassDetailClient() {
   const { classId } = useParams<{ classId: string }>();
   const router = useRouter();
-  const { currentOrg } = useOrganization();
+  const { currentOrg, isLoading: orgLoading } = useOrganization();
   const orgId = currentOrg?._id;
-  const { data: gymClass, isLoading } = useGymClass(orgId, classId);
+  const { data: gymClass, isLoading: classLoading } = useGymClass(orgId, classId);
+  // The class query is disabled until the workspace is known, and a disabled
+  // query reports isLoading false, so "not found" flashed while the org loaded.
+  const isLoading = orgLoading || classLoading;
   const update = useUpdateGymClass(orgId);
   const remove = useDeleteGymClass(orgId);
   const [error, setError] = useState<string | null>(null);
