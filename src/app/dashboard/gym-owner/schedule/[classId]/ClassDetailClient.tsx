@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/components/Toast";
+import { AttendanceControl } from "./AttendanceControl";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { useOrganization } from "@/contexts/OrganizationContext";
@@ -17,6 +19,8 @@ import {
 import {
   classBookingsService,
   nextOccurrences,
+  previousOccurrences,
+  type ClassAttendance,
   type ClassBooking,
 } from "@/lib/api/classBookings";
 import { ClassForm, WEEKDAYS } from "../ClassForm";
@@ -41,8 +45,10 @@ export function deletedClassMessage(name: string, cancelled: number): string {
 function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classId: string; dayOfWeek: number }) {
   const { prefs } = useOrgFormat();
   const dateLocale = localeForDateFormat(prefs);
-  const dates = nextOccurrences(dayOfWeek, 4);
-  const [date, setDate] = useState(dates[0]);
+  const upcoming = nextOccurrences(dayOfWeek, 4);
+  // Recent past occurrences too, so attendance can still be recorded or checked the day after.
+  const dates = [...previousOccurrences(dayOfWeek, 3).reverse(), ...upcoming];
+  const [date, setDate] = useState(upcoming[0]);
   const { data: roster = [], isLoading } = useQuery<ClassBooking[]>({
     queryKey: ["classRoster", orgId, classId, date],
     queryFn: async () => {
@@ -50,6 +56,21 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
       return res.success && res.data ? res.data : [];
     },
   });
+
+  // Recording who came is bookings:manage (the API enforces it too).
+  const canMark = holds(useGymViewer(), TeamPermission.BOOKINGS_MANAGE);
+  const queryClient = useQueryClient();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const mark = async (b: ClassBooking, next: ClassAttendance | null) => {
+    setBusyId(b._id);
+    const res = await classBookingsService.setAttendance(orgId, classId, b._id, next);
+    setBusyId(null);
+    if (res.success) {
+      await queryClient.invalidateQueries({ queryKey: ["classRoster", orgId, classId, date] });
+    } else {
+      toast.error(res.message ?? "We couldn't save that. Try again.");
+    }
+  };
 
   const confirmed = roster.filter((b) => b.status === "confirmed");
   const waitlisted = roster.filter((b) => b.status === "waitlisted");
@@ -74,11 +95,16 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
           }))}
         />
       </div>
+      {canMark && confirmed.length > 0 && (
+        <p className="px-5.5 pt-3 text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+          Mark who came once the class has started. It is a record for you only: nothing is charged and the member is not told.
+        </p>
+      )}
       {!isLoading && roster.length === 0 && (
         <p className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>No bookings for this occurrence yet.</p>
       )}
       {roster.map((b, i) => (
-        <div key={b._id} className="flex items-center gap-3 px-5.5 py-2.5" style={{ borderBottom: i < roster.length - 1 ? "1px solid var(--border)" : "none" }}>
+        <div key={b._id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5.5 py-2.5" style={{ borderBottom: i < roster.length - 1 ? "1px solid var(--border)" : "none" }}>
           <span className="flex-1 text-[13.5px]" style={{ color: "var(--ink)" }}>{memberName(b)}</span>
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
             style={b.status === "confirmed"
@@ -86,6 +112,9 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
               : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }}>
             {b.status === "confirmed" ? "Confirmed" : "Waitlist"}
           </span>
+          {b.status === "confirmed" && (
+            <AttendanceControl booking={b} canMark={canMark} busy={busyId === b._id} onChange={(next) => void mark(b, next)} />
+          )}
         </div>
       ))}
     </DSCard>
