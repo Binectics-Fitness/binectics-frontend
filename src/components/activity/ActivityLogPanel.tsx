@@ -51,6 +51,7 @@ const CATEGORY_LABEL: Record<OrgAuditCategory, string> = {
   [OrgAuditCategory.ROLES]: "Roles",
   [OrgAuditCategory.PAYMENTS]: "Payments",
   [OrgAuditCategory.LOYALTY]: "Loyalty",
+  [OrgAuditCategory.MEMBERSHIPS]: "Memberships",
 };
 
 /** The lower bound for a range, rounded to the minute so the query key is stable. */

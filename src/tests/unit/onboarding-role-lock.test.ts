@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, WORKSPACE_GYM_OWNER, canChangeRole, enrolledMemberMessage, enrolledMemberNote, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceDecision } from "@/app/onboarding/_config";
+import { ACCOUNT_TYPE_TO_USER_ROLE, WORKSPACE_ENROLLED_MEMBER, WORKSPACE_GYM_OWNER, canChangeRole, enrolledMemberMessage, enrolledMemberNote, membershipGate, resolveEstablishedRole, resolvePreselectedRole, workspaceCreateError, workspaceCreateFlags, workspaceDecision } from "@/app/onboarding/_config";
+import { AccountType } from "@/lib/types";
 
 // Regression guards for the onboarding role model:
 //
@@ -246,5 +247,18 @@ describe("enrolledMemberNote", () => {
     expect(enrolledMemberNote({ ...base, step: 2 })).toBeNull();
     expect(enrolledMemberNote({ ...base, hasError: true })).toBeNull();
     expect(enrolledMemberNote({ ...base, role: "trainer" })).toBeNull();
+  });
+});
+
+// A gym started on the phone and finished on the web (or a retry after a
+// lost response) must get the same gym back, not a second one.
+describe("workspaceCreateFlags", () => {
+  it("asks for the gym back when creating a gym", () => {
+    expect(workspaceCreateFlags(AccountType.GYM_OWNER)).toEqual({ reuse_existing: true });
+  });
+
+  it("sends nothing extra for trainer and dietitian workspaces", () => {
+    expect(workspaceCreateFlags(AccountType.PERSONAL_TRAINER)).toEqual({});
+    expect(workspaceCreateFlags(AccountType.DIETITIAN)).toEqual({});
   });
 });

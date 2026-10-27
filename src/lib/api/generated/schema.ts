@@ -3179,7 +3179,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Pause your membership. Access stops; the remaining days are held and credited back on resume. */
+        /** Pause your membership. Access stops; the remaining days are held and credited back on resume. Refused with 409 PAUSE_LIMIT_REACHED (limit, used, next_available_at) when the gym's yearly limit on members' own pauses is used up (rolling 12 months, all your memberships at that gym). */
         patch: operations["MarketplaceController_pauseSubscription"];
         trace?: never;
     };
@@ -4041,7 +4041,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Pause a member's membership for them. Access stops; the remaining days are held and added back to end_date on resume (by the gym or the member). Active, unexpired memberships only; refused (409 RENEWAL_CHARGE_IN_PROGRESS) while a card renewal is processing. paused_by is 'gym'. */
+        /** Pause a member's membership for them. Access stops; the remaining days are held and added back to end_date on resume (by the gym or the member). Does not count against the member's yearly pause limit. Active, unexpired memberships only; refused (409 RENEWAL_CHARGE_IN_PROGRESS) while a card renewal is processing. paused_by is 'gym'. */
         patch: operations["MarketplaceOrgController_pauseOrgSubscription"];
         trace?: never;
     };
@@ -4092,7 +4092,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Resume a paused membership, whoever paused it. end_date moves out by exactly how long the pause lasted. */
+        /** Resume a pause the gym started. end_date moves out by exactly how long the pause lasted. A pause the member started (paused_by 'member', or null on older rows) is theirs to end: refused with 409 MEMBER_PAUSE. */
         patch: operations["MarketplaceOrgController_resumeOrgSubscription"];
         trace?: never;
     };
@@ -8542,6 +8542,7 @@ export interface components {
             /** @example Iron Lab (Pty) Ltd */
             legal_name?: string;
             logo?: string;
+            membership_rules?: components["schemas"]["MembershipRulesDto"];
             /** @example FitLife Nutrition Co. */
             name: string;
             /** @enum {string} */
@@ -9276,6 +9277,13 @@ export interface components {
             /** @description Column index (0-based) holding start_date; leave out when the file has none. */
             start_date?: number;
         };
+        MembershipRulesDto: {
+            /**
+             * @description How many times a member may pause their own membership in any rolling 12 months, across all their memberships at this gym. null means no limit (the default); 0 means members cannot pause themselves. Pauses the gym starts never count.
+             * @example 3
+             */
+            max_member_pauses_per_year: number | null;
+        };
         MessageDto: {
             _id: string;
             author: components["schemas"]["AuthorDto"];
@@ -9416,6 +9424,7 @@ export interface components {
             success: boolean;
         };
         MySubscriptionExtrasDto: {
+            pause_allowance: components["schemas"]["PauseAllowanceDto"];
             /** @description The listing to renew through (POST /marketplace/listings/:id/plans/:planId/checkout), the first that is published and not suspended of: the renewal plan's own listing, the membership's own listing, the organization's newest listing. The renewal plan is next_plan_id while that plan is active, else plan_id while it is active. Null when there is none. */
             renewal_listing_id: string | null;
             /** @description The plan to check out through renewal_listing_id: the renewal plan (next_plan_id while that plan is active, else plan_id while it is active), and only when that listing sells it and it is paid (price_minor > 0, with a currency) and recurring (not one_time), so the pair always opens a checkout that renews this membership in place. Null when renewal_listing_id is null, when there is no active renewal plan, when the listing does not sell it, or when it is free or one-time (ask the gym). Never the current plan in place of a scheduled next plan that cannot be bought. When this is a string, judge whether renewal is due by this plan; it is paid and recurring. Check out this plan, not plan_id: a scheduled next plan can sit on a different listing. */
@@ -9556,6 +9565,21 @@ export interface components {
             /** @description Stop syncing from another device */
             remove_device_key?: string;
             use_for_tasks?: boolean;
+        };
+        PauseAllowanceDto: {
+            /** @description Pauses the gym allows in any 12 months (its membership_rules.max_member_pauses_per_year); null when there is no limit. 0 means the member cannot pause themselves. */
+            limit: number | null;
+            /**
+             * Format: date-time
+             * @description When remaining is 0 and the limit is above 0: when the oldest counted pause stops counting and the member can pause again. Null otherwise.
+             */
+            next_available_at: string | null;
+            /** @description limit - used, never below 0; null when there is no limit. When 0, pausing is refused with 409 PAUSE_LIMIT_REACHED. */
+            remaining: number | null;
+            /** @description The member's own pauses at this gym that started in the last 12 months. */
+            used: number;
+            /** @enum {string} */
+            window: "rolling_12_months";
         };
         PayoutScheduleDto: {
             /**
@@ -10568,6 +10592,7 @@ export interface components {
             /** @example Iron Lab (Pty) Ltd */
             legal_name?: string;
             logo?: string;
+            membership_rules?: components["schemas"]["MembershipRulesDto"];
             /** @example FitLife Nutrition Co. */
             name?: string;
             /** @enum {string} */
@@ -15753,7 +15778,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }, renewal_listing_id and renewal_plan_id (check out that pair to renew). */
+            /** @description The member's memberships; each item also carries renewal_retry { pending, next_attempt_at }, renewal_listing_id and renewal_plan_id (check out that pair to renew), and pause_allowance (the member's own pauses against the gym's yearly limit). */
             200: {
                 headers: {
                     [name: string]: unknown;

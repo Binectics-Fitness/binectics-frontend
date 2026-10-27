@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
+import { MAX_PAUSE_LIMIT, parsePauseLimitInput } from "@/lib/billing/membershipHolds";
 import { ClassCancellationPolicyEditor } from "./ClassCancellationPolicyEditor";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
@@ -22,6 +23,7 @@ import { utilityService } from "@/lib/api/utility";
 import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import { orgPriceOptions, providerRouteNote, writeErrorMessage } from "@/lib/currencies/helpers";
 import { toast } from "@/components/Toast";
+import { taxIsInclusive } from "@/lib/tax/taxInclusive";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -52,7 +54,7 @@ import {
 
 const SECTIONS = [
   { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
-  { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
+  { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "membership", label: "Membership rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
 ];
@@ -95,9 +97,15 @@ interface SettingsForm {
   number_format: NumberFormat;
   /** Kept as the raw input string; converted to a number when saving. */
   tax_rate: string;
-  tax_inclusive: boolean;
+  /** null = never answered: nothing is pre-selected and a rate cannot be saved. */
+  tax_inclusive: boolean | null;
   tax_label: string;
   booking_rules: BookingRules;
+  /**
+   * Member pauses per year, as typed: blank = no limit. Sent as
+   * membership_rules.max_member_pauses_per_year when it is valid.
+   */
+  pause_limit: string;
   payout_schedule: PayoutSchedule;
 }
 
@@ -117,9 +125,13 @@ function seedForm(org: Organization): SettingsForm {
     time_format: org.time_format ?? LOCALE_DEFAULTS.time_format,
     number_format: org.number_format ?? LOCALE_DEFAULTS.number_format,
     tax_rate: org.tax_rate != null ? String(org.tax_rate) : "",
-    tax_inclusive: org.tax_inclusive ?? true,
+    tax_inclusive: taxIsInclusive(org) ?? null,
     tax_label: org.tax_label ?? "VAT",
     booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
+    pause_limit:
+      org.membership_rules?.max_member_pauses_per_year != null
+        ? String(org.membership_rules.max_member_pauses_per_year)
+        : "",
     payout_schedule: { ...DEFAULT_PAYOUT_SCHEDULE, ...(org.payout_schedule ?? {}) },
   };
 }
@@ -140,9 +152,16 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
         ? JSON.stringify(b) !== JSON.stringify(n)
         : b !== n;
     if (!changed) return;
+    if (k === "tax_inclusive" && next.tax_inclusive === null) return;
     if (k === "tax_rate") {
       const parsed = Number(next.tax_rate);
       if (next.tax_rate !== "" && !Number.isNaN(parsed)) out.tax_rate = parsed;
+      return;
+    }
+    if (k === "pause_limit") {
+      // Invalid input is not sent; the field says why.
+      const max = parsePauseLimitInput(next.pause_limit);
+      if (max !== undefined) out.membership_rules = { max_member_pauses_per_year: max };
       return;
     }
     if (k === "payout_schedule") {
@@ -202,7 +221,7 @@ export function SettingsClient() {
     setForm(seeded);
   }
 
-  // New org with no saved country → suggest one from the caller's IP.
+  // New org with no saved country → pre-fill one from the caller's IP (see below).
   useEffect(() => {
     if (!org || org.country || geoAppliedFor.current === org._id) return;
     geoAppliedFor.current = org._id;
@@ -211,6 +230,11 @@ export function SettingsClient() {
       const res = await utilityService.resolveGeo();
       const detected = res.success && res.data?.country ? res.data.country.toUpperCase() : "";
       if (cancelled || !detected) return;
+      // A guess is a pre-fill, not an edit: put it in the baseline too, so the
+      // page does not open with "Save changes" lit and a wrong country (the
+      // tester's IP, not the gym's) can't be saved by accident. It is saved
+      // only once the owner changes the field themselves.
+      setBaseline((b) => (b && !b.country ? { ...b, country: detected } : b));
       setForm((f) => (f && !f.country ? { ...f, country: detected } : f));
     })();
     return () => {
@@ -242,7 +266,12 @@ export function SettingsClient() {
     () => (baseline && form ? diff(baseline, form) : {}),
     [baseline, form],
   );
-  const dirty = Object.keys(payload).length > 0;
+  // An invalid pause limit blocks the whole save: saving the other fields
+  // and quietly dropping it would read as saved.
+  const pauseLimitInvalid = !!form && parsePauseLimitInput(form.pause_limit) === undefined;
+  const dirty = Object.keys(payload).length > 0 || pauseLimitInvalid;
+  // Saving a rate needs the explicit answer to "Do your prices already include tax?".
+  const taxNeedsChoice = !!form && form.tax_rate.trim() !== "" && form.tax_inclusive === null;
 
   const set = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
@@ -264,7 +293,7 @@ export function SettingsClient() {
     setPayout({ frequency, payout_day: frequency === "daily" ? undefined : 1 });
 
   const onSave = async () => {
-    if (!orgId || !dirty || !form) return;
+    if (!orgId || !dirty || !form || taxNeedsChoice || pauseLimitInvalid) return;
     setSavedFlash(false);
     const res = await updateOrg.mutateAsync({ orgId, data: payload });
     if (res.success) {
@@ -288,9 +317,20 @@ export function SettingsClient() {
           Save failed, retry
         </button>
       );
+    if (pauseLimitInvalid)
+      return (
+        <button className="btn-primary-v2 sm" disabled title="Fix Member pauses per year to save">
+          Save changes
+        </button>
+      );
     if (dirty)
       return (
-        <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
+        <button
+          className="btn-primary-v2 sm"
+          onClick={() => void onSave()}
+          disabled={taxNeedsChoice}
+          title={taxNeedsChoice ? "Choose whether your prices include tax first" : undefined}
+        >
           Save changes
         </button>
       );
@@ -380,15 +420,25 @@ export function SettingsClient() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
                 <TextField label="Tax rate %" type="number" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
-                <div className="flex flex-col gap-1.5">
-                  <Eyebrow as="label">Prices include tax</Eyebrow>
-                  <div className="flex items-center gap-2.5 py-2.75">
-                    <Toggle on={form?.tax_inclusive ?? true} onToggle={() => set("tax_inclusive", !(form?.tax_inclusive ?? true))} />
-                    <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                      {form?.tax_inclusive ?? true ? "Listed prices already include tax" : "Tax is added on top of listed prices"}
-                    </span>
+                <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
+                  <legend className="mb-1.5"><Eyebrow>Do your prices already include tax?</Eyebrow></legend>
+                  <div role="radiogroup" aria-label="Do your prices already include tax?" className="flex flex-col gap-2 py-1">
+                    {([
+                      [true, "Yes, prices include tax"],
+                      [false, "No, tax is added on top"],
+                    ] as const).map(([value, text]) => (
+                      <label key={String(value)} className="flex items-center gap-2 text-[13px] cursor-pointer" style={{ color: "var(--ink)" }}>
+                        <input type="radio" name="tax-inclusive" disabled={!form} checked={form?.tax_inclusive === value} onChange={() => set("tax_inclusive", value)} />
+                        {text}
+                      </label>
+                    ))}
                   </div>
-                </div>
+                  {form?.tax_inclusive === null && (
+                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger)" : "var(--fg-3)" }}>
+                      Choose one to save a tax rate.
+                    </span>
+                  )}
+                </fieldset>
               </div>
             </DSCard>
           </section>
@@ -416,6 +466,50 @@ export function SettingsClient() {
               .
             </p>
           </WiredToggleSection>
+
+          {/* Membership rules: the yearly limit on a member's own pauses
+              (owner ruling, Oct 20 2026). Saved with the rest of the page,
+              so gated like it (team:manage_organization). */}
+          <section id="membership">
+            <SectionHeading
+              title="Membership rules"
+              desc="How members can use their memberships."
+            />
+            <DSCard className="flex flex-col gap-3 p-5.5">
+              <div className="flex flex-col gap-1.5 max-w-[220px]">
+                <Eyebrow as="label" htmlFor="member-pause-limit">Member pauses per year</Eyebrow>
+                <input
+                  id="member-pause-limit"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={MAX_PAUSE_LIMIT}
+                  step={1}
+                  placeholder="No limit"
+                  value={form?.pause_limit ?? ""}
+                  onChange={(e) => set("pause_limit", e.target.value)}
+                  disabled={!form || !canManage}
+                  aria-invalid={form ? parsePauseLimitInput(form.pause_limit) === undefined : undefined}
+                  aria-describedby="member-pause-limit-help"
+                  className={INPUT_CLASS}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              {form && parsePauseLimitInput(form.pause_limit) === undefined && (
+                <p role="alert" className="text-[12.5px] text-danger-ink">
+                  Enter a whole number from 0 to {MAX_PAUSE_LIMIT}, or leave it blank for no limit.
+                </p>
+              )}
+              <p id="member-pause-limit-help" className="text-[12.5px] max-w-[60ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                How many times a member can pause their own membership in any 12 months. Leave it blank for no limit. 0 means members can&apos;t pause themselves. Pauses you start for them don&apos;t count, and they can always end a pause you started.
+              </p>
+              {!canManage && (
+                <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                  Only people who can manage the organization can change this.
+                </p>
+              )}
+            </DSCard>
+          </section>
 
           {/* Kiosk & QR. The kiosk has no settings of its own yet; this
               explains how check-in works and links to the kiosk page. */}
