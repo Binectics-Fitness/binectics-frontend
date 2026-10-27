@@ -26,11 +26,14 @@ export function parseTaxRate(text: string): number | null {
  * same way (PATCH of the organization, which the API allows only to people
  * who manage it). They drive the estimate on the Tax page and nothing else.
  * An empty rate means "not set": no estimate is made and none is assumed.
+ * Whether amounts already include tax is an explicit choice: nothing is
+ * pre-selected until it has been saved once, and saving a rate requires it.
  */
 interface TaxValues {
   label: string;
   rate: string;
-  inclusive: boolean;
+  /** null = never answered. */
+  inclusive: boolean | null;
 }
 
 export function TaxSettingsCard() {
@@ -40,7 +43,7 @@ export function TaxSettingsCard() {
   const initial: TaxValues = {
     label: org.tax_label ?? "",
     rate: org.tax_rate != null ? String(org.tax_rate) : "",
-    inclusive: taxIsInclusive(org),
+    inclusive: taxIsInclusive(org) ?? null,
   };
   // Re-keyed on the saved values so the form restarts from what was saved.
   return <TaxSettingsForm key={JSON.stringify(initial)} orgId={currentOrg._id} initial={initial} />;
@@ -52,7 +55,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
 
   const [label, setLabel] = useState(initial.label);
   const [rate, setRate] = useState(initial.rate);
-  const [inclusive, setInclusive] = useState(initial.inclusive);
+  const [inclusive, setInclusive] = useState<boolean | null>(initial.inclusive);
 
   const parsed = parseTaxRate(rate);
   const rateInvalid = Number.isNaN(parsed);
@@ -71,7 +74,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
   // An empty name is sent as "" (not left out) so it clears a saved name; the
   // API shows "Tax" when the name is blank.
   const save = async () => {
-    if (rateInvalid || parsed === null) return;
+    if (rateInvalid || parsed === null || inclusive === null) return;
     const res = await updateOrg.mutateAsync({
       orgId,
       data: { tax_rate: parsed, tax_inclusive: inclusive, tax_label: label.trim() },
@@ -101,31 +104,29 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
             <input id="tax-rate" type="number" inputMode="decimal" min={0} max={100} step="any" value={rate} onChange={(e) => setRate(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} aria-invalid={rateInvalid} />
             {rateInvalid && <span className="text-[12px]" style={{ color: "var(--danger)" }}>Enter a rate from 0 to 100.</span>}
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Eyebrow as="label" htmlFor="tax-inclusive">Amounts include tax</Eyebrow>
-            <div className="flex items-center gap-2.5 py-2.75">
-              <button
-                id="tax-inclusive"
-                type="button"
-                role="switch"
-                aria-checked={inclusive}
-                onClick={() => setInclusive((v) => !v)}
-                className="w-[30px] h-[18px] rounded-full relative cursor-pointer shrink-0"
-                style={{ background: inclusive ? "var(--ink)" : "var(--border-2)", border: "none", padding: 0 }}
-              >
-                <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: inclusive ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
-              </button>
-              <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-                {inclusive ? "Amounts already include tax" : "Tax is added on top of amounts"}
-              </span>
+          <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
+            <legend className="mb-1.5"><Eyebrow>Do your prices already include tax?</Eyebrow></legend>
+            <div role="radiogroup" aria-label="Do your prices already include tax?" className="flex flex-col gap-2 py-1">
+              {([
+                [true, "Yes, prices include tax"],
+                [false, "No, tax is added on top"],
+              ] as const).map(([value, text]) => (
+                <label key={String(value)} className="flex items-center gap-2 text-[13px] cursor-pointer" style={{ color: "var(--ink)" }}>
+                  <input type="radio" name="tax-inclusive" checked={inclusive === value} onChange={() => setInclusive(value)} />
+                  {text}
+                </label>
+              ))}
             </div>
-          </div>
+            {inclusive === null && (
+              <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>Choose one to save your tax settings.</span>
+            )}
+          </fieldset>
         </div>
         <button
           type="button"
           className="btn-ghost-v2 sm mt-4"
           onClick={() => void save()}
-          disabled={updateOrg.isPending || rateInvalid || parsed === null || unchanged}
+          disabled={updateOrg.isPending || rateInvalid || parsed === null || inclusive === null || unchanged}
         >
           {updateOrg.isPending ? "Saving…" : "Save tax settings"}
         </button>
