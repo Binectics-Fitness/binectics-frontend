@@ -22,3 +22,10 @@
   to = "https://binectics-gym-dev-api-dwbaeufeafgqd6db.canadacentral-01.azurewebsites.net/api/v1/:splat"
   status = 200
   force = true
+
+# Deploy previews are switched off: pull requests are checked by CI and the
+# Vercel preview, and only the release branch deploys to production. Netlify
+# cancels a build when this command exits 0 (exit 1 would build). Remove this
+# block to turn Netlify previews back on.
+[context.deploy-preview]
+  ignore = "exit 0"

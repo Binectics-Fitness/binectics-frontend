@@ -108,7 +108,9 @@ describe("gym members list: holds", () => {
     wrap(<GymMembersClient />);
     const paused = await rowOf("Tunde Bakare");
     expect(within(paused).getByText("Paused")).toBeInTheDocument();
-    expect(within(paused).getByTestId("hold-line")).toHaveTextContent(/^Paused by the member since .+ \(4 days\)\. Ends .+ if it resumes today\.$/);
+    expect(within(paused).getByTestId("hold-line")).toHaveTextContent(
+      /^Paused by the member since .+ \(4 days\)\. Ends .+ if it resumes today\. Only they can resume it\.$/,
+    );
     const suspended = await rowOf("Halima Yusuf");
     expect(within(suspended).getByText("Suspended")).toBeInTheDocument();
     expect(within(suspended).getByTestId("hold-line")).toHaveTextContent(/Suspended since .+: “Outstanding balance from March”/);
@@ -126,7 +128,7 @@ describe("gym members list: holds", () => {
     expect(screen.queryByText("Halima Yusuf")).not.toBeInTheDocument();
   });
 
-  it("offers Pause and Suspend on an active member, Lift on a suspended one, and Resume on a paused one", async () => {
+  it("offers Pause and Suspend on an active member, Lift on a suspended one, and no Resume on the member's own pause", async () => {
     wrap(<GymMembersClient />);
     await openMenu("Ngozi Okafor");
     expect(screen.getByRole("button", { name: "Suspend…" })).toBeInTheDocument();
@@ -141,7 +143,19 @@ describe("gym members list: holds", () => {
     expect(screen.queryByRole("button", { name: "Suspend…" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Lift suspension…" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Pause…" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Resume…" })).toBeInTheDocument();
+    // The member paused it themselves: theirs to end (owner ruling, Oct 20 2026).
+    expect(screen.queryByRole("button", { name: "Resume…" })).toBeNull();
+    const off = screen.getByTestId("resume-member-pause-disabled");
+    expect(off).toBeDisabled();
+    expect(off).toHaveTextContent("Tunde Bakare paused this themselves. Only they can resume it.");
+  });
+
+  it("offers Resume on a pause the gym started", async () => {
+    list.mockResolvedValue({ success: true, data: [{ ...tunde(), paused_by: "gym" }] });
+    wrap(<GymMembersClient />);
+    await openMenu("Tunde Bakare");
+    expect(screen.getByRole("button", { name: "Resume…" })).toBeEnabled();
+    expect(screen.queryByTestId("resume-member-pause-disabled")).toBeNull();
   });
 
   it("doesn't offer Pause on a term that has already ended", async () => {
@@ -189,8 +203,9 @@ describe("gym members list: holds", () => {
     expect(within(await rowOf("Ngozi Okafor")).getByText("Active")).toBeInTheDocument();
   });
 
-  it("resumes the member's own pause, naming the new end date", async () => {
+  it("resumes the gym's own pause, naming the new end date", async () => {
     const later = new Date(Date.parse(end) + 4 * DAY).toISOString();
+    list.mockResolvedValue({ success: true, data: [ngozi(), { ...tunde(), paused_by: "gym" }, halima()] });
     resume.mockResolvedValue({ success: true, data: { ...sub({ _id: "s2", status: S.ACTIVE, end_date: later, paused_at: null }), member_user_id: "u2", plan_id: "p1" } });
     wrap(<GymMembersClient />);
     await openMenu("Tunde Bakare");
@@ -333,13 +348,23 @@ describe("single member page: holds", () => {
     expect(screen.getByText(/Suspended since .+: “Outstanding balance from March”/)).toBeInTheDocument();
   });
 
-  it("a paused member: Resume, and the pause in the details", async () => {
+  it("a member's own pause: Resume disabled with why, and the pause in the details", async () => {
     await renderDetail(tunde());
-    expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+    const resumeBtn = screen.getByRole("button", { name: "Resume" });
+    expect(resumeBtn).toBeDisabled();
+    expect(resumeBtn).toHaveAccessibleDescription("Tunde Bakare paused this themselves. Only they can resume it.");
+    // Said once, next to the button, not again in the details.
+    expect(screen.getAllByText(/Only they can resume it\./)).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Pause" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Suspend" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Lift suspension" })).toBeNull();
     expect(screen.getByText(/Paused by the member since .+ \(4 days\)\. Ends .+ if it resumes today\./)).toBeInTheDocument();
+  });
+
+  it("a pause the gym started: Resume", async () => {
+    await renderDetail({ ...tunde(), paused_by: "gym" });
+    expect(screen.getByRole("button", { name: "Resume" })).toBeEnabled();
+    expect(screen.queryByText(/paused this themselves/)).toBeNull();
   });
 
   it("pauses from the page and shows the new state", async () => {
@@ -459,5 +484,23 @@ describe("messaging a member from the list", () => {
     } finally {
       restore();
     }
+  });
+});
+
+describe("gym members list: resend invite for a claimed member", () => {
+  it("shows the API message, hides the action and reloads the roster on 409 MEMBER_ALREADY_CLAIMED", async () => {
+    const resend = vi.spyOn(marketplaceService, "resendMemberInvite").mockResolvedValue({
+      success: false,
+      code: "MEMBER_ALREADY_CLAIMED",
+      status: 409,
+      message: "Ngozi has already set up their account",
+    });
+    wrap(<GymMembersClient />);
+    await openMenu("Ngozi Okafor");
+    await userEvent.click(screen.getByRole("button", { name: "Resend invite email" }));
+    await waitFor(() => expect(resend).toHaveBeenCalled());
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    await openMenu("Ngozi Okafor");
+    expect(screen.queryByRole("button", { name: "Resend invite email" })).toBeNull();
   });
 });

@@ -15,12 +15,15 @@ export enum OrgAuditCategory {
   ROLES = "roles",
   PAYMENTS = "payments",
   LOYALTY = "loyalty",
+  MEMBERSHIPS = "memberships",
 }
 
 /** Who did it, as this workspace may see them. */
 export enum OrgAuditPersonKind {
   OWNER = "owner",
   MEMBER = "member",
+  /** One of the gym's own members (not on its team). Named on membership events. */
+  GYM_MEMBER = "gym_member",
   /** A Binectics admin who is not on this team. Never named. */
   PLATFORM_ADMIN = "platform_admin",
   /** Someone no longer on this team. Never named. */
@@ -55,6 +58,8 @@ export interface OrgAuditDetails {
   currencies_missing?: string[];
   fields?: string[];
   enabled?: boolean;
+  /** Who had paused a membership the gym resumed. */
+  paused_by?: "gym" | "member";
 }
 
 export interface OrgAuditEntry {

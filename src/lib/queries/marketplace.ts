@@ -90,7 +90,9 @@ export function useMembershipHold() {
         ? marketplaceService.pauseMembershipSubscription(subscriptionId)
         : marketplaceService.resumeMembershipSubscription(subscriptionId),
     onSuccess: (res) => {
-      if (res.success) refresh();
+      // A pause refused for the gym's yearly limit means the page's
+      // pause_allowance was stale: re-read it so Pause goes away.
+      if (res.success || res.code === "PAUSE_LIMIT_REACHED") refresh();
     },
   });
 }

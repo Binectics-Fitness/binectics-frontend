@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
+import { MAX_PAUSE_LIMIT, parsePauseLimitInput } from "@/lib/billing/membershipHolds";
 import { ClassCancellationPolicyEditor } from "./ClassCancellationPolicyEditor";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
@@ -53,7 +54,7 @@ import {
 
 const SECTIONS = [
   { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
-  { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
+  { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "membership", label: "Membership rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
 ];
@@ -100,6 +101,11 @@ interface SettingsForm {
   tax_inclusive: boolean | null;
   tax_label: string;
   booking_rules: BookingRules;
+  /**
+   * Member pauses per year, as typed: blank = no limit. Sent as
+   * membership_rules.max_member_pauses_per_year when it is valid.
+   */
+  pause_limit: string;
   payout_schedule: PayoutSchedule;
 }
 
@@ -122,6 +128,10 @@ function seedForm(org: Organization): SettingsForm {
     tax_inclusive: taxIsInclusive(org) ?? null,
     tax_label: org.tax_label ?? "VAT",
     booking_rules: { ...DEFAULT_BOOKING_RULES, ...(org.booking_rules ?? {}) },
+    pause_limit:
+      org.membership_rules?.max_member_pauses_per_year != null
+        ? String(org.membership_rules.max_member_pauses_per_year)
+        : "",
     payout_schedule: { ...DEFAULT_PAYOUT_SCHEDULE, ...(org.payout_schedule ?? {}) },
   };
 }
@@ -146,6 +156,12 @@ function diff(base: SettingsForm, next: SettingsForm): UpdateOrganizationRequest
     if (k === "tax_rate") {
       const parsed = Number(next.tax_rate);
       if (next.tax_rate !== "" && !Number.isNaN(parsed)) out.tax_rate = parsed;
+      return;
+    }
+    if (k === "pause_limit") {
+      // Invalid input is not sent; the field says why.
+      const max = parsePauseLimitInput(next.pause_limit);
+      if (max !== undefined) out.membership_rules = { max_member_pauses_per_year: max };
       return;
     }
     if (k === "payout_schedule") {
@@ -245,7 +261,10 @@ export function SettingsClient() {
     () => (baseline && form ? diff(baseline, form) : {}),
     [baseline, form],
   );
-  const dirty = Object.keys(payload).length > 0;
+  // An invalid pause limit blocks the whole save: saving the other fields
+  // and quietly dropping it would read as saved.
+  const pauseLimitInvalid = !!form && parsePauseLimitInput(form.pause_limit) === undefined;
+  const dirty = Object.keys(payload).length > 0 || pauseLimitInvalid;
   // Saving a rate needs the explicit answer to "Do your prices already include tax?".
   const taxNeedsChoice = !!form && form.tax_rate.trim() !== "" && form.tax_inclusive === null;
 
@@ -269,7 +288,7 @@ export function SettingsClient() {
     setPayout({ frequency, payout_day: frequency === "daily" ? undefined : 1 });
 
   const onSave = async () => {
-    if (!orgId || !dirty || !form || taxNeedsChoice) return;
+    if (!orgId || !dirty || !form || taxNeedsChoice || pauseLimitInvalid) return;
     setSavedFlash(false);
     const res = await updateOrg.mutateAsync({ orgId, data: payload });
     if (res.success) {
@@ -291,6 +310,12 @@ export function SettingsClient() {
       return (
         <button className="btn-primary-v2 sm" onClick={() => void onSave()}>
           Save failed, retry
+        </button>
+      );
+    if (pauseLimitInvalid)
+      return (
+        <button className="btn-primary-v2 sm" disabled title="Fix Member pauses per year to save">
+          Save changes
         </button>
       );
     if (dirty)
@@ -436,6 +461,50 @@ export function SettingsClient() {
               .
             </p>
           </WiredToggleSection>
+
+          {/* Membership rules: the yearly limit on a member's own pauses
+              (owner ruling, Oct 20 2026). Saved with the rest of the page,
+              so gated like it (team:manage_organization). */}
+          <section id="membership">
+            <SectionHeading
+              title="Membership rules"
+              desc="How members can use their memberships."
+            />
+            <DSCard className="flex flex-col gap-3 p-5.5">
+              <div className="flex flex-col gap-1.5 max-w-[220px]">
+                <Eyebrow as="label" htmlFor="member-pause-limit">Member pauses per year</Eyebrow>
+                <input
+                  id="member-pause-limit"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={MAX_PAUSE_LIMIT}
+                  step={1}
+                  placeholder="No limit"
+                  value={form?.pause_limit ?? ""}
+                  onChange={(e) => set("pause_limit", e.target.value)}
+                  disabled={!form || !canManage}
+                  aria-invalid={form ? parsePauseLimitInput(form.pause_limit) === undefined : undefined}
+                  aria-describedby="member-pause-limit-help"
+                  className={INPUT_CLASS}
+                  style={INPUT_STYLE}
+                />
+              </div>
+              {form && parsePauseLimitInput(form.pause_limit) === undefined && (
+                <p role="alert" className="text-[12.5px] text-danger-ink">
+                  Enter a whole number from 0 to {MAX_PAUSE_LIMIT}, or leave it blank for no limit.
+                </p>
+              )}
+              <p id="member-pause-limit-help" className="text-[12.5px] max-w-[60ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                How many times a member can pause their own membership in any 12 months. Leave it blank for no limit. 0 means members can&apos;t pause themselves. Pauses you start for them don&apos;t count, and they can always end a pause you started.
+              </p>
+              {!canManage && (
+                <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                  Only people who can manage the organization can change this.
+                </p>
+              )}
+            </DSCard>
+          </section>
 
           {/* Kiosk & QR. The kiosk has no settings of its own yet; this
               explains how check-in works and links to the kiosk page. */}
