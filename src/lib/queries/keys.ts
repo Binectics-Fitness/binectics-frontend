@@ -1,4 +1,12 @@
 export const queryKeys = {
+  starter: {
+    all: ["starter"] as const,
+    options: (q: string) => [...queryKeys.starter.all, "options", q] as const,
+    preview: (id: string) => [...queryKeys.starter.all, "preview", id] as const,
+    mine: () => [...queryKeys.starter.all, "mine"] as const,
+    program: (id: string) => [...queryKeys.starter.all, "program", id] as const,
+  },
+
   progress: {
     all: ["progress"] as const,
     dashboardStats: () =>
