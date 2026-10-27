@@ -158,6 +158,7 @@ function RowActions({
   const [resumeOpen, setResumeOpen] = useState(false);
   const { fmtDate } = useOrgFormat();
   const [busy, setBusy] = useState(false);
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -226,7 +227,13 @@ function RowActions({
     run(async () => {
       const res = await marketplaceService.resendMemberInvite(orgId, sub._id);
       if (res.success) toast.success("Invite email sent, the link lasts 7 days");
-      else toast.error(res.message ?? "Couldn't send the invite");
+      else if (res.code === "MEMBER_ALREADY_CLAIMED") {
+        // The members API carries no claimed flag, so the API's refusal is the
+        // signal: say so, hide the action for this row and reload the roster.
+        setAlreadyClaimed(true);
+        toast.error(res.message ?? "This member has already set up their account");
+        onRosterChange();
+      } else toast.error(res.message ?? "Couldn't send the invite");
     });
 
   const handleClearNextPlan = () =>
@@ -339,7 +346,7 @@ function RowActions({
               className={`${item} block`}
             />
           )}
-          {isLive && (
+          {isLive && !alreadyClaimed && (
             <button type="button" className={item} style={{ color: "var(--ink)" }} onClick={handleResendInvite}>
               Resend invite email
             </button>
