@@ -209,6 +209,12 @@ export interface CreateOrganizationRequest {
   description?: string;
   logo?: string;
   account_type: AccountType;
+  /**
+   * Return the live workspace of this type the caller already owns instead
+   * of opening another. Gym onboarding sends it; trainer and dietitian
+   * workspaces always behave this way.
+   */
+  reuse_existing?: boolean;
 }
 
 export interface UpdateOrganizationRequest {
