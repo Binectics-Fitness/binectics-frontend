@@ -250,6 +250,10 @@ export interface WorkoutExercise {
   rest_seconds?: number;
   order: number;
   notes?: string;
+  /** Set when picked from the exercise library; absent for custom exercises. */
+  library_exercise_id?: string;
+  library_variant?: string;
+  media_id?: string;
 }
 
 export interface WorkoutPlan {
@@ -417,6 +421,9 @@ export interface CreateWorkoutExerciseRequest {
   rest_seconds?: number;
   order: number;
   notes?: string;
+  library_exercise_id?: string;
+  library_variant?: string;
+  media_id?: string;
 }
 
 export interface CreateWorkoutPlanRequest {

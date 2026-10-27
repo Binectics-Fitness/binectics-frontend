@@ -83,6 +83,7 @@ export function billingResourceLabel(key: string | null): string {
       white_label_enabled: "white-label branding",
       custom_domain_enabled: "custom domains",
       branded_email_enabled: "branded email",
+      exercise_library_enabled: "the exercise library",
       forms_enabled: "forms",
       classes_enabled: "class schedules",
       api_access_enabled: "API access",

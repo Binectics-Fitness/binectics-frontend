@@ -20,9 +20,8 @@ export type ProgramComponentType =
   | "meal_plan"
   | "measurement"
   | "form"
-  // Accepted by the API; not offered in the builder until providers have
-  // reusable workout plans to link (today every workout plan belongs to one
-  // client).
+  // Built in the program builder from inline exercises (library picker or
+  // custom). Linking an existing workout plan is still API-only.
   | "workout_plan";
 export type ProgramCadence =
   | "once"
@@ -41,6 +40,23 @@ export type OccurrenceStatus = "pending" | "done" | "skipped" | "missed";
 
 // ── Definition (versioned template) ──────────────────────────────────
 
+/**
+ * One exercise inside a workout_plan block. Library picks carry the three
+ * library fields; custom exercises carry none. `name` is the required
+ * snapshot (max 80 here).
+ */
+export interface ProgramExercise {
+  name: string;
+  sets?: number;
+  reps?: number;
+  seconds?: number;
+  rest_seconds?: number;
+  cues?: string[];
+  library_exercise_id?: string;
+  library_variant?: string;
+  media_id?: string;
+}
+
 export interface ProgramBlock {
   _id?: string;
   type: ProgramComponentType;
@@ -54,6 +70,8 @@ export interface ProgramBlock {
   metric?: string;
   meal_plan_id?: string;
   workout_plan_id?: string;
+  /** Inline exercises of a workout_plan block (not with workout_plan_id). */
+  exercises?: ProgramExercise[];
   /** Form (questionnaire) the client fills in to complete a form task. */
   form_id?: string;
 }
