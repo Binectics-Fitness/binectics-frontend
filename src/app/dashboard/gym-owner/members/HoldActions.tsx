@@ -9,12 +9,17 @@ import {
   type ApiResponse,
   type MembershipSubscription,
 } from "@/lib/types";
-import { endIfResumedAt, pausedLine, renewsByCard } from "@/lib/billing/membershipHolds";
+import {
+  endIfResumedAt,
+  pausedByMember,
+  pausedLine,
+  renewsByCard,
+} from "@/lib/billing/membershipHolds";
 
 /** Longest reason the API accepts (SuspendSubscriptionDto). */
 export const SUSPEND_REASON_MAX = 500;
 
-function memberNameOf(sub: MembershipSubscription): string {
+export function memberNameOf(sub: MembershipSubscription): string {
   if (typeof sub.member_user_id === "object" && sub.member_user_id !== null) {
     const name = `${sub.member_user_id.first_name} ${sub.member_user_id.last_name}`.trim();
     if (name) return name;
@@ -382,7 +387,11 @@ export function PauseMemberModal({
   );
 }
 
-/** The gym resumes a pause, its own or the member's: the paused days are added back. */
+/**
+ * The gym resumes a pause it started: the paused days are added back. A pause
+ * the member started is theirs to end (the API answers 409 MEMBER_PAUSE), so
+ * the pages don't offer this for one.
+ */
 export function ResumeMemberModal({
   open,
   sub,
@@ -461,9 +470,13 @@ export function holdDetailLine(
   sub: MembershipSubscription,
   fmtDate: (d: string | Date) => string,
   now: Date = new Date(),
+  /** False where the page already says why next to a disabled Resume. */
+  sayWhoResumes = true,
 ): string | null {
   if (sub.status === MembershipSubscriptionStatus.PAUSED) {
-    return pausedLine(sub, fmtDate, now, "gym");
+    const line = pausedLine(sub, fmtDate, now, "gym");
+    // Theirs to end, so say why there is no Resume.
+    return sayWhoResumes && pausedByMember(sub) ? `${line} Only they can resume it.` : line;
   }
   if (sub.status === MembershipSubscriptionStatus.SUSPENDED) {
     const since = sub.suspended_at ? `Suspended since ${fmtDate(sub.suspended_at)}` : "Suspended";

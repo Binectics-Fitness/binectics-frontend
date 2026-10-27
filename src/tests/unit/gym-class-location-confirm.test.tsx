@@ -10,6 +10,7 @@ import { classBookingsService } from "@/lib/api/classBookings";
 import { teamsService } from "@/lib/api/teams";
 import type { GymViewer } from "@/lib/gymStaffNav";
 import { findConfirmDialog } from "@/test/confirmDialog";
+import { toast } from "@/components/Toast";
 
 /**
  * Deleting a class and deactivating a location ask in the app's dialog,
@@ -63,18 +64,36 @@ beforeEach(() => {
   vi.spyOn(teamsService, "getLocations").mockResolvedValue({ success: true, data: [main, annex] } as never);
 });
 
+describe("class detail: loading", () => {
+  it("never says the class is missing while the workspace is still loading", async () => {
+    const previous = { ...org };
+    org.currentOrg = undefined as never;
+    org.isLoading = true;
+    try {
+      wrap(<ClassDetailClient />);
+      expect(screen.getByText("Loading class…")).toBeInTheDocument();
+      expect(screen.queryByText(/Class not found/)).toBeNull();
+    } finally {
+      org.currentOrg = previous.currentOrg;
+      org.isLoading = previous.isLoading;
+    }
+  });
+});
+
 describe("class detail: delete", () => {
-  it("deletes only after the dialog, which says booked members aren't told", async () => {
-    const del = vi.spyOn(classesService, "deleteClass").mockResolvedValue({ success: true } as never);
+  it("deletes only after the dialog, which says upcoming bookings are cancelled and members told", async () => {
+    const del = vi.spyOn(classesService, "deleteClass").mockResolvedValue({ success: true, data: { cancelled_bookings: 2 } } as never);
     const user = userEvent.setup();
     wrap(<ClassDetailClient />);
     await user.click(await screen.findByRole("button", { name: "Delete" }));
     const dialog = await findConfirmDialog('Delete "Spin"?');
-    expect(dialog).toHaveTextContent("Members who already booked aren't told");
+    expect(dialog).toHaveTextContent("Upcoming bookings and waitlist places are cancelled, and each member is told.");
+    expect(dialog).not.toHaveTextContent("aren't told");
     expect(del).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Delete class" }));
     await waitFor(() => expect(del).toHaveBeenCalledWith("o1", "c1"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/gym-owner/schedule"));
+    expect(toast.success).toHaveBeenCalledWith("Spin was deleted. 2 bookings were cancelled and the members told.");
     expect(nativeConfirm).not.toHaveBeenCalled();
   });
 

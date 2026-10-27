@@ -15,13 +15,22 @@ import { StartConversationButton } from "@/components/messaging/StartConversatio
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
-import { canPause, canResume, canSuspend, canUnsuspend } from "@/lib/billing/membershipHolds";
+import { MemberActivityCard } from "./MemberActivityCard";
+import {
+  canPause,
+  canSuspend,
+  canUnsuspend,
+  gymCanResume,
+  memberPauseNote,
+  pausedByMember,
+} from "@/lib/billing/membershipHolds";
 import {
   LiftSuspensionModal,
   PauseMemberModal,
   ResumeMemberModal,
   SuspendMemberModal,
   holdDetailLine,
+  memberNameOf,
 } from "../HoldActions";
 
 function getMemberName(sub: MembershipSubscription): string {
@@ -142,7 +151,9 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
   // Pause and resume for the member: marketplace:manage_listing (api #282).
   const canManageMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
 
-  const holdLine = holdDetailLine(subscription, fmtDate);
+  // Staff who can manage members see the disabled Resume with its note,
+  // so the details line doesn't say it again.
+  const holdLine = holdDetailLine(subscription, fmtDate, new Date(), !canManageMembers);
 
   const kpis = [
     { label: "Plan", value: planName },
@@ -210,10 +221,26 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
-          {canManageMembers && canResume(subscription) && (
+          {canManageMembers && gymCanResume(subscription) && (
             <button type="button" className="btn-primary-v2 md" onClick={() => setHoldDialog("resume")}>
               Resume
             </button>
+          )}
+          {/* A pause the member started is theirs to end (owner ruling,
+              Oct 20 2026): shown disabled, with why. */}
+          {canManageMembers && pausedByMember(subscription) && (
+            <>
+              <button type="button" className="btn-primary-v2 md" disabled aria-describedby="member-pause-note">
+                Resume
+              </button>
+              <span
+                id="member-pause-note"
+                className="text-[12px] max-w-[34ch]"
+                style={{ color: "var(--fg-3)" }}
+              >
+                {memberPauseNote(memberNameOf(subscription))}
+              </span>
+            </>
           )}
           {canManageMembers && canPause(subscription) && (
             <button type="button" className="btn-ghost-v2 md" onClick={() => setHoldDialog("pause")}>
@@ -331,13 +358,7 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
         </>
       )}
 
-      {/* Activity — not yet available */}
-      <DSCard className="p-5.5 flex flex-col items-center justify-center gap-2 min-h-[120px]">
-        <p className="text-[14px] font-medium" style={{ color: "var(--fg-2)" }}>Activity</p>
-        <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-          Activity tracking coming soon.
-        </p>
-      </DSCard>
+      {currentOrg && <MemberActivityCard orgId={currentOrg._id} memberUserId={memberUserId} />}
     </GymDashboardShell>
   );
 }

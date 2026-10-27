@@ -4,6 +4,7 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
+import { TaxSettingsCard } from "@/components/provider/TaxSettingsCard";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
@@ -25,6 +26,9 @@ export default function DietitianSettingsPage() {
       </div>
       <div className="mt-8">
         <CancellationPolicyCard />
+      </div>
+      <div className="mt-8">
+        <TaxSettingsCard />
       </div>
       {canSeeActivityLog(currentOrg, true) && (
         <div className="mt-8">
