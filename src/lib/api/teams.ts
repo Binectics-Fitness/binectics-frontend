@@ -86,6 +86,16 @@ export interface KioskSettings {
   voice_announcement: boolean;
 }
 
+/** Membership rules — stored/sent as a whole object. */
+export interface MembershipRules {
+  /**
+   * How many times a member may pause their own membership in any rolling
+   * 12 months. null = no limit (the default); 0 = members can't pause
+   * themselves. Pauses the gym starts never count.
+   */
+  max_member_pauses_per_year: number | null;
+}
+
 export type PayoutFrequency = "daily" | "weekly" | "monthly";
 
 /** Payout cadence preferences — stored/sent as a whole object. */
@@ -124,12 +134,13 @@ export interface Organization {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
-  /** Tax & VAT settings (display/receipt metadata). */
-  tax_rate?: number;
+  /** Tax & VAT settings: receipts and the provider tax estimate. null/absent = no rate saved. */
+  tax_rate?: number | null;
   tax_inclusive?: boolean;
   tax_label?: string;
   booking_rules?: BookingRules;
   kiosk_settings?: KioskSettings;
+  membership_rules?: MembershipRules;
   payout_schedule?: PayoutSchedule;
   is_active: boolean;
   /** Short, human-typable code members enter on the manual check-in screen. */
@@ -209,6 +220,12 @@ export interface CreateOrganizationRequest {
   description?: string;
   logo?: string;
   account_type: AccountType;
+  /**
+   * Return the live workspace of this type the caller already owns instead
+   * of opening another. Gym onboarding sends it; trainer and dietitian
+   * workspaces always behave this way.
+   */
+  reuse_existing?: boolean;
 }
 
 export interface UpdateOrganizationRequest {
@@ -236,12 +253,13 @@ export interface UpdateOrganizationRequest {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
-  /** null clears it. */
+  /** Send null to clear a saved rate (0 is a real rate). */
   tax_rate?: number | null;
   tax_inclusive?: boolean;
   tax_label?: string;
   booking_rules?: BookingRules;
   kiosk_settings?: KioskSettings;
+  membership_rules?: MembershipRules;
   payout_schedule?: PayoutSchedule;
 }
 
