@@ -65,6 +65,54 @@ export interface SessionEarnings {
   };
 }
 
+/** One month of a provider's income summary (minor units, one currency). */
+export interface IncomeSummaryMonth {
+  /** YYYY-MM, in UTC. */
+  month: string;
+  gross_minor: number;
+  refunds_minor: number;
+  adjustments_minor: number;
+  net_minor: number;
+  /** Estimated tax on net_minor; null when no tax rate is saved. */
+  estimated_tax_minor: number | null;
+  transaction_count: number;
+}
+
+/** The saved settings an estimate was made with. */
+export interface IncomeSummaryTaxSettings {
+  /** Percent, 0 to 100. */
+  rate_percent: number;
+  label: string;
+  inclusive: boolean;
+}
+
+export interface IncomeSummaryCurrency {
+  currency: string;
+  gross_minor: number;
+  refunds_minor: number;
+  adjustments_minor: number;
+  net_minor: number;
+  /** Sum of the monthly estimates; null when no tax rate is saved. */
+  estimated_tax_minor: number | null;
+  transaction_count: number;
+  months: IncomeSummaryMonth[];
+}
+
+/**
+ * Informational income by year, month and currency, from settled ledger
+ * rows. Payouts are excluded; no tax is computed. Currencies are never
+ * added together.
+ */
+export interface IncomeSummary {
+  year: number;
+  time_zone: "UTC";
+  /** The settings the estimates use; null when no rate is saved (no estimate is made). */
+  tax: IncomeSummaryTaxSettings | null;
+  /** Years with any settled row, newest first. */
+  years: number[];
+  currencies: IncomeSummaryCurrency[];
+}
+
 /** Where a workspace's money was collected, and what was paid out (minor units, one currency). */
 export interface PayoutOverviewCurrency {
   currency: string;
@@ -111,6 +159,13 @@ export const earningsService = {
     const query = search.toString();
     return apiClient.get<LedgerPage>(
       `/transactions/organizations/${orgId}/transactions${query ? `?${query}` : ""}`,
+    );
+  },
+
+  getIncomeSummary(orgId: string, year?: number): Promise<ApiResponse<IncomeSummary>> {
+    const query = year ? `?year=${year}` : "";
+    return apiClient.get<IncomeSummary>(
+      `/transactions/organizations/${orgId}/income-summary${query}`,
     );
   },
 

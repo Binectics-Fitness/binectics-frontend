@@ -134,8 +134,8 @@ export interface Organization {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
-  /** Tax & VAT settings (display/receipt metadata). */
-  tax_rate?: number;
+  /** Tax & VAT settings: receipts and the provider tax estimate. null/absent = no rate saved. */
+  tax_rate?: number | null;
   tax_inclusive?: boolean;
   tax_label?: string;
   booking_rules?: BookingRules;
@@ -252,7 +252,8 @@ export interface UpdateOrganizationRequest {
   date_format?: DateFormat;
   time_format?: TimeFormat;
   number_format?: NumberFormat;
-  tax_rate?: number;
+  /** Send null to clear a saved rate (0 is a real rate). */
+  tax_rate?: number | null;
   tax_inclusive?: boolean;
   tax_label?: string;
   booking_rules?: BookingRules;

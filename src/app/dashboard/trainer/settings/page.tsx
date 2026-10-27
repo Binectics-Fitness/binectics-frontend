@@ -5,6 +5,7 @@ import { DSCard } from "@/components/ds";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
+import { TaxSettingsCard } from "@/components/provider/TaxSettingsCard";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
@@ -49,6 +50,12 @@ export default function TrainerSettingsPage() {
       {!gym && (
         <div className="mt-8">
           <CancellationPolicyCard />
+        </div>
+      )}
+      {/* The estimate on their Tax page; a gym's trainer has no workspace of their own. */}
+      {!gym && (
+        <div className="mt-8">
+          <TaxSettingsCard />
         </div>
       )}
       {/* Their own workspace's log; a gym's staff trainer has none here. */}
