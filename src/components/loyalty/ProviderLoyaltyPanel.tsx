@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ActionModal, AsyncSpinner, DSCard, EmptySlate } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { useGymViewer } from "@/hooks/useGymViewer";
+import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import {
   useOrgLoyaltyRewards,
   useOrgLoyaltySettings,
@@ -86,7 +88,10 @@ const inputStyle = {
 export function ProviderLoyaltyPanel() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
   const orgId = currentOrg?._id;
-  const canManage = !!currentOrg && (currentOrg.is_owner || currentOrg.can_manage_organization);
+  // The owner, or a teammate whose role holds manage_organization (what
+  // every write route and the rewards list ask for). A gym's staff manage
+  // the gym's program from the gym workspace.
+  const canManage = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const { fmtNumber } = useOrgFormat();
 
   const settings = useOrgLoyaltySettings(orgId);

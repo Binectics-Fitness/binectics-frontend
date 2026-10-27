@@ -26,7 +26,7 @@ const STATS = [
 
 const PRINCIPLES = [
   { num: "01", title: <>Providers run businesses.<br />We run rails.</>, desc: <>Trainers pick their prices. Gyms set their cancellation policies. Dietitians own their methodology. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>We never recommend what to charge.</strong> Marketplaces that price-set become race-to-the-bottoms. We charge providers per seat and take no cut of what their members pay.</> },
-  { num: "02", title: <>Money moves through. It doesn&apos;t stop.</>, desc: <>Member payments settle directly into the provider&apos;s own Paystack account. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>Float isn&apos;t our business model.</strong> It would compromise the trust the whole platform runs on.</> },
+  { num: "02", title: <>Providers get paid in full.</>, desc: <>Payments go straight to a provider&apos;s own Paystack account once they&apos;ve connected one. Until then, Binectics collects them and pays them out to the provider once payouts are available and their account is verified. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>We take no cut either way.</strong> Our revenue is the seats providers pay for.</> },
   { num: "03", title: <>If we&apos;re not in the room, the work still happens.</>, desc: <>The product is a tool, not a relationship. We don&apos;t gamify, we don&apos;t push, we don&apos;t optimize for daily active users. We optimize for sessions completed and providers who renew. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>One measures pretending. The other measures fit.</strong></> },
 ];
 

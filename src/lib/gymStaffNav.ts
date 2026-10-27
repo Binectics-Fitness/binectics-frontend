@@ -82,13 +82,16 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Refunds: OWNER,
   // /marketplace/organizations/:id/plans
   "Plans & pricing": needs(P.MARKETPLACE_MANAGE_LISTING),
-  // The page edits the signed-in gym owner's listing; for anyone else it
-  // opens their own solo listing, not the gym's.
-  "My listing": OWNER,
-  // The page lists and creates the signed-in person's own forms.
+  // The gym's listing, gallery, cover photo and publishing:
+  // /marketplace/organizations/:id/listing* (manage_listing). Staff edit the
+  // gym's listing there, never their own.
+  "My listing": needs(P.MARKETPLACE_MANAGE_LISTING),
+  // The page lists and creates the signed-in person's own forms, not the
+  // gym's (the API's form:* routes are org-scoped, the page isn't yet).
   Forms: OWNER,
-  // The page shows a member's own points to anyone without the gym owner role.
-  Loyalty: OWNER,
+  // /loyalty/organizations/:id/*: reading the settings needs view_members;
+  // turning it on or off and every reward route need manage_organization.
+  Loyalty: needs(P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS),
   // GET /teams/organizations/:id, .../members, .../roles
   "Team & roles": needs(P.VIEW_MEMBERS),
   // /marketplace/organizations/:id/assignment-rules
@@ -141,10 +144,15 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/gym-owner/settings/activity", needs(P.VIEW_AUDIT_LOG)],
   // GET org listing (manage_listing); replying needs manage_reviews
   ["/dashboard/gym-owner/reviews", needs(P.MARKETPLACE_MANAGE_LISTING)],
+  // The gym's own loyalty program, in the gym's workspace.
+  ["/dashboard/gym-owner/loyalty", NAV.Loyalty],
   ["/dashboard/team", NAV["Team & roles"]],
   ["/dashboard/assignment-rules", NAV["Assignment rules"]],
   ["/dashboard/profile-edit", NAV["My listing"]],
   ["/dashboard/forms", NAV.Forms],
+  // The shared loyalty page (members, trainers, dietitians); the gym nav
+  // opens /dashboard/gym-owner/loyalty instead.
+  ["/dashboard/loyalty", NAV.Loyalty],
   ["/dashboard/billing", NAV.Billing],
   ["/dashboard/refunds", NAV.Refunds],
 ];

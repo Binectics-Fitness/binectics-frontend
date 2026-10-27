@@ -46,7 +46,7 @@ const FEATURES = [
   },
   {
     title: "Get paid",
-    desc: "Clients pay by card or bank transfer straight into your own Paystack account. Binectics takes no cut.",
+    desc: "Clients pay by card or bank transfer. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified. Binectics takes no cut.",
     stat: "Each currency shown as it was paid",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
   },
@@ -65,7 +65,7 @@ const EARNINGS = [
   },
   {
     title: "Coaching plans",
-    desc: "Sell plans for ongoing coaching. Clients subscribe from your profile and pay into your own Paystack account.",
+    desc: "Sell plans for ongoing coaching. Clients subscribe from your profile and pay into your own Paystack account once you connect it.",
   },
   {
     title: "Clients you bring",
@@ -108,8 +108,8 @@ export default function ForTrainersPage() {
           style={{ color: "var(--fg-2)" }}
         >
           Build training programs once and assign them, take 1:1 bookings
-          against your own hours, and get paid straight into your Paystack
-          account. A marketplace profile clients can find, and a calendar
+          against your own hours, and get paid with no cut taken. A
+          marketplace profile clients can find, and a calendar
           that never double-books.
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3">
