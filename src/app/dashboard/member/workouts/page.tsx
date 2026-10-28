@@ -9,6 +9,8 @@ import { myProgramsService, type ProgramWorkoutSession } from "@/lib/api/myProgr
 import { ClientExerciseList } from "@/components/workouts/ClientExerciseList";
 import { authorName, sessionExerciseRows } from "@/lib/workouts/clientRows";
 
+const MAX_SESSIONS = 5;
+
 function dayLabel(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
@@ -37,7 +39,13 @@ export default function MemberWorkoutsPage() {
       const lists = await Promise.all(live.map((p) => myProgramsService.inlineWorkouts(p._id, p.name)));
       if (!active) return;
       const all = lists.flatMap((r) => (r.success && r.data ? r.data : []));
-      setSessions(all.filter((s) => s.status === "pending" || s.status === "scheduled"));
+      // The next few only: a daily workout would otherwise list every day of the program.
+      setSessions(
+        all
+          .filter((s) => s.status === "pending" || s.status === "scheduled")
+          .sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor))
+          .slice(0, MAX_SESSIONS),
+      );
       setLoading(false);
     })();
     return () => {
