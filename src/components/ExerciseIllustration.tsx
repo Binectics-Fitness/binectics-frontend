@@ -7,7 +7,7 @@ import { EXERCISE_ILLUSTRATION_LABELS } from "@/lib/exercises/illustrations";
  * Returns null for an id with no art so callers can show their own fallback.
  */
 export function hasExerciseIllustration(mediaId?: string | null): boolean {
-  return !!mediaId && mediaId in EXERCISE_ILLUSTRATION_LABELS;
+  return !!mediaId && Object.prototype.hasOwnProperty.call(EXERCISE_ILLUSTRATION_LABELS, mediaId);
 }
 
 export default function ExerciseIllustration({

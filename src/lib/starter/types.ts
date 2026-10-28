@@ -59,6 +59,9 @@ export interface StarterExercise {
   cues: string[];
   /** Id of a bundled illustration (see ExerciseIllustration); absent for none. */
   mediaId?: string;
+  /** Set when a provider picked the exercise from the exercise library. */
+  libraryExerciseId?: string;
+  libraryVariant?: string;
 }
 
 export interface StarterSessionOutline {
