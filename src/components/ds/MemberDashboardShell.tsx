@@ -31,6 +31,7 @@ const BASE_MEMBER_NAV_LINKS = [
   { label: "Bookings",    href: "/dashboard/bookings" },
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
+  { label: "Workouts",    href: "/dashboard/member/workouts" },
   { label: "Activity",    href: "/dashboard/member/streaks" },
   { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
@@ -42,7 +43,7 @@ export const STARTER_NAV_LINK = { label: "Starter", href: "/dashboard/member/sta
 
 /** The member's nav links; "Starter" joins them while the feature is on. */
 export const MEMBER_NAV_LINKS = isStarterProgramEnabled()
-  ? [...BASE_MEMBER_NAV_LINKS.slice(0, 7), STARTER_NAV_LINK, ...BASE_MEMBER_NAV_LINKS.slice(7)]
+  ? [...BASE_MEMBER_NAV_LINKS.slice(0, 8), STARTER_NAV_LINK, ...BASE_MEMBER_NAV_LINKS.slice(8)]
   : BASE_MEMBER_NAV_LINKS;
 
 /**

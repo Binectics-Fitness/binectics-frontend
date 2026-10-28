@@ -1,6 +1,8 @@
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 import type { ProgramInstanceStatus } from "./programs";
+import { normalizeExercise } from "./starter";
+import type { StarterExercise } from "@/lib/starter/types";
 
 /**
  * The client's side of Programs: the programs assigned to the signed-in
@@ -41,7 +43,55 @@ export interface MyProgram {
   progress?: MyProgramProgress;
 }
 
+/** A workout task a provider wrote with its exercises inline (no linked plan). */
+export interface ProgramWorkoutSession {
+  id: string;
+  title: string;
+  scheduledFor: string;
+  status: string;
+  programName: string;
+  exercises: StarterExercise[];
+}
+
+const isRec = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * The workout sessions in a program agenda that list their exercises inline.
+ * Starter sessions (their own pages) and workouts that link a plan (shown
+ * under "Workout plans") are left out; unreadable rows are skipped.
+ */
+export function inlineWorkoutSessions(programName: string, agenda: unknown): ProgramWorkoutSession[] {
+  if (!Array.isArray(agenda)) return [];
+  const out: ProgramWorkoutSession[] = [];
+  for (const t of agenda) {
+    if (!isRec(t) || t.component_type !== "workout_plan" || t.workout_plan_id || t.source === "starter") continue;
+    const id = typeof t._id === "string" ? t._id : null;
+    const scheduledFor = typeof t.scheduled_for === "string" ? t.scheduled_for : null;
+    const exercises = (Array.isArray(t.exercises) ? t.exercises : [])
+      .map(normalizeExercise)
+      .filter((e): e is StarterExercise => e !== null);
+    if (!id || !scheduledFor || exercises.length === 0) continue;
+    out.push({
+      id,
+      title: typeof t.title === "string" && t.title.trim() ? t.title : "Workout",
+      scheduledFor,
+      status: typeof t.status === "string" ? t.status : "pending",
+      programName,
+      exercises,
+    });
+  }
+  return out.sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor));
+}
+
 export const myProgramsService = {
+  /** One program's agenda, reduced to its inline-exercise workout sessions. */
+  async inlineWorkouts(instanceId: string, programName: string): Promise<ApiResponse<ProgramWorkoutSession[]>> {
+    const res = await apiClient.get<unknown>(`/my-programs/${encodeURIComponent(instanceId)}`);
+    if (!res.success) return { ...res, data: undefined } as ApiResponse<ProgramWorkoutSession[]>;
+    const d = res.data;
+    return { ...res, data: inlineWorkoutSessions(programName, isRec(d) ? d.agenda : []) };
+  },
+
   /** My programs, newest first, each with its progress summary. */
   listMine(): Promise<ApiResponse<MyProgram[]>> {
     return apiClient.get<MyProgram[]>("/my-programs");

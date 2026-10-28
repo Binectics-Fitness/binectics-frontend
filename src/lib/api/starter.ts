@@ -58,6 +58,8 @@ export function normalizeExercise(raw: unknown): StarterExercise | null {
     restSeconds: num(raw.rest_seconds),
     cues: arr(raw.cues).filter((c): c is string => typeof c === "string" && c.trim().length > 0),
     mediaId: str(raw.media_id),
+    ...(str(raw.library_exercise_id) ? { libraryExerciseId: str(raw.library_exercise_id) } : {}),
+    ...(str(raw.library_variant) ? { libraryVariant: str(raw.library_variant) } : {}),
   };
 }
 
