@@ -110,3 +110,27 @@ describe("WorkoutExercisesEditor", () => {
     expect(latest.map((r) => r.name)).toEqual(["A"]);
   });
 });
+
+describe("phone layout classes", () => {
+  beforeEach(() => {
+    getLibrary.mockReset();
+    resetExerciseLibraryCache();
+  });
+
+  it("lets the name take its own line and keeps 44px targets on phones", async () => {
+    getLibrary.mockResolvedValue({ success: true, data: { available: true, exercises: LIB.exercises } });
+    render(<Harness initial={[{ name: "Goblet Squat", sets: "", reps: "", seconds: "", rest_seconds: "", cues: "", library_exercise_id: "goblet-squat", media_id: "goblet-squat" }]} />);
+    const name = screen.getByLabelText("Exercise 1 name");
+    expect(name.className).toMatch(/basis-full/);
+    expect(name.className).toMatch(/min-w-0/);
+    expect(name.className).toMatch(/h-\[44px\]/);
+    expect(name.parentElement!.className).toMatch(/flex-wrap/);
+    expect(screen.getByRole("button", { name: "Remove exercise" }).className).toMatch(/w-\[44px\] h-\[44px\]/);
+    fireEvent.click(await screen.findByRole("button", { name: "+ From library" }));
+    const add = screen.getByRole("button", { name: "Add Goblet Squat" });
+    expect(add.className).toMatch(/min-h-\[44px\]/);
+    const row = add.parentElement!.parentElement!;
+    expect(row.className).toMatch(/flex-wrap/);
+    expect(row.querySelector(".break-words")?.className).not.toMatch(/truncate/);
+  });
+});

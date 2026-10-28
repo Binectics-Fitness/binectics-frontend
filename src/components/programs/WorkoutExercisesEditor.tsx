@@ -52,7 +52,8 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-const small = "h-8 rounded-(--r-2) px-2 text-[13px] w-full";
+const small = "h-[44px] sm:h-8 rounded-(--r-2) px-2 text-[13px] w-full";
+const iconBtn = "w-[44px] h-[44px] sm:w-7 sm:h-7 shrink-0 rounded-(--r-2) disabled:opacity-30";
 const num = { fontVariantNumeric: "tabular-nums" } as const;
 
 /**
@@ -127,7 +128,7 @@ export default function WorkoutExercisesEditor({
             className="rounded-(--r-2) p-2.5 flex flex-col gap-2"
             style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[10px] tabular-nums w-4 shrink-0" style={{ color: "var(--fg-4)" }}>{i + 1}</span>
               {ex.library_exercise_id && <ExerciseThumb mediaId={art} />}
               <input
@@ -136,20 +137,21 @@ export default function WorkoutExercisesEditor({
                 maxLength={PROGRAM_EXERCISE_NAME_MAX}
                 placeholder="Exercise name"
                 aria-label={`Exercise ${i + 1} name`}
-                className={`${small} flex-1 min-w-0`}
+                className={`${small} order-last basis-full sm:order-none sm:basis-0 sm:flex-1 min-w-0`}
                 style={{ ...fieldStyle, background: "var(--bg)" }}
               />
               {ex.library_exercise_id && art && <DemoTag />}
+              <span className="flex-1 sm:hidden" />
               <button type="button" aria-label="Move exercise up" onClick={() => move(i, -1)} disabled={i === 0}
-                className="w-7 h-7 shrink-0 rounded-(--r-2) disabled:opacity-30" style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
+                className={iconBtn} style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
                 <svg className="mx-auto" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m18 15-6-6-6 6" /></svg>
               </button>
               <button type="button" aria-label="Move exercise down" onClick={() => move(i, 1)} disabled={i === exercises.length - 1}
-                className="w-7 h-7 shrink-0 rounded-(--r-2) disabled:opacity-30" style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
+                className={iconBtn} style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
                 <svg className="mx-auto" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
               </button>
               <button type="button" aria-label="Remove exercise" onClick={() => remove(i)}
-                className="w-7 h-7 shrink-0 rounded-(--r-2)" style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
+                className={iconBtn} style={{ border: "1px solid var(--border)", color: "var(--fg-3)" }}>
                 <svg className="mx-auto" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
             </div>
@@ -213,7 +215,7 @@ export default function WorkoutExercisesEditor({
             type="button"
             onClick={() => setPicking(true)}
             disabled={full}
-            className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40"
+            className="min-h-[44px] sm:min-h-0 font-mono text-[10.5px] uppercase tracking-[0.04em] px-3 sm:px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40"
             style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
           >
             + From library
@@ -223,7 +225,7 @@ export default function WorkoutExercisesEditor({
           type="button"
           onClick={() => onChange([...exercises, emptyExerciseRow()])}
           disabled={full}
-          className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40"
+          className="min-h-[44px] sm:min-h-0 font-mono text-[10.5px] uppercase tracking-[0.04em] px-3 sm:px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40"
           style={{ border: "1px dashed var(--border-2)", color: "var(--fg-3)", background: "transparent" }}
         >
           + Custom exercise

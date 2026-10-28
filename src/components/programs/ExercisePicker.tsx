@@ -91,7 +91,7 @@ export default function ExercisePicker({
         <button
           type="button"
           onClick={onClose}
-          className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+          className="min-h-[44px] sm:min-h-0 font-mono text-[10.5px] uppercase tracking-[0.04em] px-3 sm:px-2.5 py-1.25 rounded-(--r-1)"
           style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
         >
           Close
@@ -126,7 +126,7 @@ export default function ExercisePicker({
         />
       </div>
 
-      <ul className="flex flex-col max-h-[320px] overflow-y-auto rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+      <ul className="flex flex-col max-h-[320px] overflow-y-auto overflow-x-hidden rounded-(--r-2)" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
         {results.length === 0 && (
           <li className="px-3 py-4 text-[12.5px]" style={{ color: "var(--fg-3)" }}>
             No library exercise matches. Close this and add a custom exercise instead.
@@ -134,21 +134,23 @@ export default function ExercisePicker({
         )}
         {results.map((e) => (
           <li key={e.id} className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
-            <div className="flex items-center gap-3">
+            {/* Phones: the name block takes the first line, the actions wrap under it. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <ExerciseThumb mediaId={e.id} />
-              <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>{e.name}</div>
-                <div className="font-mono text-[10.5px] truncate" style={{ color: "var(--fg-3)" }}>
+              <div className="min-w-0 flex-1 basis-[calc(100%-4rem)] sm:basis-0">
+                <div className="text-[13px] font-medium break-words" style={{ color: "var(--ink)" }}>{e.name}</div>
+                <div className="font-mono text-[10.5px] break-words" style={{ color: "var(--fg-3)" }}>
                   {e.category} · {e.equipment}
                 </div>
               </div>
+              <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
               <DemoTag />
               {hasExerciseIllustration(e.id) && (
                 <button
                   type="button"
                   onClick={() => setPreviewId((p) => (p === e.id ? null : e.id))}
                   aria-expanded={previewId === e.id}
-                  className="text-[12px] px-2 py-1 rounded-(--r-1)"
+                  className="min-h-[44px] sm:min-h-0 text-[12px] px-3 sm:px-2 py-1 rounded-(--r-1)"
                   style={{ color: "var(--fg-2)", border: "1px solid var(--border)", background: "transparent" }}
                 >
                   {previewId === e.id ? "Hide" : "Preview"}
@@ -158,11 +160,12 @@ export default function ExercisePicker({
                 type="button"
                 onClick={() => onPick(e)}
                 aria-label={`Add ${e.name}`}
-                className="text-[12px] font-medium px-2.5 py-1 rounded-(--r-1)"
+                className="min-h-[44px] sm:min-h-0 text-[12px] font-medium px-4 sm:px-2.5 py-1 rounded-(--r-1)"
                 style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
               >
                 Add
               </button>
+              </div>
             </div>
             {previewId === e.id && (
               <div className="mt-2 flex justify-center">
