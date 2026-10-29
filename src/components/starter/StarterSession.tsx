@@ -11,6 +11,7 @@ import { useActiveStarter } from "@/lib/queries/starter";
 import { queryKeys } from "@/lib/queries/keys";
 import { STARTER_ART_NOTE, STARTER_STOP_NOTE } from "@/lib/starter/copy";
 import { starterErrorMessage } from "@/lib/starter/errors";
+import { FROZEN_RENEW_HREF, FROZEN_RENEW_LABEL, isFrozenResponse } from "@/lib/frozenContent";
 import {
   blankSets,
   exerciseCountLabel,
@@ -46,6 +47,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
   const [busy, setBusy] = useState(false);
   const [confirmSkip, setConfirmSkip] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [frozen, setFrozen] = useState(false);
   const [result, setResult] = useState<"done" | "skipped" | null>(null);
 
   const task = data?.tasks.find((t) => t.id === occurrenceId) ?? null;
@@ -109,6 +111,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
     const res = await starterService.completeTask(task.id);
     if (!res.success) {
       setBusy(false);
+      setFrozen(isFrozenResponse(res));
       setActionError(starterErrorMessage(res, "Could not save your session. Try again."));
       return;
     }
@@ -140,6 +143,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
     setBusy(false);
     setConfirmSkip(false);
     if (!res.success) {
+      setFrozen(isFrozenResponse(res));
       setActionError(starterErrorMessage(res, "Could not skip this session. Try again."));
       return;
     }
@@ -233,7 +237,15 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
 
       <div aria-live="polite" className="mt-5">
         {actionError && (
-          <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger)" }}>{actionError}</p>
+          <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger)" }}>
+            {actionError}
+            {frozen && (
+              <>
+                {" "}
+                <Link href={FROZEN_RENEW_HREF} className="underline">{FROZEN_RENEW_LABEL}</Link>
+              </>
+            )}
+          </p>
         )}
         {settled ? (
           <DSCard className="p-4">
