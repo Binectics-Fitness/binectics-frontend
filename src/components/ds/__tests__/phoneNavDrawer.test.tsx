@@ -22,6 +22,9 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 vi.mock("../ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
 vi.mock("@/components/messaging/queries", () => ({ useMessagingUnread: () => 0 }));
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
+}));
 vi.mock("@/hooks/useCommandBar", () => ({ openCommandBar: vi.fn() }));
 
 /** A controllable (min-width: 64rem) media query. */

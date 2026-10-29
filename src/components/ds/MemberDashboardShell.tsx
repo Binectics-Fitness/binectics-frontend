@@ -11,6 +11,8 @@ import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { paidContentOn } from "@/lib/paidContent/helpers";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -40,6 +42,9 @@ const BASE_MEMBER_NAV_LINKS = [
 
 /** The Starter Program link, shown only while its feature flag is on. */
 export const STARTER_NAV_LINK = { label: "Starter", href: "/dashboard/member/starter" };
+
+/** Shown while paid content is on (runtime flag `paid_content`), before Billing. */
+export const PURCHASES_NAV_LINK = { label: "Purchases", href: "/dashboard/member/purchases" };
 
 /** The member's nav links; "Starter" joins them while the feature is on. */
 export const MEMBER_NAV_LINKS = isStarterProgramEnabled()
@@ -85,6 +90,10 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
+  const { data: flagData } = useFeatureFlags();
+  const navLinks = paidContentOn(flagData)
+    ? [...MEMBER_NAV_LINKS.slice(0, -1), PURCHASES_NAV_LINK, ...MEMBER_NAV_LINKS.slice(-1)]
+    : MEMBER_NAV_LINKS;
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
   const memberInitials =
@@ -126,7 +135,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
-            {MEMBER_NAV_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const isActive = isMemberNavActive(link, activeLabel, pathname);
               return (
                 <Link
@@ -324,7 +333,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
-              {MEMBER_NAV_LINKS.map((link) => {
+              {navLinks.map((link) => {
                 const isActive = isMemberNavActive(link, activeLabel, pathname);
                 return (
                   <Link
