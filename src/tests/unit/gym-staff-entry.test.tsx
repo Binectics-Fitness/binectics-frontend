@@ -30,6 +30,9 @@ const acceptInvite = vi.fn();
 const setCurrentOrg = vi.fn();
 const refreshOrganizations = vi.fn(async () => undefined);
 
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/teams/invite/accept",
