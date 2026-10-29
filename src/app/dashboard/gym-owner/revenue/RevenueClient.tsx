@@ -40,7 +40,10 @@ export default function RevenueClient() {
   const [analyticsGate, setAnalyticsGate] = useState<BillingError | null>(null);
   const [loading, setLoading] = useState(true);
   // Refunds and disputes are the owner's; a manager on Revenue doesn't get the link.
-  const canSeeRefunds = allows(useGymViewer(), GYM_NAV_ACCESS.Refunds);
+  const viewer = useGymViewer();
+  const canSeeRefunds = allows(viewer, GYM_NAV_ACCESS.Refunds);
+  // Revenue by trainer is the owner's (GET .../revenue-by-trainer answers 404 to anyone else).
+  const isOwner = viewer.isOwner;
   const [error, setError] = useState<string | null>(null);
   // A plan without analytics is known from the billing status: skip the
   // series call it would refuse (a 403 in the console) and show the gate.
@@ -129,7 +132,12 @@ export default function RevenueClient() {
         className="mb-0!"
         title="Revenue"
         subtitle={currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
-        actions={canSeeRefunds ? <Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link> : undefined}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {isOwner && <Link href="/dashboard/gym-owner/revenue/trainers" className="btn-ghost-v2">Revenue by trainer</Link>}
+            {canSeeRefunds && <Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link>}
+          </div>
+        }
       />
 
       {!currentOrg && !orgLoading ? (
