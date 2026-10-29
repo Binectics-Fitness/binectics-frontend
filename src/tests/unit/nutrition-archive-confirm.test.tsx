@@ -18,6 +18,9 @@ import { findConfirmDialog } from "@/test/confirmDialog";
  */
 
 const push = vi.fn();
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), push }) }));
 vi.mock("next/link", () => ({
   default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,

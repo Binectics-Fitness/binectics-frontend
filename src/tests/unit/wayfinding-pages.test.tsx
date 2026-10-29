@@ -10,6 +10,9 @@ import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 let mockGym: { _id: string; name: string } | null = null;
 let mockRole = "TRAINER";
 
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/dashboard",

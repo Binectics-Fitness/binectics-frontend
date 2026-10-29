@@ -8,6 +8,11 @@ import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/compone
 import SearchableSelect from "@/components/SearchableSelect";
 import Modal from "@/components/Modal";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { ContentPricingModal } from "@/components/content/ContentPricingModal";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { accessToRaw, normalizeAccess } from "@/lib/api/paidContent";
+import { PAID_CONTENT_FLAG, accessSummary, isPaid } from "@/lib/paidContent/helpers";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useDialogFocus } from "@/lib/ui/useDialogFocus";
 import { FoodPicker } from "./FoodPicker";
@@ -505,6 +510,7 @@ function MealPlanCard({
   onAssign,
   onArchive,
   onToggle,
+  onPricing,
   fmtDate,
 }: {
   plan: DietPlan;
@@ -512,8 +518,11 @@ function MealPlanCard({
   onAssign: () => void;
   onArchive: () => void;
   onToggle: () => void;
+  /** Present for a sellable template while paid content is on (or already paid). */
+  onPricing?: () => void;
   fmtDate: (d: string | Date) => string;
 }) {
+  const access = normalizeAccess(plan.access);
   const template = isTemplatePlan(plan);
   const isDocument = plan.delivery_type === DietPlanDeliveryType.DOCUMENT;
   const dailyCalories = planDailyCalories(plan);
@@ -535,6 +544,11 @@ function MealPlanCard({
           {isDocument && (
             <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-3)" }}>
               Document
+            </span>
+          )}
+          {isPaid(access) && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--ink)" }}>
+              {accessSummary(access)}
             </span>
           )}
         </div>
@@ -585,6 +599,16 @@ function MealPlanCard({
               Assign
             </button>
           )}
+          {onPricing && (
+            <button
+              type="button"
+              onClick={onPricing}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+              style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
+            >
+              Pricing
+            </button>
+          )}
           <button
             type="button"
             onClick={onArchive}
@@ -628,6 +652,10 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     initialCreateOpen ? { mode: "create" } : null,
   );
   const [assignPlan, setAssignPlan] = useState<DietPlan | null>(null);
+  const [pricingPlan, setPricingPlan] = useState<DietPlan | null>(null);
+  const orgs = useOptionalOrganization();
+  const { isEnabled } = useFeatureFlags();
+  const sellingOn = isEnabled(PAID_CONTENT_FLAG, orgs?.currentOrg?._id);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const router = useRouter();
 
@@ -838,6 +866,14 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
               onAssign={() => setAssignPlan(plan)}
               onArchive={() => handleArchive(plan)}
               onToggle={() => handleToggle(plan)}
+              // Only library templates in the platform format can be sold (PDF plans cannot, D13).
+              onPricing={
+                isTemplatePlan(plan) &&
+                plan.delivery_type !== DietPlanDeliveryType.DOCUMENT &&
+                (sellingOn || isPaid(normalizeAccess(plan.access)))
+                  ? () => setPricingPlan(plan)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -867,6 +903,22 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
           }
           onClose={() => setModal(null)}
           onSave={modal.mode === "create" ? handleCreate : handleEdit}
+        />
+      )}
+
+      {pricingPlan && (
+        <ContentPricingModal
+          open
+          onClose={() => setPricingPlan(null)}
+          kind="meal_plan"
+          itemId={pricingPlan._id}
+          title={pricingPlan.title}
+          rawAccess={pricingPlan.access}
+          onSaved={(access) => {
+            const raw = accessToRaw(access);
+            setPlans((list) => list.map((x) => (x._id === pricingPlan._id ? { ...x, access: raw } : x)));
+            setPricingPlan((cur) => (cur ? { ...cur, access: raw } : cur));
+          }}
         />
       )}
 

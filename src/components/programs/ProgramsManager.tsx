@@ -13,6 +13,11 @@ import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
+import { ContentPricingModal } from "@/components/content/ContentPricingModal";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { accessToRaw, normalizeAccess } from "@/lib/api/paidContent";
+import { PAID_CONTENT_FLAG, accessSummary, isPaid } from "@/lib/paidContent/helpers";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { formsService, type Form } from "@/lib/api/forms";
 import { nutritionService } from "@/lib/api/nutrition";
@@ -927,6 +932,7 @@ function ProgramCard({
   onViewClients,
   onArchive,
   onRestore,
+  onPricing,
   fmtDate,
 }: {
   template: ProgramTemplate;
@@ -936,8 +942,11 @@ function ProgramCard({
   onViewClients: () => void;
   onArchive: () => void;
   onRestore: () => void;
+  /** Present while paid content is on (or the program is already paid). */
+  onPricing?: () => void;
   fmtDate: (d: string | Date) => string;
 }) {
+  const access = normalizeAccess(template.access);
   const STATUS_LABEL: Record<ProgramTemplate["status"], string> = {
     draft: "Draft",
     published: "Published",
@@ -958,6 +967,11 @@ function ProgramCard({
             // "Published" pill on every role, incl. the amber trainer accent.
             <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
               Unpublished changes
+            </span>
+          )}
+          {isPaid(access) && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--ink)" }}>
+              {accessSummary(access)}
             </span>
           )}
           {template.category && (
@@ -988,6 +1002,11 @@ function ProgramCard({
           {isPublished && template.status !== "archived" && (
             <button type="button" onClick={onAssign} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}>
               Assign
+            </button>
+          )}
+          {onPricing && template.status !== "archived" && (
+            <button type="button" onClick={onPricing} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}>
+              Pricing
             </button>
           )}
           <button type="button" onClick={onViewClients} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}>
@@ -1052,6 +1071,10 @@ export default function ProgramsManager({
     return billing != null;
   };
   const [clientsTemplate, setClientsTemplate] = useState<ProgramTemplate | null>(null);
+  const [pricingTemplate, setPricingTemplate] = useState<ProgramTemplate | null>(null);
+  const orgs = useOptionalOrganization();
+  const { isEnabled } = useFeatureFlags();
+  const sellingOn = isEnabled(PAID_CONTENT_FLAG, orgs?.currentOrg?._id);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
@@ -1333,6 +1356,7 @@ export default function ProgramsManager({
               onViewClients={() => setClientsTemplate(t)}
               onArchive={() => handleArchive(t)}
               onRestore={() => handleRestore(t)}
+              onPricing={sellingOn || isPaid(normalizeAccess(t.access)) ? () => setPricingTemplate(t) : undefined}
             />
           ))}
         </div>
@@ -1359,6 +1383,23 @@ export default function ProgramsManager({
           template={assignTemplate}
           onClose={() => setAssignTemplate(null)}
           onAssigned={() => setClientsTemplate(assignTemplate)}
+        />
+      )}
+
+      {pricingTemplate && (
+        <ContentPricingModal
+          open
+          onClose={() => setPricingTemplate(null)}
+          kind="program"
+          itemId={pricingTemplate._id}
+          title={pricingTemplate.name}
+          rawAccess={pricingTemplate.access}
+          needsPublish={pricingTemplate.latest_published_version_no < 1}
+          onSaved={(access) => {
+            const raw = accessToRaw(access);
+            setTemplates((list) => list.map((x) => (x._id === pricingTemplate._id ? { ...x, access: raw } : x)));
+            setPricingTemplate((cur) => (cur ? { ...cur, access: raw } : cur));
+          }}
         />
       )}
 

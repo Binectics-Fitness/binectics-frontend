@@ -519,6 +519,8 @@ export interface DietPlan {
   document_file_size?: number;
   status: PlanStatus;
   version: number;
+  /** Raw paid-content block (read with normalizeAccess); absent means free. */
+  access?: unknown;
   assigned_at: string;
   created_at: string;
   updated_at: string;
