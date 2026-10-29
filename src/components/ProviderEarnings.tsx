@@ -1,5 +1,6 @@
 "use client";
 
+import { ContentSalesSection } from "@/components/content/ContentSalesSection";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
@@ -449,6 +450,9 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
             </SectionCard>
           </div>
         ) : null}
+      </div>
+      <div className="mt-6">
+        <ContentSalesSection />
       </div>
     </>
   );

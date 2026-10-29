@@ -102,6 +102,8 @@ export interface ProgramTemplate {
   status: ProgramTemplateStatus;
   latest_version_no: number;
   latest_published_version_no: number;
+  /** Raw paid-content block (read with normalizeAccess); absent means free. */
+  access?: unknown;
   created_at: string;
   updated_at: string;
 }
