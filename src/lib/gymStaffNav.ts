@@ -131,6 +131,8 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/gym-owner/devices", NAV["Check-in kiosk"]],
   ["/dashboard/gym-owner/payouts", NAV.Payouts],
   ["/dashboard/gym-owner/revenue", NAV.Revenue],
+  // GET /transactions/organizations/:id/revenue-by-trainer: owner only
+  ["/dashboard/gym-owner/revenue/trainers", OWNER],
   // GET .../revenue-stats, and the tax settings from GET /teams/organizations/:id
   ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS)],
   ["/dashboard/gym-owner/plans", NAV["Plans & pricing"]],
