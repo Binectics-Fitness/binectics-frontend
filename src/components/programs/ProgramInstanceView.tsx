@@ -8,6 +8,7 @@ import { toneColors, type Tone } from "@/lib/ui/tones";
 import { toast } from "@/components/Toast";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { frozenMessage } from "@/lib/frozenContent";
 import {
   programsService,
   type InstanceDetail,
@@ -85,7 +86,7 @@ export default function ProgramInstanceView({
       toast.success(`Program ${past[action]}.`);
       applyDetail(await programsService.getInstance(instanceId));
     } else {
-      toast.error(res.message ?? `Failed to ${action} program.`);
+      toast.error(frozenMessage(res, `Failed to ${action} program.`));
     }
   };
 
