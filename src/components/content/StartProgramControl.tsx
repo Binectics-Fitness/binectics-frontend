@@ -14,14 +14,6 @@ function todayLocal(): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/** The new instance's id from the API's reply (`id`, or the raw `_id`). */
-function instanceIdOf(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
-  const d = data as Record<string, unknown>;
-  const id = d.id ?? d._id ?? d.instance_id ?? d.instanceId;
-  return typeof id === "string" && id ? id : null;
-}
-
 /**
  * Starts a program the member has access to, themselves (D9): today, or on a
  * date they pick. The API checks access and creates the instance.
@@ -61,8 +53,8 @@ export function StartProgramControl({
     setStarted(true);
     toast.success(`${title || "Program"} started`);
     onStarted?.();
-    const instanceId = instanceIdOf(res.data);
-    router.push(instanceId ? `/dashboard/my-programs/${encodeURIComponent(instanceId)}` : "/dashboard/my-programs");
+    // Today's program tasks show on the member home; there is no per-instance page on web.
+    router.push("/dashboard/member");
   };
 
   return (
