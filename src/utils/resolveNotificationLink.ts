@@ -4,12 +4,6 @@ import { billingNotificationTarget } from "@/lib/billing/autoRenew";
 import { offerPath } from "@/lib/paidContent/helpers";
 
 /**
- * Where tapping a notification goes. Billing notices are routed by TYPE
- * (the member's go to Billing, a provider's final payment failure to their
- * members), whatever action URL they carry; everything else resolves its
- * action URL below.
- */
-/**
  * Paid program / meal plan notices (CONTENT_OFFER, CONTENT_GRANTED,
  * CONTENT_PURCHASED) carry metadata { itemKind, itemId }; with both, the tap
  * opens that item's offer page (buy it, start it, or see how to renew).
@@ -28,6 +22,12 @@ export function contentNotificationTarget(item: {
   return offerPath(kind, id);
 }
 
+/**
+ * Where tapping a notification goes. Billing notices are routed by TYPE
+ * (the member's go to Billing, a provider's final payment failure to their
+ * members), whatever action URL they carry; everything else resolves its
+ * action URL below.
+ */
 export function resolveNotificationTarget(
   item: {
     type?: string | null;
