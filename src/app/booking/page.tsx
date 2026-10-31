@@ -7,6 +7,9 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { PromoCodeField } from "@/components/coupons/PromoCodeField";
+import { couponsService, type CouponQuote } from "@/lib/api/coupons";
+import { couponErrorMessage } from "@/lib/coupons/couponUi";
 import {
   consultationsService,
   ConsultationBookingStatus,
@@ -83,6 +86,8 @@ function BookingPageInner() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // A discount code the API priced for this session. One per booking.
+  const [promo, setPromo] = useState<CouponQuote | null>(null);
 
   useEffect(() => {
     if (!listingId) return;
@@ -208,7 +213,14 @@ function BookingPageInner() {
         startsAt: selectedSlot,
         clientTimezone: getClientTimezone(),
         notes: notes.trim() || undefined,
+        ...(promo ? { couponCode: promo.code } : {}),
       });
+      if (!res.success && res.code?.startsWith("COUPON_")) {
+        // The code stopped working since it was applied: back to full price.
+        setPromo(null);
+        setSubmitError(`${couponErrorMessage(res)} The price is back to the full amount.`);
+        return;
+      }
       if (res.success && res.data) {
         // A priced booking is a hold that still needs paying; the bookings
         // page opens straight onto its payment. A free one is confirmed
@@ -440,9 +452,27 @@ function BookingPageInner() {
                   {notes.trim() && <Row k="Notes" v={notes.trim()} />}
                 </div>
               </div>
+              {isPaid && activeType && listing && (
+                <div className="mt-4">
+                  <PromoCodeField
+                    quote={promo}
+                    onChange={setPromo}
+                    disabled={submitting}
+                    validate={(code) =>
+                      couponsService.validateBookingCode({
+                        providerId: providerIdFromListing(listing),
+                        consultationTypeId: activeType.id,
+                        code,
+                      })
+                    }
+                  />
+                </div>
+              )}
               <p className="text-[12.5px] mt-3.5 leading-relaxed" style={{ color: "var(--fg-3)" }}>
-                {isPaid
-                  ? `Placing this booking holds the slot for 30 minutes. You then pay ${priceMinor != null && priceCurrency ? formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency) : "the session price"} with Paystack to confirm it; if it isn't paid in time, the hold is released.`
+                {promo?.free
+                  ? "This code covers the whole price. The booking is confirmed as soon as you place it."
+                  : isPaid
+                  ? `Placing this booking holds the slot for 30 minutes. You then pay ${promo ? formatCurrency(minorToMajor(promo.final_amount_minor, promo.currency), promo.currency) : priceMinor != null && priceCurrency ? formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency) : "the session price"} with Paystack to confirm it; if it isn't paid in time, the hold is released.`
                   : "Free session. It is confirmed as soon as you place it."}
               </p>
               {submitError && (
@@ -514,10 +544,20 @@ function BookingPageInner() {
                 {formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency)}
               </span>
             </div>
+            {promo && (
+              <div className="flex justify-between py-2.5 text-[13px]" style={{ borderBottom: "1px solid var(--border)" }} data-testid="price-breakdown">
+                <span style={{ color: "var(--fg-2)" }}>Code {promo.code}</span>
+                <span className="font-mono" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+                  -{formatCurrency(minorToMajor(promo.discount_minor, promo.currency), promo.currency)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between pt-3.5 font-medium">
               <span className="text-[14px]" style={{ color: "var(--ink)" }}>Total</span>
               <span className="text-[17px]" style={{ color: "var(--ink)", letterSpacing: "-0.012em", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency)}
+                {promo
+                  ? formatCurrency(minorToMajor(promo.final_amount_minor, promo.currency), promo.currency)
+                  : formatCurrency(minorToMajor(priceMinor, priceCurrency), priceCurrency)}
               </span>
             </div>
             <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-3)" }}>

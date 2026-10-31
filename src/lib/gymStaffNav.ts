@@ -87,6 +87,8 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Revenue: needs(P.MARKETPLACE_MANAGE_LISTING),
   // /refunds/organizations/:id/*, /disputes/*: owner only
   Refunds: OWNER,
+  // /coupons/organizations/:id/*: owner only
+  "Discount codes": OWNER,
   // /marketplace/organizations/:id/plans
   "Plans & pricing": needs(P.MARKETPLACE_MANAGE_LISTING),
   // The gym's listing, gallery, cover photo and publishing:
@@ -164,6 +166,7 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/loyalty", NAV.Loyalty],
   ["/dashboard/billing", NAV.Billing],
   ["/dashboard/refunds", NAV.Refunds],
+  ["/dashboard/discount-codes", NAV["Discount codes"]],
 ];
 
 const ROOT = "/dashboard/gym-owner";
