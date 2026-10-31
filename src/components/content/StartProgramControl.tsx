@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
 import { paidContentService, paidContentErrorOf } from "@/lib/api/paidContent";
-import { paidContentCopy } from "@/lib/paidContent/helpers";
+import { memberContentMessage } from "@/lib/paidContent/helpers";
 
 /** Today as YYYY-MM-DD in the browser's own timezone. */
 function todayLocal(): string {
@@ -47,7 +47,7 @@ export function StartProgramControl({
     setBusy(false);
     if (!res.success) {
       const e = paidContentErrorOf(res);
-      setError(e ? paidContentCopy(e) : res.message || "We couldn't start it. Please try again.");
+      setError(memberContentMessage(res, e, "We couldn't start it. Please try again."));
       return;
     }
     setStarted(true);

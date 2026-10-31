@@ -6,6 +6,7 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { AsyncSpinner, DSCard, EmptySlate, PageHeader, StatusPill } from "@/components/ds";
 import { StartProgramControl } from "@/components/content/StartProgramControl";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { FROZEN_RENEW_LABEL } from "@/lib/frozenContent";
 import {
   paidContentService,
   type ContentPurchase,
@@ -173,9 +174,9 @@ export default function PurchasesClient() {
                 <Link
                   href={offerPath(e.itemKind, e.itemId)}
                   className="btn-ghost-v2 mt-3 inline-flex"
-                  aria-label={`See how to renew ${e.title}`}
+                  aria-label={`${FROZEN_RENEW_LABEL} ${e.title}`}
                 >
-                  See how to renew
+                  {FROZEN_RENEW_LABEL}
                 </Link>
               )}
             </DSCard>

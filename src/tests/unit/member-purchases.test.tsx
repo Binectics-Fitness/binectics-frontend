@@ -9,7 +9,9 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("@/components/content/ContentBuyPanel", () => ({
-  ContentBuyPanel: () => <div data-testid="buy-panel" />,
+  ContentBuyPanel: ({ onUnlocked }: { onUnlocked?: () => void }) => (
+    <button type="button" data-testid="buy-panel" onClick={() => onUnlocked?.()} />
+  ),
 }));
 vi.mock("@/components/content/StartProgramControl", () => ({
   StartProgramControl: () => <div data-testid="start-control" />,
@@ -160,5 +162,17 @@ describe("Offer page", () => {
   it("says it is gone on a 404", async () => {
     render1(null, 404);
     expect(await screen.findByText("No longer available.")).toBeInTheDocument();
+  });
+
+  it("keeps the earlier offer and shows the error when a reload fails", async () => {
+    const get = vi.spyOn(paidContentService, "getOffer");
+    get.mockResolvedValueOnce(ok(offer({})));
+    render(<ContentOfferClient kindSegment="programs" itemId="p1" />);
+    expect(await screen.findByTestId("buy-panel")).toBeInTheDocument();
+    get.mockResolvedValueOnce({ success: false, status: 500, message: "Server down" });
+    // The buy panel mock reports an unlock; the reload that follows fails.
+    await userEvent.click(screen.getByTestId("buy-panel"));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Server down");
+    expect(screen.getByTestId("buy-panel")).toBeInTheDocument();
   });
 });
