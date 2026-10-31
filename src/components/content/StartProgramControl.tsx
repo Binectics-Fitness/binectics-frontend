@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
 import { paidContentService, paidContentErrorOf } from "@/lib/api/paidContent";
 import { paidContentCopy } from "@/lib/paidContent/helpers";
@@ -11,6 +12,14 @@ function todayLocal(): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/** The new instance's id from the API's reply (`id`, or the raw `_id`). */
+function instanceIdOf(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const d = data as Record<string, unknown>;
+  const id = d.id ?? d._id ?? d.instance_id ?? d.instanceId;
+  return typeof id === "string" && id ? id : null;
 }
 
 /**
@@ -29,10 +38,14 @@ export function StartProgramControl({
   const [picking, setPicking] = useState(false);
   const [date, setDate] = useState(todayLocal());
   const [busy, setBusy] = useState(false);
+  // After a successful start the controls stay off: a second tap would start
+  // a second copy while the page navigates.
+  const [started, setStarted] = useState(false);
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const start = async (startDate?: string) => {
-    if (busy) return;
+    if (busy || started) return;
     setBusy(true);
     setError(null);
     const res = await paidContentService.startProgram(programId, {
@@ -45,17 +58,20 @@ export function StartProgramControl({
       setError(e ? paidContentCopy(e) : res.message || "We couldn't start it. Please try again.");
       return;
     }
+    setStarted(true);
     toast.success(`${title || "Program"} started`);
     onStarted?.();
+    const instanceId = instanceIdOf(res.data);
+    router.push(instanceId ? `/dashboard/my-programs/${encodeURIComponent(instanceId)}` : "/dashboard/my-programs");
   };
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <button type="button" className="btn-signal-v2" disabled={busy} onClick={() => void start()}>
-          {busy ? "Starting..." : "Start today"}
+        <button type="button" className="btn-signal-v2" disabled={busy || started} onClick={() => void start()}>
+          {busy ? "Starting..." : started ? "Started" : "Start today"}
         </button>
-        <button type="button" className="btn-ghost-v2" disabled={busy} onClick={() => setPicking((v) => !v)}>
+        <button type="button" className="btn-ghost-v2" disabled={busy || started} onClick={() => setPicking((v) => !v)}>
           Pick a date
         </button>
       </div>
@@ -73,7 +89,7 @@ export function StartProgramControl({
             className="px-2.5 py-1.5 rounded-(--r-2) text-[13.5px]"
             style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--ink)" }}
           />
-          <button type="button" className="btn-primary-v2" disabled={busy || !date} onClick={() => void start(date)}>
+          <button type="button" className="btn-primary-v2" disabled={busy || started || !date} onClick={() => void start(date)}>
             Start on this date
           </button>
         </div>

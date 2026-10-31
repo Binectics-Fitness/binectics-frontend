@@ -1,5 +1,4 @@
 import type { Tone } from "@/lib/ui/tones";
-import type { EffectiveFeatureFlags } from "@/lib/api/featureFlags";
 import type {
   ContentAccess,
   ContentOffer,
@@ -26,14 +25,19 @@ export const PURCHASE_POLL_MS = 3000;
 export const PURCHASE_POLL_LIMIT = 20;
 
 /**
- * Whether paid content is on for the caller: globally, or for any workspace
- * they own or staff. Authoring and "My purchases" show only then; the API
- * still decides everything.
+ * THE flag rule for paid content, used by every surface (member nav, the
+ * provider's sales section, the pricing controls): the workspace the user is
+ * in decides - `isEnabled(paid_content, currentOrg._id)`, which honours that
+ * workspace's own override - and with no current workspace (a member with
+ * none) it falls back to the global value. It does not mean "any workspace
+ * I belong to": a flag turned off for the gym they are looking at stays off.
+ * The API still decides everything.
  */
-export function paidContentOn(data: EffectiveFeatureFlags | null | undefined): boolean {
-  if (!data) return false;
-  if (data.flags?.[PAID_CONTENT_FLAG] === true) return true;
-  return (data.organizations ?? []).some((o) => o.flags?.[PAID_CONTENT_FLAG] === true);
+export function paidContentOn(
+  isEnabled: (key: string, organizationId?: string | null) => boolean,
+  currentOrgId?: string | null,
+): boolean {
+  return isEnabled(PAID_CONTENT_FLAG, currentOrgId ?? null);
 }
 
 // ─── Prices ─────────────────────────────────────────────────────────────────
@@ -230,6 +234,10 @@ export function gatewayFailureCopy(status: string | null | undefined): string | 
       return "The checkout closed before the payment completed. You have not been charged; you can try again.";
     case "mismatch":
       return "The amount paid does not match this purchase. Contact support and we will sort it out.";
+    case "reversed":
+      return "This payment was reversed, so the purchase did not complete. If money left your account, your bank returns it; you can try again.";
+    case "error":
+      return "The payment service reported a problem with this payment. If you were charged, contact support and we will sort it out; otherwise you can try again.";
     case "not_payable":
       return "This purchase can no longer be paid. Start again from the item.";
     default:

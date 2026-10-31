@@ -203,6 +203,7 @@ export function ContentBuyPanel({
               type="button"
               role="radio"
               aria-checked={p.currency === currency}
+              aria-label={`${p.currency} ${formatMinor(p.currency, p.amountMinor)}`}
               disabled={!canPickCurrency}
               onClick={() => setCurrency(p.currency)}
               className="px-3 py-1.5 rounded-full text-[13px] disabled:opacity-60"
@@ -212,7 +213,7 @@ export function ContentBuyPanel({
                 color: p.currency === currency ? "var(--bg)" : "var(--fg-2)",
               }}
             >
-              {p.currency} {formatMinor(p.currency, p.amountMinor)}
+              {formatMinor(p.currency, p.amountMinor)}
             </button>
           ))}
         </div>

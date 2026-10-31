@@ -181,3 +181,20 @@ describe("a gym ending a member's connection (CONNECTION_ENDED)", () => {
     ).toBe("/dashboard/member");
   });
 });
+
+describe("paid content notifications", () => {
+  it.each(["CONTENT_OFFER", "CONTENT_GRANTED", "CONTENT_PURCHASED"])("%s opens the offer page", (type) => {
+    expect(
+      resolveNotificationTarget({ type, metadata: { itemKind: "program", itemId: "p1" }, actionUrl: "/dashboard/my-programs" }, UserRole.USER),
+    ).toBe("/dashboard/member/content/programs/p1");
+    expect(
+      resolveNotificationTarget({ type, metadata: { itemKind: "meal_plan", itemId: "m1" } }, UserRole.USER),
+    ).toBe("/dashboard/member/content/meal-plans/m1");
+  });
+
+  it("falls back to the action URL without kind and id", () => {
+    expect(
+      resolveNotificationTarget({ type: "CONTENT_OFFER", metadata: {}, actionUrl: "/dashboard/my-programs" }, UserRole.USER),
+    ).toBe("/dashboard/member"); // the API's link, mapped by the existing legacy table
+  });
+});

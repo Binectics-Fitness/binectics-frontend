@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { paidContentService } from "@/lib/api/paidContent";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
+import { useEffect, useState } from "react";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
@@ -90,8 +93,30 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
-  const { data: flagData } = useFeatureFlags();
-  const navLinks = paidContentOn(flagData)
+  const { isEnabled } = useFeatureFlags();
+  const currentOrgId = useOptionalOrganization()?.currentOrg?._id ?? null;
+  // "Purchases" shows while paid content is on for the current workspace
+  // (global when none; see paidContentOn), OR when this member already holds
+  // something. The second part is why: a flag turned off later must not hide
+  // programs and meal plans a member bought or was given. It is a
+  // one-row entitlement read, made only while the flag is off.
+  const flagOn = paidContentOn(isEnabled, currentOrgId);
+  const [holdsContent, setHoldsContent] = useState(false);
+  const userId = user?.id;
+  useEffect(() => {
+    if (flagOn || !userId) return;
+    let active = true;
+    void paidContentService
+      .myEntitlements(1)
+      .then((res) => {
+        if (active && res.success && (res.data?.items.length ?? 0) > 0) setHoldsContent(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [flagOn, userId]);
+  const navLinks = flagOn || holdsContent
     ? [...MEMBER_NAV_LINKS.slice(0, -1), PURCHASES_NAV_LINK, ...MEMBER_NAV_LINKS.slice(-1)]
     : MEMBER_NAV_LINKS;
   // A gym's staff reach the gym's dashboard from here (F1).

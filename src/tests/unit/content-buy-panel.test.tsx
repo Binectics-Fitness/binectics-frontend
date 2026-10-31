@@ -5,6 +5,12 @@ import { ContentBuyPanel } from "@/components/content/ContentBuyPanel";
 import { paidContentService, type ContentPurchase } from "@/lib/api/paidContent";
 import { openPaystackCheckout } from "@/lib/payments/paystackInline";
 
+// A fast poll so the loop can run for real: 3 re-reads, 15 ms apart.
+vi.mock("@/lib/paidContent/helpers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/paidContent/helpers")>()),
+  PURCHASE_POLL_MS: 15,
+  PURCHASE_POLL_LIMIT: 3,
+}));
 vi.mock("@/lib/payments/paystackInline", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/payments/paystackInline")>()),
   openPaystackCheckout: vi.fn(),
@@ -107,5 +113,65 @@ describe("ContentBuyPanel", () => {
     getPurchase.mockResolvedValue(ok(purchase("pending")));
     await userEvent.click(screen.getByRole("button", { name: /^Buy for/ }));
     expect(checkout).toHaveBeenCalledWith("meal_plan", "m1", "USD");
+  });
+
+  describe("after the popup", () => {
+    const pay = async (onUnlocked = vi.fn()) => {
+      open.mockResolvedValue({ closed: "callback", reference: "itm_1" });
+      const view = render(<ContentBuyPanel kind="program" itemId="prog1" prices={prices} onUnlocked={onUnlocked} />);
+      await userEvent.click(screen.getByRole("button", { name: /^Buy for/ }));
+      return { ...view, onUnlocked };
+    };
+
+    it("says reversed and error charges honestly", async () => {
+      verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "reversed" }));
+      await pay();
+      expect(await screen.findByRole("alert")).toHaveTextContent(/was reversed/);
+    });
+
+    it("uses the one currency label, not the code and the symbol", () => {
+      render(
+        <ContentBuyPanel kind="meal_plan" itemId="m1" prices={[...prices, { currency: "USD", amountMinor: 1000 }]} onUnlocked={() => {}} />,
+      );
+      expect(screen.getByRole("radio", { name: "NGN ₦15,000" })).toHaveTextContent(/^₦15,000$/);
+    });
+
+    it("ends as 'still confirming' when the purchase never settles, and can check again", async () => {
+      verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "pending" }));
+      getPurchase.mockResolvedValue(ok(purchase("pending")));
+      const { onUnlocked } = await pay();
+      expect(await screen.findByText(/still being confirmed/)).toBeInTheDocument();
+      expect(getPurchase).toHaveBeenCalledTimes(3);
+      expect(onUnlocked).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Check again" })).toBeEnabled();
+    });
+
+    it("unlocks when a later re-read says paid", async () => {
+      verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "pending" }));
+      getPurchase.mockResolvedValueOnce(ok(purchase("pending"))).mockResolvedValue(ok(purchase("paid")));
+      const { onUnlocked } = await pay();
+      await waitFor(() => expect(onUnlocked).toHaveBeenCalledTimes(1));
+      expect(getPurchase).toHaveBeenCalledTimes(2);
+    });
+
+    it("stops polling and lets the buyer retry when the purchase dies", async () => {
+      verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "pending" }));
+      getPurchase.mockResolvedValue(ok(purchase("expired")));
+      const { onUnlocked } = await pay();
+      expect(await screen.findByRole("alert")).toHaveTextContent(/not completed/);
+      expect(getPurchase).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: /^Buy for/ })).toBeEnabled();
+      expect(onUnlocked).not.toHaveBeenCalled();
+    });
+
+    it("does nothing more once unmounted mid-poll", async () => {
+      verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "pending" }));
+      getPurchase.mockResolvedValue(ok(purchase("paid")));
+      const { onUnlocked, unmount } = await pay();
+      unmount();
+      await new Promise((r) => setTimeout(r, 120));
+      expect(onUnlocked).not.toHaveBeenCalled();
+      expect(getPurchase.mock.calls.length).toBeLessThanOrEqual(1);
+    });
   });
 });
