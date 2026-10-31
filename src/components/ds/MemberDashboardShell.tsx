@@ -88,12 +88,61 @@ interface MemberDashboardShellProps {
   actions?: React.ReactNode;
 }
 
+/* ── "Holds paid content" cache ──
+ * A member who holds content keeps the Purchases link when the flag is off.
+ * "Yes" is kept for the session; "no" for ten minutes (they may be given
+ * something). Module memory first, sessionStorage behind it (try/catch:
+ * private windows and blocked storage throw).
+ */
+const HOLDS_NO_TTL_MS = 10 * 60_000;
+const holdsMemory = new Map<string, { holds: boolean; at: number }>();
+const holdsKey = (userId: string) => `bx.holdsPaidContent.${userId}`;
+
+/** Test seam: forget what was cached. */
+export function resetHoldsCache(): void {
+  holdsMemory.clear();
+  try {
+    window.sessionStorage.clear();
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function readHoldsCache(userId: string): boolean | null {
+  let entry = holdsMemory.get(userId);
+  if (!entry) {
+    try {
+      const raw = window.sessionStorage.getItem(holdsKey(userId));
+      const parsed = raw ? (JSON.parse(raw) as { holds?: unknown; at?: unknown }) : null;
+      if (parsed && typeof parsed.holds === "boolean" && typeof parsed.at === "number") {
+        entry = { holds: parsed.holds, at: parsed.at };
+        holdsMemory.set(userId, entry);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  if (!entry) return null;
+  if (!entry.holds && Date.now() - entry.at > HOLDS_NO_TTL_MS) return null;
+  return entry.holds;
+}
+
+function writeHoldsCache(userId: string, holds: boolean): void {
+  const entry = { holds, at: Date.now() };
+  holdsMemory.set(userId, entry);
+  try {
+    window.sessionStorage.setItem(holdsKey(userId), JSON.stringify(entry));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
-  const { isEnabled } = useFeatureFlags();
+  const { isEnabled, isLoading: flagsLoading } = useFeatureFlags();
   const currentOrgId = useOptionalOrganization()?.currentOrg?._id ?? null;
   // "Purchases" shows while paid content is on for the current workspace
   // (global when none; see paidContentOn), OR when this member already holds
@@ -101,22 +150,31 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
   // programs and meal plans a member bought or was given. It is a
   // one-row entitlement read, made only while the flag is off.
   const flagOn = paidContentOn(isEnabled, currentOrgId);
-  const [holdsContent, setHoldsContent] = useState(false);
   const userId = user?.id;
+  const [holdsContent, setHoldsContent] = useState(false);
   useEffect(() => {
-    if (flagOn || !userId) return;
+    // Flags read "off" while they load; asking then would make the read on
+    // every mount for a member whose flag is on. The answer is cached, so a
+    // page-to-page move does not repeat it.
+    if (flagOn || flagsLoading || !userId) return;
+    const cached = readHoldsCache(userId);
+    if (cached !== null) return;
     let active = true;
     void paidContentService
       .myEntitlements(1)
       .then((res) => {
-        if (active && res.success && (res.data?.items.length ?? 0) > 0) setHoldsContent(true);
+        if (!res.success) return;
+        const holds = (res.data?.items.length ?? 0) > 0;
+        writeHoldsCache(userId, holds);
+        if (active && holds) setHoldsContent(true);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, [flagOn, userId]);
-  const navLinks = flagOn || holdsContent
+  }, [flagOn, flagsLoading, userId]);
+  const holdsCached = userId ? readHoldsCache(userId) === true : false;
+  const navLinks = flagOn || holdsContent || holdsCached
     ? [...MEMBER_NAV_LINKS.slice(0, -1), PURCHASES_NAV_LINK, ...MEMBER_NAV_LINKS.slice(-1)]
     : MEMBER_NAV_LINKS;
   // A gym's staff reach the gym's dashboard from here (F1).
