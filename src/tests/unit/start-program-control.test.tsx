@@ -18,7 +18,7 @@ describe("StartProgramControl", () => {
     const start = vi.spyOn(paidContentService, "startProgram").mockResolvedValue({ success: true, data: { _id: "inst1" } });
     render(<StartProgramControl programId="p1" title="Base" />);
     await userEvent.click(screen.getByRole("button", { name: "Start today" }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/my-programs/inst1"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/dashboard/member"));
     expect(screen.getByRole("button", { name: "Started" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Pick a date" })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: "Started" }));
