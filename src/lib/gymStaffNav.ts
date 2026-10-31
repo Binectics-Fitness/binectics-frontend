@@ -55,6 +55,13 @@ const needs = (...all: TeamPermissionKey[]): GymAccessRule => ({ all });
 const P = TeamPermission;
 
 /**
+ * Revenue by trainer: GET /transactions/organizations/:id/revenue-by-trainer
+ * answers the owner and active members holding marketplace:manage_listing
+ * (default Admin and Manager); anyone else gets a 404.
+ */
+export const REVENUE_BY_TRAINER_ACCESS: GymAccessRule = needs(P.MARKETPLACE_MANAGE_LISTING);
+
+/**
  * Nav item → what its page needs, for someone who doesn't own the gym. The
  * key is the item's name in GymDashboardShell's SIDEBAR. An item missing
  * here is owner-only, so a new item is hidden from staff until someone
@@ -131,8 +138,8 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/gym-owner/devices", NAV["Check-in kiosk"]],
   ["/dashboard/gym-owner/payouts", NAV.Payouts],
   ["/dashboard/gym-owner/revenue", NAV.Revenue],
-  // GET /transactions/organizations/:id/revenue-by-trainer: owner only
-  ["/dashboard/gym-owner/revenue/trainers", OWNER],
+  // GET /transactions/organizations/:id/revenue-by-trainer: owner or manage_listing
+  ["/dashboard/gym-owner/revenue/trainers", REVENUE_BY_TRAINER_ACCESS],
   // GET .../revenue-stats, and the tax settings from GET /teams/organizations/:id
   ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS)],
   ["/dashboard/gym-owner/plans", NAV["Plans & pricing"]],

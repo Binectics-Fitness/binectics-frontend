@@ -22,6 +22,8 @@ export interface AttributedMoney {
   consultationsMinor: number;
   /** Of gross: memberships a rule routed to the trainer. */
   subscriptionsMinor: number;
+  /** Of gross: programs and meal plans. consultations + subscriptions + content = gross. */
+  contentMinor: number;
   /** Number of settled payments. */
   payments: number;
 }
@@ -88,6 +90,17 @@ const str = (v: unknown): string => (typeof v === "string" ? v : "");
 const list = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? (v as Record<string, unknown>[]) : []);
 const rec = (v: unknown): Record<string, unknown> => (v && typeof v === "object" ? (v as Record<string, unknown>) : {});
 
+/**
+ * Programs and meal plans in gross. The API sends `content_minor`; an API
+ * from before that field (binectics-api #334) does not, so a missing field
+ * falls back to the old derivation (gross - sessions - memberships, clamped).
+ * TODO: delete this fallback once #334 is deployed everywhere.
+ */
+function contentOf(r: Record<string, unknown>): number {
+  if (typeof r.content_minor === "number" && Number.isFinite(r.content_minor)) return r.content_minor;
+  return Math.max(0, num(r.gross_minor) - num(r.consultations_minor) - num(r.subscriptions_minor));
+}
+
 function money(r: Record<string, unknown>): AttributedMoney {
   return {
     currency: str(r.currency),
@@ -96,6 +109,7 @@ function money(r: Record<string, unknown>): AttributedMoney {
     netMinor: num(r.net_minor),
     consultationsMinor: num(r.consultations_minor),
     subscriptionsMinor: num(r.subscriptions_minor),
+    contentMinor: contentOf(r),
     payments: num(r.payments),
   };
 }
@@ -166,7 +180,7 @@ export const attributedRevenueService = {
     return mapOk(res, (d) => parseMyEarnings(rec(d)));
   },
 
-  /** Owner only: anyone else gets 404. */
+  /** The owner, or staff holding marketplace:manage_listing (Admin, Manager): anyone else gets 404. */
   async revenueByTrainer(orgId: string, q: WindowQuery): Promise<ApiResponse<RevenueByTrainer>> {
     const res = await apiClient.get<Record<string, unknown>>(
       `/transactions/organizations/${encodeURIComponent(orgId)}/revenue-by-trainer?${query(q)}`,

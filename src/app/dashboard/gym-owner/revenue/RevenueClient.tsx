@@ -4,7 +4,8 @@ import Link from "next/link";
 
 import { useEffect, useMemo, useState } from "react";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
-import { GYM_NAV_ACCESS, allows } from "@/lib/gymStaffNav";
+import { GYM_NAV_ACCESS, REVENUE_BY_TRAINER_ACCESS, TeamPermission, allows, holds } from "@/lib/gymStaffNav";
+import { OrgContentSalesSection } from "@/components/content/OrgContentSalesSection";
 import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, EmptySlate, PageHeader } from "@/components/ds";
 import { checkinsService, type OrgRevenueStats } from "@/lib/api/checkins";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -42,9 +43,11 @@ export default function RevenueClient() {
   // Refunds and disputes are the owner's; a manager on Revenue doesn't get the link.
   const viewer = useGymViewer();
   const canSeeRefunds = allows(viewer, GYM_NAV_ACCESS.Refunds);
-  // Revenue by trainer is the owner's (GET .../revenue-by-trainer answers 404 to anyone else).
+  // Revenue by trainer is for the owner and staff holding manage_listing (Admin,
+  // Manager); GET .../revenue-by-trainer answers 404 to anyone else.
   // Not behind paid_content on purpose: it reports sessions and memberships too.
-  const isOwner = viewer.isOwner;
+  const canSeeTrainerRevenue = allows(viewer, REVENUE_BY_TRAINER_ACCESS);
+  const canSeeContentSales = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
   const [error, setError] = useState<string | null>(null);
   // A plan without analytics is known from the billing status: skip the
   // series call it would refuse (a 403 in the console) and show the gate.
@@ -135,7 +138,7 @@ export default function RevenueClient() {
         subtitle={currentOrg ? `${currentOrg.name} · settled revenue` : "Your gym revenue"}
         actions={
           <div className="flex flex-wrap gap-2">
-            {isOwner && <Link href="/dashboard/gym-owner/revenue/trainers" className="btn-ghost-v2">Revenue by trainer</Link>}
+            {canSeeTrainerRevenue && <Link href="/dashboard/gym-owner/revenue/trainers" className="btn-ghost-v2">Revenue by trainer</Link>}
             {canSeeRefunds && <Link href="/dashboard/refunds" className="btn-ghost-v2">Refunds and disputes</Link>}
           </div>
         }
@@ -213,6 +216,7 @@ export default function RevenueClient() {
               </div>
             )}
           </DSCard>
+          {canSeeContentSales && currentOrg && <OrgContentSalesSection orgId={currentOrg._id} canRefund={viewer.isOwner} />}
         </>
       ) : null}
     </GymDashboardShell>

@@ -18,8 +18,8 @@ const LIMIT = 25;
  * decision D6; GET /transactions/organizations/:id/revenue-by-trainer). A
  * report only: the gym keeps the money and any commission is settled outside
  * Binectics, so there are no shares, payouts or balances here. One block per
- * trainer and currency; currencies are never summed. Owner only: anyone else
- * gets 404 from the API.
+ * trainer and currency; currencies are never summed. For the owner and staff holding
+ * marketplace:manage_listing (Admin, Manager); anyone else gets 404 from the API.
  *
  * Deliberately NOT behind the paid_content flag (owner decision): the report
  * also covers sessions and memberships, which exist without paid content, so
@@ -31,7 +31,7 @@ export default function TrainerRevenueClient() {
   const [range, setRange] = useState<RangeKey>(DEFAULT_RANGE);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<RevenueByTrainer | null>(null);
-  const [error, setError] = useState<{ message: string; notOwner: boolean } | null>(null);
+  const [error, setError] = useState<{ message: string; noAccess: boolean } | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function TrainerRevenueClient() {
         setError(null);
       } else {
         setError({
-          notOwner: res.status === 404,
+          noAccess: res.status === 404,
           message: res.message || "Check your connection and try again.",
         });
       }
@@ -85,10 +85,10 @@ export default function TrainerRevenueClient() {
 
       {!orgId && !orgLoading ? (
         <EmptySlate message="Select an organization to see its revenue by trainer." />
-      ) : error?.notOwner && !data ? (
+      ) : error?.noAccess && !data ? (
         <EmptySlate
-          message="Only the gym's owner can see revenue by trainer."
-          hint="Ask the gym's owner for this report."
+          message="You don't have access to revenue by trainer."
+          hint="Ask the gym's owner or an admin for this report."
         />
       ) : error && !data ? (
         <EmptySlate
