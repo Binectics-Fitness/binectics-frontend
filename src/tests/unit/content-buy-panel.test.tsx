@@ -107,12 +107,25 @@ describe("ContentBuyPanel", () => {
         onUnlocked={() => {}}
       />,
     );
-    await userEvent.click(screen.getByRole("radio", { name: /USD/ }));
+    await userEvent.click(screen.getByRole("button", { name: /USD/ }));
     expect(screen.getByRole("button", { name: "Buy for $10" })).toBeInTheDocument();
     open.mockResolvedValue({ closed: "dismissed" });
     getPurchase.mockResolvedValue(ok(purchase("pending")));
     await userEvent.click(screen.getByRole("button", { name: /^Buy for/ }));
     expect(checkout).toHaveBeenCalledWith("meal_plan", "m1", "USD");
+  });
+
+  it("marks the chosen currency as pressed, and falls back when the prices change under it", async () => {
+    const both = [...prices, { currency: "USD", amountMinor: 1000 }];
+    const { rerender } = render(<ContentBuyPanel kind="meal_plan" itemId="m1" prices={both} onUnlocked={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: /USD/ }));
+    expect(screen.getByRole("button", { name: /USD/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /NGN/ })).toHaveAttribute("aria-pressed", "false");
+    rerender(<ContentBuyPanel kind="meal_plan" itemId="m1" prices={prices} onUnlocked={() => {}} />);
+    open.mockResolvedValue({ closed: "dismissed" });
+    getPurchase.mockResolvedValue(ok(purchase("pending")));
+    await userEvent.click(screen.getByRole("button", { name: /^Buy for/ }));
+    expect(checkout).toHaveBeenLastCalledWith("meal_plan", "m1", "NGN");
   });
 
   describe("after the popup", () => {
@@ -133,7 +146,7 @@ describe("ContentBuyPanel", () => {
       render(
         <ContentBuyPanel kind="meal_plan" itemId="m1" prices={[...prices, { currency: "USD", amountMinor: 1000 }]} onUnlocked={() => {}} />,
       );
-      expect(screen.getByRole("radio", { name: "NGN ₦15,000" })).toHaveTextContent(/^₦15,000$/);
+      expect(screen.getByRole("button", { name: "NGN ₦15,000" })).toHaveTextContent(/^₦15,000$/);
     });
 
     it("ends as 'still confirming' when the purchase never settles, and can check again", async () => {
