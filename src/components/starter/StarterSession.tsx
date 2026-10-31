@@ -108,6 +108,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
   const finish = async () => {
     setBusy(true);
     setActionError("");
+    setFrozen(false);
     const res = await starterService.completeTask(task.id);
     if (!res.success) {
       setBusy(false);
@@ -139,6 +140,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
   const skip = async () => {
     setBusy(true);
     setActionError("");
+    setFrozen(false);
     const res = await starterService.skipTask(task.id);
     setBusy(false);
     setConfirmSkip(false);

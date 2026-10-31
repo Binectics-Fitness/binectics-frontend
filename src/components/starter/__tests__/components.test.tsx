@@ -148,6 +148,17 @@ describe("StarterSession", () => {
       );
     },
   );
+  it("clears the renew link when a retry fails for another reason", async () => {
+    api.completeTask
+      .mockResolvedValueOnce({ success: false, code: "CONTENT_ACCESS_FROZEN", status: 409, message: "x" })
+      .mockResolvedValueOnce({ success: false, message: "Server down" });
+    wrap(<StarterSession occurrenceId="o1" />);
+    await userEvent.click(await screen.findByRole("button", { name: "Finish session" }));
+    expect(await screen.findByRole("link", { name: "See how to renew" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Finish session" }));
+    expect(await screen.findByText("Server down")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "See how to renew" })).toBeNull();
+  });
   it("says the session is not available for an unknown id", async () => {
     wrap(<StarterSession occurrenceId="nope" />);
     expect(await screen.findByText("This session is not available.")).toBeInTheDocument();
