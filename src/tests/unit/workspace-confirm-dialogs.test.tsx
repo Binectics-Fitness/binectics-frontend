@@ -254,6 +254,20 @@ describe("a client's program: complete and cancel", () => {
     expect(nativeConfirm).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["PROGRAM_FROZEN_LAPSED", "This client's plan has lapsed, so their program is read-only until they renew."],
+    ["CONTENT_ACCESS_FROZEN", "This program is frozen. It resumes when they renew, or when you give it to them for free."],
+  ])("keeps the provider sentence when %s refuses", async (code, message) => {
+    vi.spyOn(programsService, "getInstance").mockResolvedValue(detail("paused") as never);
+    vi.spyOn(programsService, "resumeInstance").mockResolvedValue({ success: false, code, status: 409, message } as never);
+    const user = userEvent.setup();
+    render(<ProgramInstanceView config={config} instanceId="i1" />);
+    await user.click(await screen.findByRole("button", { name: "Resume" }));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
+    expect(screen.queryByText(/Renew to keep it going/)).toBeNull();
+    expect(screen.queryByRole("link", { name: /renew/i })).toBeNull();
+  });
+
   it("cancels only after the dialog, and Keep program leaves it running", async () => {
     vi.spyOn(programsService, "getInstance").mockResolvedValue(detail("active") as never);
     const cancel = vi.spyOn(programsService, "cancelInstance").mockResolvedValue({ success: true } as never);

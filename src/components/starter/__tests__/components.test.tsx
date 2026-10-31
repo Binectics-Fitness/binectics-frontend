@@ -133,6 +133,32 @@ describe("StarterSession", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Server down");
     expect(screen.getByRole("button", { name: "Finish session" })).toBeEnabled();
   });
+  it.each(["CONTENT_ACCESS_FROZEN", "PROGRAM_FROZEN_LAPSED"])(
+    "says %s the same way and offers to renew",
+    async (code) => {
+      api.completeTask.mockResolvedValue({ success: false, code, status: 409, message: "API sentence" });
+      wrap(<StarterSession occurrenceId="o1" />);
+      await userEvent.click(await screen.findByRole("button", { name: "Finish session" }));
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(/Access has ended/);
+      expect(alert).not.toHaveTextContent("API sentence");
+      expect(screen.getByRole("link", { name: "See how to renew" })).toHaveAttribute(
+        "href",
+        "/dashboard/member/billing",
+      );
+    },
+  );
+  it("clears the renew link when a retry fails for another reason", async () => {
+    api.completeTask
+      .mockResolvedValueOnce({ success: false, code: "CONTENT_ACCESS_FROZEN", status: 409, message: "x" })
+      .mockResolvedValueOnce({ success: false, message: "Server down" });
+    wrap(<StarterSession occurrenceId="o1" />);
+    await userEvent.click(await screen.findByRole("button", { name: "Finish session" }));
+    expect(await screen.findByRole("link", { name: "See how to renew" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Finish session" }));
+    expect(await screen.findByText("Server down")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "See how to renew" })).toBeNull();
+  });
   it("says the session is not available for an unknown id", async () => {
     wrap(<StarterSession occurrenceId="nope" />);
     expect(await screen.findByText("This session is not available.")).toBeInTheDocument();
