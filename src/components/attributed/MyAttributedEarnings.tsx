@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AsyncSpinner, DSCard, DSCardHead, EmptySlate } from "@/components/ds";
 import { MoneyBreakdown } from "./MoneyBreakdown";
 import { RangeChips } from "./RangeChips";
@@ -35,13 +35,17 @@ export function MyAttributedEarnings() {
   // Bumped whenever the first page is (re)loaded for a range: a "Show more"
   // that returns after the range changed belongs to the old range and is dropped.
   const generation = useRef(0);
+  // The window is worked out once per range (and per retry), so every page of
+  // a range asks for the same from/to; "Show more" never moves it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const win = useMemo(() => windowFor(range), [range, attempt]);
 
   useEffect(() => {
     if (!inGym) return;
     let active = true;
     generation.current += 1;
     void (async () => {
-      const res = await attributedRevenueService.myEarnings({ ...windowFor(range), page: 1, limit: LIMIT });
+      const res = await attributedRevenueService.myEarnings({ ...win, page: 1, limit: LIMIT });
       if (!active) return;
       if (res.success && res.data) {
         setData(res.data);
@@ -56,7 +60,7 @@ export function MyAttributedEarnings() {
     return () => {
       active = false;
     };
-  }, [inGym, range, attempt]);
+  }, [inGym, win]);
 
   if (!inGym) return null;
 
@@ -64,7 +68,7 @@ export function MyAttributedEarnings() {
     if (loadingMore) return;
     setLoadingMore(true);
     const started = generation.current;
-    const res = await attributedRevenueService.myEarnings({ ...windowFor(range), page: page + 1, limit: LIMIT });
+    const res = await attributedRevenueService.myEarnings({ ...win, page: page + 1, limit: LIMIT });
     setLoadingMore(false);
     if (generation.current !== started) return;
     if (!res.success || !res.data) return setError(res.message || "Couldn't load more. Try again.");

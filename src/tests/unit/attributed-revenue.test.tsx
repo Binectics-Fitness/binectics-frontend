@@ -193,6 +193,38 @@ describe("My attributed earnings", () => {
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
   });
 
+  it("asks every page of a range for the same window, even across midnight UTC", async () => {
+    const item = (id: string) => ({ id, occurred_at: "2026-10-20T23:30:00Z", type: "consultation", direction: "credit", amount_minor: 1000, currency: "NGN", organization_id: "o" });
+    const body = (items: unknown[]) =>
+      parseMyEarnings({
+        from: "2026-10-01T00:00:00.000Z",
+        to: "2026-10-29T00:00:00.000Z",
+        currencies: [{ currency: "NGN", gross_minor: 1, refunds_minor: 0, net_minor: 1, consultations_minor: 1, subscriptions_minor: 0, payments: 1 }],
+        by_organization: [],
+        items,
+        total: 26,
+        page: 1,
+        limit: 25,
+      });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-10-29T23:59:00Z"));
+      const spy = vi
+        .spyOn(attributedRevenueService, "myEarnings")
+        .mockResolvedValueOnce(ok(body(Array.from({ length: 25 }, (_, i) => item(`a${i}`)))))
+        .mockResolvedValueOnce(ok(body([item("late")])));
+      render(<MyAttributedEarnings />);
+      const more = await screen.findByRole("button", { name: "Show more" });
+      vi.setSystemTime(new Date("2026-10-30T00:01:00Z"));
+      await userEvent.setup({ advanceTimers: () => {} }).click(more);
+      await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+      const [a, b] = spy.mock.calls.map((c) => c[0]);
+      expect({ from: b.from, to: b.to }).toEqual({ from: a.from, to: a.to });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("dates its items in UTC", async () => {
     vi.spyOn(attributedRevenueService, "myEarnings").mockResolvedValue(
       ok(

@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { DSCard, DSCardHead, EmptySlate, AsyncSpinner, StatusPill } from "@/components/ds";
+import { useEffect, useRef, useState } from "react";
+import { DSCard, DSCardHead, EmptySlate, AsyncSpinner } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { paidContentService, type OrgContentSale } from "@/lib/api/paidContent";
 import { utcShortDate } from "@/lib/attributedRevenue/helpers";
 import { kindLabel, paidContentOn } from "@/lib/paidContent/helpers";
+import { SaleRefundState, useSaleRefund, type SaleRow } from "./saleRefund";
 
 const PAGE = 25;
 
@@ -23,23 +24,35 @@ const FILTERS: { key: StatusFilter; label: string }[] = [
  * for the owner and staff holding marketplace:manage_listing (Admin, Manager);
  * the caller decides who sees it, the API refuses everyone else with a 404.
  * Each row keeps its own currency: amounts are never added across currencies.
- * Dates are UTC. Refunds are not made here: they stay with the gym owner's
- * existing refund flow for content sales. Shown only while `paid_content` is
- * on for this gym (the shared paidContentOn rule).
+ * Dates are UTC. The gym OWNER (`canRefund`) can refund a sale from its row
+ * (POST /content/sales/:id/refund; the API allows the workspace owner only),
+ * the same confirm-first flow as a provider's own sales; Admin and Manager
+ * see the table without it. Shown while `paid_content` is on for this gym
+ * (the shared paidContentOn rule) OR once the gym has sales, so turning the
+ * flag off never hides history or refunds.
  */
-export function OrgContentSalesSection({ orgId }: { orgId: string }) {
+export function OrgContentSalesSection({ orgId, canRefund = false }: { orgId: string; canRefund?: boolean }) {
   const { isEnabled, isLoading: flagsLoading } = useFeatureFlags();
   const on = paidContentOn(isEnabled, orgId);
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [rows, setRows] = useState<OrgContentSale[] | null>(null);
+  const [rows, setRows] = useState<SaleRow<OrgContentSale>[] | null>(null);
+  // Set once any load shows a sale: with the flag off, that is what keeps the
+  // section (and its status filter) on screen.
+  const [hasSales, setHasSales] = useState(false);
+  // Bumped whenever the first page is (re)loaded: a "Show more" that returns
+  // after the filter changed belongs to the old filter and is dropped.
+  const generation = useRef(0);
+  const { busy, askRefund, confirmationModal } = useSaleRefund<OrgContentSale>(setRows);
   const [total, setTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<{ message: string; noAccess: boolean } | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!on) return;
+    // Flags read "off" while they load; wait, so no call is made for nothing.
+    if (flagsLoading) return;
     let active = true;
+    generation.current += 1;
     void (async () => {
       const res = await paidContentService.orgSales(orgId, {
         status: status === "all" ? undefined : status,
@@ -50,6 +63,7 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
       if (res.success && res.data) {
         setRows(res.data.items);
         setTotal(res.data.total);
+        if (res.data.items.length > 0) setHasSales(true);
         setError(null);
       } else {
         setError({ noAccess: res.status === 404, message: res.message || "Check your connection and try again." });
@@ -58,9 +72,9 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
     return () => {
       active = false;
     };
-  }, [on, orgId, status, attempt]);
+  }, [flagsLoading, orgId, status, attempt]);
 
-  if (flagsLoading || !on) return null;
+  if (flagsLoading || (!on && !hasSales)) return null;
 
   const changeStatus = (key: StatusFilter) => {
     setStatus(key);
@@ -71,12 +85,14 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
   const showMore = async () => {
     if (!rows || loadingMore) return;
     setLoadingMore(true);
+    const started = generation.current;
     const res = await paidContentService.orgSales(orgId, {
       status: status === "all" ? undefined : status,
       limit: PAGE,
       skip: rows.length,
     });
     setLoadingMore(false);
+    if (generation.current !== started) return;
     if (!res.success || !res.data) return toast.error(res.message || "Couldn't load more. Try again.");
     const next = res.data;
     setRows((cur) => [...(cur ?? rows), ...next.items]);
@@ -87,13 +103,12 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
     <DSCard>
       <DSCardHead title="Programs & meal plan sales" subtitle="What people bought from this gym on its own price. Dates are UTC." />
       <div className="px-4.5 pb-4.5">
-        <div role="radiogroup" aria-label="Sale status" className="flex flex-wrap gap-2 mb-3">
+        <div role="group" aria-label="Sale status" className="flex flex-wrap gap-2 mb-3">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               type="button"
-              role="radio"
-              aria-checked={status === f.key}
+              aria-pressed={status === f.key}
               className="btn-ghost-v2"
               style={status === f.key ? { background: "var(--ink)", color: "var(--bg)" } : undefined}
               onClick={() => changeStatus(f.key)}
@@ -152,7 +167,7 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
                     <span className="text-[14px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                       {formatMinor(s.currency, s.amountMinor)}
                     </span>
-                    {s.status === "refunded" ? <StatusPill label="Refunded" tone="neutral" /> : null}
+                    <SaleRefundState sale={s} canRefund={canRefund} busy={busy} onAsk={askRefund} />
                   </div>
                 </li>
               ))}
@@ -166,11 +181,12 @@ export function OrgContentSalesSection({ orgId }: { orgId: string }) {
               </button>
             )}
             <p className="text-[12.5px] mt-3" style={{ color: "var(--fg-3)" }}>
-              Refunds are the gym owner&apos;s decision and use the existing refund flow for content sales. Nothing is refunded from this list.
+              Refunds are the gym owner&apos;s decision. Nothing is refunded automatically, and a refund returns the full amount.
             </p>
           </>
         )}
       </div>
+      {confirmationModal}
     </DSCard>
   );
 }

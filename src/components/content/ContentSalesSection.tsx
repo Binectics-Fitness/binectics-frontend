@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DSCard, DSCardHead, EmptySlate, AsyncSpinner, StatusPill } from "@/components/ds";
+import { DSCard, DSCardHead, EmptySlate, AsyncSpinner } from "@/components/ds";
 import { toast } from "@/components/Toast";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { paidContentErrorOf, paidContentService, type ContentSale } from "@/lib/api/paidContent";
-import { kindLabel, paidContentCopy, refundConfirmCopy, shortDate } from "@/lib/paidContent/helpers";
+import { kindLabel, paidContentCopy, shortDate } from "@/lib/paidContent/helpers";
+import { SaleRefundState, useSaleRefund, type SaleRow } from "./saleRefund";
 
 const PAGE = 25;
-
-/** A sale plus what this screen knows locally: a refund asked for but not yet processed. */
-type SaleRow = ContentSale & { refundRequested?: boolean };
 
 /**
  * The provider's sales of programs and meal plans (GET /content/sales). Refund
@@ -31,9 +28,8 @@ export function ContentSalesSection() {
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+  const { busy, askRefund, confirmationModal } = useSaleRefund<ContentSale>(setRows);
 
   useEffect(() => {
     // Flags read "off" while they load; wait, so no call is made for nothing.
@@ -73,41 +69,6 @@ export function ContentSalesSection() {
     setMore(next.length === PAGE);
   };
 
-  const refund = async (sale: ContentSale) => {
-    setBusy(sale.id);
-    const res = await paidContentService.refund(sale.id);
-    setBusy(null);
-    if (!res.success) {
-      const e = paidContentErrorOf(res);
-      toast.error(e ? paidContentCopy(e) : res.message || "Couldn't refund this sale. Try again.");
-      return;
-    }
-    const requested = res.data === "requested";
-    toast.success(requested ? "Refund requested" : "Refund sent");
-    // Update just this row. Re-fetching the first page would drop the pages
-    // already loaded; a "requested" refund isn't processed yet, so the row
-    // says so locally and its button goes away (it can't be clicked twice).
-    setRows((cur) =>
-      (cur ?? []).map((r) =>
-        r.id === sale.id
-          ? requested
-            ? { ...r, refundRequested: true }
-            : { ...r, status: "refunded" as const, refundedAt: new Date().toISOString() }
-          : r,
-      ),
-    );
-  };
-
-  const askRefund = (sale: ContentSale) =>
-    requestConfirmation({
-      title: "Refund this sale?",
-      description: refundConfirmCopy(sale.buyerName, formatMinor(sale.currency, sale.amountMinor), sale.paymentRail),
-      confirmLabel: "Refund",
-      cancelLabel: "Keep the sale",
-      confirmVariant: "danger",
-      onConfirm: () => refund(sale),
-    });
-
   return (
     <DSCard>
       <DSCardHead title="Program and meal plan sales" subtitle="What people bought from you on its own price." />
@@ -133,7 +94,6 @@ export function ContentSalesSection() {
           <>
             <ul className="flex flex-col">
               {rows.map((s) => {
-                const refunded = s.status === "refunded";
                 return (
                   <li
                     key={s.id}
@@ -153,21 +113,7 @@ export function ContentSalesSection() {
                       <span className="text-[14px] font-medium" style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                         {formatMinor(s.currency, s.amountMinor)}
                       </span>
-                      {refunded ? (
-                        <StatusPill label="Refunded" tone="neutral" />
-                      ) : s.refundRequested ? (
-                        <StatusPill label="Refund requested" tone="warn" />
-                      ) : !canRefund ? null : (
-                        <button
-                          type="button"
-                          className="btn-ghost-v2"
-                          disabled={!!busy}
-                          aria-label={`Refund ${s.buyerName || "this buyer"}, ${formatMinor(s.currency, s.amountMinor)}`}
-                          onClick={() => askRefund(s)}
-                        >
-                          Refund
-                        </button>
-                      )}
+                      <SaleRefundState sale={s} canRefund={canRefund} busy={busy} onAsk={askRefund} />
                     </div>
                   </li>
                 );

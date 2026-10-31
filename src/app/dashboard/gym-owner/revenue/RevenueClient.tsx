@@ -216,7 +216,7 @@ export default function RevenueClient() {
               </div>
             )}
           </DSCard>
-          {canSeeContentSales && currentOrg && <OrgContentSalesSection orgId={currentOrg._id} />}
+          {canSeeContentSales && currentOrg && <OrgContentSalesSection orgId={currentOrg._id} canRefund={viewer.isOwner} />}
         </>
       ) : null}
     </GymDashboardShell>
