@@ -170,6 +170,18 @@ export function normalizeAccess(raw: unknown): ContentAccess | null {
   };
 }
 
+/** The inverse of normalizeAccess: the block as the list endpoints carry it, to refresh a card after a save. */
+export function accessToRaw(access: ContentAccess | null): Record<string, unknown> | undefined {
+  if (!access) return undefined;
+  return {
+    mode: access.mode,
+    prices: access.prices.map((p) => ({ currency: p.currency, amount_minor: p.amountMinor })),
+    included_in_plan_ids: access.includedPlanIds,
+    show_on_listing: access.showOnListing,
+    seller_organization_id: access.sellerOrganizationId,
+  };
+}
+
 export function normalizeOffer(raw: unknown): ContentOffer | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
