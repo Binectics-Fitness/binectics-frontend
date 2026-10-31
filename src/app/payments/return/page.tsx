@@ -8,6 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { consultationsService } from "@/lib/api/consultations";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { paidContentService } from "@/lib/api/paidContent";
+import { memberPaymentsService } from "@/lib/api/memberPayments";
+import { clearPendingOwed, readPendingOwed } from "@/lib/payments/pendingOwed";
+import { payMembershipPath } from "@/lib/memberPayments/helpers";
 import { autoRenewSuccessQuery } from "@/lib/billing/autoRenew";
 import { clearPendingCheckout, readPendingCheckout } from "@/lib/payments/pendingCheckout";
 
@@ -23,6 +26,8 @@ import { clearPendingCheckout, readPendingCheckout } from "@/lib/payments/pendin
  *  - "itm_" (a paid program or meal plan): find the purchase this reference
  *    belongs to among the member's own, ask the API to verify it, then go to
  *    My purchases, which shows whatever the API says.
+ *  - "mbr_" paid from /pay/membership/:id (a gym enrolment the member owes):
+ *    ask the API to verify that charge, then go back to that page.
  *  - "mbr_" (a membership plan): finish the subscribe step the checkout
  *    page would have run, with the reference the server issued; the API
  *    verifies the charge before activating anything.
@@ -91,6 +96,20 @@ function PaymentReturnInner() {
           // My purchases still shows the API's view of the purchase.
         }
         router.replace("/dashboard/member/purchases");
+        return;
+      }
+
+      // Something a gym said the member owes (/pay/membership/:id): ask the
+      // API to verify it, then back to that page, which shows the API's view.
+      const owedId = readPendingOwed(reference);
+      if (owedId) {
+        try {
+          await memberPaymentsService.verify(owedId);
+        } catch {
+          // The pay page still shows the API's view of the charge.
+        }
+        clearPendingOwed();
+        router.replace(payMembershipPath(owedId));
         return;
       }
 
