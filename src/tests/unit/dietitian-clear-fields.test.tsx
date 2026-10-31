@@ -14,6 +14,7 @@ import { DietPlanDeliveryType, PlanStatus } from "@/lib/types";
  * figure would come back.
  */
 
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1", role: "DIETITIAN" } }) }));
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
 }));

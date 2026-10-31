@@ -18,6 +18,7 @@ import { findConfirmDialog } from "@/test/confirmDialog";
  */
 
 const push = vi.fn();
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1", role: "DIETITIAN" } }) }));
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
 }));

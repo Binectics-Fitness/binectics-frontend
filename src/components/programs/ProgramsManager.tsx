@@ -14,10 +14,9 @@ import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors"
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { ContentPricingModal } from "@/components/content/ContentPricingModal";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
 import { accessToRaw, normalizeAccess } from "@/lib/api/paidContent";
-import { PAID_CONTENT_FLAG, accessSummary, isPaid } from "@/lib/paidContent/helpers";
+import { accessSummary, isPaid } from "@/lib/paidContent/helpers";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { formsService, type Form } from "@/lib/api/forms";
 import { nutritionService } from "@/lib/api/nutrition";
@@ -1072,9 +1071,8 @@ export default function ProgramsManager({
   };
   const [clientsTemplate, setClientsTemplate] = useState<ProgramTemplate | null>(null);
   const [pricingTemplate, setPricingTemplate] = useState<ProgramTemplate | null>(null);
-  const orgs = useOptionalOrganization();
-  const { isEnabled } = useFeatureFlags();
-  const sellingOn = isEnabled(PAID_CONTENT_FLAG, orgs?.currentOrg?._id);
+  // Pricing shows by the one paid-content rule, and not to a gym's staff trainer (D10).
+  const { on: sellingOn, canPrice } = usePaidContentSeller();
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
@@ -1356,7 +1354,7 @@ export default function ProgramsManager({
               onViewClients={() => setClientsTemplate(t)}
               onArchive={() => handleArchive(t)}
               onRestore={() => handleRestore(t)}
-              onPricing={sellingOn || isPaid(normalizeAccess(t.access)) ? () => setPricingTemplate(t) : undefined}
+              onPricing={canPrice && (sellingOn || isPaid(normalizeAccess(t.access))) ? () => setPricingTemplate(t) : undefined}
             />
           ))}
         </div>

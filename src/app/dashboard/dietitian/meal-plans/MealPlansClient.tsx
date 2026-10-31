@@ -9,10 +9,9 @@ import SearchableSelect from "@/components/SearchableSelect";
 import Modal from "@/components/Modal";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { ContentPricingModal } from "@/components/content/ContentPricingModal";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
 import { accessToRaw, normalizeAccess } from "@/lib/api/paidContent";
-import { PAID_CONTENT_FLAG, accessSummary, isPaid } from "@/lib/paidContent/helpers";
+import { accessSummary, isPaid } from "@/lib/paidContent/helpers";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useDialogFocus } from "@/lib/ui/useDialogFocus";
 import { FoodPicker } from "./FoodPicker";
@@ -653,9 +652,8 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
   );
   const [assignPlan, setAssignPlan] = useState<DietPlan | null>(null);
   const [pricingPlan, setPricingPlan] = useState<DietPlan | null>(null);
-  const orgs = useOptionalOrganization();
-  const { isEnabled } = useFeatureFlags();
-  const sellingOn = isEnabled(PAID_CONTENT_FLAG, orgs?.currentOrg?._id);
+  // Pricing shows by the one paid-content rule, and not to a gym's staff trainer (D10).
+  const { on: sellingOn, canPrice } = usePaidContentSeller();
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
   const router = useRouter();
 
@@ -868,6 +866,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
               onToggle={() => handleToggle(plan)}
               // Only library templates in the platform format can be sold (PDF plans cannot, D13).
               onPricing={
+                canPrice &&
                 isTemplatePlan(plan) &&
                 plan.delivery_type !== DietPlanDeliveryType.DOCUMENT &&
                 (sellingOn || isPaid(normalizeAccess(plan.access)))

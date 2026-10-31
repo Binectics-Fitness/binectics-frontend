@@ -4,24 +4,29 @@ import { useEffect, useState } from "react";
 import { DSCard, DSCardHead, EmptySlate, AsyncSpinner, StatusPill } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { paidContentErrorOf, paidContentService, type ContentSale } from "@/lib/api/paidContent";
-import { kindLabel, paidContentCopy, paidContentOn, refundConfirmCopy, shortDate } from "@/lib/paidContent/helpers";
+import { kindLabel, paidContentCopy, refundConfirmCopy, shortDate } from "@/lib/paidContent/helpers";
 
 const PAGE = 25;
+
+/** A sale plus what this screen knows locally: a refund asked for but not yet processed. */
+type SaleRow = ContentSale & { refundRequested?: boolean };
 
 /**
  * The provider's sales of programs and meal plans (GET /content/sales). Refund
  * is the provider's own decision, in full; nothing is refunded automatically
  * and the buyer cannot ask for one. Money collected on the platform account is
  * refunded by Binectics once asked, so the answer can be "requested" rather
- * than "sent". Shown only while `paid_content` is on.
+ * than "sent". Shown only while `paid_content` is on for the current
+ * workspace (global when none), and the Refund button only to the workspace's
+ * owner: a staff trainer sees their sales but the API answers a refund with a
+ * 404 for anyone else.
  */
 export function ContentSalesSection() {
-  const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
-  const on = paidContentOn(flags);
-  const [rows, setRows] = useState<ContentSale[] | null>(null);
+  const { on, flagsLoading, ownsWorkspace: canRefund } = usePaidContentSeller();
+  const [rows, setRows] = useState<SaleRow[] | null>(null);
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +62,9 @@ export function ContentSalesSection() {
     const res = await paidContentService.sales(PAGE, rows.length);
     setLoadingMore(false);
     if (!res.success || !res.data) return toast.error(res.message || "Couldn't load more. Try again.");
-    setRows([...rows, ...res.data]);
-    setMore(res.data.length === PAGE);
+    const next = res.data;
+    setRows((cur) => [...(cur ?? rows), ...next]);
+    setMore(next.length === PAGE);
   };
 
   const refund = async (sale: ContentSale) => {
@@ -70,8 +76,20 @@ export function ContentSalesSection() {
       toast.error(e ? paidContentCopy(e) : res.message || "Couldn't refund this sale. Try again.");
       return;
     }
-    toast.success(res.data === "requested" ? "Refund requested" : "Refund sent");
-    setAttempt((n) => n + 1);
+    const requested = res.data === "requested";
+    toast.success(requested ? "Refund requested" : "Refund sent");
+    // Update just this row. Re-fetching the first page would drop the pages
+    // already loaded; a "requested" refund isn't processed yet, so the row
+    // says so locally and its button goes away (it can't be clicked twice).
+    setRows((cur) =>
+      (cur ?? []).map((r) =>
+        r.id === sale.id
+          ? requested
+            ? { ...r, refundRequested: true }
+            : { ...r, status: "refunded" as const, refundedAt: new Date().toISOString() }
+          : r,
+      ),
+    );
   };
 
   const askRefund = (sale: ContentSale) =>
@@ -131,7 +149,9 @@ export function ContentSalesSection() {
                       </span>
                       {refunded ? (
                         <StatusPill label="Refunded" tone="neutral" />
-                      ) : (
+                      ) : s.refundRequested ? (
+                        <StatusPill label="Refund requested" tone="warn" />
+                      ) : !canRefund ? null : (
                         <button
                           type="button"
                           className="btn-ghost-v2"

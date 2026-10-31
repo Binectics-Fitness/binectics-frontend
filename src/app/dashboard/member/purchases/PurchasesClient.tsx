@@ -18,6 +18,7 @@ import {
   entitlementStateLabel,
   kindLabel,
   offerPath,
+  purchaseIsDead,
   purchaseStatusLabel,
   purchaseView,
   shortDate,
@@ -44,13 +45,15 @@ export default function PurchasesClient() {
     void (async () => {
       const [p, e] = await Promise.all([paidContentService.myPurchases(), paidContentService.myEntitlements()]);
       if (!active) return;
-      if (!p.success || !p.data) {
-        setError(p.message || "Check your connection and try again.");
+      // Either list failing is an error with a retry: an empty "Nothing here
+      // yet" would tell a member who owns things that they own nothing.
+      if (!p.success || !p.data || !e.success || !e.data) {
+        setError(p.message || e.message || "Check your connection and try again.");
         return;
       }
       setPurchases(p.data);
-      setOwned(e.success && e.data ? e.data.items : []);
-      setCursor(e.success && e.data ? e.data.nextCursor : null);
+      setOwned(e.data.items);
+      setCursor(e.data.nextCursor);
       setError(null);
     })();
     return () => {
@@ -70,8 +73,10 @@ export default function PurchasesClient() {
   };
 
   // A paid purchase is listed as an entitlement; these are the ones still
-  // settling or returned.
-  const records = (purchases ?? []).filter((p) => purchaseView(p) !== "unlocked");
+  // settling or returned. Holds that died (expired, failed, cancelled) charged
+  // nothing and cannot be finished, so they are left out: buying again starts
+  // a new one from the item.
+  const records = (purchases ?? []).filter((p) => purchaseView(p) !== "unlocked" && !purchaseIsDead(p));
 
   return (
     <MemberDashboardShell activeLabel="Purchases">
@@ -79,12 +84,16 @@ export default function PurchasesClient() {
         title="My purchases"
         subtitle="Programs and meal plans you bought, were given, or get through a plan."
       />
-      {error && purchases === null ? (
+      {error ? (
         <EmptySlate
           message="We couldn't load your purchases."
           hint={error}
           action={
-            <button type="button" className="btn-ghost-v2" onClick={() => setAttempt((n) => n + 1)}>
+            <button type="button" className="btn-ghost-v2" onClick={() => {
+                setError(null);
+                setPurchases(null);
+                setAttempt((n) => n + 1);
+              }}>
               Try again
             </button>
           }

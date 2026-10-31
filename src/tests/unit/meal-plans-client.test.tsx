@@ -4,8 +4,13 @@ import MealPlansClient from "@/app/dashboard/dietitian/meal-plans/MealPlansClien
 import { progressService, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType, MealSlot, PlanStatus } from "@/lib/types";
 
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1", role: "DIETITIAN" } }) }));
+const sell = vi.hoisted(() => ({ on: false, org: null as Record<string, unknown> | null }));
+vi.mock("@/contexts/OrganizationContext", () => ({
+  useOptionalOrganization: () => ({ currentOrg: sell.org }),
+}));
 vi.mock("@/hooks/useFeatureFlags", () => ({
-  useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
+  useFeatureFlags: () => ({ isEnabled: () => sell.on, data: undefined, isLoading: false }),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
 vi.mock("next/link", () => ({
@@ -154,5 +159,37 @@ describe("MealPlansClient builder keyboard", () => {
     fireEvent.keyDown(title, { key: "Escape" });
     expect(await screen.findByText("Discard changes?")).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "New meal plan" })).toBeInTheDocument();
+  });
+});
+
+describe("MealPlansClient: Pricing button", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    sell.on = true;
+    sell.org = { _id: "org1", owner_id: "u1", is_owner: true };
+    vi.spyOn(progressService, "getProviderDietPlans").mockResolvedValue({ success: true, data: [TEMPLATE, ASSIGNED, DOCUMENT] });
+    vi.spyOn(progressService, "getMyClientProfiles").mockResolvedValue({ success: true, data: [] });
+  });
+
+  it("shows on a sellable template for the workspace's owner while the flag is on", async () => {
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    expect(within(card("Template week")).getByRole("button", { name: "Pricing" })).toBeInTheDocument();
+    expect(within(card("Assigned week")).queryByRole("button", { name: "Pricing" })).toBeNull();
+    expect(within(card("PDF plan")).queryByRole("button", { name: "Pricing" })).toBeNull();
+  });
+
+  it("is hidden while the flag is off", async () => {
+    sell.on = false;
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    expect(within(card("Template week")).queryByRole("button", { name: "Pricing" })).toBeNull();
+  });
+
+  it("is hidden from a gym's staff trainer (D10)", async () => {
+    sell.org = { _id: "gym1", owner_id: "boss", is_owner: false, my_role_code: "consultant" };
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    expect(within(card("Template week")).queryByRole("button", { name: "Pricing" })).toBeNull();
   });
 });
