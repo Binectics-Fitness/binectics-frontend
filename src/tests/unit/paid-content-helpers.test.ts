@@ -12,6 +12,8 @@ import {
   purchaseStatusLabel,
   renewHint,
   gatewayFailureCopy,
+  memberContentMessage,
+  shortDate,
 } from "@/lib/paidContent/helpers";
 import {
   normalizeAccess,
@@ -183,5 +185,31 @@ describe("pricing draft", () => {
     const same = draftFromAccess(a);
     expect(draftFingerprint(d)).toBe(draftFingerprint(same));
     expect(draftFingerprint({ ...d, showOnListing: true })).not.toBe(draftFingerprint(d));
+  });
+});
+
+describe("shortDate", () => {
+  it("reads the UTC day, whatever zone the viewer is in", () => {
+    // 23:30 UTC on 3 Nov is already 4 Nov east of UTC and still 3 Nov west of it.
+    expect(shortDate("2026-11-03T23:30:00.000Z")).toBe("3 Nov 2026");
+    expect(shortDate("2026-11-04T00:30:00.000Z")).toBe("4 Nov 2026");
+  });
+  it("is empty for no or a bad date", () => {
+    expect(shortDate(null)).toBe("");
+    expect(shortDate("nope")).toBe("");
+  });
+});
+
+describe("memberContentMessage", () => {
+  it("uses the shared member frozen text, not the provider wording", () => {
+    const res = { success: false, code: "CONTENT_ACCESS_FROZEN", message: "" };
+    const msg = memberContentMessage(res, paidContentErrorOf(res), "fallback");
+    expect(msg).toMatch(/Renew to keep it going/);
+    expect(msg).not.toMatch(/client/i);
+  });
+  it("otherwise falls back to the paid-content copy or the message", () => {
+    const res = { success: false, code: "CONTENT_ALREADY_OWNED", message: "" };
+    expect(memberContentMessage(res, paidContentErrorOf(res), "fallback")).toBe("You already have this.");
+    expect(memberContentMessage({ message: "" }, null, "fallback")).toBe("fallback");
   });
 });

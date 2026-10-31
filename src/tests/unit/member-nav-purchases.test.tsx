@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { MemberDashboardShell, resetHoldsCache } from "@/components/ds/MemberDashboardShell";
 import { paidContentService } from "@/lib/api/paidContent";
 
 /**
@@ -8,7 +8,7 @@ import { paidContentService } from "@/lib/api/paidContent";
  * current workspace (global with none), and also shows once the member holds
  * any program or meal plan, so turning the flag off never hides what they own.
  */
-const state = vi.hoisted(() => ({ flag: false, orgId: null as string | null, seenOrg: undefined as unknown }));
+const state = vi.hoisted(() => ({ flag: false, orgId: null as string | null, seenOrg: undefined as unknown, loading: false }));
 
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({
@@ -17,7 +17,7 @@ vi.mock("@/hooks/useFeatureFlags", () => ({
       return state.flag;
     },
     data: undefined,
-    isLoading: false,
+    isLoading: state.loading,
   }),
 }));
 vi.mock("@/contexts/OrganizationContext", () => ({
@@ -46,6 +46,8 @@ describe("member nav: Purchases link", () => {
     state.flag = false;
     state.orgId = null;
     state.seenOrg = undefined;
+    state.loading = false;
+    resetHoldsCache();
     vi.restoreAllMocks();
   });
 
@@ -85,5 +87,34 @@ describe("member nav: Purchases link", () => {
     vi.spyOn(paidContentService, "myEntitlements").mockResolvedValue({ success: true, data: { items: [], nextCursor: null } });
     render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
     expect(state.seenOrg).toBe("org-9");
+  });
+
+  it("does not ask while the flags are still loading", () => {
+    state.loading = true;
+    const read = vi.spyOn(paidContentService, "myEntitlements");
+    render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it("asks once, then answers the next mount from the cache", async () => {
+    const read = vi.spyOn(paidContentService, "myEntitlements").mockResolvedValue({ success: true, data: { items: [], nextCursor: null } });
+    const first = render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
+    await waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    first.unmount();
+    render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
+    expect(read).toHaveBeenCalledTimes(1);
+  });
+
+  it("remembers that the member holds content", async () => {
+    const read = vi.spyOn(paidContentService, "myEntitlements").mockResolvedValue({
+      success: true,
+      data: { items: [{ id: "e1" }] as never, nextCursor: null },
+    });
+    const first = render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
+    await waitFor(() => expect(purchasesLinks().length).toBeGreaterThan(0));
+    first.unmount();
+    render(<MemberDashboardShell activeLabel="Home">x</MemberDashboardShell>);
+    expect(purchasesLinks().length).toBeGreaterThan(0);
+    expect(read).toHaveBeenCalledTimes(1);
   });
 });
