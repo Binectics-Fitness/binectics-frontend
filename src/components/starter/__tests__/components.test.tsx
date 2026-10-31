@@ -144,7 +144,7 @@ describe("StarterSession", () => {
       expect(alert).not.toHaveTextContent("API sentence");
       expect(screen.getByRole("link", { name: "See how to renew" })).toHaveAttribute(
         "href",
-        "/dashboard/member/billing",
+        "/dashboard/member/purchases",
       );
     },
   );
