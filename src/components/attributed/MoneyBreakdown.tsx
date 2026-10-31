@@ -1,6 +1,5 @@
 import type { AttributedMoney } from "@/lib/api/attributedRevenue";
 import { formatMinor } from "@/lib/currencies/helpers";
-import { contentMinorOf } from "@/lib/attributedRevenue/helpers";
 
 function Line({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
@@ -42,7 +41,7 @@ export function MoneyBreakdown({
         <Line label="Net" value={formatMinor(c, money.netMinor)} strong />
         <Line label="From sessions" value={formatMinor(c, money.consultationsMinor)} />
         <Line label="From memberships" value={formatMinor(c, money.subscriptionsMinor)} />
-        <Line label="From programs and meal plans" value={formatMinor(c, contentMinorOf(money))} />
+        <Line label="From programs and meal plans" value={formatMinor(c, money.contentMinor)} />
         <Line label="Payments" value={money.payments.toLocaleString("en-GB")} />
       </dl>
     </div>

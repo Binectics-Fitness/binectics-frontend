@@ -1,4 +1,4 @@
-import type { AttributedItem, AttributedMoney, TrainerRevenueRow } from "@/lib/api/attributedRevenue";
+import type { AttributedItem, TrainerRevenueRow } from "@/lib/api/attributedRevenue";
 
 /**
  * The date window of the attributed-revenue reports (binectics-api
@@ -66,15 +66,6 @@ export function attributedTypeLabel(type: string): string {
 
 export const trainerName = (r: Pick<TrainerRevenueRow, "firstName" | "lastName">): string =>
   [r.firstName, r.lastName].filter(Boolean).join(" ").trim() || "Unnamed trainer";
-
-/**
- * Of gross, what is neither a session nor a membership. The API counts
- * program and meal plan purchases in gross and net but sends no field for
- * them, so this is derived (gross - sessions - memberships) and clamped.
- */
-export function contentMinorOf(m: Pick<AttributedMoney, "grossMinor" | "consultationsMinor" | "subscriptionsMinor">): number {
-  return Math.max(0, m.grossMinor - m.consultationsMinor - m.subscriptionsMinor);
-}
 
 /** "20 Oct 2026" in UTC, like the window the report is read in ("Dates are UTC"). */
 export function utcShortDate(iso: string | null | undefined): string {

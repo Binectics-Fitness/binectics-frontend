@@ -8,7 +8,7 @@ import {
   parseMyEarnings,
   parseRevenueByTrainer,
 } from "@/lib/api/attributedRevenue";
-import { contentMinorOf, groupByTrainer, utcShortDate, windowFor, windowLabel, attributedTypeLabel } from "@/lib/attributedRevenue/helpers";
+import { groupByTrainer, utcShortDate, windowFor, windowLabel, attributedTypeLabel } from "@/lib/attributedRevenue/helpers";
 
 vi.mock("@/components/ds/GymDashboardShell", () => ({
   GymDashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -31,6 +31,7 @@ const row = (user: string, first: string, currency: string, over: Record<string,
   net_minor: 900000,
   consultations_minor: 600000,
   subscriptions_minor: 300000,
+  content_minor: 100000,
   payments: 4,
   ...over,
 });
@@ -43,9 +44,12 @@ describe("helpers", () => {
     expect(windowFor("month", new Date("2026-10-28T10:00:00Z")).from).toBe("2026-10-01T00:00:00.000Z");
     expect(windowLabel(w.from, w.to)).toBe("22 Oct to 28 Oct (UTC)");
   });
-  it("derives the program and meal plan share without going negative", () => {
-    expect(contentMinorOf({ grossMinor: 1000, consultationsMinor: 600, subscriptionsMinor: 300 })).toBe(100);
-    expect(contentMinorOf({ grossMinor: 100, consultationsMinor: 600, subscriptionsMinor: 300 })).toBe(0);
+  it("reads content_minor, and falls back to the old derivation only when the API lacks it", () => {
+    const read = (over: Record<string, unknown>) => parseRevenueByTrainer({ items: [row("a", "Ann", "NGN", over)] }).items[0].contentMinor;
+    expect(read({ content_minor: 100000 })).toBe(100000);
+    expect(read({ content_minor: 0, gross_minor: 1000000 })).toBe(0); // present zero is trusted, not re-derived
+    expect(read({ content_minor: undefined })).toBe(100000); // older API: 1,000,000 - 600,000 - 300,000
+    expect(read({ content_minor: undefined, gross_minor: 100, consultations_minor: 600, subscriptions_minor: 300 })).toBe(0);
   });
   it("formats item dates in UTC, whatever the browser's timezone", () => {
     expect(utcShortDate("2026-10-20T23:30:00Z")).toBe("20 Oct 2026");
@@ -110,10 +114,11 @@ describe("Revenue by trainer page", () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  it("says it is the owner's report on a 404", async () => {
+  it("says you have no access on a 404, without naming only the owner", async () => {
     vi.spyOn(attributedRevenueService, "revenueByTrainer").mockResolvedValue({ success: false, status: 404, message: "Organization not found" });
     render(<TrainerRevenueClient />);
-    expect(await screen.findByText("Only the gym's owner can see revenue by trainer.")).toBeInTheDocument();
+    expect(await screen.findByText("You don't have access to revenue by trainer.")).toBeInTheDocument();
+    expect(screen.queryByText(/only the/i)).not.toBeInTheDocument();
   });
 });
 

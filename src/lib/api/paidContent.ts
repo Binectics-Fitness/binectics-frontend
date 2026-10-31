@@ -123,6 +123,27 @@ export interface ContentSale extends ContentPurchase {
   paymentRail: string;
 }
 
+/** One row of GET /content/organizations/:orgId/sales. */
+export interface OrgContentSale extends ContentSale {
+  paidLate: boolean;
+  trainerName: string | null;
+  transactionId: string | null;
+}
+
+export interface OrgContentSalesPage {
+  items: OrgContentSale[];
+  total: number;
+  limit: number;
+  skip: number;
+}
+
+export interface OrgContentSalesQuery {
+  status?: "paid" | "refunded";
+  trainerId?: string;
+  limit?: number;
+  skip?: number;
+}
+
 export interface ContentGrant {
   id: string;
   clientId: string;
@@ -262,6 +283,16 @@ export function normalizeSale(raw: Record<string, unknown>): ContentSale {
     ...normalizePurchase(raw),
     buyerName: typeof buyer.name === "string" ? buyer.name : "",
     paymentRail: typeof raw.payment_rail === "string" ? raw.payment_rail : "platform",
+  };
+}
+
+export function normalizeOrgSale(raw: Record<string, unknown>): OrgContentSale {
+  const trainer = raw.trainer && typeof raw.trainer === "object" ? (raw.trainer as Record<string, unknown>) : null;
+  return {
+    ...normalizeSale(raw),
+    paidLate: raw.paid_late === true,
+    trainerName: trainer && typeof trainer.name === "string" ? trainer.name : null,
+    transactionId: typeof raw.transaction_id === "string" ? raw.transaction_id : null,
   };
 }
 
@@ -483,6 +514,26 @@ export const paidContentService = {
   async sales(limit = 50, skip = 0): Promise<ApiResponse<ContentSale[]>> {
     const res = await apiClient.get<unknown>(`/content/sales?limit=${limit}&skip=${skip}`);
     return mapOk(res, (d) => asList(d).map(normalizeSale));
+  },
+
+  /**
+   * A gym's content sales (owner, Admin, Manager; anyone else gets a 404).
+   * Paged with limit/skip; `total` counts the rows matching the filters.
+   */
+  async orgSales(orgId: string, q: OrgContentSalesQuery = {}): Promise<ApiResponse<OrgContentSalesPage>> {
+    const p = new URLSearchParams({ limit: String(q.limit ?? 50), skip: String(q.skip ?? 0) });
+    if (q.status) p.set("status", q.status);
+    if (q.trainerId) p.set("trainer_id", q.trainerId);
+    const res = await apiClient.get<Record<string, unknown>>(`/content/organizations/${enc(orgId)}/sales?${p.toString()}`);
+    return mapOk(res, (d) => {
+      const items = asList(d?.items).map(normalizeOrgSale);
+      return {
+        items,
+        total: typeof d?.total === "number" ? d.total : items.length,
+        limit: typeof d?.limit === "number" ? d.limit : q.limit ?? 50,
+        skip: typeof d?.skip === "number" ? d.skip : q.skip ?? 0,
+      };
+    });
   },
 
   /**
