@@ -166,12 +166,18 @@ describe("ContentBuyPanel", () => {
 
     it("does nothing more once unmounted mid-poll", async () => {
       verify.mockResolvedValue(ok({ purchase: purchase("pending"), gatewayStatus: "pending" }));
-      getPurchase.mockResolvedValue(ok(purchase("paid")));
+      let release: () => void = () => {};
+      getPurchase.mockImplementation(
+        () => new Promise((resolve) => { release = () => resolve(ok(purchase("paid"))); }),
+      );
       const { onUnlocked, unmount } = await pay();
+      // A re-read is in flight; the panel goes away; the answer arrives late.
+      await waitFor(() => expect(getPurchase).toHaveBeenCalledTimes(1));
       unmount();
-      await new Promise((r) => setTimeout(r, 120));
+      release();
+      await new Promise((r) => setTimeout(r, 80));
       expect(onUnlocked).not.toHaveBeenCalled();
-      expect(getPurchase.mock.calls.length).toBeLessThanOrEqual(1);
+      expect(getPurchase).toHaveBeenCalledTimes(1);
     });
   });
 });

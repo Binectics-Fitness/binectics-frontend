@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import { toast } from "@/components/Toast";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useOrgPriceCurrencies } from "@/lib/queries/currencies";
 import { orgPriceOptions } from "@/lib/currencies/helpers";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -31,9 +32,14 @@ function clientUserId(c: ClientProfile): string {
   return typeof c.client_id === "object" && c.client_id ? c.client_id._id : String(c.client_id);
 }
 function clientLabel(c: ClientProfile): string {
-  return typeof c.client_id === "object" && c.client_id
-    ? `${c.client_id.first_name} ${c.client_id.last_name}`.trim() || "Client"
-    : "Client";
+  if (typeof c.client_id === "object" && c.client_id) {
+    return `${c.client_id.first_name ?? ""} ${c.client_id.last_name ?? ""}`.trim() || c.client_id.email || "Client";
+  }
+  return "Client";
+}
+/** A grant whose client isn't in the list: tell them apart by the id's tail. */
+function unknownClientLabel(userId: string): string {
+  return userId ? `Client ending ${userId.slice(-4)}` : "Client";
 }
 
 /**
@@ -81,11 +87,24 @@ export function ContentPricingModal({
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [disabled, setDisabled] = useState(false);
+  const [peopleError, setPeopleError] = useState<string | null>(null);
+  const [peopleAttempt, setPeopleAttempt] = useState(0);
+  // The fingerprint of what our own save returned. The list then hands the
+  // saved block back as `rawAccess`; that must not reset the draft or wipe the
+  // warnings the save just produced.
+  const ownSave = useRef<string | null>(null);
 
   // Each open starts from what the list says now.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      ownSave.current = null;
+      return;
+    }
     const d = draftFromAccess(saved);
+    if (ownSave.current !== null && ownSave.current === draftFingerprint(d)) {
+      ownSave.current = null;
+      return;
+    }
     /* eslint-disable react-hooks/set-state-in-effect */
     setDraft(d);
     setBaseline(draftFingerprint(d));
@@ -118,13 +137,20 @@ export function ContentPricingModal({
         progressService.getMyClientProfiles(),
       ]);
       if (!active) return;
-      setGrants(g.success && g.data ? g.data : []);
-      setClients(c.success && c.data ? c.data : []);
+      // A failed read is not "nobody": say so, and let them retry.
+      if (!g.success || !g.data || !c.success || !c.data) {
+        const e = paidContentErrorOf(g);
+        setPeopleError(e ? paidContentCopy(e) : g.message || c.message || "Check your connection and try again.");
+        return;
+      }
+      setPeopleError(null);
+      setGrants(g.data);
+      setClients(c.data);
     })();
     return () => {
       active = false;
     };
-  }, [open, savedPaid, kind, itemId]);
+  }, [open, savedPaid, kind, itemId, peopleAttempt]);
 
   const dirty = draftFingerprint(draft) !== baseline;
   const used = new Set(draft.prices.map((p) => p.currency));
@@ -133,7 +159,7 @@ export function ContentPricingModal({
   const patch = (p: Partial<PricingDraft>) => setDraft((d) => ({ ...d, ...p }));
   const nameOf = (userId: string) => {
     const c = clients.find((x) => clientUserId(x) === userId);
-    return c ? clientLabel(c) : "A client";
+    return c ? clientLabel(c) : unknownClientLabel(userId);
   };
 
   const save = async () => {
@@ -154,6 +180,7 @@ export function ContentPricingModal({
     setDraft(next);
     setBaseline(draftFingerprint(next));
     setWarnings(res.data.warnings);
+    ownSave.current = draftFingerprint(next);
     onSaved(res.data.access);
     toast.success(built.input.mode === "paid" ? "Pricing saved" : "Now free");
   };
@@ -161,7 +188,10 @@ export function ContentPricingModal({
   const give = async () => {
     if (!pickClient) return;
     const res = await paidContentService.grant(kind, itemId, pickClient);
-    if (!res.success) return toast.error(res.message || "Couldn't give it. Try again.");
+    if (!res.success) {
+      const e = paidContentErrorOf(res);
+      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't give it. Try again.");
+    }
     const g = await paidContentService.listGrants(kind, itemId);
     if (g.success && g.data) setGrants(g.data);
     setPickClient("");
@@ -170,23 +200,37 @@ export function ContentPricingModal({
 
   const withdraw = async (grant: ContentGrant) => {
     const res = await paidContentService.revokeGrant(grant.id);
-    if (!res.success) return toast.error(res.message || "Couldn't withdraw it. Try again.");
+    if (!res.success) {
+      const e = paidContentErrorOf(res);
+      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't withdraw it. Try again.");
+    }
     setGrants((list) => list.filter((x) => x.id !== grant.id));
     toast.success("Free access withdrawn");
   };
 
   const quiet = disabled && !savedPaid;
 
+  // Unsaved edits: the Modal's own guard only sees typing, not the Free/Paid
+  // switch or ticks, so this modal runs the guard itself from the draft's
+  // fingerprint and turns the Modal's off (one prompt, from here).
+  const { requestClose, markDirty, reset, confirmationModal } = useUnsavedChangesGuard(onClose);
+  useEffect(() => {
+    if (dirty) markDirty();
+    else reset();
+  }, [dirty, markDirty, reset]);
+
   return (
+    <>
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
+      disableCloseGuard
       title={`Pricing: ${title}`}
       size="lg"
       footer={
         quiet ? undefined : (
           <div className="flex justify-end gap-2">
-            <button type="button" className="btn-ghost-v2" onClick={onClose}>
+            <button type="button" className="btn-ghost-v2" onClick={requestClose}>
               Close
             </button>
             <button type="button" className="btn-primary-v2" disabled={saving || !dirty} onClick={() => void save()}>
@@ -344,7 +388,16 @@ export function ContentPricingModal({
               <div className="font-mono text-[11px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>
                 Given for free
               </div>
-              {grants.length === 0 ? (
+              {peopleError ? (
+                <div className="mb-2">
+                  <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
+                    We couldn&apos;t load who has it. {peopleError}
+                  </p>
+                  <button type="button" className="btn-ghost-v2 mt-1" onClick={() => setPeopleAttempt((n) => n + 1)}>
+                    Try again
+                  </button>
+                </div>
+              ) : grants.length === 0 ? (
                 <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Nobody has it for free yet.</p>
               ) : (
                 <ul className="flex flex-col gap-1.5 mb-2">
@@ -370,7 +423,8 @@ export function ContentPricingModal({
                   {clients
                     .filter((c) => !grants.some((g) => g.clientId === clientUserId(c)))
                     .map((c) => (
-                      <option key={c._id} value={clientUserId(c)}>
+                      // The API takes a client PROFILE id here; a grant lists the client's user id.
+                      <option key={c._id} value={c._id}>
                         {clientLabel(c)}
                       </option>
                     ))}
@@ -395,5 +449,7 @@ export function ContentPricingModal({
         </div>
       )}
     </Modal>
+    {confirmationModal}
+    </>
   );
 }
