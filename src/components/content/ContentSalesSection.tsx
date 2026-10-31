@@ -19,8 +19,9 @@ type SaleRow = ContentSale & { refundRequested?: boolean };
  * is the provider's own decision, in full; nothing is refunded automatically
  * and the buyer cannot ask for one. Money collected on the platform account is
  * refunded by Binectics once asked, so the answer can be "requested" rather
- * than "sent". Shown only while `paid_content` is on for the current
- * workspace (global when none), and the Refund button only to the workspace's
+ * than "sent". Shown while `paid_content` is on for the current
+ * workspace (global when none) OR once there are sales to show (turning the
+ * flag off never hides history or refunds), and the Refund button only to the workspace's
  * owner: a staff trainer sees their sales but the API answers a refund with a
  * 404 for anyone else.
  */
@@ -35,7 +36,8 @@ export function ContentSalesSection() {
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   useEffect(() => {
-    if (!on) return;
+    // Flags read "off" while they load; wait, so no call is made for nothing.
+    if (flagsLoading) return;
     let active = true;
     void (async () => {
       const res = await paidContentService.sales(PAGE, 0);
@@ -52,9 +54,13 @@ export function ContentSalesSection() {
     return () => {
       active = false;
     };
-  }, [on, attempt]);
+  }, [flagsLoading, attempt]);
 
-  if (flagsLoading || !on) return null;
+  // With the flag off the section is hidden unless there is a sales history:
+  // those sales and their refunds stay reachable. The first page doubles as
+  // the check, so there is no extra call.
+  if (flagsLoading) return null;
+  if (!on && (rows === null || rows.length === 0)) return null;
 
   const showMore = async () => {
     if (!rows || loadingMore) return;
