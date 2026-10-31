@@ -521,6 +521,8 @@ export interface DietPlan {
   version: number;
   /** Raw paid-content block (read with normalizeAccess); absent means free. */
   access?: unknown;
+  /** Stamp on a bought copy: which catalogue item it came from. */
+  paid_access?: { item_id?: string } | null;
   assigned_at: string;
   created_at: string;
   updated_at: string;

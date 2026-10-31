@@ -7,6 +7,12 @@ import { AsyncSpinner, EmptySlate, PageHeader } from "@/components/ds";
 import { progressService, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType } from "@/lib/types";
 import { isWeeklyPlan, planDays } from "@/lib/progress/weeklyPlan";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { paidContentOn, offerPath } from "@/lib/paidContent/helpers";
+import { deliveredAccess } from "@/lib/paidContent/offers";
+import { useUnlockableOffers } from "@/hooks/useUnlockableOffers";
+import { ContentOffersStrip } from "@/components/content/ContentOffersStrip";
 
 function providerName(plan: DietPlan): string | null {
   if (typeof plan.created_by === "object" && plan.created_by !== null) {
@@ -23,6 +29,11 @@ export default function MemberMealPlansPage() {
   const [plans, setPlans] = useState<DietPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Paid content shows only while the flag is on for the current workspace.
+  const { isEnabled } = useFeatureFlags();
+  const currentOrgId = useOptionalOrganization()?.currentOrg?._id ?? null;
+  const paidOn = paidContentOn(isEnabled, currentOrgId);
+  const unlockable = useUnlockableOffers(paidOn);
 
   useEffect(() => {
     let active = true;
@@ -68,9 +79,10 @@ export default function MemberMealPlansPage() {
           {plans.map((plan) => {
             const isDocument = plan.delivery_type === DietPlanDeliveryType.DOCUMENT;
             const provider = providerName(plan);
+            const { frozen, itemId } = paidOn ? deliveredAccess(plan) : { frozen: false, itemId: null };
             return (
+              <div key={plan._id} className="flex flex-col gap-2">
               <Link
-                key={plan._id}
                 href={`/dashboard/member/meal-plans/${plan._id}`}
                 className="rounded-(--r-3) px-5 py-4 flex flex-col gap-1.5"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
@@ -99,10 +111,27 @@ export default function MemberMealPlansPage() {
                   </div>
                 )}
               </Link>
+              {frozen && itemId && (
+                <div className="flex flex-wrap items-center gap-2 text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+                  <span>Your access ended. You can still read this plan.</span>
+                  <Link href={offerPath("meal_plan", itemId)} className="underline" style={{ color: "var(--ink)" }}>
+                    See how to renew
+                  </Link>
+                </div>
+              )}
+              </div>
             );
           })}
         </div>
       ) : null}
+
+      {paidOn && !error && !loading && (
+        <ContentOffersStrip
+          offers={unlockable}
+          title="Programs & meal plans from your providers"
+          className="mt-8"
+        />
+      )}
     </MemberDashboardShell>
   );
 }
