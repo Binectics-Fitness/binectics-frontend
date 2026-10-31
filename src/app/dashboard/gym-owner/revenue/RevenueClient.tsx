@@ -43,6 +43,7 @@ export default function RevenueClient() {
   const viewer = useGymViewer();
   const canSeeRefunds = allows(viewer, GYM_NAV_ACCESS.Refunds);
   // Revenue by trainer is the owner's (GET .../revenue-by-trainer answers 404 to anyone else).
+  // Not behind paid_content on purpose: it reports sessions and memberships too.
   const isOwner = viewer.isOwner;
   const [error, setError] = useState<string | null>(null);
   // A plan without analytics is known from the billing status: skip the

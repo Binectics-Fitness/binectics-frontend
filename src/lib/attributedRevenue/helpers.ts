@@ -76,7 +76,25 @@ export function contentMinorOf(m: Pick<AttributedMoney, "grossMinor" | "consulta
   return Math.max(0, m.grossMinor - m.consultationsMinor - m.subscriptionsMinor);
 }
 
-/** Rows for one trainer, grouped by id in the order the API sent them. */
+/** "20 Oct 2026" in UTC, like the window the report is read in ("Dates are UTC"). */
+export function utcShortDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+/**
+ * Rows for one trainer, grouped by id in the order the API sent them.
+ *
+ * The API pages rows (one per trainer AND currency), not trainers, so a
+ * trainer with two currencies can have one row at the end of a page and the
+ * other at the start of the next. This groups the page it is given; the page
+ * shows what is on this page and says so (the pager sits right below). It is
+ * not merged across pages on purpose: totals are the API's, never recomputed
+ * here.
+ */
 export function groupByTrainer(rows: TrainerRevenueRow[]): { userId: string; name: string; rows: TrainerRevenueRow[] }[] {
   const out: { userId: string; name: string; rows: TrainerRevenueRow[] }[] = [];
   for (const r of rows) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TrainerRevenueClient from "@/app/dashboard/gym-owner/revenue/trainers/TrainerRevenueClient";
 import { MyAttributedEarnings } from "@/components/attributed/MyAttributedEarnings";
@@ -8,7 +8,7 @@ import {
   parseMyEarnings,
   parseRevenueByTrainer,
 } from "@/lib/api/attributedRevenue";
-import { contentMinorOf, groupByTrainer, windowFor, windowLabel, attributedTypeLabel } from "@/lib/attributedRevenue/helpers";
+import { contentMinorOf, groupByTrainer, utcShortDate, windowFor, windowLabel, attributedTypeLabel } from "@/lib/attributedRevenue/helpers";
 
 vi.mock("@/components/ds/GymDashboardShell", () => ({
   GymDashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -46,6 +46,12 @@ describe("helpers", () => {
   it("derives the program and meal plan share without going negative", () => {
     expect(contentMinorOf({ grossMinor: 1000, consultationsMinor: 600, subscriptionsMinor: 300 })).toBe(100);
     expect(contentMinorOf({ grossMinor: 100, consultationsMinor: 600, subscriptionsMinor: 300 })).toBe(0);
+  });
+  it("formats item dates in UTC, whatever the browser's timezone", () => {
+    expect(utcShortDate("2026-10-20T23:30:00Z")).toBe("20 Oct 2026");
+    expect(utcShortDate("2026-10-21T00:00:00Z")).toBe("21 Oct 2026");
+    expect(utcShortDate(null)).toBe("");
+    expect(utcShortDate("nope")).toBe("");
   });
   it("names the ledger kinds and groups rows by trainer", () => {
     expect(attributedTypeLabel("content_purchase")).toBe("Program or meal plan");
@@ -86,7 +92,8 @@ describe("Revenue by trainer page", () => {
     render(<TrainerRevenueClient />);
     expect(await screen.findByText("Ann T")).toBeInTheDocument();
     expect(screen.getByText(/Dates are UTC/)).toBeInTheDocument();
-    expect(screen.getByText("Gym net")).toBeInTheDocument();
+    expect(screen.getByText("Member payments net")).toBeInTheDocument();
+    expect(screen.queryByText("Gym net")).not.toBeInTheDocument();
     expect(screen.getAllByText(/Net · /)).toHaveLength(2); // NGN and USD, never one summed block
     expect(screen.getAllByText("From programs and meal plans")).toHaveLength(2);
     expect(spy).toHaveBeenCalledWith("org1", expect.objectContaining({ page: 1, limit: 25 }));
@@ -148,5 +155,53 @@ describe("My attributed earnings", () => {
     expect(within(refund).getByText("-₦1,000")).toBeInTheDocument();
     expect(screen.getByText(/The gym receives this money/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
+  });
+
+  it("drops a 'Show more' that comes back after the range changed", async () => {
+    const item = (id: string) => ({ id, occurred_at: "2026-10-20T23:30:00Z", type: "consultation", direction: "credit", amount_minor: 1000, currency: "NGN", organization_id: "o" });
+    const body = (items: unknown[], total: number) =>
+      parseMyEarnings({
+        from: "2026-10-01T00:00:00.000Z",
+        to: "2026-10-29T00:00:00.000Z",
+        currencies: [{ currency: "NGN", gross_minor: 1, refunds_minor: 0, net_minor: 1, consultations_minor: 1, subscriptions_minor: 0, payments: 1 }],
+        by_organization: [],
+        items,
+        total,
+        page: 1,
+        limit: 25,
+      });
+    let release: () => void = () => {};
+    const spy = vi
+      .spyOn(attributedRevenueService, "myEarnings")
+      .mockResolvedValueOnce(ok(body(Array.from({ length: 25 }, (_, i) => item(`a${i}`)), 26)))
+      .mockImplementationOnce(() => new Promise((resolve) => { release = () => resolve(ok(body([item("late")], 26))); }))
+      .mockResolvedValue(ok(body([item("fresh")], 1)));
+    render(<MyAttributedEarnings />);
+    await userEvent.click(await screen.findByRole("button", { name: "Show more" }));
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+    await userEvent.click(screen.getByRole("radio", { name: "90 days" }));
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(3));
+    release();
+    await new Promise((r) => setTimeout(r, 50));
+    // Only the new range's single row is listed; the old range's page 2 was dropped.
+    await waitFor(() => expect(screen.getAllByText("Session")).toHaveLength(1));
+    expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
+  });
+
+  it("dates its items in UTC", async () => {
+    vi.spyOn(attributedRevenueService, "myEarnings").mockResolvedValue(
+      ok(
+        parseMyEarnings({
+          from: "2026-10-01T00:00:00.000Z",
+          to: "2026-10-29T00:00:00.000Z",
+          currencies: [{ currency: "NGN", gross_minor: 1, refunds_minor: 0, net_minor: 1, consultations_minor: 1, subscriptions_minor: 0, payments: 1 }],
+          by_organization: [],
+          items: [{ id: "1", occurred_at: "2026-10-20T23:30:00Z", type: "consultation", direction: "credit", amount_minor: 1000, currency: "NGN", organization_id: "o" }],
+          total: 1,
+        }),
+      ),
+    );
+    render(<MyAttributedEarnings />);
+    expect(await screen.findByText("20 Oct 2026")).toBeInTheDocument();
   });
 });

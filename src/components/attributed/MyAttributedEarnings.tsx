@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AsyncSpinner, DSCard, DSCardHead, EmptySlate } from "@/components/ds";
 import { MoneyBreakdown } from "./MoneyBreakdown";
 import { RangeChips } from "./RangeChips";
 import { useCoachingGym } from "@/hooks/useTrainerAccess";
 import { formatMinor } from "@/lib/currencies/helpers";
-import { shortDate } from "@/lib/paidContent/helpers";
 import { attributedRevenueService, type AttributedItem, type MyAttributedEarnings as Earnings } from "@/lib/api/attributedRevenue";
-import { DEFAULT_RANGE, attributedTypeLabel, isRefund, windowFor, windowLabel, type RangeKey } from "@/lib/attributedRevenue/helpers";
+import { DEFAULT_RANGE, attributedTypeLabel, isRefund, utcShortDate, windowFor, windowLabel, type RangeKey } from "@/lib/attributedRevenue/helpers";
 
 const LIMIT = 25;
 
@@ -18,6 +17,9 @@ const LIMIT = 25;
  * delivered, memberships a rule routed to them, programs and meal plans they
  * authored. A report only: the gym receives this money. Shown only to a
  * trainer who coaches at a gym, the only place attribution exists.
+ *
+ * Deliberately NOT behind the paid_content flag (owner decision): the report
+ * also covers sessions and memberships, which exist without paid content.
  */
 export function MyAttributedEarnings() {
   const gym = useCoachingGym();
@@ -30,10 +32,14 @@ export function MyAttributedEarnings() {
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  // Bumped whenever the first page is (re)loaded for a range: a "Show more"
+  // that returns after the range changed belongs to the old range and is dropped.
+  const generation = useRef(0);
 
   useEffect(() => {
     if (!inGym) return;
     let active = true;
+    generation.current += 1;
     void (async () => {
       const res = await attributedRevenueService.myEarnings({ ...windowFor(range), page: 1, limit: LIMIT });
       if (!active) return;
@@ -57,8 +63,10 @@ export function MyAttributedEarnings() {
   const loadMore = async () => {
     if (loadingMore) return;
     setLoadingMore(true);
+    const started = generation.current;
     const res = await attributedRevenueService.myEarnings({ ...windowFor(range), page: page + 1, limit: LIMIT });
     setLoadingMore(false);
+    if (generation.current !== started) return;
     if (!res.success || !res.data) return setError(res.message || "Couldn't load more. Try again.");
     const next = [...items, ...res.data.items];
     setItems(next);
@@ -122,7 +130,7 @@ export function MyAttributedEarnings() {
                         <li key={i.id} className="flex items-center justify-between gap-3 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
                           <div>
                             <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>{attributedTypeLabel(i.type)}</div>
-                            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{shortDate(i.occurredAt)}</div>
+                            <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>{utcShortDate(i.occurredAt)}</div>
                           </div>
                           <div className="font-mono text-[13.5px]" style={{ color: debit ? "var(--danger-ink)" : "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                             {debit ? "-" : ""}

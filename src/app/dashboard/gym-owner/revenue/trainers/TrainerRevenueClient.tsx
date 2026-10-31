@@ -20,6 +20,10 @@ const LIMIT = 25;
  * Binectics, so there are no shares, payouts or balances here. One block per
  * trainer and currency; currencies are never summed. Owner only: anyone else
  * gets 404 from the API.
+ *
+ * Deliberately NOT behind the paid_content flag (owner decision): the report
+ * also covers sessions and memberships, which exist without paid content, so
+ * gating it would hide existing session/membership reporting.
  */
 export default function TrainerRevenueClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
@@ -104,14 +108,14 @@ export default function TrainerRevenueClient() {
             <DSCard>
               <DSCardHead
                 title="This window"
-                subtitle="The gym's net revenue, and the part of it attributed to a trainer. Per currency."
+                subtitle="Net member payments to the gym, and the part of them attributed to a trainer. Per currency."
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4.5">
                 {data.totals.map((t) => (
                   <div key={t.currency} className="rounded-(--r-2) p-4" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
                     <div className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>{t.currency}</div>
                     <div className="text-[13px] mt-2 flex justify-between gap-3">
-                      <span style={{ color: "var(--fg-2)" }}>Gym net</span>
+                      <span style={{ color: "var(--fg-2)" }}>Member payments net</span>
                       <span className="font-mono" style={{ color: "var(--ink)" }}>{formatMinor(t.currency, t.organizationNetMinor)}</span>
                     </div>
                     <div className="text-[13px] mt-1 flex justify-between gap-3">
