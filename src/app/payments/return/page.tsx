@@ -7,6 +7,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { consultationsService } from "@/lib/api/consultations";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { paidContentService } from "@/lib/api/paidContent";
 import { autoRenewSuccessQuery } from "@/lib/billing/autoRenew";
 import { clearPendingCheckout, readPendingCheckout } from "@/lib/payments/pendingCheckout";
 
@@ -19,6 +20,9 @@ import { clearPendingCheckout, readPendingCheckout } from "@/lib/payments/pendin
  * this page only asks the API to check, then moves on:
  *  - "bkg_" (a booking hold): ask the API to verify that booking's charge,
  *    then go to My bookings, which shows whatever the API says.
+ *  - "itm_" (a paid program or meal plan): find the purchase this reference
+ *    belongs to among the member's own, ask the API to verify it, then go to
+ *    My purchases, which shows whatever the API says.
  *  - "mbr_" (a membership plan): finish the subscribe step the checkout
  *    page would have run, with the reference the server issued; the API
  *    verifies the charge before activating anything.
@@ -32,8 +36,9 @@ type View =
   | { kind: "working"; text: string }
   | { kind: "done"; title: string; body: string; href?: string; cta?: string };
 
-function referenceKind(reference: string): "booking" | "membership" | "other" {
+function referenceKind(reference: string): "booking" | "content" | "membership" | "other" {
   if (reference.startsWith("bkg_")) return "booking";
+  if (reference.startsWith("itm_")) return "content";
   if (reference.startsWith("mbr_")) return "membership";
   return "other";
 }
@@ -74,6 +79,18 @@ function PaymentReturnInner() {
           // The bookings page still shows the API's view of the hold.
         }
         router.replace("/dashboard/bookings");
+        return;
+      }
+
+      if (kind === "content") {
+        try {
+          const mine = await paidContentService.myPurchases();
+          const purchase = mine.success ? mine.data?.find((p) => p.reference === reference) : undefined;
+          if (purchase) await paidContentService.verify(purchase.id);
+        } catch {
+          // My purchases still shows the API's view of the purchase.
+        }
+        router.replace("/dashboard/member/purchases");
         return;
       }
 

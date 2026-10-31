@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { paidContentService } from "@/lib/api/paidContent";
 import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
+import { useEffect, useState } from "react";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { paidContentOn } from "@/lib/paidContent/helpers";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -40,6 +45,9 @@ const BASE_MEMBER_NAV_LINKS = [
 
 /** The Starter Program link, shown only while its feature flag is on. */
 export const STARTER_NAV_LINK = { label: "Starter", href: "/dashboard/member/starter" };
+
+/** Shown while paid content is on (runtime flag `paid_content`), before Billing. */
+export const PURCHASES_NAV_LINK = { label: "Purchases", href: "/dashboard/member/purchases" };
 
 /** The member's nav links; "Starter" joins them while the feature is on. */
 export const MEMBER_NAV_LINKS = isStarterProgramEnabled()
@@ -80,11 +88,95 @@ interface MemberDashboardShellProps {
   actions?: React.ReactNode;
 }
 
+/* ── "Holds paid content" cache ──
+ * A member who holds content keeps the Purchases link when the flag is off.
+ * "Yes" is kept for the session; "no" for ten minutes (they may be given
+ * something). Module memory first, sessionStorage behind it (try/catch:
+ * private windows and blocked storage throw).
+ */
+const HOLDS_NO_TTL_MS = 10 * 60_000;
+const holdsMemory = new Map<string, { holds: boolean; at: number }>();
+const holdsKey = (userId: string) => `bx.holdsPaidContent.${userId}`;
+
+/** Test seam: forget what was cached. */
+export function resetHoldsCache(): void {
+  holdsMemory.clear();
+  try {
+    window.sessionStorage.clear();
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function readHoldsCache(userId: string): boolean | null {
+  let entry = holdsMemory.get(userId);
+  if (!entry) {
+    try {
+      const raw = window.sessionStorage.getItem(holdsKey(userId));
+      const parsed = raw ? (JSON.parse(raw) as { holds?: unknown; at?: unknown }) : null;
+      if (parsed && typeof parsed.holds === "boolean" && typeof parsed.at === "number") {
+        entry = { holds: parsed.holds, at: parsed.at };
+        holdsMemory.set(userId, entry);
+      }
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  if (!entry) return null;
+  if (!entry.holds && Date.now() - entry.at > HOLDS_NO_TTL_MS) return null;
+  return entry.holds;
+}
+
+function writeHoldsCache(userId: string, holds: boolean): void {
+  const entry = { holds, at: Date.now() };
+  holdsMemory.set(userId, entry);
+  try {
+    window.sessionStorage.setItem(holdsKey(userId), JSON.stringify(entry));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 /* ── Component ── */
 export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
+  const { isEnabled, isLoading: flagsLoading } = useFeatureFlags();
+  const currentOrgId = useOptionalOrganization()?.currentOrg?._id ?? null;
+  // "Purchases" shows while paid content is on for the current workspace
+  // (global when none; see paidContentOn), OR when this member already holds
+  // something. The second part is why: a flag turned off later must not hide
+  // programs and meal plans a member bought or was given. It is a
+  // one-row entitlement read, made only while the flag is off.
+  const flagOn = paidContentOn(isEnabled, currentOrgId);
+  const userId = user?.id;
+  const [holdsContent, setHoldsContent] = useState(false);
+  useEffect(() => {
+    // Flags read "off" while they load; asking then would make the read on
+    // every mount for a member whose flag is on. The answer is cached, so a
+    // page-to-page move does not repeat it.
+    if (flagOn || flagsLoading || !userId) return;
+    const cached = readHoldsCache(userId);
+    if (cached !== null) return;
+    let active = true;
+    void paidContentService
+      .myEntitlements(1)
+      .then((res) => {
+        if (!res.success) return;
+        const holds = (res.data?.items.length ?? 0) > 0;
+        writeHoldsCache(userId, holds);
+        if (active && holds) setHoldsContent(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [flagOn, flagsLoading, userId]);
+  const holdsCached = userId ? readHoldsCache(userId) === true : false;
+  const navLinks = flagOn || holdsContent || holdsCached
+    ? [...MEMBER_NAV_LINKS.slice(0, -1), PURCHASES_NAV_LINK, ...MEMBER_NAV_LINKS.slice(-1)]
+    : MEMBER_NAV_LINKS;
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
   const memberInitials =
@@ -126,7 +218,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
-            {MEMBER_NAV_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const isActive = isMemberNavActive(link, activeLabel, pathname);
               return (
                 <Link
@@ -324,7 +416,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
 
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
-              {MEMBER_NAV_LINKS.map((link) => {
+              {navLinks.map((link) => {
                 const isActive = isMemberNavActive(link, activeLabel, pathname);
                 return (
                   <Link

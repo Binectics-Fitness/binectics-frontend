@@ -30,7 +30,7 @@ describe("not frozen", () => {
     expect(memberFrozenMessage({}, "fallback")).toBe("fallback");
   });
 
-  it("sends renew to the billing page", () => {
-    expect(FROZEN_RENEW_HREF).toBe("/dashboard/member/billing");
+  it("sends renew to the purchases page", () => {
+    expect(FROZEN_RENEW_HREF).toBe("/dashboard/member/purchases");
   });
 });

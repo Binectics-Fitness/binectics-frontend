@@ -44,6 +44,13 @@ interface RawResponseBody {
   retry_after_seconds?: unknown;
   /** Fresh auto-renew consent (CONSENT_TEXT_CHANGED, CONSENT_REQUIRED). */
   consent?: unknown;
+  /** What would unlock a paid item (CONTENT_ENTITLEMENT_REQUIRED, frozen). */
+  offer?: unknown;
+  /** Paid meal plans in the way of a free program (PAID_MEAL_PLAN_IN_FREE_PROGRAM). */
+  conflicts?: unknown;
+  /** Lowest chargeable price (CONTENT_PRICE_BELOW_MINIMUM). */
+  minimum_minor?: unknown;
+  currency?: unknown;
   /** Why auto-renew isn't offered (AUTO_RENEW_NOT_AVAILABLE). */
   reason?: unknown;
 }
@@ -63,6 +70,10 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   "retry_after_seconds",
   "consent",
   "reason",
+  "offer",
+  "conflicts",
+  "minimum_minor",
+  "currency",
 ] as const;
 
 function detailsOf(

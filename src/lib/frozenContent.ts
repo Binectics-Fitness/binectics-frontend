@@ -16,9 +16,12 @@ export const FROZEN_CODES = ["CONTENT_ACCESS_FROZEN", "PROGRAM_FROZEN_LAPSED"] a
 
 export const FROZEN_MESSAGE =
   "Access has ended, so this is on hold. Renew to keep it going; everything done so far stays here to read.";
+export const FROZEN_TITLE = "Renew to keep your plan going";
+export const FROZEN_BODY =
+  "Everything you have done is still here to read. New tasks and edits are on hold until your access is back.";
 export const FROZEN_RENEW_LABEL = "See how to renew";
 /** Where "See how to renew" goes. */
-export const FROZEN_RENEW_HREF = "/dashboard/member/billing";
+export const FROZEN_RENEW_HREF = "/dashboard/member/purchases";
 
 /** True when the API refused because access ended (either wire code). */
 export function isFrozenResponse(res: Pick<ApiResponse, "code"> | null | undefined): boolean {
