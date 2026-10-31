@@ -17,6 +17,11 @@ import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import { ConnectRequestButton } from "@/components/marketplace/ConnectRequestButton";
 import { ListingReviews, useListingRating } from "@/components/marketplace/ListingReviews";
 import type { MarketplaceMembershipPlan, MembershipPlanType } from "@/lib/types";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { paidContentOn } from "@/lib/paidContent/helpers";
+import { offersFromListing } from "@/lib/paidContent/offers";
+import { ContentOffersStrip } from "@/components/content/ContentOffersStrip";
 import { licenseBadgeSummary, populationLabel, specializationLabel } from "@/lib/credentials/dietitian";
 
 /* ─── Icons ──────────────────────────────────────────────── */
@@ -39,6 +44,17 @@ const PH_BG: Record<string, string> = {
   personal_trainer: "repeating-linear-gradient(135deg, oklch(0.92 0.012 75) 0 10px, oklch(0.94 0.01 75) 10px 20px)",
   dietitian:        "repeating-linear-gradient(135deg, oklch(0.90 0.018 300) 0 10px, oklch(0.93 0.014 300) 10px 20px)",
 };
+
+/** "Strength Base, 4-week meal plan" from a plan's `includes[]` (paid items it unlocks), or "". */
+function includesText(plan: unknown, on: boolean): string {
+  if (!on) return "";
+  const list = (plan as { includes?: { title?: unknown }[] }).includes;
+  if (!Array.isArray(list)) return "";
+  return list
+    .map((i) => (typeof i?.title === "string" ? i.title : ""))
+    .filter(Boolean)
+    .join(", ");
+}
 
 /* ─── Types ──────────────────────────────────────────────── */
 
@@ -112,6 +128,12 @@ export function ListingProfile({
   const listingId = listing._id;
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const { isEnabled } = useFeatureFlags();
+  const currentOrgId = useOptionalOrganization()?.currentOrg?._id ?? null;
+  // Paid programs and meal plans: only while the flag is on (signed-out and
+  // flag-off visitors see the profile exactly as before).
+  const contentOn = paidContentOn(isEnabled, currentOrgId);
+  const contentOffers = contentOn ? offersFromListing(publicListing) : [];
   // What a plan's currency can be paid in right now, for the footer copy only;
   // the checkout itself is refused by the API, with its reason, if it can't.
   const { all: currencyList } = useCurrencies();
@@ -354,6 +376,11 @@ export function ListingProfile({
                         ))}
                       </ul>
                     )}
+                    {includesText(p, contentOn) && (
+                      <div className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+                        <span style={{ color: "var(--ink)" }}>Includes:</span> {includesText(p, contentOn)}
+                      </div>
+                    )}
                     <div className="mt-auto">
                       <button
                         type="button"
@@ -371,6 +398,8 @@ export function ListingProfile({
               </div>
             </section>
           )}
+
+          <ContentOffersStrip offers={contentOffers} />
 
           {/* Amenities */}
           {allAmenities.length > 0 && (

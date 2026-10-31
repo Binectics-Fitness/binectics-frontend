@@ -43,6 +43,11 @@ vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ all: [NGN], data: [NGN] }),
 }));
 
+let paidFlagOn = false;
+vi.mock("@/hooks/useFeatureFlags", () => ({
+  useFeatureFlags: () => ({ isEnabled: (key: string) => key === "paid_content" && paidFlagOn, data: undefined, isLoading: false }),
+}));
+
 const listing = {
   _id: "l1",
   account_type: "dietitian",
@@ -88,6 +93,7 @@ describe("listing booking card", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authState = { user: null, isLoading: false };
+    paidFlagOn = false;
   });
 
   it("offers each plan as a radio, priced in the plan's own currency with its cadence", async () => {
@@ -179,5 +185,38 @@ describe("listing booking card", () => {
     expect(screen.queryByText(/Cancel any time|24.hr review window/)).toBeNull();
     expect(card.queryByText("Platform fee")).toBeNull();
     expect(card.queryByText("Location")).toBeNull();
+  });
+
+  describe("Programs & meal plans strip (paid content)", () => {
+    const withOffers = {
+      ...listing,
+      content_offers: [
+        { item_kind: "program", item_id: "pr1", title: "Strength Base", prices: [{ currency: "NGN", amount_minor: 1_500_000 }], plans: [] },
+      ],
+    };
+    const planWithIncludes = { ...eightWeek, includes: [{ item_kind: "program", id: "pr1", title: "Strength Base" }] };
+
+    it("shows the strip, the price and the Includes line when the flag is on", async () => {
+      paidFlagOn = true;
+      render(<ListingProfile listing={withOffers as never} initialPlans={[planWithIncludes as never]} />);
+      await screen.findByRole("heading", { level: 1 });
+      expect(screen.getByRole("heading", { name: "Programs & meal plans" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Buy" })).toHaveAttribute("href", "/dashboard/member/content/programs/pr1");
+      expect(screen.getByText("Includes:")).toBeInTheDocument();
+    });
+
+    it("shows nothing new when the flag is off", async () => {
+      render(<ListingProfile listing={withOffers as never} initialPlans={[planWithIncludes as never]} />);
+      await screen.findByRole("heading", { level: 1 });
+      expect(screen.queryByRole("heading", { name: "Programs & meal plans" })).toBeNull();
+      expect(screen.queryByText("Includes:")).toBeNull();
+    });
+
+    it("hides the strip when the listing sells nothing", async () => {
+      paidFlagOn = true;
+      renderWithPlans([eightWeek]);
+      await screen.findByRole("heading", { level: 1 });
+      expect(screen.queryByRole("heading", { name: "Programs & meal plans" })).toBeNull();
+    });
   });
 });
