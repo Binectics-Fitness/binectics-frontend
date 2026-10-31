@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import PaymentReturnPage from "@/app/payments/return/page";
 import { consultationsService, ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/consultations";
 import { marketplaceService } from "@/lib/api/marketplace";
+import { paidContentService, type ContentPurchase } from "@/lib/api/paidContent";
 import { savePendingCheckout } from "@/lib/payments/pendingCheckout";
 
 const replace = vi.fn();
@@ -44,6 +45,33 @@ describe("/payments/return", () => {
     render(<PaymentReturnPage />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/bookings"));
     expect(verify).not.toHaveBeenCalled();
+  });
+
+  const purchase = { id: "pu1", reference: "itm_abc", status: "pending" } as unknown as ContentPurchase;
+
+  it("asks the API to verify a paid program's purchase, then goes to My purchases", async () => {
+    nav.search = "trxref=itm_abc&reference=itm_abc";
+    vi.spyOn(paidContentService, "myPurchases").mockResolvedValue({ success: true, data: [purchase] });
+    const verify = vi.spyOn(paidContentService, "verify").mockResolvedValue({ success: true } as never);
+    render(<PaymentReturnPage />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/member/purchases"));
+    expect(verify).toHaveBeenCalledWith("pu1");
+  });
+
+  it("still goes to My purchases when the reference isn't theirs, verifying nothing", async () => {
+    nav.search = "reference=itm_zzz";
+    vi.spyOn(paidContentService, "myPurchases").mockResolvedValue({ success: true, data: [purchase] });
+    const verify = vi.spyOn(paidContentService, "verify");
+    render(<PaymentReturnPage />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/member/purchases"));
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  it("still goes to My purchases when the lookup throws", async () => {
+    nav.search = "reference=itm_abc";
+    vi.spyOn(paidContentService, "myPurchases").mockRejectedValue(new Error("offline"));
+    render(<PaymentReturnPage />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/dashboard/member/purchases"));
   });
 
   it("finishes a membership with the server's reference, and the API decides", async () => {

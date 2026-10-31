@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { effectiveFlag } from "@/lib/featureFlags/helpers";
 import {
   buildAccessInput,
   draftFromAccess,
@@ -22,17 +23,25 @@ import {
 } from "@/lib/api/paidContent";
 
 describe("paidContentOn", () => {
-  it("is off with no data", () => {
-    expect(paidContentOn(undefined)).toBe(false);
+  const data = {
+    flags: { paid_content: false },
+    organizations: [
+      { organization_id: "on", flags: { paid_content: true } },
+      { organization_id: "off", flags: { paid_content: false } },
+    ],
+  };
+  const isEnabled = (k: string, o?: string | null) => effectiveFlag(data, k, o);
+  it("follows the current workspace's own value", () => {
+    expect(paidContentOn(isEnabled, "on")).toBe(true);
+    expect(paidContentOn(isEnabled, "off")).toBe(false);
   });
-  it("is on globally or for any workspace", () => {
-    expect(paidContentOn({ flags: { paid_content: true }, organizations: [] })).toBe(true);
-    expect(
-      paidContentOn({ flags: {}, organizations: [{ organization_id: "o", flags: { paid_content: true } }] }),
-    ).toBe(true);
-    expect(
-      paidContentOn({ flags: {}, organizations: [{ organization_id: "o", flags: { paid_content: false } }] }),
-    ).toBe(false);
+  it("falls back to the global value with no workspace", () => {
+    expect(paidContentOn(isEnabled, null)).toBe(false);
+    expect(paidContentOn(isEnabled)).toBe(false);
+    expect(paidContentOn((k, o) => effectiveFlag({ flags: { paid_content: true }, organizations: [] }, k, o), null)).toBe(true);
+  });
+  it("does not turn on because some other workspace has it", () => {
+    expect(paidContentOn(isEnabled, "unknown-org")).toBe(false);
   });
 });
 
@@ -56,6 +65,8 @@ describe("purchases", () => {
   });
   it("only names a gateway failure it knows", () => {
     expect(gatewayFailureCopy("abandoned")).toMatch(/not been charged/);
+    expect(gatewayFailureCopy("reversed")).toMatch(/reversed/);
+    expect(gatewayFailureCopy("error")).toMatch(/problem/);
     expect(gatewayFailureCopy("success")).toBeNull();
     expect(gatewayFailureCopy(null)).toBeNull();
   });

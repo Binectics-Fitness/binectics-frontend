@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import PurchasesClient from "@/app/dashboard/member/purchases/PurchasesClient";
 import ContentOfferClient from "@/app/dashboard/member/content/[kind]/[id]/ContentOfferClient";
 import { paidContentService, type ContentOfferRead } from "@/lib/api/paidContent";
@@ -72,6 +73,31 @@ describe("My purchases", () => {
       "/dashboard/member/content/meal-plans/m1",
     );
     expect(screen.queryByText("Done")).not.toBeInTheDocument();
+  });
+
+  it("shows an error with a retry, not an empty list, when the entitlements fail", async () => {
+    vi.spyOn(paidContentService, "myPurchases").mockResolvedValue(ok([]));
+    const owned = vi
+      .spyOn(paidContentService, "myEntitlements")
+      .mockResolvedValueOnce({ success: false, message: "boom" })
+      .mockResolvedValue(ok({ items: [ent({ title: "Back again" })], nextCursor: null }));
+    render(<PurchasesClient />);
+    expect(await screen.findByText("We couldn't load your purchases.")).toBeInTheDocument();
+    expect(screen.queryByText("Nothing here yet.")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Back again")).toBeInTheDocument();
+    expect(owned).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves out holds that expired, failed or were cancelled", async () => {
+    const hold = (id: string, status: string) => ({ id, itemKind: "program" as const, itemId: "p", itemName: `Hold ${id}`, amountMinor: 1, currency: "NGN", status, reference: `itm_${id}`, expiresAt: null, paidAt: null, refundedAt: null });
+    vi.spyOn(paidContentService, "myPurchases").mockResolvedValue(
+      ok([hold("a", "expired"), hold("b", "failed"), hold("c", "cancelled"), hold("d", "pending")]),
+    );
+    vi.spyOn(paidContentService, "myEntitlements").mockResolvedValue(ok({ items: [], nextCursor: null }));
+    render(<PurchasesClient />);
+    expect(await screen.findByText("Hold d")).toBeInTheDocument();
+    for (const id of ["a", "b", "c"]) expect(screen.queryByText(`Hold ${id}`)).not.toBeInTheDocument();
   });
 
   it("shows an empty state", async () => {

@@ -1,6 +1,7 @@
 import { UserRole } from "@/lib/types";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 import { billingNotificationTarget } from "@/lib/billing/autoRenew";
+import { offerPath } from "@/lib/paidContent/helpers";
 
 /**
  * Where tapping a notification goes. Billing notices are routed by TYPE
@@ -8,6 +9,25 @@ import { billingNotificationTarget } from "@/lib/billing/autoRenew";
  * members), whatever action URL they carry; everything else resolves its
  * action URL below.
  */
+/**
+ * Paid program / meal plan notices (CONTENT_OFFER, CONTENT_GRANTED,
+ * CONTENT_PURCHASED) carry metadata { itemKind, itemId }; with both, the tap
+ * opens that item's offer page (buy it, start it, or see how to renew).
+ * Without them the API's own action URL applies.
+ */
+const CONTENT_NOTIFICATION_TYPES = new Set(["CONTENT_OFFER", "CONTENT_GRANTED", "CONTENT_PURCHASED"]);
+
+export function contentNotificationTarget(item: {
+  type?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): string | null {
+  if (!item.type || !CONTENT_NOTIFICATION_TYPES.has(item.type)) return null;
+  const kind = item.metadata?.itemKind;
+  const id = item.metadata?.itemId;
+  if ((kind !== "program" && kind !== "meal_plan") || typeof id !== "string" || !id) return null;
+  return offerPath(kind, id);
+}
+
 export function resolveNotificationTarget(
   item: {
     type?: string | null;
@@ -18,6 +38,7 @@ export function resolveNotificationTarget(
 ): string {
   return (
     billingNotificationTarget(item, userRole) ??
+    contentNotificationTarget(item) ??
     resolveNotificationLink(item.actionUrl, userRole)
   );
 }
