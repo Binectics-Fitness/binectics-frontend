@@ -9,6 +9,7 @@ import { DietPlanDeliveryType } from "@/lib/types";
 import { isWeeklyPlan, planDays } from "@/lib/progress/weeklyPlan";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useOptionalOrganization } from "@/contexts/OrganizationContext";
+import { FROZEN_RENEW_LABEL } from "@/lib/frozenContent";
 import { paidContentOn, offerPath } from "@/lib/paidContent/helpers";
 import { deliveredAccess } from "@/lib/paidContent/offers";
 import { useUnlockableOffers } from "@/hooks/useUnlockableOffers";
@@ -115,7 +116,7 @@ export default function MemberMealPlansPage() {
                 <div className="flex flex-wrap items-center gap-2 text-[12.5px]" style={{ color: "var(--fg-2)" }}>
                   <span>Your access ended. You can still read this plan.</span>
                   <Link href={offerPath("meal_plan", itemId)} className="underline" style={{ color: "var(--ink)" }}>
-                    See how to renew
+                    {FROZEN_RENEW_LABEL}
                   </Link>
                 </div>
               )}

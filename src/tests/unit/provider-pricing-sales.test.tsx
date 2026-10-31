@@ -62,7 +62,7 @@ describe("ContentPricingModal", () => {
     );
     const onSaved = vi.fn();
     open(undefined, onSaved);
-    await userEvent.click(screen.getByRole("radio", { name: "Paid" }));
+    await userEvent.click(screen.getByRole("button", { name: "Paid" }));
     await userEvent.click(await screen.findByRole("button", { name: "Add NGN" }));
     await userEvent.type(screen.getByLabelText("Price in NGN"), "15000");
     await userEvent.click(screen.getByRole("button", { name: "Save pricing" }));
@@ -78,7 +78,7 @@ describe("ContentPricingModal", () => {
 
   it("will not save a paid item nobody can get", async () => {
     open();
-    await userEvent.click(screen.getByRole("radio", { name: "Paid" }));
+    await userEvent.click(screen.getByRole("button", { name: "Paid" }));
     await userEvent.click(screen.getByRole("button", { name: "Save pricing" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/Add a price/);
     expect(setAccess).not.toHaveBeenCalled();
@@ -92,8 +92,8 @@ describe("ContentPricingModal", () => {
       details: { currency: "NGN", minimum_minor: 5000 },
     });
     open({ mode: "paid", prices: [{ currency: "NGN", amount_minor: 1000 }] });
-    await userEvent.click(screen.getByRole("radio", { name: "Free" }));
-    await userEvent.click(screen.getByRole("radio", { name: "Paid" }));
+    await userEvent.click(screen.getByRole("button", { name: "Free" }));
+    await userEvent.click(screen.getByRole("button", { name: "Paid" }));
     await userEvent.type(screen.getByLabelText("Price in NGN"), "1");
     await userEvent.click(screen.getByRole("button", { name: "Save pricing" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("lowest price Paystack can charge in NGN");
@@ -102,7 +102,7 @@ describe("ContentPricingModal", () => {
   it("falls quiet when selling is not enabled for this workspace", async () => {
     setAccess.mockResolvedValue({ success: false, code: "FEATURE_DISABLED", message: "off" });
     open();
-    await userEvent.click(screen.getByRole("radio", { name: "Paid" }));
+    await userEvent.click(screen.getByRole("button", { name: "Paid" }));
     await userEvent.click(await screen.findByRole("button", { name: "Add NGN" }));
     await userEvent.type(screen.getByLabelText("Price in NGN"), "100");
     await userEvent.click(screen.getByRole("button", { name: "Save pricing" }));
@@ -133,7 +133,7 @@ describe("ContentPricingModal: unsaved edits, warnings, grants", () => {
 
   it("asks before the footer Close throws away a Free/Paid switch", async () => {
     mount();
-    await userEvent.click(screen.getByRole("radio", { name: "Free" }));
+    await userEvent.click(screen.getByRole("button", { name: "Free" }));
     await userEvent.click(screen.getAllByRole("button", { name: "Close" })[1]);
     expect(onClose).not.toHaveBeenCalled();
     expect(await screen.findByText("Discard changes?")).toBeInTheDocument();
@@ -249,6 +249,18 @@ describe("paid content: who may price and refund (current workspace)", () => {
     expect(result.current).toMatchObject({ on: true, ownsWorkspace: false, canPrice: false });
   });
 
+  it("lets a gym Admin or Manager (manage_listing) price, but not refund", () => {
+    org = { _id: "gym1", owner_id: "boss", is_owner: false, my_role_code: "manager", my_permissions: ["marketplace:manage_listing"] };
+    const { result } = renderHook(() => usePaidContentSeller());
+    expect(result.current).toMatchObject({ on: true, ownsWorkspace: false, canPrice: true });
+  });
+
+  it("keeps a member of staff without manage_listing from pricing", () => {
+    org = { _id: "gym1", owner_id: "boss", is_owner: false, my_permissions: ["team:view_members"] };
+    const { result } = renderHook(() => usePaidContentSeller());
+    expect(result.current).toMatchObject({ canPrice: false });
+  });
+
   it("uses the global flag and leaves it to the API with no workspace", () => {
     org = null;
     const { result } = renderHook(() => usePaidContentSeller());
@@ -269,12 +281,20 @@ describe("ContentSalesSection", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders nothing while paid content is off", () => {
+  it("renders nothing while paid content is off and there are no sales", async () => {
     flagsOn = false;
-    const spy = vi.spyOn(paidContentService, "sales");
+    const spy = vi.spyOn(paidContentService, "sales").mockResolvedValue(ok([]));
     const { container } = render(<ContentSalesSection />);
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
     expect(container).toBeEmptyDOMElement();
-    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("stays reachable with the flag off once there is a sales history", async () => {
+    flagsOn = false;
+    vi.spyOn(paidContentService, "sales").mockResolvedValue(ok([sale]));
+    render(<ContentSalesSection />);
+    expect(await screen.findByText(/Maya Ade/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Refund Maya Ade/ })).toBeInTheDocument();
   });
 
   it("lists sales, notes platform-held money, and refunds only after confirming", async () => {

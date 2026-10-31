@@ -13,6 +13,11 @@ vi.mock("@/components/ds/GymDashboardShell", () => ({
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({ currentOrg: { _id: "o1" } }),
 }));
+// The page asks the plan gate whether analytics is on; here it always is.
+vi.mock("@/components/ds/PlanGate", () => ({
+  PlanGate: () => null,
+  useFeatureGateState: () => ({ gate: null, ready: true }),
+}));
 vi.mock("@/lib/queries/teams", () => ({ useOrganizationDetails: () => ({ data: mockOrg }) }));
 vi.mock("@/lib/format/useOrgFormat", () => ({
   useOrgFormat: () => ({ fmtMoney: (major: number, currency: string) => `${currency} ${major}` }),

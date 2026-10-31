@@ -10,6 +10,8 @@ import type {
 } from "@/lib/api/paidContent";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
+import { isFrozenResponse, FROZEN_MESSAGE } from "@/lib/frozenContent";
+import type { ApiResponse } from "@/lib/types";
 
 /**
  * Pure rules for paid programs and meal plans: what a price reads as, what a
@@ -133,6 +135,8 @@ export function buildAccessInput(d: PricingDraft): { input: SetAccessInput } | {
  * the fallback for a bare code.
  */
 export function paidContentCopy(e: PaidContentError): string {
+  // PROVIDER wording for the frozen codes below; member screens use
+  // memberContentMessage instead.
   if (e.message) return e.message;
   switch (e.code) {
     case "FEATURE_DISABLED":
@@ -163,11 +167,22 @@ export function paidContentCopy(e: PaidContentError): string {
   }
 }
 
-// ─── Frozen content ─────────────────────────────────────────────────────────
+/**
+ * MEMBER-facing sentence for a refused call: the shared frozen text for a
+ * frozen refusal, else the paid-content copy, else the API's message, else
+ * `fallback`. Provider screens use paidContentCopy.
+ */
+export function memberContentMessage(
+  res: Pick<ApiResponse, "code" | "message">,
+  e: PaidContentError | null | undefined,
+  fallback: string,
+): string {
+  if (isFrozenResponse(res)) return FROZEN_MESSAGE;
+  return e ? paidContentCopy(e) : res.message?.trim() || fallback;
+}
 
-export const FROZEN_TITLE = "Renew to keep your plan going";
-export const FROZEN_BODY =
-  "Everything you have done is still here to read. New tasks and edits are on hold until your access is back.";
+// ─── Frozen content ─────────────────────────────────────────────────────────
+// The member wording lives in @/lib/frozenContent (one source with starter).
 
 /** What a frozen item offers: the plans that would bring it back, or just the words. */
 export function renewHint(offer: ContentOffer | undefined | null): string | null {
@@ -253,13 +268,13 @@ export function purchaseIsDead(p: Pick<ContentPurchase, "status">): boolean {
 export const kindLabel = (kind: "program" | "meal_plan"): string =>
   kind === "program" ? "Program" : "Meal plan";
 
-/** "3 Nov 2026", or "" when the API sent no (or a bad) date. */
+/** "3 Nov 2026" (UTC day, so every viewer sees the same date), or "" when the API sent no (or a bad) date. */
 export function shortDate(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? ""
-    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
 /** The refund confirmation: the provider's decision, never automatic, no fee talk. */

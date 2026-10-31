@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ContentOffer } from "@/lib/api/paidContent";
+import { FROZEN_RENEW_LABEL } from "@/lib/frozenContent";
 import { kindLabel, offerPath, priceText } from "@/lib/paidContent/helpers";
 
 /**
@@ -28,7 +29,7 @@ export function ContentLockCard({
   const href = offerPath(offer.itemKind, offer.itemId);
   const buyable = offer.prices.length > 0;
   const planNames = offer.plans.map((p) => p.name).filter(Boolean);
-  const action = frozen ? "See how to renew" : buyable ? "Buy" : planNames.length > 0 ? "Join plan" : "See details";
+  const action = frozen ? FROZEN_RENEW_LABEL : buyable ? "Buy" : planNames.length > 0 ? "Join plan" : "See details";
 
   return (
     <div

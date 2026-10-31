@@ -6,13 +6,36 @@ import { paidContentService, type ContentOffer } from "@/lib/api/paidContent";
 import { offersFromListing } from "@/lib/paidContent/offers";
 
 const MAX_PROVIDERS = 6;
+/** Entitlements are read 100 at a time, up to this many pages (500 items). */
+const ENTITLEMENT_PAGE = 100;
+const MAX_ENTITLEMENT_PAGES = 5;
+
+/**
+ * Every item the member holds, in any state, or null when the read failed or
+ * the member holds more than the cap. Null means "do not know": the caller
+ * shows no offers, since an item they already have must never be offered
+ * for sale again.
+ */
+async function heldKeys(): Promise<Set<string> | null> {
+  const held = new Set<string>();
+  let cursor: string | null = null;
+  for (let page = 0; page < MAX_ENTITLEMENT_PAGES; page++) {
+    const res = await paidContentService.myEntitlements(ENTITLEMENT_PAGE, cursor);
+    if (!res.success || !res.data) return null;
+    for (const e of res.data.items) held.add(`${e.itemKind}:${e.itemId}`);
+    cursor = res.data.nextCursor;
+    if (!cursor) return held;
+  }
+  return null;
+}
 
 /**
  * Paid items the member's own providers offer and the member does not hold
  * yet: my providers -> each listing's `content_offers` -> minus what the
  * member already has (any state, so a frozen item shows as a renew card on
  * its own row instead of twice). Quiet on any failure; the list is a
- * convenience. Does nothing while `enabled` is false.
+ * convenience. Fails closed: if what the member holds cannot be read in full,
+ * no offers show. Does nothing while `enabled` is false.
  */
 export function useUnlockableOffers(enabled: boolean) {
   const [offers, setOffers] = useState<ContentOffer[]>([]);
@@ -28,12 +51,11 @@ export function useUnlockableOffers(enabled: boolean) {
       ].filter((id): id is string => !!id);
       const unique = [...new Set(ids)].slice(0, MAX_PROVIDERS);
       if (unique.length === 0) return;
-      const [listings, held] = await Promise.all([
+      const [listings, owned] = await Promise.all([
         Promise.all(unique.map((id) => marketplaceService.getListingById(id))),
-        paidContentService.myEntitlements(100),
+        heldKeys(),
       ]);
-      if (!active) return;
-      const owned = new Set((held.success && held.data ? held.data.items : []).map((e) => `${e.itemKind}:${e.itemId}`));
+      if (!active || !owned) return;
       const seen = new Set<string>();
       const out: ContentOffer[] = [];
       for (const l of listings) {

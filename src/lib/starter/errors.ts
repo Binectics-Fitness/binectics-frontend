@@ -1,4 +1,5 @@
 import type { ApiResponse } from "@/lib/types";
+import { FROZEN_MESSAGE, isFrozenResponse } from "@/lib/frozenContent";
 
 /** The API answers a second start with 409 STARTER_ALREADY_ACTIVE. */
 export const isStarterAlreadyActive = (res: Pick<ApiResponse, "code">): boolean =>
@@ -20,6 +21,7 @@ export function starterErrorMessage(
   res: Pick<ApiResponse, "code" | "message" | "status">,
   fallback: string,
 ): string {
+  if (isFrozenResponse(res)) return FROZEN_MESSAGE;
   if (res.code && BY_CODE[res.code]) return BY_CODE[res.code];
   if (res.status === 429) return "That was too many tries in a short time. Wait a minute and try again.";
   return res.message?.trim() || fallback;

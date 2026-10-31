@@ -105,12 +105,10 @@ export function ContentPricingModal({
       ownSave.current = null;
       return;
     }
-    /* eslint-disable react-hooks/set-state-in-effect */
     setDraft(d);
     setBaseline(draftFingerprint(d));
     setError(null);
     setWarnings([]);
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, [open, saved]);
 
   const isPaid = draft.mode === "paid";
@@ -250,13 +248,12 @@ export function ContentPricingModal({
             <legend className="font-mono text-[11px] uppercase tracking-[0.05em] mb-2" style={{ color: "var(--fg-3)" }}>
               Who can get it
             </legend>
-            <div role="radiogroup" className="flex gap-2">
+            <div role="group" aria-label="Who can get it" className="flex gap-2">
               {(["free", "paid"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
-                  role="radio"
-                  aria-checked={draft.mode === m}
+                  aria-pressed={draft.mode === m}
                   onClick={() => patch({ mode: m })}
                   className="px-3.5 py-1.5 rounded-full text-[13.5px]"
                   style={{

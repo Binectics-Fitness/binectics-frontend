@@ -8,7 +8,8 @@ import { ContentBuyPanel } from "@/components/content/ContentBuyPanel";
 import { StartProgramControl } from "@/components/content/StartProgramControl";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { paidContentService, pathToKind, type ContentOfferRead } from "@/lib/api/paidContent";
-import { FROZEN_BODY, FROZEN_TITLE, kindLabel, pricesText } from "@/lib/paidContent/helpers";
+import { kindLabel, pricesText } from "@/lib/paidContent/helpers";
+import { FROZEN_BODY, FROZEN_TITLE } from "@/lib/frozenContent";
 
 /**
  * One paid item's offer, opened from a provider's "shared something with you"
@@ -21,9 +22,20 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
   // undefined: loading. null: not offered (404).
   const [offer, setOffer] = useState<ContentOfferRead | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  // True while a (re)load is in flight, so "Try again" shows it is working.
+  const [loading, setLoading] = useState(true);
+  // Read out by the polite live region after a purchase unlocks the item.
+  const [announce, setAnnounce] = useState("");
 
   const [attempt, setAttempt] = useState(0);
-  const reload = () => setAttempt((n) => n + 1);
+  const reload = () => {
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  };
+  const onUnlocked = () => {
+    setAnnounce("Payment confirmed. This is now unlocked.");
+    reload();
+  };
 
   useEffect(() => {
     if (!kind) return;
@@ -31,6 +43,7 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
     void (async () => {
       const res = await paidContentService.getOffer(kind, itemId);
       if (!active) return;
+      setLoading(false);
       if (res.success) {
         setOffer(res.data ?? null);
         setError(null);
@@ -56,14 +69,29 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
           message="We couldn't load this."
           hint={error}
           action={
-            <button type="button" className="btn-ghost-v2" onClick={() => reload()}>
-              Try again
-            </button>
+            <TryAgain loading={loading} onClick={reload} />
           }
         />
       );
     }
     if (offer === undefined) return <AsyncSpinner />;
+    if (error) {
+      // A reload failed while an earlier answer is on screen: say so, keep
+      // the earlier answer below it (it may be out of date).
+      return (
+        <div className="flex flex-col gap-3">
+          <div role="alert" className="flex flex-wrap items-center gap-3 text-[13px]" style={{ color: "var(--fg-2)" }}>
+            <span>We couldn&apos;t refresh this. {error}</span>
+            <TryAgain loading={loading} onClick={reload} />
+          </div>
+          {offerBody(offer)}
+        </div>
+      );
+    }
+    return offerBody(offer);
+  };
+
+  const offerBody = (offer: ContentOfferRead | null) => {
     if (offer === null) {
       return (
         <EmptySlate
@@ -99,7 +127,7 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
           <Offered offer={offer} />
           {offer.forSale && offer.prices.length > 0 && (
             <div className="mt-4">
-              <ContentBuyPanel kind={offer.itemKind} itemId={offer.itemId} prices={offer.prices} onUnlocked={() => reload()} />
+              <ContentBuyPanel kind={offer.itemKind} itemId={offer.itemId} prices={offer.prices} onUnlocked={onUnlocked} />
             </div>
           )}
         </DSCard>
@@ -133,7 +161,7 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
         <Offered offer={offer} />
         {offer.prices.length > 0 && (
           <div className="mt-4">
-            <ContentBuyPanel kind={offer.itemKind} itemId={offer.itemId} prices={offer.prices} onUnlocked={() => reload()} />
+            <ContentBuyPanel kind={offer.itemKind} itemId={offer.itemId} prices={offer.prices} onUnlocked={onUnlocked} />
           </div>
         )}
       </DSCard>
@@ -144,7 +172,19 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
     <MemberDashboardShell activeLabel="Purchases">
       <PageHeader title="Shared with you" />
       <div className="max-w-xl">{body()}</div>
+      <div role="status" aria-live="polite" className="sr-only">
+        {announce}
+      </div>
     </MemberDashboardShell>
+  );
+}
+
+function TryAgain({ loading, onClick }: { loading: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className="btn-ghost-v2 inline-flex items-center gap-2" disabled={loading} onClick={onClick}>
+      {loading && <AsyncSpinner />}
+      {loading ? "Trying again..." : "Try again"}
+    </button>
   );
 }
 

@@ -85,7 +85,8 @@ export default function ProgramInstanceView({
       toast.success(`Program ${past[action]}.`);
       applyDetail(await programsService.getInstance(instanceId));
     } else {
-      toast.error(res.message ?? `Failed to ${action} program.`);
+      // Provider screen: keep the API's own sentence (it speaks to the provider).
+      toast.error(res.message?.trim() || `Failed to ${action} program.`);
     }
   };
 

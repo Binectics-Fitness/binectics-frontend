@@ -9,7 +9,7 @@ import {
   PURCHASE_POLL_LIMIT,
   PURCHASE_POLL_MS,
   gatewayFailureCopy,
-  paidContentCopy,
+  memberContentMessage,
   purchaseIsDead,
   purchaseView,
 } from "@/lib/paidContent/helpers";
@@ -52,6 +52,9 @@ export function ContentBuyPanel({
     };
   }, []);
 
+  // The prices can change under a mounted panel (a reload after a failed
+  // check): a currency no longer sold falls back to the first one (derived,
+  // and used for the checkout and the highlight), so it never asks for a currency the item is not priced in.
   const price = prices.find((p) => p.currency === currency) ?? prices[0];
   const setPhaseSafe = (p: Phase) => {
     if (alive.current) setPhase(p);
@@ -93,7 +96,7 @@ export function ContentBuyPanel({
       // failed: keep "Confirming" and let the re-read below decide.
       setPhaseSafe("idle");
       const e = paidContentErrorOf(res);
-      setNotice(e ? paidContentCopy(e) : res.message || UNAVAILABLE);
+      setNotice(memberContentMessage(res, e, UNAVAILABLE));
       return;
     }
     for (let i = 0; i < PURCHASE_POLL_LIMIT && alive.current; i++) {
@@ -113,19 +116,19 @@ export function ContentBuyPanel({
   const pay = async () => {
     setNotice(null);
     setPhaseSafe("starting");
-    const started = await paidContentService.checkout(kind, itemId, currency || undefined);
+    const started = await paidContentService.checkout(kind, itemId, price?.currency || undefined);
     if (!alive.current) return;
     if (!started.success || !started.data) {
       const e = paidContentErrorOf(started);
       if (e?.code === "CONTENT_ALREADY_OWNED") {
-        setNotice(paidContentCopy(e));
+        setNotice(memberContentMessage(started, e, UNAVAILABLE));
         const mine = await paidContentService.myPurchases();
         const owned = mine.data?.find((p) => p.itemId === itemId && purchaseView(p) === "unlocked");
         if (owned) return unlocked(owned);
         return setPhaseSafe("idle");
       }
       setPhaseSafe("idle");
-      setNotice(e ? paidContentCopy(e) : started.message || "We couldn't start the payment. Please try again.");
+      setNotice(memberContentMessage(started, e, "We couldn't start the payment. Please try again."));
       return;
     }
     const { purchase, payment } = started.data;
@@ -196,21 +199,20 @@ export function ContentBuyPanel({
   return (
     <div className="flex flex-col gap-3" data-testid="content-buy-panel">
       {prices.length > 1 && (
-        <div role="radiogroup" aria-label="Pay in" className="flex flex-wrap gap-2">
+        <div role="group" aria-label="Pay in" className="flex flex-wrap gap-2">
           {prices.map((p) => (
             <button
               key={p.currency}
               type="button"
-              role="radio"
-              aria-checked={p.currency === currency}
+              aria-pressed={p.currency === price.currency}
               aria-label={`${p.currency} ${formatMinor(p.currency, p.amountMinor)}`}
               disabled={!canPickCurrency}
               onClick={() => setCurrency(p.currency)}
               className="px-3 py-1.5 rounded-full text-[13px] disabled:opacity-60"
               style={{
                 border: "1px solid var(--border-2)",
-                background: p.currency === currency ? "var(--ink)" : "transparent",
-                color: p.currency === currency ? "var(--bg)" : "var(--fg-2)",
+                background: p.currency === price.currency ? "var(--ink)" : "transparent",
+                color: p.currency === price.currency ? "var(--bg)" : "var(--fg-2)",
               }}
             >
               {formatMinor(p.currency, p.amountMinor)}
