@@ -30,6 +30,9 @@ import {
   uncancelCheckoutLine,
 } from "@/lib/billing/autoRenew";
 import { formatDate } from "@/utils/format";
+import { PromoCodeField } from "@/components/coupons/PromoCodeField";
+import { couponsService, type CouponQuote } from "@/lib/api/coupons";
+import { couponErrorMessage } from "@/lib/coupons/couponUi";
 
 /**
  * Plan checkout.
@@ -76,6 +79,8 @@ function CheckoutContent() {
   const [consentNotice, setConsentNotice] = useState<string | null>(null);
   // Renewing a membership cancelled mid-term: ticking the box takes it back.
   const [renewsCancelled, setRenewsCancelled] = useState(false);
+  // A discount code the API priced for this plan. One per purchase.
+  const [promo, setPromo] = useState<CouponQuote | null>(null);
   // One checkout at a time: a second click while the popup is up is ignored.
   const inFlight = useRef(false);
 
@@ -151,7 +156,7 @@ function CheckoutContent() {
     setPaymentError("");
     try {
       const renewal: RenewalCheckoutRequest | undefined =
-        renewTicked && isOfferedConsent(consent)
+        !promo && renewTicked && isOfferedConsent(consent)
           ? {
               save_card: true,
               text_version: consent.text_version,
@@ -161,7 +166,21 @@ function CheckoutContent() {
           : undefined;
       const started = renewal
         ? await marketplaceService.startPlanCheckout(listing._id, plan._id, renewal)
-        : await marketplaceService.startPlanCheckout(listing._id, plan._id);
+        : promo
+          ? await marketplaceService.startPlanCheckout(listing._id, plan._id, undefined, promo.code)
+          : await marketplaceService.startPlanCheckout(listing._id, plan._id);
+      if (!started.success && started.code?.startsWith("COUPON_")) {
+        // The code stopped working since it was applied (used up, expired).
+        setPromo(null);
+        setPaymentError(`${couponErrorMessage(started)} Your price is back to the full amount.`);
+        return;
+      }
+      if (started.success && started.data?.free) {
+        // A code covered the whole price: the API activated the membership.
+        clearPendingCheckout();
+        router.push(`/checkout/success?listing=${listing._id}&plan=${plan._id}`);
+        return;
+      }
       if (!started.success && started.code === "CONSENT_TEXT_CHANGED") {
         // The price, plan or provider changed since the page loaded. Show
         // the new terms, untick, and let the member decide again.
@@ -206,6 +225,7 @@ function CheckoutContent() {
         return;
       }
       const checkout = started.data;
+      const accessCode = checkout.access_code as string;
       // Kept for this tab in case the checkout has to finish on
       // /payments/return after Paystack's hosted page.
       savePendingCheckout({
@@ -218,7 +238,7 @@ function CheckoutContent() {
       });
       let result;
       try {
-        result = await openPaystackCheckout(checkout.access_code);
+        result = await openPaystackCheckout(accessCode);
       } catch (err) {
         if (err instanceof PaystackUnavailableError && checkout.authorization_url) {
           // The popup can't load here; the hosted page charges the same
@@ -335,7 +355,8 @@ function CheckoutContent() {
       : listing.headline;
 
   const isFree = plan.price_minor === 0;
-  const priceLabel = formatMinor(plan.currency, plan.price_minor);
+  const payMinor = promo ? promo.final_amount_minor : plan.price_minor;
+  const priceLabel = formatMinor(plan.currency, payMinor);
 
   return (
     <div className="min-h-screen bg-bg py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -417,10 +438,22 @@ function CheckoutContent() {
               )}
 
               <div className="border-t border-border pt-4">
+                {promo && (
+                  <div className="space-y-1.5 mb-3 text-sm" data-testid="price-breakdown">
+                    <div className="flex justify-between">
+                      <span className="text-fg-2">Price</span>
+                      <span className="text-fg" style={{ fontVariantNumeric: "tabular-nums" }}>{formatMinor(plan.currency, plan.price_minor)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-fg-2">Code {promo.code}</span>
+                      <span className="text-fg" style={{ fontVariantNumeric: "tabular-nums" }}>-{formatMinor(plan.currency, promo.discount_minor)}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-fg">Total</span>
                   <span className="text-2xl font-black text-ink">
-                    {isFree ? "Free" : priceLabel}
+                    {isFree || promo?.free ? "Free" : priceLabel}
                   </span>
                 </div>
               </div>
@@ -458,7 +491,18 @@ function CheckoutContent() {
                 </div>
               ) : (
                 <>
-                  {isOfferedConsent(consent) && (
+                  <div className="mb-5">
+                    <PromoCodeField
+                      quote={promo}
+                      onChange={(q) => {
+                        setPromo(q);
+                        if (q) setRenewTicked(false);
+                      }}
+                      validate={(code) => couponsService.validatePlanCode(listing._id, plan._id, code)}
+                      disabled={isProcessing}
+                    />
+                  </div>
+                  {isOfferedConsent(consent) && !promo && (
                     <div className="mb-5">
                       {renewsCancelled && (
                         <p className="mb-3 text-[13.5px] text-ink" data-testid="uncancel-note">
@@ -487,7 +531,11 @@ function CheckoutContent() {
                     disabled={isProcessing}
                     className="w-full"
                   >
-                    {isProcessing ? "Processing..." : `Pay ${priceLabel} with Paystack`}
+                    {isProcessing
+                      ? "Processing..."
+                      : promo?.free
+                        ? "Activate for free"
+                        : `Pay ${priceLabel} with Paystack`}
                   </Button>
 
                   <p className="text-xs text-fg-3 mt-4 text-center">
