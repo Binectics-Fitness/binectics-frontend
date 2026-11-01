@@ -28,7 +28,8 @@ function I({ children, d }: { children?: React.ReactNode; d?: string }) {
 
 /* ── Nav items ──
  * Billing is here so a member can find auto-renew, cards and Renew without
- * going through Settings (discoverability F8). */
+ * going through Settings (discoverability F8). Payments is what they owe,
+ * what they paid and their receipts. */
 const BASE_MEMBER_NAV_LINKS = [
   { label: "Home",        href: "/dashboard/member" },
   { label: "Marketplace", href: "/marketplace" },
@@ -41,6 +42,7 @@ const BASE_MEMBER_NAV_LINKS = [
   { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
   { label: "Billing",     href: "/dashboard/member/billing" },
+  { label: "Payments",    href: "/dashboard/member/payments" },
 ];
 
 /** The Starter Program link, shown only while its feature flag is on. */

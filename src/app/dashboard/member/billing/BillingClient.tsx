@@ -38,6 +38,7 @@ import {
   pausedLine,
   suspendedLine,
 } from "@/lib/billing/membershipHolds";
+import { payMembershipPath } from "@/lib/memberPayments/helpers";
 import { AutoRenewControl } from "./AutoRenewControl";
 import { SavedCards } from "./SavedCards";
 
@@ -394,7 +395,10 @@ export function BillingClient() {
                   </div>
                 ) : s.status === MembershipSubscriptionStatus.SUSPENDED ? (
                   <div className="text-[11.5px] mt-1" style={{ color: "var(--danger-ink)" }} data-testid="suspended-line">
-                    {suspendedLine(s, formatDate)}
+                    {suspendedLine(s, formatDate)}{" "}
+                    <Link href="/dashboard/member/payments" className="underline underline-offset-2">
+                      See what you owe and have paid
+                    </Link>
                   </div>
                 ) : (
                   !meta.hasAccess &&
@@ -432,6 +436,15 @@ export function BillingClient() {
               {/* Cancelling is offered wherever the membership is still live —
                   a past_due member can still choose to stop, and a paused one
                   should not have to resume first. */}
+              {s.status === MembershipSubscriptionStatus.PENDING_PAYMENT && s.amount_paid_minor > 0 && (
+                <Link
+                  href={payMembershipPath(s._id)}
+                  className="btn-primary-v2 md shrink-0"
+                  aria-label={`Pay for ${plan?.name ?? "membership"}`}
+                >
+                  Pay now
+                </Link>
+              )}
               {renewHref && (
                 <Link
                   href={renewHref}
