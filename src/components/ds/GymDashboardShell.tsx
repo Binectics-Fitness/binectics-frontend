@@ -33,6 +33,7 @@ export const SIDEBAR: NavSection[] = [
     { name: "Payouts", href: "/dashboard/gym-owner/payouts", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
     { name: "Revenue", href: "/dashboard/gym-owner/revenue", icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
     { name: "Refunds", href: "/dashboard/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
+    { name: "Discount codes", href: "/dashboard/discount-codes", icon: <I d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01" /> },
     { name: "Plans & pricing", href: "/dashboard/gym-owner/plans", icon: <I d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /> },
   ]},
   { label: "Workspace", items: [

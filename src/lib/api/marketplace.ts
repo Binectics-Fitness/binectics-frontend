@@ -159,11 +159,20 @@ export interface PlanCheckout {
   reference: string;
   /** What subscribe expects as `payment_reference` ("paystack_<reference>"). */
   payment_reference: string;
-  access_code: string;
+  /** Null when a discount code covered the whole price (`free`). */
+  access_code: string | null;
   authorization_url: string | null;
+  /** What is charged now, after any code. */
   amount_minor: number;
   currency: string;
   plan_id: string;
+  /** The plan's list price before any code. */
+  list_price_minor?: number;
+  discount_minor?: number;
+  coupon_code?: string | null;
+  /** A code covered the whole price: the membership is already active. */
+  free?: boolean;
+  subscription_id?: string | null;
   /** True when this checkout will save the card for auto-renew (card only). */
   save_card?: boolean;
   /** Set when the payment renews a membership the member already holds. */
@@ -1095,10 +1104,15 @@ export const marketplaceService = {
      * charged again. Omitted, this is a one-off payment.
      */
     renewal?: RenewalCheckoutRequest,
+    /** A provider discount code; the server prices it. Not with `renewal`. */
+    couponCode?: string,
   ): Promise<ApiResponse<PlanCheckout>> {
     return await apiClient.post<PlanCheckout>(
       `/marketplace/listings/${encodeURIComponent(listingId)}/plans/${encodeURIComponent(planId)}/checkout`,
-      renewal ? { renewal } : {},
+      {
+        ...(renewal ? { renewal } : {}),
+        ...(couponCode ? { coupon_code: couponCode } : {}),
+      },
     );
   },
 

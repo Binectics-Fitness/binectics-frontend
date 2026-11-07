@@ -239,7 +239,8 @@ export interface ConsultationBooking {
 
 // All four request types sourced from the generated OpenAPI contract so the
 // frontend tracks the API automatically. See src/lib/api/generated/types.ts.
-export type CreateBookingRequest = CreateBookingDto;
+/** `couponCode`: a provider discount code, priced by the API (validate-code previews it). */
+export type CreateBookingRequest = CreateBookingDto & { couponCode?: string };
 export type RescheduleBookingRequest = RescheduleBookingDto;
 export type CancelBookingRequest = CancelBookingDto & {
   /**

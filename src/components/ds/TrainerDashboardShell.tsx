@@ -14,7 +14,7 @@ import { useRefundsAttentionCount } from "@/lib/queries/refunds";
  * plans, forms are the gym's to manage, and the gym pays Binectics and
  * handles refunds on money it took.
  */
-const NOT_FOR_GYM_TRAINERS = new Set(["Requests", "Plans", "My profile", "Forms", "Refunds", "Billing"]);
+const NOT_FOR_GYM_TRAINERS = new Set(["Requests", "Plans", "My profile", "Forms", "Refunds", "Discount codes", "Billing"]);
 
 /** The one line that says why a gym's trainer sees fewer items (F25). */
 export function gymTrainerNote(gymName: string): string {
@@ -41,6 +41,7 @@ export const SIDEBAR: NavSection[] = [
     { name: "Loyalty", href: "/dashboard/loyalty", icon: <I d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z" /> },
     { name: "Earnings", href: "/dashboard/trainer/earnings", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
     { name: "Refunds", href: "/dashboard/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
+    { name: "Discount codes", href: "/dashboard/discount-codes", icon: <I d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01" /> },
     { name: "Plans", href: "/dashboard/trainer/plans", icon: <I d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /> },
     { name: "Programs", href: "/dashboard/trainer/programs", icon: <I><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></I> },
     { name: "My profile", href: "/dashboard/trainer/profile", icon: <I><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></I> },
