@@ -26,7 +26,9 @@ export function GymClosureGate({ isOwner, children }: { isOwner: boolean; childr
 
   const loaded = !!ctx && !ctx.isLoading;
   const noWorkspace = loaded && !ctx.currentOrg;
-  const { data: closed, isLoading: closedLoading } = useClosedOrganizations(loaded && (isOwner || noWorkspace));
+  const { data: closed, isLoading, isFetching } = useClosedOrganizations(loaded && (isOwner || noWorkspace));
+  // A refetch right after a close must not flash the note before the redirect.
+  const closedLoading = isLoading || (noWorkspace && isFetching);
   const hasClosed = (closed?.length ?? 0) > 0;
 
   const redirect = noWorkspace && hasClosed && !onClosedPage;
@@ -46,9 +48,9 @@ export function GymClosureGate({ isOwner, children }: { isOwner: boolean; childr
 
   return (
     <div role="status" className="flex flex-col items-start gap-3 max-w-[56ch]">
-      <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>This gym is closed</h2>
+      <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No open gym here</h2>
       <p className="text-[14px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
-        You do not have an open gym here. If the gym you work for has closed, its owner has closed it and team access
+        You are not part of an open gym workspace. If the gym you work for has been closed by its owner, team access
         ends while it is closed. Ask the owner if it is expected to reopen.
       </p>
       <Link href="/dashboard" className="text-[13.5px] font-medium underline" style={{ color: "var(--ink)" }}>

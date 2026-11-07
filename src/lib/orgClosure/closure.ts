@@ -64,11 +64,13 @@ export function daysLeftToReopen(c: Pick<ClosedOrganization, "reopenUntil">, now
   return left <= 0 ? 0 : Math.ceil(left / DAY_MS);
 }
 
-/** Reopening is offered only while the window is open (server flag AND clock). */
-export function canReopenNow(c: ClosedOrganization, now: Date = new Date()): boolean {
-  if (!c.canReopen) return false;
-  const days = daysLeftToReopen(c, now);
-  return days === null ? true : days > 0;
+/**
+ * Reopening is offered when the SERVER says the window is open. The device
+ * clock is not consulted: a phone set a day ahead must not hide the button,
+ * and the API re-checks (409 ORG_REOPEN_WINDOW_EXPIRED) anyway.
+ */
+export function canReopenNow(c: ClosedOrganization): boolean {
+  return c.canReopen;
 }
 
 export function daysLeftLabel(days: number | null): string {
@@ -77,11 +79,14 @@ export function daysLeftLabel(days: number | null): string {
   return days === 1 ? "1 day left to reopen" : `${days} days left to reopen`;
 }
 
-/** The API accepts the gym's name (any case) or the word CLOSE. */
+/**
+ * The API accepts the gym's name in any case, or the word CLOSE in capitals
+ * only (lowercase "close" is refused with ORG_CLOSE_CONFIRMATION_MISMATCH).
+ */
 export function confirmationMatches(typed: string, gymName: string): boolean {
-  const t = typed.trim().toLowerCase();
+  const t = typed.trim();
   if (!t) return false;
-  return t === "close" || t === gymName.trim().toLowerCase();
+  return t === "CLOSE" || t.toLowerCase() === gymName.trim().toLowerCase();
 }
 
 export const ORG_CLOSED_MESSAGE =

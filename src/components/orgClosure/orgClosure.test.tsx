@@ -65,11 +65,18 @@ describe("ClosedGymsView", () => {
   });
 
   it("hides Reopen once the window has expired but keeps the exports", async () => {
-    svc.listClosed.mockResolvedValue({ success: true, data: [gym({ reopenUntil: past })] });
+    svc.listClosed.mockResolvedValue({ success: true, data: [gym({ reopenUntil: past, canReopen: false })] });
     renderWithProviders(<ClosedGymsView />);
     expect(await screen.findByText(/reopen window has ended/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Reopen gym" })).toBeNull();
     expect(screen.getByRole("button", { name: /Download Transaction ledger as CSV/ })).toBeInTheDocument();
+  });
+
+  it("still offers Reopen when the server says so, whatever the device clock thinks", async () => {
+    svc.listClosed.mockResolvedValue({ success: true, data: [gym({ reopenUntil: past, canReopen: true })] });
+    renderWithProviders(<ClosedGymsView />);
+    expect(await screen.findByRole("button", { name: "Reopen gym" })).toBeInTheDocument();
+    expect(screen.queryByText(/reopen window has ended/i)).toBeNull();
   });
 
   it("explains a server refusal when reopening", async () => {
@@ -110,6 +117,8 @@ describe("CloseGymSection", () => {
     fireEvent.change(screen.getByLabelText(/to confirm/), { target: { value: "Iron" } });
     expect(confirm).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/to confirm/), { target: { value: "close" } });
+    expect(confirm).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/to confirm/), { target: { value: "CLOSE" } });
     expect(confirm).toBeEnabled();
     expect(svc.close).not.toHaveBeenCalled();
   });
@@ -144,10 +153,10 @@ describe("GymClosureGate", () => {
     expect(screen.queryByText("dash")).toBeNull();
   });
 
-  it("tells staff the gym is closed when they have no workspace and no closed gyms", async () => {
+  it("tells someone with no workspace and no closed gyms that there is no open gym when they have no workspace and no closed gyms", async () => {
     svc.listClosed.mockResolvedValue({ success: true, data: [] });
     renderWithProviders(<GymClosureGate isOwner={false}><p>dash</p></GymClosureGate>);
-    expect(await screen.findByText("This gym is closed")).toBeInTheDocument();
+    expect(await screen.findByText("No open gym here")).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
   });
 

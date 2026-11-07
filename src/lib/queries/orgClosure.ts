@@ -16,6 +16,9 @@ export function useClosedOrganizations(enabled = true) {
     },
     enabled,
     retry: false,
+    // Asked on every gym dashboard page for owners: cache it. Closing and
+    // reopening invalidate it.
+    staleTime: 60_000,
   });
 }
 

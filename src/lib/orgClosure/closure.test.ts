@@ -17,7 +17,12 @@ describe("confirmationMatches", () => {
   it("accepts the gym name in any case, or CLOSE", () => {
     expect(confirmationMatches("iron gym", "Iron Gym")).toBe(true);
     expect(confirmationMatches("  IRON GYM ", "Iron Gym")).toBe(true);
-    expect(confirmationMatches("close", "Iron Gym")).toBe(true);
+    expect(confirmationMatches("CLOSE", "Iron Gym")).toBe(true);
+    expect(confirmationMatches(" CLOSE ", "Iron Gym")).toBe(true);
+  });
+  it("refuses lowercase close, which the API refuses", () => {
+    expect(confirmationMatches("close", "Iron Gym")).toBe(false);
+    expect(confirmationMatches("Close", "Iron Gym")).toBe(false);
   });
   it("rejects anything else, including empty", () => {
     expect(confirmationMatches("", "Iron Gym")).toBe(false);
@@ -38,12 +43,10 @@ describe("reopen window", () => {
     expect(daysLeftLabel(12)).toBe("12 days left to reopen");
     expect(daysLeftLabel(0)).toMatch(/ended/);
   });
-  it("does not offer reopen when the window has expired, even if the flag is stale", () => {
+  it("follows the server's can_reopen flag, not the device clock", () => {
     const base = parseClosures([{ id: "a", name: "A", reopen_until: "2026-11-01T00:00:00Z", can_reopen: true }])[0];
-    expect(canReopenNow(base, NOW)).toBe(false);
-    const open = { ...base, reopenUntil: "2026-11-20T00:00:00Z" };
-    expect(canReopenNow(open, NOW)).toBe(true);
-    expect(canReopenNow({ ...open, canReopen: false }, NOW)).toBe(false);
+    expect(canReopenNow(base)).toBe(true);
+    expect(canReopenNow({ ...base, canReopen: false })).toBe(false);
   });
 });
 

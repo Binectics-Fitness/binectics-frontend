@@ -12,7 +12,7 @@ export function ClosedGymBanner({ gyms }: { gyms: ClosedOrganization[] }) {
   const reopenable = gyms.some((g) => canReopenNow(g));
   const text =
     gyms.length === 1
-      ? `${first.name} is closed. ${canReopenNow(first) ? daysLeftLabel(daysLeftToReopen(first)) + "." : "Your records stay available to export."}`
+      ? `${first.name} is closed. ${canReopenNow(first) ? daysLeftLabel(Math.max(1, daysLeftToReopen(first) ?? 1)) + "." : "Your records stay available to export."}`
       : `${gyms.length} of your gyms are closed.${reopenable ? " Some can still be reopened." : ""}`;
   return (
     <div

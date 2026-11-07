@@ -78,8 +78,10 @@ function ClosedGymCard({ gym }: { gym: ClosedOrganization }) {
   const [busy, setBusy] = useState<ExportKind | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const days = daysLeftToReopen(gym);
   const canReopen = canReopenNow(gym);
+  // The server says it is open; a device clock that disagrees must not print "ended".
+  const left = daysLeftToReopen(gym);
+  const days = left === null ? null : Math.max(1, left);
   const closedOn = fmtDate(gym.closedAt);
   const until = fmtDate(gym.reopenUntil);
 
