@@ -345,7 +345,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
               </div>
               <p id="refund-confirm-body" className="text-[13px]" style={{ color: "var(--fg-2)" }}>
                 {railNote}
-                {quote.charge.discount_code?.gives_back_on_full_refund && confirming.minor >= quote.refundable_minor && quote.refunded_minor === 0
+                {quote.charge.discount_code?.gives_back_on_full_refund && confirming.minor >= quote.refundable_minor
                   ? ` This also gives the code ${quote.charge.discount_code.code} back to the member.`
                   : ""}
               </p>
