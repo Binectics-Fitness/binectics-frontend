@@ -10,6 +10,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
 import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
+import { CloseGymSection } from "@/components/orgClosure/CloseGymSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection } from "./TeamAccessSections";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
@@ -39,6 +40,7 @@ import {
   type TimeFormat,
   type NumberFormat,
 } from "@/lib/constants/settingsLocale";
+import { AccountType } from "@/lib/types";
 import type {
   Organization,
   UpdateOrganizationRequest,
@@ -57,6 +59,7 @@ const SECTIONS = [
   { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "membership", label: "Membership rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
+  { group: "Danger zone", items: [{ id: "danger", label: "Close gym" }] },
 ];
 
 /**
@@ -203,7 +206,7 @@ export function SettingsClient() {
   const canManage = holds(viewer, TeamPermission.MANAGE_ORGANIZATION);
   const sections = useMemo(
     () =>
-      SECTIONS.filter((g) => isOwner || g.group !== "Money").map((g) =>
+      SECTIONS.filter((g) => isOwner || (g.group !== "Money" && g.group !== "Danger zone")).map((g) =>
         showActivity && g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
       ),
     [showActivity, isOwner],
@@ -592,6 +595,11 @@ export function SettingsClient() {
 
           {/* Activity log — who changed what, on its own page */}
           {showActivity && <ActivityLogSection href="/dashboard/gym-owner/settings/activity" />}
+
+          {/* Close gym — owner only; only a gym workspace can be closed */}
+          {isOwner && orgId && currentOrg?.account_type === AccountType.GYM_OWNER && (
+            <CloseGymSection orgId={orgId} orgName={currentOrg.name} />
+          )}
 
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>

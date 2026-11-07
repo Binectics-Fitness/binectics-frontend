@@ -7,6 +7,7 @@ import type { ApiResponse } from "@/lib/types";
 import { clearAuthStorage, userStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 import { isAdminLoginPath } from "@/lib/routing/adminPaths";
+import { ORG_CLOSED_MESSAGE } from "@/lib/orgClosure/closure";
 import {
   ACCOUNT_STATE_ROUTES,
   isAccountStateRoute,
@@ -242,7 +243,12 @@ class ApiClient {
       }
 
       const rawMsg = body.message || body.error || "An error occurred";
-      const message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+      let message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+      // A closed gym refuses new business with the same code from every flow
+      // (booking, membership, purchase, invitation): one friendly sentence.
+      if (response.status === 409 && (body.code === "ORG_CLOSED" || body.error === "ORG_CLOSED")) {
+        message = ORG_CLOSED_MESSAGE;
+      }
 
       return {
         success: false,

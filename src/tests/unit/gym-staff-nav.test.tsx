@@ -131,6 +131,11 @@ let mockOrg: Record<string, unknown> = ownerOrg;
 let mockUser = { id: "u1", role: "GYM_OWNER", first_name: "Dapo", last_name: "A" };
 const replace = vi.fn();
 
+vi.mock("@/lib/queries/orgClosure", () => ({
+  useClosedOrganizations: () => ({ data: [], isLoading: false }),
+  useCloseOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useReopenOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace }),
   usePathname: () => mockPath,
