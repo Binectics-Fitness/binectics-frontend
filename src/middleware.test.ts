@@ -79,3 +79,19 @@ describe("middleware provider-profile 404", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+describe("middleware: the pay page needs a session, the payment return does not", () => {
+  it("sends a signed-out visitor from /pay/membership/:id to sign in, and back after", async () => {
+    const res = await middleware(request("/pay/membership/abc123", SITE_HOST));
+    expect(res.status).toBe(307);
+    const location = new URL(res.headers.get("location") ?? "");
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("redirect")).toBe("/pay/membership/abc123");
+    expect(res.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+
+  it("does not sign a visitor out of /payments/return (Paystack's callback lands there)", async () => {
+    const res = await middleware(request("/payments/return?reference=mbr_1", SITE_HOST));
+    expect(res.status).not.toBe(307);
+  });
+});

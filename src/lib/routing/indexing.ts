@@ -21,6 +21,7 @@ export const PRIVATE_PATH_PREFIXES = [
   "/account-suspended",
   "/onboarding",
   "/checkout",
+  "/pay",
   "/booking",
   "/payments",
   "/check-in",

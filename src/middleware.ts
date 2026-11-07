@@ -20,6 +20,8 @@ const protectedRoutes = [
   // authentication enforce it in-page and at the API).
   "/check-in",
   "/checkout",
+  // Trailing slash: "/payments/return" must stay reachable without a session.
+  "/pay/",
   "/teams",
   "/onboarding",
 ];
