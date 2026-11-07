@@ -17,6 +17,11 @@ const h = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
 }));
 
+vi.mock("@/lib/queries/orgClosure", () => ({
+  useClosedOrganizations: () => ({ data: [], isLoading: false }),
+  useCloseOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useReopenOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
 vi.mock("@/components/ds/GymDashboardShell", async () => {
   const { useGymViewer } = await import("@/hooks/useGymViewer");
   return {
