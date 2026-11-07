@@ -26,6 +26,8 @@ const UNAVAILABLE_COPY: Record<string, string> = {
   currency_not_card_chargeable:
     "Cards can't be charged automatically in this plan's currency. You can renew by paying for each term.",
   plan_unavailable: "This plan isn't offered any more, so it can't renew automatically.",
+  coupon:
+    "This code only discounts the first payment, so it can't be combined with automatic renewal. Remove the code to renew automatically, or pay for this term only.",
 };
 
 export function autoRenewUnavailableCopy(reason: string | null | undefined): string {

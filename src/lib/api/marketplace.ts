@@ -1104,7 +1104,7 @@ export const marketplaceService = {
      * charged again. Omitted, this is a one-off payment.
      */
     renewal?: RenewalCheckoutRequest,
-    /** A provider discount code; the server prices it. Not with `renewal`. */
+    /** A provider discount code; the server prices it. With `renewal` only when the code carries into renewals (its consent text names it). */
     couponCode?: string,
   ): Promise<ApiResponse<PlanCheckout>> {
     return await apiClient.post<PlanCheckout>(

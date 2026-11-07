@@ -6,7 +6,7 @@ import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { couponsService, type Coupon, type CouponRedemption } from "@/lib/api/coupons";
-import { APPLIES_LABEL, COUPON_STATE_LABEL, couponState, discountLabel, type CouponState } from "@/lib/coupons/couponUi";
+import { APPLIES_LABEL, COUPON_STATE_LABEL, couponState, discountLabel, renewalsLabel, type CouponState } from "@/lib/coupons/couponUi";
 import type { Tone } from "@/lib/ui/tones";
 import { CreateCodeModal } from "./CreateCodeModal";
 
@@ -20,8 +20,9 @@ function when(iso?: string | null): string {
 }
 
 /**
- * /dashboard/discount-codes: the provider's own codes. Owner-only on the API
- * (anyone else gets its refusal); there are no platform codes.
+ * /dashboard/discount-codes: the provider's own codes. The owner, or staff of
+ * this gym whose role holds coupons:manage (the nav shows the item only to
+ * them); anyone else gets the API's refusal. There are no platform codes.
  */
 export function DiscountCodesClient() {
   const { currentOrg, isLoading: orgLoading } = useOrganization();
@@ -120,6 +121,8 @@ function CodeRow({ orgId, c, onToggle }: { orgId: string; c: Coupon; onToggle: (
           </div>
           <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
             {discountLabel(c)} · {c.applies_to.map((k) => APPLIES_LABEL[k]).join(" and ")}
+            {renewalsLabel(c) ? ` · ${renewalsLabel(c)}` : ""}
+            {c.return_on_refund ? " · Given back on a full refund" : ""}
             {c.label ? ` · ${c.label}` : ""}
             {c.expires_at ? ` · expires ${when(c.expires_at)}` : ""}
           </div>

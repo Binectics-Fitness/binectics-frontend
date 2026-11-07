@@ -81,6 +81,11 @@ function CheckoutContent() {
   const [renewsCancelled, setRenewsCancelled] = useState(false);
   // A discount code the API priced for this plan. One per purchase.
   const [promo, setPromo] = useState<CouponQuote | null>(null);
+  // The consent text for a code that also discounts the first N renewals
+  // (it names the code and the discounted renewals). Null: none applies.
+  const [promoConsent, setPromoConsent] = useState<AutoRenewConsentOffer | null>(null);
+  // The consent the box shows: the plain one, or the code's.
+  const activeConsent = promo ? promoConsent : consent;
   // One checkout at a time: a second click while the popup is up is ignored.
   const inFlight = useRef(false);
 
@@ -156,19 +161,44 @@ function CheckoutContent() {
     setPaymentError("");
     try {
       const renewal: RenewalCheckoutRequest | undefined =
-        !promo && renewTicked && isOfferedConsent(consent)
+        renewTicked && isOfferedConsent(activeConsent)
           ? {
               save_card: true,
-              text_version: consent.text_version,
-              text_sha256: consent.text_sha256,
+              text_version: activeConsent.text_version,
+              text_sha256: activeConsent.text_sha256,
               channel: "web",
             }
           : undefined;
+      // A code only rides along with "Renew automatically" when it carries
+      // into renewals (the consent the member ticked names it).
       const started = renewal
-        ? await marketplaceService.startPlanCheckout(listing._id, plan._id, renewal)
+        ? promo
+          ? await marketplaceService.startPlanCheckout(listing._id, plan._id, renewal, promo.code)
+          : await marketplaceService.startPlanCheckout(listing._id, plan._id, renewal)
         : promo
           ? await marketplaceService.startPlanCheckout(listing._id, plan._id, undefined, promo.code)
           : await marketplaceService.startPlanCheckout(listing._id, plan._id);
+      if (!started.success && started.code === "CONSENT_TEXT_CHANGED" && promo) {
+        // The code changed since it was applied (its renewal terms). Fetch the
+        // terms again, untick, and let the member read them.
+        const fresh =
+          consentFromError(started) ??
+          (await memberBillingService.getPlanAutoRenewConsent(listing._id, plan._id, promo.code)).data ??
+          null;
+        setPromoConsent(fresh);
+        setRenewTicked(false);
+        setConsentNotice(
+          isOfferedConsent(fresh)
+            ? "The renewal terms changed since you opened this page. Read them again and tick the box if you agree."
+            : null,
+        );
+        if (!isOfferedConsent(fresh)) {
+          setPaymentError(
+            `${autoRenewUnavailableCopy(fresh && !fresh.offered ? fresh.reason : null)} You can still pay for this term on its own.`,
+          );
+        }
+        return;
+      }
       if (!started.success && started.code?.startsWith("COUPON_")) {
         // The code stopped working since it was applied (used up, expired).
         setPromo(null);
@@ -204,7 +234,8 @@ function CheckoutContent() {
       }
       if (!started.success && started.code === "AUTO_RENEW_NOT_AVAILABLE") {
         const reason = reasonFromError(started);
-        setConsent({ offered: false, reason: reason ?? "disabled" });
+        if (promo) setPromoConsent({ offered: false, reason: reason ?? "coupon" });
+        else setConsent({ offered: false, reason: reason ?? "disabled" });
         setRenewTicked(false);
         setConsentNotice(null);
         setPaymentError(
@@ -496,21 +527,37 @@ function CheckoutContent() {
                       quote={promo}
                       onChange={(q) => {
                         setPromo(q);
-                        if (q) setRenewTicked(false);
+                        setRenewTicked(false);
+                        setConsentNotice(null);
+                        setPromoConsent(null);
+                        if (q && q.apply_to_renewals > 0) {
+                          // The terms for this code: names the discounted renewals.
+                          void memberBillingService
+                            .getPlanAutoRenewConsent(listing._id, plan._id, q.code)
+                            .then((r) => setPromoConsent(r.success && r.data ? r.data : null))
+                            .catch(() => setPromoConsent(null));
+                        }
                       }}
                       validate={(code) => couponsService.validatePlanCode(listing._id, plan._id, code)}
                       disabled={isProcessing}
                     />
                   </div>
-                  {isOfferedConsent(consent) && !promo && (
+                  {promo && isOfferedConsent(consent) && !isOfferedConsent(promoConsent) && (
+                    <p className="mb-5 text-[12.5px] text-fg-2" data-testid="promo-no-renew">
+                      {promo.apply_to_renewals > 0
+                        ? "Checking the renewal terms for this code..."
+                        : autoRenewUnavailableCopy("coupon")}
+                    </p>
+                  )}
+                  {isOfferedConsent(activeConsent) && (
                     <div className="mb-5">
                       {renewsCancelled && (
                         <p className="mb-3 text-[13.5px] text-ink" data-testid="uncancel-note">
-                          {uncancelCheckoutLine(consent, (iso) => formatDate(iso))}
+                          {uncancelCheckoutLine(activeConsent, (iso) => formatDate(iso))}
                         </p>
                       )}
                       <AutoRenewConsentBox
-                        consent={consent}
+                        consent={activeConsent}
                         checked={renewTicked}
                         onChange={(next) => {
                           setRenewTicked(next);
@@ -520,7 +567,11 @@ function CheckoutContent() {
                         disabled={isProcessing}
                       />
                       <p className="mt-2 text-[12.5px] text-fg-2">
-                        {renewTicked
+                        {renewTicked && promo
+                          ? `You pay ${priceLabel} now, by card, with your code. Your first ${promo.apply_to_renewals === 1 ? "renewal is" : `${promo.apply_to_renewals} renewals are`} discounted too${
+                              promo.renewal_amount_minor != null ? ` (${formatMinor(plan.currency, promo.renewal_amount_minor)} at today's price)` : ""
+                            }, then the full price. Your card is saved for renewals only if your bank allows it.`
+                          : renewTicked
                           ? "You pay today's amount now, by card. Your card is saved for renewals only if your bank allows it."
                           : "Leave this unticked to pay for this term only."}
                       </p>

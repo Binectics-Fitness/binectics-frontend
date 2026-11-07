@@ -13,7 +13,7 @@ const MESSAGES: Record<string, string> = {
   COUPON_NO_DISCOUNT: "This code doesn't lower this price.",
   COUPON_RENEWAL_NOT_FREE: "A code can't make a renewal free.",
   AUTO_RENEW_NOT_AVAILABLE:
-    "Automatic renewal can't be set up on a discounted payment. Turn it on from your membership afterwards.",
+    "Automatic renewal can't be set up with this code. Turn it on from your membership afterwards.",
   RATE_LIMITED: "Too many tries. Wait a minute and try again.",
 };
 
@@ -33,6 +33,13 @@ export function couponErrorMessage(
 export function discountLabel(c: Pick<Coupon, "discount_type" | "percent_off" | "amounts_minor">): string {
   if (c.discount_type === CouponDiscountType.PERCENT) return `${c.percent_off ?? 0}% off`;
   return `${c.amounts_minor.map((a) => formatMinor(a.currency, a.amount_minor)).join(" or ")} off`;
+}
+
+/** "Also on the first 2 renewals" / null when the code does not carry into renewals. */
+export function renewalsLabel(c: Pick<Coupon, "apply_to_renewals">): string | null {
+  const n = c.apply_to_renewals ?? 0;
+  if (n <= 0) return null;
+  return n === 1 ? "Also on the first renewal" : `Also on the first ${n} renewals`;
 }
 
 export const APPLIES_LABEL: Record<CouponKind, string> = {

@@ -36,6 +36,9 @@ const quote = (over: Partial<CouponQuote> = {}): CouponQuote => ({
   floored: false,
   discount_type: CouponDiscountType.PERCENT,
   percent_off: 10,
+  apply_to_renewals: 0,
+  renewal_amount_minor: null,
+  renewal_discount_minor: null,
   ...over,
 });
 
@@ -52,6 +55,8 @@ const coupon = (over: Partial<Coupon> = {}): Coupon => ({
   expires_at: null,
   max_redemptions: 5,
   max_per_user: 1,
+  apply_to_renewals: 0,
+  return_on_refund: false,
   used_count: 2,
   redeemed_count: 2,
   is_active: true,
