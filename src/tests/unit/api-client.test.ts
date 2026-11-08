@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from "vitest";
 
 import { apiClient } from "@/lib/api/client";
+import { resetDeviceIdCache } from "@/lib/device/deviceId";
 
 type FakeResponseOptions = { throwOnParse?: boolean };
 
@@ -147,6 +148,64 @@ describe("apiClient sign-in refusal details", () => {
 
     expect(res.status).toBe(429);
     expect(res.details).toEqual({ retry_after_seconds: 42 });
+  });
+
+  it("turns the throttler's class-name message into a friendly one", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(429, { message: "ThrottlerException: Too Many Requests" }),
+    );
+    const res = await apiClient.post("/auth/login", {}, false);
+    expect(res.message).toBe("Too many requests. Please wait a moment and try again.");
+  });
+
+  it("keeps a lockout's lock_scope in details", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(401, {
+        code: "AUTH_ACCOUNT_LOCKED",
+        message: ["Too many tries."],
+        retry_after_seconds: 120,
+        lock_scope: "device",
+      }),
+    );
+    const res = await apiClient.post("/auth/login", {}, false);
+    expect(res.details).toEqual({ retry_after_seconds: 120, lock_scope: "device" });
+  });
+
+  it("sends a stable random X-Device-Id on account endpoints only", async () => {
+    window.localStorage.clear();
+    resetDeviceIdCache();
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(200, { data: {} }));
+    await apiClient.post("/auth/login", {}, false);
+    await apiClient.post("/auth/login", {}, false);
+    await apiClient.post("/marketplace/listings", {}, false);
+    const idOf = (call: number) =>
+      (fetchMock.mock.calls[call][1]?.headers as Record<string, string>)["X-Device-Id"];
+    expect(idOf(0)).toMatch(/^[A-Za-z0-9_-]{16,64}$/);
+    expect(idOf(1)).toBe(idOf(0));
+    expect(idOf(2)).toBeUndefined();
+    expect(window.localStorage.getItem("binectics:device-id")).toBe(idOf(0));
+  });
+
+  it("sends no device id, and still works, when storage is blocked", async () => {
+    resetDeviceIdCache();
+    const real = Object.getOwnPropertyDescriptor(window, "localStorage");
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("blocked");
+      },
+    });
+    onTestFinished(() => {
+      if (real) Object.defineProperty(window, "localStorage", real);
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(200, { data: {} }));
+    const res = await apiClient.post("/auth/login", {}, false);
+    expect(res.success).toBe(true);
+    expect((fetchMock.mock.calls[0][1]?.headers as Record<string, string>)["X-Device-Id"]).toBeUndefined();
   });
 
   it("ignores a Retry-After that isn't a number of seconds", async () => {
