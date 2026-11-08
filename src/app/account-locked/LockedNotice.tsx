@@ -63,8 +63,9 @@ export default function LockedNotice() {
       )}
       {!open && (
         <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "-12px auto 24px", maxWidth: "44ch" }}>
-          Forgotten your password? You can reset it now, but you&apos;ll still
-          need to wait for the pause to end before signing in.
+          Forgotten your password? Resetting it usually ends the pause
+          straight away. If sign-in is still paused afterwards, wait for the
+          timer to finish.
         </p>
       )}
     </AccountStatePanel>
