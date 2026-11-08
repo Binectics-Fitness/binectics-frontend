@@ -158,6 +158,18 @@ describe("apiClient sign-in refusal details", () => {
     expect(res.message).toBe("Too many requests. Please wait a moment and try again.");
   });
 
+  it("reads a wrong password as 'Invalid email or password', also from an older API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(401, { code: "AUTH_INVALID_CREDENTIALS", message: ["Authentication failed"] }),
+    );
+    expect((await apiClient.post("/auth/login", {}, false)).message).toBe("Invalid email or password");
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(401, { code: "AUTH_INVALID_CREDENTIALS", message: ["Invalid email or password"] }),
+    );
+    expect((await apiClient.post("/auth/login", {}, false)).message).toBe("Invalid email or password");
+  });
+
   it("keeps a lockout's lock_scope in details", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       jsonResponse(401, {

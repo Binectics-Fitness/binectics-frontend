@@ -264,6 +264,10 @@ class ApiClient {
       if (response.status === 429 && /^ThrottlerException/.test(message)) {
         message = RATE_LIMIT_MESSAGE;
       }
+      // Older API builds said "Authentication failed" for a wrong password.
+      if (body.code === "AUTH_INVALID_CREDENTIALS" && message === "Authentication failed") {
+        message = "Invalid email or password";
+      }
       if (response.status === 409 && (body.code === "ORG_CLOSED" || body.error === "ORG_CLOSED")) {
         message = ORG_CLOSED_MESSAGE;
       }
