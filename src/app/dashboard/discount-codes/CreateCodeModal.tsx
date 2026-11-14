@@ -43,6 +43,10 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
   const [expires, setExpires] = useState("");
   const [cap, setCap] = useState("");
   const [perPerson, setPerPerson] = useState("1");
+  // 0 = the discount stays on the first payment only (the default).
+  const [renewals, setRenewals] = useState("0");
+  // Off unless the provider turns it on.
+  const [giveBack, setGiveBack] = useState(false);
   // Local calendar day, read once: an expiry is the end of that day.
   const [today] = useState(() => {
     const d = new Date();
@@ -54,6 +58,8 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
   const pct = Number(percent);
   const capN = cap === "" ? null : Number(cap);
   const per = Number(perPerson);
+  const renewalsN = renewals === "" ? 0 : Number(renewals);
+  const forMemberships = kinds.includes(CouponKind.MEMBERSHIP);
   const problems: string[] = [];
   if (!isValidCodeText(code)) problems.push("A code is 3 to 20 letters and digits.");
   if (type === CouponDiscountType.PERCENT && !(Number.isInteger(pct) && pct >= 1 && pct <= 100)) problems.push("Percent is a whole number from 1 to 100.");
@@ -61,6 +67,8 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
   if (kinds.length === 0) problems.push("Pick what the code works on.");
   if (capN !== null && !(Number.isInteger(capN) && capN >= 1)) problems.push("The total limit is a whole number of 1 or more.");
   if (!(Number.isInteger(per) && per >= 1 && per <= 10)) problems.push("Per-person limit is 1 to 10.");
+  if (forMemberships && !(Number.isInteger(renewalsN) && renewalsN >= 0 && renewalsN <= 24)) problems.push("Renewals is a whole number from 0 to 24.");
+  if (forMemberships && renewalsN > 0 && type === CouponDiscountType.PERCENT && pct === 100) problems.push("A 100% code can't carry into renewals. A renewal is never free.");
   if (expires && expires < today) problems.push("The expiry date must be in the future.");
 
   const toggle = (k: CouponKind) => setKinds((ks) => (ks.includes(k) ? ks.filter((x) => x !== k) : [...ks, k]));
@@ -80,6 +88,8 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
       ...(expires ? { expires_at: new Date(`${expires}T23:59:59`).toISOString() } : {}),
       ...(capN !== null ? { max_redemptions: capN } : {}),
       max_per_user: per,
+      ...(forMemberships && renewalsN > 0 ? { apply_to_renewals: renewalsN } : {}),
+      ...(giveBack ? { return_on_refund: true } : {}),
     };
     const res = await couponsService.create(orgId, input);
     setBusy(false);
@@ -171,6 +181,33 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
             <input inputMode="numeric" value={perPerson} onChange={(e) => setPerPerson(e.target.value.replace(/[^\d]/g, ""))} className="rounded-(--r-2) px-3 py-2 text-[14px]" style={field} />
           </label>
         </div>
+
+        {forMemberships && (
+          <label className="flex flex-col gap-1.5" htmlFor="apply-renewals">
+            Apply to the first N renewals
+            <input
+              id="apply-renewals"
+              inputMode="numeric"
+              value={renewals}
+              onChange={(e) => setRenewals(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+              className="rounded-(--r-2) px-3 py-2 text-[14px] sm:w-32"
+              style={field}
+            />
+            <span style={{ color: "var(--fg-3)" }}>
+              0 (the default) means the discount is for the first payment only; automatic renewals are charged at the full price. With a number above 0, a member who also turns on Renew automatically gets the discount on that many automatic renewals, then pays the full price. They are told this before they agree.
+            </span>
+          </label>
+        )}
+
+        <label className="flex items-start gap-2" htmlFor="give-back">
+          <input id="give-back" type="checkbox" className="mt-0.5" checked={giveBack} onChange={(e) => setGiveBack(e.target.checked)} />
+          <span>
+            Give the code back when the payment is refunded
+            <span className="block" style={{ color: "var(--fg-3)" }}>
+              Off by default. When on, a full refund of the discounted payment lets that member use the code again. A partial refund never gives it back.
+            </span>
+          </span>
+        </label>
 
         {problems.length > 0 && (code || cap || expires || type === CouponDiscountType.FIXED) && (
           <ul className="text-[12.5px]" style={{ color: "var(--danger)" }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>

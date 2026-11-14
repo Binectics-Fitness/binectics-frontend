@@ -263,6 +263,14 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
         ))}
       </div>
       <p className="text-[13px]" style={{ color: "var(--fg-2)" }}>{railNote}</p>
+      {quote.charge.discount_code ? (
+        <p className="text-[13px]" style={{ color: "var(--fg-2)" }} data-testid="refund-code-note">
+          This payment used the code {quote.charge.discount_code.code}.{" "}
+          {quote.charge.discount_code.gives_back_on_full_refund
+            ? "Refunding the full amount gives the code back, so the member can use it again. A partial refund does not."
+            : "Refunding it does not give the code back."}
+        </p>
+      ) : null}
 
       {quote.action !== "none" ? (
         <form
@@ -337,6 +345,9 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
               </div>
               <p id="refund-confirm-body" className="text-[13px]" style={{ color: "var(--fg-2)" }}>
                 {railNote}
+                {quote.charge.discount_code?.gives_back_on_full_refund && confirming.minor >= quote.refundable_minor
+                  ? ` This also gives the code ${quote.charge.discount_code.code} back to the member.`
+                  : ""}
               </p>
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn-ghost-v2" onClick={cancelConfirm}>

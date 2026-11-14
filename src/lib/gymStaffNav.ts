@@ -40,6 +40,7 @@ export const TeamPermission = {
   MARKETPLACE_MANAGE_REVIEWS: "marketplace:manage_reviews",
   BOOKINGS_MANAGE: "bookings:manage",
   MESSAGING_ANSWER_MEMBERS: "messaging:answer_members",
+  COUPONS_MANAGE: "coupons:manage",
 } as const;
 export type TeamPermissionKey = (typeof TeamPermission)[keyof typeof TeamPermission];
 
@@ -87,8 +88,10 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Revenue: needs(P.MARKETPLACE_MANAGE_LISTING),
   // /refunds/organizations/:id/*, /disputes/*: owner only
   Refunds: OWNER,
-  // /coupons/organizations/:id/*: owner only
-  "Discount codes": OWNER,
+  // /coupons/organizations/:id/*: the owner, or staff of THIS gym whose role
+  // holds coupons:manage (default Admin and Manager). Everyone else gets a
+  // 404 there, so the item is not shown to them.
+  "Discount codes": needs(P.COUPONS_MANAGE),
   // /marketplace/organizations/:id/plans
   "Plans & pricing": needs(P.MARKETPLACE_MANAGE_LISTING),
   // The gym's listing, gallery, cover photo and publishing:
