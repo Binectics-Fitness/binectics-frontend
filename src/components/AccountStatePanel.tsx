@@ -200,3 +200,17 @@ export function Countdown({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+/**
+ * A visually hidden live region that speaks the countdown's progress. Give
+ * it `countdownAnnouncement(secondsLeft)`: the text changes only a few times
+ * over a wait, so a screen reader is told "About 2 minutes left" and "Less
+ * than a minute left", not every tick. The visible timer stays silent.
+ */
+export function CountdownAnnouncement({ text }: { text: string }) {
+  return (
+    <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      {text}
+    </p>
+  );
+}

@@ -124,6 +124,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch] mb-3.5" style={{ color: "var(--fg-2)" }}>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>How you use the product</strong>, pages viewed, searches, taps. Stored against a rotating device ID, not your account, where possible.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Device & network</strong>, browser, OS, IP, approximate city. Used for fraud detection and to localize the experience.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Sign-in safety ID</strong>, a random code made in your browser (or in the app) and sent when you sign in. It holds no device details and does not identify you. We use it only to slow down repeated wrong passwords from one place without locking you out of your own account.</li>
         </ul>
         <h3 className="text-[16px] font-medium mt-7 mb-2.5" style={{ letterSpacing: "-0.005em", color: "var(--ink)" }}>Others tell us</h3>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
