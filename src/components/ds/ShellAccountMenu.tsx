@@ -16,12 +16,15 @@ export function ShellAccountMenu({
   trigger,
   direction = "up",
   workspaceLink,
+  extraItems,
 }: {
   trigger: ReactNode;
   /** Popover opens above (sidebar footers) or below (topbar chips). */
   direction?: "up" | "down";
   /** Another place the person works (a gym's staff: the gym, or home). */
   workspaceLink?: WorkspaceLink | null;
+  /** More links after Settings (the solo member's Privacy and sharing, Help). */
+  extraItems?: { href: string; label: string }[];
 }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -47,6 +50,7 @@ export function ShellAccountMenu({
     ...(workspaceLink ? [workspaceLink] : []),
     { href: "/dashboard/settings/profile", label: "Profile" },
     { href: "/dashboard/settings", label: "Settings" },
+    ...(extraItems ?? []),
     ...(user?.is_admin && user.role !== UserRole.ADMIN
       ? [{ href: "/admin/dashboard", label: "Admin panel" }]
       : []),

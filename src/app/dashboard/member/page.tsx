@@ -46,6 +46,9 @@ import { EnrollmentOffersCard } from "./_components/EnrollmentOffersCard";
 import { GymClassesLink } from "./_components/GymClassesLink";
 import { MembershipNoticeCard } from "./_components/MembershipNoticeCard";
 import { formatDate } from "@/utils/format";
+import { useIsSoloMember } from "@/hooks/useIsSoloMember";
+import { isSoloMemberEnabled } from "@/lib/solo/flag";
+import { SoloToday, SoloTodayLoading } from "./_components/solo/SoloToday";
 
 interface MemberSnapshot {
   checkins: StreakStats | null;
@@ -89,6 +92,25 @@ export default function MemberHomePage() {
   // for wrong-role visitors.
   const { isAuthorized } = useRoleGuard(UserRole.USER);
   if (!isAuthorized) return null;
+  return <MemberHomeSwitch />;
+}
+
+/**
+ * Today for a member on their own (NEXT_PUBLIC_FEATURE_SOLO_MEMBER on, no
+ * provider, nothing pending), otherwise the home this page always had. While
+ * the first answer is still coming the page shows shapes; a read that fails
+ * falls back to the usual home, never to a guess.
+ */
+function MemberHomeSwitch() {
+  // A build-time constant: with the switch off nothing solo runs at all.
+  if (!isSoloMemberEnabled()) return <MemberHomeContent />;
+  return <SoloAwareHome />;
+}
+
+function SoloAwareHome() {
+  const { solo, isLoading } = useIsSoloMember();
+  if (solo === true) return <SoloToday />;
+  if (solo === null && isLoading) return <SoloTodayLoading />;
   return <MemberHomeContent />;
 }
 
