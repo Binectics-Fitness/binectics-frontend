@@ -219,7 +219,7 @@ export function FastHistory() {
       </p>
 
       <FastEditDrawer
-        fast={editing}
+        fast={nowMs === null ? null : editing}
         nowMs={nowMs ?? 0}
         saving={edit.isPending}
         deleting={del.isPending}
