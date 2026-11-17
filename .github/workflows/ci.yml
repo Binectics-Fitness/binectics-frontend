@@ -32,6 +32,7 @@ jobs:
         id: node
         with:
           node-version: 22
+          package-manager-cache: false
       # node_modules is cached, so a warm job skips `npm ci` (about 40-60 s).
       # npm ci runs only on a miss. Caches saved from a PR are visible to that
       # PR only; the weekly run on main seeds the cache every PR can read.
@@ -44,6 +45,16 @@ jobs:
       - name: Install dependencies
         if: steps.deps.outputs.cache-hit != 'true'
         run: npm ci
+      # tsconfig has "incremental": true, so tsc writes tsconfig.tsbuildinfo even
+      # with --noEmit. It hashes file contents, so a stale cache cannot hide an
+      # error. Keyed per commit; the restore key takes the newest earlier one.
+      - name: Restore tsc build info
+        uses: actions/cache@v6
+        with:
+          path: tsconfig.tsbuildinfo
+          key: tsc-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json') }}-${{ github.sha }}
+          restore-keys: |
+            tsc-${{ runner.os }}-${{ hashFiles('package-lock.json', 'tsconfig.json') }}-
       - run: npx tsc --noEmit
       # Tests run on the developer's machine before every push (the pre-push
       # hook), so PR runs skip them to save Actions minutes. The weekly and
@@ -60,6 +71,7 @@ jobs:
         id: node
         with:
           node-version: 22
+          package-manager-cache: false
       # node_modules is cached, so a warm job skips `npm ci` (about 40-60 s).
       # npm ci runs only on a miss. Caches saved from a PR are visible to that
       # PR only; the weekly run on main seeds the cache every PR can read.
@@ -72,4 +84,13 @@ jobs:
       - name: Install dependencies
         if: steps.deps.outputs.cache-hit != 'true'
         run: npm ci
+      # Next's own build cache. Keyed per commit; the restore key takes the
+      # newest earlier one, and Next invalidates what changed.
+      - name: Restore Next build cache
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
       - run: npx next build
