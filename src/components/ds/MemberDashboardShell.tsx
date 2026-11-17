@@ -160,7 +160,7 @@ function SoloAwareShell(props: MemberDashboardShellProps) {
 interface MemberShellViewProps extends MemberDashboardShellProps {
   /** The member is solo (see lib/solo/rule.ts): the short bar replaces the full one. */
   solo?: boolean;
-  soloFlags?: { water: boolean };
+  soloFlags?: { water: boolean; fasting?: boolean; history?: boolean };
 }
 
 function MemberShellView({ activeLabel, children, actions, solo = false, soloFlags }: MemberShellViewProps) {
@@ -206,7 +206,11 @@ function MemberShellView({ activeLabel, children, actions, solo = false, soloFla
   // While the answer is unknown, or for anyone else, the bar is exactly what
   // it always was.
   const isSolo = solo;
-  const navLinks = isSolo ? soloNavLinks({ water: soloFlags?.water ?? false }) : memberNavLinks;
+  const navLinks = isSolo ? soloNavLinks({
+        water: soloFlags?.water ?? false,
+        fasting: soloFlags?.fasting ?? false,
+        history: soloFlags?.history ?? false,
+      }) : memberNavLinks;
   const navActiveLabel = isSolo ? soloActiveLabel(activeLabel, pathname) : activeLabel;
   const accountExtras = isSolo ? SOLO_MENU_LINKS : undefined;
   // A gym's staff reach the gym's dashboard from here (F1).

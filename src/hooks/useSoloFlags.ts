@@ -8,6 +8,7 @@ export interface SoloFlagState {
   checklist: boolean;
   fasting: boolean;
   history: boolean;
+  targets: boolean;
   /** Server flags are still loading (every flag reads off meanwhile). */
   isLoading: boolean;
 }
@@ -20,6 +21,7 @@ export function useSoloFlags(): SoloFlagState {
     checklist: isEnabled(SOLO_FLAGS.checklist),
     fasting: isEnabled(SOLO_FLAGS.fasting),
     history: isEnabled(SOLO_FLAGS.history),
+    targets: isEnabled(SOLO_FLAGS.targets),
     isLoading,
   };
 }

@@ -104,12 +104,28 @@ describe("member shell, solo switch ON", () => {
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/marketplace");
   });
 
-  it("never shows Fasting or Progress in W1, even with their flags on", () => {
+  it("adds Fasting only when solo_fasting is on and Progress only when solo_history is on (W2)", () => {
+    solo.answer = true;
+    flags.on = new Set(["solo_fasting"]);
+    const { unmount } = renderShell();
+    expect(labels()).toEqual(["Today", "Fasting", "Log", "Explore"]);
+    expect(screen.getByRole("link", { name: "Fasting" })).toHaveAttribute("href", "/dashboard/member/fasting");
+    unmount();
+    flags.on = new Set(["solo_history"]);
+    renderShell();
+    expect(labels()).toEqual(["Today", "Progress", "Log", "Explore"]);
+    expect(screen.getByRole("link", { name: "Progress" })).toHaveAttribute("href", "/dashboard/member/progress");
+  });
+
+  it("orders the whole bar Today, Fasting, Water, Progress, Log, Explore with every flag on, and a targets flag alone adds nothing", () => {
     solo.answer = true;
     flags.on = new Set(["solo_water", "solo_fasting", "solo_history", "solo_targets"]);
+    const { unmount } = renderShell();
+    expect(labels()).toEqual(["Today", "Fasting", "Water", "Progress", "Log", "Explore"]);
+    unmount();
+    flags.on = new Set(["solo_targets"]);
     renderShell();
-    expect(labels()).not.toContain("Fasting");
-    expect(labels()).not.toContain("Progress");
+    expect(labels()).toEqual(["Today", "Log", "Explore"]);
   });
 
   it("marks Today current on the home page and Log current on the weight log", () => {
