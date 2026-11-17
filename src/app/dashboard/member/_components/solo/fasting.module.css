@@ -176,8 +176,10 @@
 .stripBar { width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; }
 /* Seven days: the columns share the whole row with no gap, so each is a 44px-wide touch
    target even at 390px; the bars are inset inside them to keep their spacing. */
-.strip7 { gap: 0; margin-left: -10px; margin-right: -10px; }
-.strip7Labels { margin-left: -10px; margin-right: -10px; }
+.strip7 { gap: 0; }
+@media (max-width: 480px) {
+  .strip7, .strip7Labels { margin-left: -10px; margin-right: -10px; }
+}
 .strip7 .stripBar { width: calc(100% - 8px); margin: 0 4px; }
 .stripBarSel { outline: 2px solid var(--ink); outline-offset: 2px; }
 .band {
