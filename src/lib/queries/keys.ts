@@ -7,6 +7,15 @@ export const queryKeys = {
     checklistToday: () => [...queryKeys.solo.all, "checklist", "today"] as const,
     checklistItems: () => [...queryKeys.solo.all, "checklist", "items"] as const,
     latestWeight: () => [...queryKeys.solo.all, "weight", "latest"] as const,
+    fastingSettings: () => [...queryKeys.solo.all, "fasting", "settings"] as const,
+    fastingCurrent: () => [...queryKeys.solo.all, "fasting", "current"] as const,
+    fastingHistory: () => [...queryKeys.solo.all, "fasting", "history"] as const,
+    fastingSummary: (from: string, to: string, tz: string) =>
+      [...queryKeys.solo.all, "fasting", "summary", from, to, tz] as const,
+    series: (metric: string, from: string, to: string, tz: string, bucket: string) =>
+      [...queryKeys.solo.all, "series", metric, from, to, tz, bucket] as const,
+    weightCompare: (period: string, tz: string) => [...queryKeys.solo.all, "weight", "compare", period, tz] as const,
+    targets: () => [...queryKeys.solo.all, "targets"] as const,
   },
 
   starter: {

@@ -8,11 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOnline } from "@/hooks/useOnline";
 import { useSoloFlags } from "@/hooks/useSoloFlags";
 import { useChecklistToday, useLatestWeight, useWaterToday } from "@/lib/queries/solo";
+import { useCurrentFast } from "@/lib/queries/fasting";
 import { useActiveStarter } from "@/lib/queries/starter";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { ChecklistCard } from "./ChecklistCard";
+import { FastTodayCard } from "./FastTodayCard";
 import { CardSkeleton } from "./parts";
 import { RemindersCard } from "./RemindersCard";
 import { StarterCard } from "./StarterCard";
@@ -69,12 +71,14 @@ export function SoloToday() {
 
   const water = useWaterToday(flags.water);
   const checklist = useChecklistToday(flags.checklist);
+  const fasting = useCurrentFast(flags.fasting);
   const weight = useLatestWeight(true);
   const starter = useActiveStarter(starterOn);
 
   const asked = [
     flags.water ? water : null,
     flags.checklist ? checklist : null,
+    flags.fasting ? fasting : null,
     weight,
     starterOn ? starter : null,
   ].filter((q): q is NonNullable<typeof q> => q !== null);
@@ -84,9 +88,10 @@ export function SoloToday() {
 
   const hasWater = flags.water && (water.data?.glasses ?? 0) > 0;
   const hasList = flags.checklist && (checklist.data?.items.length ?? 0) > 0;
+  const hasFast = flags.fasting && !!fasting.data;
   const hasWeight = !!weight.data;
   const hasStarter = starterOn && !!starter.data?.program;
-  const firstDay = !hasWater && !hasList && !hasWeight && !hasStarter;
+  const firstDay = !hasWater && !hasList && !hasWeight && !hasStarter && !hasFast;
 
   const updatedAt = Math.max(0, ...asked.map((q) => q.dataUpdatedAt));
   const updatedLabel = useMemo(
@@ -133,6 +138,9 @@ export function SoloToday() {
       ) : firstDay ? (
         <div className="flex flex-col gap-3.5">
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+            {flags.fasting && (
+              <StartCard title="Start a fast" text="Pick a length, and the time is kept for you. You choose when to stop." href={SOLO_HREFS.fasting} action="Start a fast" />
+            )}
             {flags.water && (
               <StartCard title="Count today's water" text="Tap once for each glass. You choose whether to set an aim." href={SOLO_HREFS.water} action="Open water" />
             )}
@@ -160,6 +168,7 @@ export function SoloToday() {
         </div>
       ) : (
         <div className="flex flex-col gap-3.5">
+          {flags.fasting && <FastTodayCard fast={fasting.data ?? null} />}
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
             {flags.water && <WaterCard variant="compact" />}
             <WeightCard />

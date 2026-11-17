@@ -5,14 +5,11 @@
  * a dead link:
  *
  *   Today     always
+ *   Fasting   solo_fasting (W2)
  *   Water     solo_water
+ *   Progress  solo_history (W2)
  *   Log       always (the hub only links to the existing log pages)
  *   Explore   always
- *   Fasting   later milestone (W2): not built, never shown in W1
- *   Progress  later milestone (W4): not built, never shown in W1
- *
- * When Fasting and Progress ship they join here behind solo_fasting and
- * solo_history respectively.
  */
 export interface SoloNavLink {
   label: string;
@@ -21,16 +18,23 @@ export interface SoloNavLink {
 
 export const SOLO_HREFS = {
   today: "/dashboard/member",
+  fasting: "/dashboard/member/fasting",
+  fastingStages: "/dashboard/member/fasting/stages",
+  fastingHistory: "/dashboard/member/fasting/history",
   water: "/dashboard/member/water",
+  progress: "/dashboard/member/progress",
+  targets: "/dashboard/member/progress/targets",
   todayList: "/dashboard/member/today-list",
   log: "/dashboard/member/log",
   explore: "/marketplace",
 } as const;
 
-export function soloNavLinks(flags: { water: boolean }): SoloNavLink[] {
+export function soloNavLinks(flags: { water: boolean; fasting?: boolean; history?: boolean }): SoloNavLink[] {
   return [
     { label: "Today", href: SOLO_HREFS.today },
+    ...(flags.fasting ? [{ label: "Fasting", href: SOLO_HREFS.fasting }] : []),
     ...(flags.water ? [{ label: "Water", href: SOLO_HREFS.water }] : []),
+    ...(flags.history ? [{ label: "Progress", href: SOLO_HREFS.progress }] : []),
     { label: "Log", href: SOLO_HREFS.log },
     { label: "Explore", href: SOLO_HREFS.explore },
   ];

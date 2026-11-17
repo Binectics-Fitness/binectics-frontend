@@ -1,0 +1,204 @@
+/* Fasting and Progress. Tokens only (globals.css); the dawn surface's colours
+   are set inline from lib/solo/fastingRules.ts (the one gradient exception). */
+
+.hero {
+  border-radius: var(--r-3);
+  border: 1px solid var(--border);
+  padding: 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 40px;
+  min-height: 600px;
+}
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+.heroRight {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+.numerals {
+  font-family: var(--font-mono);
+  font-size: 120px;
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+.arcWrap {
+  position: relative;
+  width: min(480px, 100%);
+  aspect-ratio: 390 / 230;
+  margin-top: 10px;
+}
+.arcWrap svg { width: 100%; height: 100%; display: block; }
+.arcLabel {
+  position: absolute;
+  bottom: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.card {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--r-3);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cardLink { text-decoration: none; color: var(--ink); }
+.cardLink:hover { border-color: var(--border-2); }
+.segs { display: flex; gap: 4px; }
+.seg { flex: 1; height: 4px; border-radius: var(--r-full); background: var(--bg-3); }
+.segDone { background: var(--fg-4); }
+.segNow { background: var(--ink); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pill[aria-pressed="true"],
+.pill[aria-checked="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.pill:focus-visible,
+.slider:focus-visible,
+.field:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pill:disabled { opacity: 0.5; cursor: default; }
+
+/* Buttons that sit ON the gradient take their colour from the tone. */
+.btnOnHero {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: var(--r-2);
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.btnOnHero:disabled { opacity: 0.6; cursor: default; }
+/* A button on the gradient rings in the hero's text colour (paper on night, ink on morning),
+   which keeps its contrast with the surface on both halves. Controls inside the paper cards
+   keep the ink ring. */
+.btnOnHero:focus-visible { outline: 2px solid var(--hero-fg, var(--ink)); outline-offset: 3px; }
+
+.field {
+  min-height: 44px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0 12px;
+  font-size: 14px;
+}
+.label { font-size: 13px; color: var(--fg-2); }
+.error { color: var(--danger-ink); font-size: 13px; }
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  background: var(--bg);
+  cursor: pointer;
+}
+.checkRow input { width: 20px; height: 20px; accent-color: var(--ink); flex: none; }
+
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th { text-align: left; font-weight: 400; color: var(--fg-3); font-size: 12px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+
+.weekCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.weekDot {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+.weekDotOn { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+/* Glance: weight then and now */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.bigNum { font-size: 44px; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.bigUnit { font-size: 16px; color: var(--fg-3); margin-left: 4px; }
+
+/* Glance: fasting strip on a band */
+.strip {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 140px;
+  padding-top: 4px;
+}
+.stripCol { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.stripBar { width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; }
+.stripBarSel { outline: 2px solid var(--ink); outline-offset: 2px; }
+.band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--bg-3);
+  border-top: 1px solid var(--border-2);
+  border-bottom: 1px solid var(--border-2);
+  pointer-events: none;
+}
+.slider { width: 100%; min-height: 44px; accent-color: var(--ink); }
+
+.skeletonLine { height: 14px; border-radius: var(--r-1); background: var(--bg-3); }
+
+.dayRow { display: flex; justify-content: space-between; align-items: center; min-height: 44px; border-bottom: 1px solid var(--border); font-size: 14px; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 24px 20px; gap: 28px; min-height: 0; }
+  .numerals { font-size: 76px; }
+}
+@media (max-width: 480px) {
+  .numerals { font-size: 64px; }
+  .pair { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bigNum { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero, .hero *, .stripBar, .pill, .card { transition: none !important; animation: none !important; }
+}

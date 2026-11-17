@@ -23,7 +23,7 @@ export function SoloPage({
 }: {
   activeLabel: string;
   /** The server flag this page needs; null when it needs none. */
-  flag: "water" | "checklist" | null;
+  flag: "water" | "checklist" | "fasting" | "history" | "targets" | null;
   unavailableTitle: string;
   children: ReactNode;
 }) {
