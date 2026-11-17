@@ -12,7 +12,7 @@ const LOGS = [
 /** The Log hub: a way into the three existing logs. Nothing is stored here. */
 export default function LogHubPage() {
   return (
-    <SoloPage activeLabel="Log" flag={null} unavailableTitle="Log is not available yet">
+    <SoloPage activeLabel="Log">
       <PageHeader title="Log" subtitle="Write down what you like. Only you can see it." />
       <ul className="flex flex-col gap-2.5" style={{ maxWidth: 720 }}>
         {LOGS.map((l) => (

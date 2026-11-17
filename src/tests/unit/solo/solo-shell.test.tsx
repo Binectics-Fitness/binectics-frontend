@@ -32,7 +32,7 @@ vi.mock("@/hooks/useIsSoloMember", () => ({
   useIsSoloMember: () => ({ solo: solo.answer, isLoading: false }),
 }));
 
-import { MEMBER_NAV_LINKS, MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
+import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 
 function stubViewport() {
   const mql = {
@@ -63,19 +63,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("member shell, solo switch OFF", () => {
-  it("is exactly the full member bar, whatever the solo answer would be", () => {
-    solo.answer = true; // would be solo, but the build switch is off
-    renderShell();
-    expect(labels()).toEqual(MEMBER_NAV_LINKS.map((l) => l.label));
-    expect(labels()).toContain("Billing");
-    expect(labels()).not.toContain("Explore");
-  });
-});
-
-describe("member shell, solo switch ON", () => {
-  beforeEach(() => vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "true"));
-
+describe("member shell", () => {
   it("keeps the full bar while the answer is unknown (no flicker)", () => {
     solo.answer = null;
     renderShell();
@@ -89,43 +77,14 @@ describe("member shell, solo switch ON", () => {
     expect(labels()).toContain("Billing");
   });
 
-  it("shows only Today, Log and Explore while no solo flag is on, with no dead Fasting or Progress link", () => {
+  it("shows the whole solo bar in the design's order with no server flag read", () => {
     solo.answer = true;
     renderShell();
-    expect(labels()).toEqual(["Today", "Log", "Explore"]);
-  });
-
-  it("adds Water only when solo_water is on", () => {
-    solo.answer = true;
-    flags.on = new Set(["solo_water"]);
-    renderShell();
-    expect(labels()).toEqual(["Today", "Water", "Log", "Explore"]);
-    expect(screen.getByRole("link", { name: "Water" })).toHaveAttribute("href", "/dashboard/member/water");
-    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/marketplace");
-  });
-
-  it("adds Fasting only when solo_fasting is on and Progress only when solo_history is on (W2)", () => {
-    solo.answer = true;
-    flags.on = new Set(["solo_fasting"]);
-    const { unmount } = renderShell();
-    expect(labels()).toEqual(["Today", "Fasting", "Log", "Explore"]);
-    expect(screen.getByRole("link", { name: "Fasting" })).toHaveAttribute("href", "/dashboard/member/fasting");
-    unmount();
-    flags.on = new Set(["solo_history"]);
-    renderShell();
-    expect(labels()).toEqual(["Today", "Progress", "Log", "Explore"]);
-    expect(screen.getByRole("link", { name: "Progress" })).toHaveAttribute("href", "/dashboard/member/progress");
-  });
-
-  it("orders the whole bar Today, Fasting, Water, Progress, Log, Explore with every flag on, and a targets flag alone adds nothing", () => {
-    solo.answer = true;
-    flags.on = new Set(["solo_water", "solo_fasting", "solo_history", "solo_targets"]);
-    const { unmount } = renderShell();
     expect(labels()).toEqual(["Today", "Fasting", "Water", "Progress", "Log", "Explore"]);
-    unmount();
-    flags.on = new Set(["solo_targets"]);
-    renderShell();
-    expect(labels()).toEqual(["Today", "Log", "Explore"]);
+    expect(screen.getByRole("link", { name: "Water" })).toHaveAttribute("href", "/dashboard/member/water");
+    expect(screen.getByRole("link", { name: "Fasting" })).toHaveAttribute("href", "/dashboard/member/fasting");
+    expect(screen.getByRole("link", { name: "Progress" })).toHaveAttribute("href", "/dashboard/member/progress");
+    expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/marketplace");
   });
 
   it("marks Today current on the home page and Log current on the weight log", () => {

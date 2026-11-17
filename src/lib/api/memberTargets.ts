@@ -3,7 +3,7 @@ import type { ApiResponse } from "@/lib/types";
 
 /*
  * Member targets client. Contract: binectics-api #343 (src/member-targets).
- * Behind `solo_targets` (404 while off). Targets are always optional RANGES.
+ * Targets are always optional RANGES.
  *   GET   /member-targets
  *   PATCH /member-targets   partial: a missing key is untouched, null clears it
  *   (DELETE /member-targets clears EVERYTHING including the water aim, so the

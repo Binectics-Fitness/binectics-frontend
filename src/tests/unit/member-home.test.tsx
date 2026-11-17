@@ -13,6 +13,8 @@ import { progressService, type WeightLog } from "@/lib/api/progress";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 import { resetClientNowForTests } from "@/lib/ui/useClientNow";
 
+// These tests are about the non-solo shell; the solo answer is a separate read.
+vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("next/link", () => ({
   default: ({ children, href, ...rest }: { children: React.ReactNode; href: string } & Record<string, unknown>) => (
     <a href={href} {...rest}>{children}</a>

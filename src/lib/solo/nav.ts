@@ -1,15 +1,7 @@
 /**
  * The solo member's top bar: Today, Fasting, Water, Progress, Log, Explore
- * (design: web canvas "Overview and web navigation"). A link appears only
- * when its page exists AND its server flag is on, so a member never lands on
- * a dead link:
- *
- *   Today     always
- *   Fasting   solo_fasting (W2)
- *   Water     solo_water
- *   Progress  solo_history (W2)
- *   Log       always (the hub only links to the existing log pages)
- *   Explore   always
+ * (design: web canvas "Overview and web navigation"). Every link is always
+ * shown: the pages are on for everyone.
  */
 export interface SoloNavLink {
   label: string;
@@ -29,12 +21,12 @@ export const SOLO_HREFS = {
   explore: "/marketplace",
 } as const;
 
-export function soloNavLinks(flags: { water: boolean; fasting?: boolean; history?: boolean }): SoloNavLink[] {
+export function soloNavLinks(): SoloNavLink[] {
   return [
     { label: "Today", href: SOLO_HREFS.today },
-    ...(flags.fasting ? [{ label: "Fasting", href: SOLO_HREFS.fasting }] : []),
-    ...(flags.water ? [{ label: "Water", href: SOLO_HREFS.water }] : []),
-    ...(flags.history ? [{ label: "Progress", href: SOLO_HREFS.progress }] : []),
+    { label: "Fasting", href: SOLO_HREFS.fasting },
+    { label: "Water", href: SOLO_HREFS.water },
+    { label: "Progress", href: SOLO_HREFS.progress },
     { label: "Log", href: SOLO_HREFS.log },
     { label: "Explore", href: SOLO_HREFS.explore },
   ];

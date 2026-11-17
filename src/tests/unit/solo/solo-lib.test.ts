@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isOngoing, isSoloMember, type SoloInputs } from "@/lib/solo/rule";
-import { isSoloMemberEnabled } from "@/lib/solo/flag";
 import { SOLO_HREFS, soloActiveLabel, soloNavLinks } from "@/lib/solo/nav";
 import { applyDelta, aimPosition, inverse, railFill, waterSentence } from "@/lib/solo/waterModel";
 import { atCap, daysLabel, toggleDay, withTick } from "@/lib/solo/checklistModel";
@@ -34,42 +33,9 @@ describe("isSoloMember (same rule as mobile)", () => {
   });
 });
 
-describe("client switch", () => {
-  afterEach(() => vi.unstubAllEnvs());
-  it("is off by default and for anything but true / 1 / on", () => {
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "");
-    expect(isSoloMemberEnabled()).toBe(false);
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "false");
-    expect(isSoloMemberEnabled()).toBe(false);
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "yes please");
-    expect(isSoloMemberEnabled()).toBe(false);
-  });
-  it.each(["true", "1", "on", " TRUE "])("is on for %s", (v) => {
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", v);
-    expect(isSoloMemberEnabled()).toBe(true);
-  });
-});
-
 describe("solo top bar links", () => {
-  it("never ships a dead link: Fasting and Progress appear only when their flags are passed", () => {
-    const labels = soloNavLinks({ water: true }).map((l) => l.label);
-    expect(labels).toEqual(["Today", "Water", "Log", "Explore"]);
-    expect(labels).not.toContain("Fasting");
-    expect(labels).not.toContain("Progress");
-  });
-  it("adds Fasting and Progress in the design's order when their flags are on", () => {
-    expect(soloNavLinks({ water: true, fasting: true, history: true }).map((l) => l.label)).toEqual([
-      "Today",
-      "Fasting",
-      "Water",
-      "Progress",
-      "Log",
-      "Explore",
-    ]);
-    expect(soloNavLinks({ water: false, fasting: true, history: false }).map((l) => l.label)).toEqual(["Today", "Fasting", "Log", "Explore"]);
-  });
-  it("hides Water until solo_water is on", () => {
-    expect(soloNavLinks({ water: false }).map((l) => l.label)).toEqual(["Today", "Log", "Explore"]);
+  it("lists every link in the design's order", () => {
+    expect(soloNavLinks().map((l) => l.label)).toEqual(["Today", "Fasting", "Water", "Progress", "Log", "Explore"]);
   });
   it("keeps the existing log pages under Log and Home as Today", () => {
     expect(soloActiveLabel("Home", "/dashboard/member")).toBe("Today");

@@ -2,8 +2,7 @@ import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 
 /*
- * Daily list client. Contract: binectics-api #341 (src/checklist). Behind the
- * `solo_checklist` flag (404 while off). No streaks, no "missed" state.
+ * Daily list client. Contract: binectics-api #341 (src/checklist). No streaks, no "missed" state.
  *   GET    /checklist/today?tz
  *   GET    /checklist/items
  *   POST   /checklist/items                   { label, days? }

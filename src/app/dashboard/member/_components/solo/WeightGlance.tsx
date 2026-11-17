@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { DSCard } from "@/components/ds";
-import { useAuth } from "@/contexts/AuthContext";
-import { useHideDailyWeights } from "@/hooks/useHideDailyWeights";
 import { useOnline } from "@/hooks/useOnline";
 import type { ComparePeriod, WeightCompare } from "@/lib/api/memberSeries";
 import type { MemberTargets } from "@/lib/api/memberTargets";
 import { useSeries, useWeightCompare } from "@/lib/queries/glance";
+import { useSetHideDailyWeights, useSoloSettings } from "@/lib/queries/solo";
 import {
   STATE_COPY,
   WEIGHT_COPY,
@@ -24,7 +23,7 @@ import {
 import { dayKeyOf, latestWeighIns, windowOf } from "@/lib/solo/glance";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { deviceTimeZone } from "@/lib/solo/time";
-import { CardSkeleton, Switch } from "./parts";
+import { CardSkeleton, Switch, WriteError } from "./parts";
 import styles from "./fasting.module.css";
 
 const PERIODS: WeightPeriod[] = ["4w", "3m", "1y"];
@@ -38,15 +37,18 @@ function timeLabel(at: number): string {
  * Weight, "then and now": two weekly averages and ONE sentence. No arrow, no
  * colour for better or worse (the change is plain ink: a number and the words
  * lower / higher). Daily weights are hidden behind a tap, and can be hidden for
- * good on this browser. A gap is never drawn as zero.
+ * good (kept on the server). A gap is never drawn as zero.
  */
 export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
-  const { user } = useAuth();
   const online = useOnline();
   const tz = deviceTimeZone();
   const [period, setPeriod] = useState<WeightPeriod>("4w");
   const [showDaily, setShowDaily] = useState(false);
-  const [hiddenForGood, setHiddenForGood] = useHideDailyWeights(user?.id);
+  // "Hide for good" is kept on the server, so it follows the member to the phone.
+  // A missing field (an API that predates it) reads as false.
+  const settings = useSoloSettings();
+  const setHide = useSetHideDailyWeights();
+  const hiddenForGood = settings.data?.hide_daily_weights === true;
 
   const compare = useWeightCompare(period as ComparePeriod, tz, true);
   const today = dayKeyOf(new Date());
@@ -58,7 +60,7 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
     tz,
     bucket: "day",
     // Daily weights are only requested once the member asks to see them.
-    enabled: showDaily && !hiddenForGood,
+    enabled: showDaily && !hiddenForGood && !settings.isLoading,
   });
 
   const data: WeightCompare | undefined = compare.data;
@@ -226,15 +228,17 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
             on={hiddenForGood}
             label={WEIGHT_COPY.hideSwitchLabel}
             onChange={(next) => {
-              setHiddenForGood(next);
+              setHide.mutate(next);
               if (next) setShowDaily(false);
             }}
           />
         </div>
+        {setHide.isError && (
+          <div className="mt-2">
+            <WriteError message={WEIGHT_COPY.hideSaveFailed} onDismiss={() => setHide.reset()} />
+          </div>
+        )}
       </div>
-      <p className="mt-3 text-[12.5px]" style={{ color: "var(--fg-3)" }}>
-        {WEIGHT_COPY.disclaimer}
-      </p>
     </DSCard>
   );
 }

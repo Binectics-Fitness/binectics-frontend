@@ -19,18 +19,10 @@ beforeEach(() => {
   readIsSolo.mockReset();
   user = { id: "u1", role: UserRole.USER };
   window.sessionStorage.clear();
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "true");
 });
 afterEach(() => vi.unstubAllEnvs());
 
 describe("useIsSoloMember", () => {
-  it("makes no read and answers null with the switch off", async () => {
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "");
-    const { result } = renderHook(() => useIsSoloMember(), { wrapper });
-    expect(result.current).toEqual({ solo: null, isLoading: false });
-    expect(readIsSolo).not.toHaveBeenCalled();
-  });
-
   it.each([UserRole.TRAINER, UserRole.GYM_OWNER, UserRole.DIETITIAN])("makes no read for a %s", (role) => {
     user = { id: "u2", role };
     const { result } = renderHook(() => useIsSoloMember(), { wrapper });

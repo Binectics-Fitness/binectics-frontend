@@ -59,7 +59,7 @@ export function useWeightCompare(period: ComparePeriod, tz: string, enabled: boo
   });
 }
 
-export function useTargets(enabled: boolean) {
+export function useTargets(enabled = true) {
   return useQuery<MemberTargets>({
     queryKey: queryKeys.solo.targets(),
     enabled,

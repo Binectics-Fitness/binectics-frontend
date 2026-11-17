@@ -19,16 +19,14 @@ vi.mock("@/hooks/useRequireAuth", () => ({ useRoleGuard: () => ({ isAuthorized: 
 vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children, activeLabel }: { children: ReactNode; activeLabel: string }) => <main data-active={activeLabel}>{children}</main>,
 }));
-const flagsState = vi.hoisted(() => ({ on: new Set<string>(), loading: false }));
-vi.mock("@/hooks/useFeatureFlags", () => ({
-  useFeatureFlags: () => ({ isEnabled: (k: string) => flagsState.on.has(k), data: undefined, isLoading: flagsState.loading }),
-}));
 const series = vi.hoisted(() => ({ read: vi.fn(), compareWeight: vi.fn() }));
 const targetsApi = vi.hoisted(() => ({ get: vi.fn(), update: vi.fn() }));
+const goals = vi.hoisted(() => ({ getSettings: vi.fn(), updateSettings: vi.fn() }));
 const water = vi.hoisted(() => ({ today: vi.fn(), adjust: vi.fn(), getSettings: vi.fn(), updateSettings: vi.fn() }));
 const list = vi.hoisted(() => ({ today: vi.fn() }));
 vi.mock("@/lib/api/memberSeries", async (o) => ({ ...(await o<typeof import("@/lib/api/memberSeries")>()), memberSeriesService: series }));
 vi.mock("@/lib/api/memberTargets", async (o) => ({ ...(await o<typeof import("@/lib/api/memberTargets")>()), memberTargetsService: targetsApi }));
+vi.mock("@/lib/api/memberGoals", async (o) => ({ ...(await o<typeof import("@/lib/api/memberGoals")>()), memberGoalsService: goals }));
 vi.mock("@/lib/api/water", async (o) => ({ ...(await o<typeof import("@/lib/api/water")>()), waterService: water }));
 vi.mock("@/lib/api/checklist", async (o) => ({ ...(await o<typeof import("@/lib/api/checklist")>()), checklistService: list }));
 
@@ -36,7 +34,6 @@ import ProgressRoute from "@/app/dashboard/member/progress/page";
 import TargetsRoute from "@/app/dashboard/member/progress/targets/page";
 import { ProgressContent } from "@/app/dashboard/member/_components/solo/ProgressPage";
 import { dayKeyOf, addDaysTo } from "@/lib/solo/glance";
-import { hideKeyForTests } from "./progress-helpers";
 
 const ok = <T,>(data: T) => ({ success: true as const, data });
 const TODAY = dayKeyOf(new Date());
@@ -56,16 +53,19 @@ function renderUi(ui: ReactNode) {
 const setOnline = (v: boolean) => Object.defineProperty(window.navigator, "onLine", { value: v, configurable: true });
 
 beforeEach(() => {
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "true");
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  flagsState.on = new Set(["solo_fasting", "solo_water", "solo_history", "solo_targets"]);
-  flagsState.loading = false;
-  [...Object.values(series), ...Object.values(targetsApi), ...Object.values(water), ...Object.values(list)].forEach((f) => f.mockReset());
+  [...Object.values(series), ...Object.values(targetsApi), ...Object.values(water), ...Object.values(list), ...Object.values(goals)].forEach((f) => f.mockReset());
   series.compareWeight.mockResolvedValue(ok(COMPARE_LOWER));
   series.read.mockImplementation(async (q: { metric: string }) => ok({ metric: q.metric, bucket: "day", tz: "UTC", from: "", to: "", points: [] }));
   targetsApi.get.mockResolvedValue(ok(NO_TARGETS));
   water.today.mockResolvedValue(ok({ local_day: TODAY, glasses: 3, glass_ml: 250, target_glasses: 8 }));
   list.today.mockResolvedValue(ok({ local_day: TODAY, items: [] }));
+  goals.getSettings.mockResolvedValue(ok({ week_start: "monday", hide_daily_weights: false }));
+  goals.updateSettings.mockImplementation(async (b: { hide_daily_weights: boolean }) => {
+    // Behaves like the server: the next read returns what was saved.
+    goals.getSettings.mockResolvedValue(ok({ week_start: "monday", ...b }));
+    return ok({ week_start: "monday", ...b });
+  });
   setOnline(true);
   localStorage.clear();
 });
@@ -73,38 +73,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
   setOnline(true);
   window.dispatchEvent(new Event("online"));
-});
-
-describe("flag gating", () => {
-  it("Progress is 'not available yet' with solo_history off, and no series read is made", async () => {
-    flagsState.on = new Set(["solo_water"]);
-    renderUi(<ProgressRoute />);
-    expect(await screen.findByText("Progress is not available yet")).toBeInTheDocument();
-    expect(series.compareWeight).not.toHaveBeenCalled();
-    expect(series.read).not.toHaveBeenCalled();
-  });
-  it("Targets are 'not available yet' with solo_targets off and no targets read is made", async () => {
-    flagsState.on = new Set(["solo_history"]);
-    renderUi(<TargetsRoute />);
-    expect(await screen.findByText("Targets are not available yet")).toBeInTheDocument();
-    expect(targetsApi.get).not.toHaveBeenCalled();
-  });
-  it("Progress works with solo_targets off: no targets read, no 'Your targets' link, no set-a-range prompt", async () => {
-    flagsState.on = new Set(["solo_history"]);
-    renderUi(<ProgressContent />);
-    expect(await screen.findByTestId("weight-pair")).toBeInTheDocument();
-    expect(targetsApi.get).not.toHaveBeenCalled();
-    expect(screen.queryByRole("link", { name: "Your targets" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Set a target range")).not.toBeInTheDocument();
-  });
-  it("the fasting and water cards follow their own flags", async () => {
-    flagsState.on = new Set(["solo_history"]);
-    renderUi(<ProgressContent />);
-    await screen.findByTestId("weight-pair");
-    expect(screen.queryByText(/Fasting · last/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Water · today/)).not.toBeInTheDocument();
-    expect(series.read).not.toHaveBeenCalled();
-  });
 });
 
 describe("weight: then and now", () => {
@@ -208,23 +176,60 @@ describe("daily weights: hidden by default, hideable for good", () => {
     expect(screen.queryByTestId("weight-daily")).not.toBeInTheDocument();
   });
 
-  it("'Hide daily weights for good' removes Show, is stored per account under a solo key, and survives a reload", async () => {
+  it("'Hide daily weights for good' is saved on the server, removes Show, and comes back from the server on a reload", async () => {
     const first = renderUi(<ProgressContent />);
     await screen.findByTestId("weight-pair");
     await userEvent.click(screen.getByRole("switch", { name: "Hide daily weights" }));
-    expect(screen.getByText("Hidden for good. Change this below.")).toBeInTheDocument();
+    expect(await screen.findByText("Hidden for good. Change this below.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Show" })).not.toBeInTheDocument();
-    expect(localStorage.getItem(hideKeyForTests("u1"))).toBe("1");
+    await waitFor(() => expect(goals.updateSettings).toHaveBeenCalledWith({ hide_daily_weights: true }));
+    // Nothing is kept in this browser.
+    expect(localStorage.length).toBe(0);
     first.unmount();
+    // A fresh cache (a reload, or the phone) learns it from the server.
+    goals.getSettings.mockResolvedValue(ok({ week_start: "monday", hide_daily_weights: true }));
+    qc.clear();
     renderUi(<ProgressContent />);
     await screen.findByTestId("weight-pair");
-    expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "true");
+    await waitFor(() => expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "true"));
     expect(screen.queryByRole("button", { name: "Show" })).not.toBeInTheDocument();
     expect(series.read.mock.calls.filter(([q]) => q.metric === "weight")).toHaveLength(0);
     // Switching it off brings Show back.
     await userEvent.click(screen.getByRole("switch", { name: "Hide daily weights" }));
-    expect(localStorage.getItem(hideKeyForTests("u1"))).toBeNull();
+    await waitFor(() => expect(goals.updateSettings).toHaveBeenLastCalledWith({ hide_daily_weights: false }));
+    expect(await screen.findByRole("button", { name: "Show" })).toBeInTheDocument();
+  });
+
+  it("a failed save puts the switch back and says so plainly", async () => {
+    goals.updateSettings.mockResolvedValue({ success: false, status: 400, message: "property hide_daily_weights should not exist" });
+    renderUi(<ProgressContent />);
+    await screen.findByTestId("weight-pair");
+    await userEvent.click(screen.getByRole("switch", { name: "Hide daily weights" }));
+    expect(await screen.findByText("That could not be saved. Try again.")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "false"));
     expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/should not exist/);
+  });
+
+  it("an API that does not know the setting yet (only week_start) reads as not hidden", async () => {
+    goals.getSettings.mockResolvedValue(ok({ week_start: "monday" }));
+    renderUi(<ProgressContent />);
+    await screen.findByTestId("weight-pair");
+    expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+  });
+
+  it("a failed settings read leaves the page working with daily weights not hidden", async () => {
+    goals.getSettings.mockResolvedValue({ success: false, status: 500, message: "boom" });
+    renderUi(<ProgressContent />);
+    expect(await screen.findByTestId("weight-pair")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+  });
+
+  it("the weight screen carries no medical-device footer", async () => {
+    renderUi(<ProgressContent />);
+    await screen.findByTestId("weight-pair");
+    expect(document.body.textContent).not.toMatch(/medical device|health worker/i);
   });
 
   it("hiding for good closes daily weights that were showing", async () => {
@@ -414,17 +419,16 @@ describe("targets", () => {
     expect(screen.getByTestId("target-preview").textContent).not.toMatch(/%|\bmet\b|\bpass\b(?! mark)|left to go|away from/i);
   });
 
-  it("the API's 422 below-range answer shows the gentle message, prints no limit, and stores nothing", async () => {
+  it("the API's 422 below-range answer shows ONE short line, never the raw code, and stores nothing", async () => {
     targetsApi.update.mockResolvedValue({ success: false, status: 422, code: "TARGET_BELOW_SUPPORTED_RANGE", message: "targets.weight.below_supported_range" });
     renderTargets();
     await screen.findByDisplayValue("69");
     fireEvent.change(lo(), { target: { value: "44" } });
     await userEvent.click(screen.getByRole("button", { name: "Save target" }));
-    const box = await screen.findByTestId("target-refused");
-    expect(box).toHaveTextContent("This is lower than we can support here");
-    expect(box).toHaveTextContent("Please talk to a health worker about your weight. You can still keep tracking without a target.");
-    expect(box.textContent).not.toMatch(/\d|45|kg/);
-    expect(document.body.textContent).not.toMatch(/targets\.weight\.below_supported_range|TARGET_BELOW_SUPPORTED_RANGE/);
+    const line = await screen.findByTestId("target-refused");
+    expect(line).toHaveTextContent("The lowest weight we can save is 45 kg.");
+    expect(line.textContent).toBe("The lowest weight we can save is 45 kg.");
+    expect(document.body.textContent).not.toMatch(/targets\.weight\.below_supported_range|TARGET_BELOW_SUPPORTED_RANGE|health worker/);
     expect(screen.queryByText("Target saved")).not.toBeInTheDocument();
     // A later successful save clears it.
     targetsApi.update.mockResolvedValue(ok({ ...NO_TARGETS, weight_range: { min_kg: 68, max_kg: 71 } }));
@@ -524,5 +528,14 @@ describe("targets", () => {
     targetsApi.get.mockResolvedValue(ok(NO_TARGETS));
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByDisplayValue("69")).toBeInTheDocument();
+  });
+});
+
+describe("always on", () => {
+  it("the Progress page renders with no flag or switch of any kind", async () => {
+    renderUi(<ProgressRoute />);
+    expect(await screen.findByTestId("weight-pair")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Your targets" })).toBeInTheDocument();
+    expect(screen.queryByText(/not available yet|coming to your account/i)).not.toBeInTheDocument();
   });
 });

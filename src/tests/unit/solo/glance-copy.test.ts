@@ -5,7 +5,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   TARGETS_COPY,
-  TARGET_BELOW_SUPPORTED_RANGE_COPY,
+  TARGET_BELOW_SUPPORTED_RANGE_LINE,
+  WEIGHT_COPY,
   fastingAverageSentence,
   fastingDayNote,
   fastingPreview,
@@ -103,13 +104,11 @@ describe("targets: ranges, plain text, never a percent or a pass mark", () => {
     const all = [weightPreview(70, 68, 70), fastingPreview(15.7, 16, 20), waterTodaySentence(5, 8), fastingWindowSentence(16, 20, 5)].join(" ");
     expect(all).not.toMatch(/%|percent|\bpass\b|\bmet\b|days left|\bgoal\b/i);
   });
-  it("the gentle refusal copy is marked as needing clinical review", () => {
+  it("the below-range refusal is one short plain line, with no advice and no placeholder text", () => {
     const src = readFileSync(join(process.cwd(), "src/lib/solo/glanceCopy.ts"), "utf8");
-    expect(src).toMatch(/PLACEHOLDER copy: needs clinical review/);
-    expect(TARGET_BELOW_SUPPORTED_RANGE_COPY.title).toBe("This is lower than we can support here");
-    expect(TARGET_BELOW_SUPPORTED_RANGE_COPY.body).toMatch(/talk to a health worker/);
-    // The page never decides or prints the limit.
-    expect(JSON.stringify(TARGET_BELOW_SUPPORTED_RANGE_COPY)).not.toMatch(/\d/);
+    expect(src).not.toMatch(/PLACEHOLDER|clinical review|gentle|health worker|medical device/i);
+    expect(TARGET_BELOW_SUPPORTED_RANGE_LINE).toBe("The lowest weight we can save is 45 kg.");
+    expect(WEIGHT_COPY).not.toHaveProperty("disclaimer");
     expect(TARGETS_COPY.intro).toMatch(/Optional/);
   });
   it("words the offline and could-not-refresh notes", () => {

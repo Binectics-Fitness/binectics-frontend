@@ -6,7 +6,6 @@ import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnline } from "@/hooks/useOnline";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
 import { useChecklistToday, useLatestWeight, useWaterToday } from "@/lib/queries/solo";
 import type { FastSession } from "@/lib/api/fasting";
 import { useCurrentFast } from "@/lib/queries/fasting";
@@ -60,38 +59,37 @@ function StartCard({ title, text, href, action }: { title: string; text: string;
 
 /**
  * Today for a member on their own (no provider, no gym). Cards render only
- * when their server flag is on AND the data they need exists; nothing is
+ * when the data they need exists; nothing is
  * invented, and there are no streaks, scores or "missed" days.
  */
 export function SoloToday() {
   const { user } = useAuth();
-  const flags = useSoloFlags();
   const online = useOnline();
   const now = useClientNow();
   const starterOn = isStarterProgramEnabled();
 
-  const water = useWaterToday(flags.water);
-  const checklist = useChecklistToday(flags.checklist);
-  const fasting = useCurrentFast(flags.fasting);
+  const water = useWaterToday();
+  const checklist = useChecklistToday();
+  const fasting = useCurrentFast();
   // A fast ended from the card on this page: kept so the page does not swap layouts under its Undo.
   const [endedHere, setEndedHere] = useState<FastSession | null>(null);
   const weight = useLatestWeight(true);
   const starter = useActiveStarter(starterOn);
 
   const asked = [
-    flags.water ? water : null,
-    flags.checklist ? checklist : null,
-    flags.fasting ? fasting : null,
+    water,
+    checklist,
+    fasting,
     weight,
     starterOn ? starter : null,
   ].filter((q): q is NonNullable<typeof q> => q !== null);
 
-  const loading = flags.isLoading || asked.some((q) => q.isLoading);
+  const loading = asked.some((q) => q.isLoading);
   const allFailed = asked.length > 0 && asked.every((q) => q.isError);
 
-  const hasWater = flags.water && (water.data?.glasses ?? 0) > 0;
-  const hasList = flags.checklist && (checklist.data?.items.length ?? 0) > 0;
-  const hasFast = flags.fasting && (!!fasting.data || !!endedHere);
+  const hasWater = (water.data?.glasses ?? 0) > 0;
+  const hasList = (checklist.data?.items.length ?? 0) > 0;
+  const hasFast = (!!fasting.data || !!endedHere);
   const hasWeight = !!weight.data;
   const hasStarter = starterOn && !!starter.data?.program;
   const firstDay = !hasWater && !hasList && !hasWeight && !hasStarter && !hasFast;
@@ -141,19 +139,13 @@ export function SoloToday() {
       ) : firstDay ? (
         <div className="flex flex-col gap-3.5">
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-            {flags.fasting && (
-              <StartCard title="Start a fast" text="Pick a length, and the time is kept for you. You choose when to stop." href={SOLO_HREFS.fasting} action="Start a fast" />
-            )}
-            {flags.water && (
-              <StartCard title="Count today's water" text="Tap once for each glass. You choose whether to set an aim." href={SOLO_HREFS.water} action="Open water" />
-            )}
+            <StartCard title="Start a fast" text="Pick a length, and the time is kept for you. You choose when to stop." href={SOLO_HREFS.fasting} action="Start a fast" />
+            <StartCard title="Count today's water" text="Tap once for each glass. You choose whether to set an aim." href={SOLO_HREFS.water} action="Open water" />
             <StartCard title="Log your weight" text="Weigh in when you like. Once a week is plenty." href="/dashboard/member/weight-log" action="Log weight" />
             {starterOn && (
               <StartCard title="Start a free program" text="Beginner workouts. Three questions to pick one." href="/dashboard/member/starter" action="Find a program" />
             )}
-            {flags.checklist && (
-              <StartCard title="Make a daily list" text="A few lines you want to do each day. Tool lines tick themselves." href={SOLO_HREFS.todayList} action="Build your list" />
-            )}
+            <StartCard title="Make a daily list" text="A few lines you want to do each day. Tool lines tick themselves." href={SOLO_HREFS.todayList} action="Build your list" />
           </div>
           <DSCard flat className="p-5">
             <h2 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
@@ -171,13 +163,13 @@ export function SoloToday() {
         </div>
       ) : (
         <div className="flex flex-col gap-3.5">
-          {flags.fasting && <FastTodayCard fast={fasting.data ?? null} justEnded={endedHere} onEnded={setEndedHere} />}
+          <FastTodayCard fast={fasting.data ?? null} justEnded={endedHere} onEnded={setEndedHere} />
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
-            {flags.water && <WaterCard variant="compact" />}
+            <WaterCard variant="compact" />
             <WeightCard />
           </div>
           <div className="grid grid-cols-1 items-start gap-3.5 md:grid-cols-[1.7fr_1fr]">
-            {flags.checklist ? <ChecklistCard /> : <div />}
+            <ChecklistCard />
             <div className="flex min-w-0 flex-col gap-3.5">
               {hasStarter && <StarterCard />}
               <RemindersCard />

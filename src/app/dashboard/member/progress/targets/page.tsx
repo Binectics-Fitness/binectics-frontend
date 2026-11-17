@@ -5,7 +5,7 @@ import { TargetsContent } from "../../_components/solo/TargetsPage";
 
 export default function TargetsRoute() {
   return (
-    <SoloPage activeLabel="Progress" flag="targets" unavailableTitle="Targets are not available yet">
+    <SoloPage activeLabel="Progress">
       <TargetsContent />
     </SoloPage>
   );

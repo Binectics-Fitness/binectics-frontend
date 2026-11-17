@@ -3,8 +3,7 @@
  *
  * Every word of fasting guidance the web shows lives in this one file, so a
  * dietitian can review and edit it in one place (owner requirement, 17 Nov
- * 2026). Nothing here has been reviewed yet; do not turn `solo_fasting` on for
- * members until it has been. The wording is the mobile app's (binectics-mobile
+ * 2026). Nothing here has been reviewed yet. The wording is the mobile app's (binectics-mobile
  * src/constants/fastingCopy.ts) so the two apps say the same thing.
  *
  * Rules the copy keeps (design canvas notes n10, n10b):

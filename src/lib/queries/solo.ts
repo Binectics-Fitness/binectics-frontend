@@ -11,6 +11,7 @@ import {
   type CreateChecklistItemInput,
   type UpdateChecklistItemInput,
 } from "@/lib/api/checklist";
+import { memberGoalsService, type MemberGoalsSettings } from "@/lib/api/memberGoals";
 import { progressService, type WeightLog } from "@/lib/api/progress";
 import { applyDelta, inverse } from "@/lib/solo/waterModel";
 import { withTick } from "@/lib/solo/checklistModel";
@@ -41,7 +42,7 @@ function unwrap<T>(res: ApiResponse<T>, fallback: string): T {
 
 // ─── Water ──────────────────────────────────────────────────────────────
 
-export function useWaterToday(enabled: boolean) {
+export function useWaterToday(enabled = true) {
   return useQuery({
     queryKey: queryKeys.solo.waterToday(),
     enabled,
@@ -63,7 +64,7 @@ export interface PendingTap {
  * SAME op id: a glass is never counted twice, and the page never says it
  * saved when it did not.
  */
-export function useWaterCounter(enabled: boolean) {
+export function useWaterCounter(enabled = true) {
   const qc = useQueryClient();
   const key = queryKeys.solo.waterToday();
   const query = useWaterToday(enabled);
@@ -116,7 +117,7 @@ export function useWaterCounter(enabled: boolean) {
   return { query, tap, retry, dismiss, failed, failedMessage: failed ? mutation.error?.message : undefined };
 }
 
-export function useWaterSettings(enabled: boolean) {
+export function useWaterSettings(enabled = true) {
   return useQuery({
     queryKey: queryKeys.solo.waterSettings(),
     enabled,
@@ -143,7 +144,7 @@ export function useUpdateWaterSettings() {
 
 // ─── Daily list ─────────────────────────────────────────────────────────
 
-export function useChecklistToday(enabled: boolean) {
+export function useChecklistToday(enabled = true) {
   return useQuery({
     queryKey: queryKeys.solo.checklistToday(),
     enabled,
@@ -153,7 +154,7 @@ export function useChecklistToday(enabled: boolean) {
   });
 }
 
-export function useChecklistItems(enabled: boolean) {
+export function useChecklistItems(enabled = true) {
   return useQuery({
     queryKey: queryKeys.solo.checklistItems(),
     enabled,
@@ -233,7 +234,7 @@ export type { ChecklistItems, ChecklistToday };
  * profile, newest entry. Null when there is no profile or no entry yet (a
  * member who never logged has no profile, and none is created by reading).
  */
-export function useLatestWeight(enabled: boolean) {
+export function useLatestWeight(enabled = true) {
   return useQuery<WeightLog | null>({
     queryKey: queryKeys.solo.latestWeight(),
     enabled,
@@ -246,5 +247,42 @@ export function useLatestWeight(enabled: boolean) {
       return logs[0] ?? null;
     },
     staleTime: 60_000,
+  });
+}
+
+// ─── Solo settings (hide daily weights) ─────────────────────────────────
+
+export function useSoloSettings(enabled = true) {
+  return useQuery<MemberGoalsSettings>({
+    queryKey: queryKeys.solo.settings(),
+    enabled,
+    networkMode: "always",
+    queryFn: async () => unwrap(await memberGoalsService.getSettings(), "Could not load your settings."),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * "Hide daily weights for good", kept on the server. Optimistic: the switch
+ * moves at once and goes back if the save fails (the caller shows the plain
+ * error). A missing field in the answer reads as false.
+ */
+export function useSetHideDailyWeights() {
+  const qc = useQueryClient();
+  return useMutation<MemberGoalsSettings, SoloApiError, boolean, { previous: MemberGoalsSettings | undefined }>({
+    networkMode: "always",
+    mutationFn: async (hide) =>
+      unwrap(await memberGoalsService.updateSettings({ hide_daily_weights: hide }), "Could not save that. Try again."),
+    onMutate: async (hide) => {
+      await qc.cancelQueries({ queryKey: queryKeys.solo.settings() });
+      const previous = qc.getQueryData<MemberGoalsSettings>(queryKeys.solo.settings());
+      qc.setQueryData<MemberGoalsSettings>(queryKeys.solo.settings(), { ...(previous ?? {}), hide_daily_weights: hide });
+      return { previous };
+    },
+    onError: (_e, _hide, ctx) => {
+      if (ctx?.previous !== undefined) qc.setQueryData(queryKeys.solo.settings(), ctx.previous);
+      else qc.removeQueries({ queryKey: queryKeys.solo.settings() });
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: queryKeys.solo.settings() }),
   });
 }

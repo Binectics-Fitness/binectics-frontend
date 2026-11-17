@@ -5,7 +5,7 @@ import { FastHistory } from "../../_components/solo/FastHistory";
 
 export default function FastingHistoryRoute() {
   return (
-    <SoloPage activeLabel="Fasting" flag="fasting" unavailableTitle="Fasting is not available yet">
+    <SoloPage activeLabel="Fasting">
       <FastHistory />
     </SoloPage>
   );

@@ -37,8 +37,7 @@ import { AutoTick, CardSkeleton, Row, Switch, TickButton, WriteError } from "./p
 import styles from "./solo.module.css";
 
 /** A tool line is offered only when the tool is there to tick it. */
-function toolOffered(key: ChecklistSystemKey, showFasting: boolean): boolean {
-  if (key === ChecklistSystemKey.FASTING) return showFasting;
+function toolOffered(key: ChecklistSystemKey): boolean {
   if (key === ChecklistSystemKey.STARTER_SESSION) return isStarterProgramEnabled();
   return true;
 }
@@ -50,7 +49,7 @@ const LIMIT_MESSAGE = `You have ${CHECKLIST_MAX_ACTIVE} lines, which is the most
  * rename, weekday chips, pause, remove) and today's ticks. At most 12 active
  * lines, 60 characters each. Nothing here counts days in a row.
  */
-export function ChecklistManager({ showFasting }: { showFasting: boolean }) {
+export function ChecklistManager() {
   const items = useChecklistItems(true);
   const today = useChecklistToday(true);
   const water = useWaterSettings(true);
@@ -129,7 +128,7 @@ export function ChecklistManager({ showFasting }: { showFasting: boolean }) {
       </p>
 
       <ul className="mt-2">
-        {TOOL_ORDER.filter((k) => toolByKey.get(k) || toolOffered(k, showFasting)).map((key) => {
+        {TOOL_ORDER.filter((k) => toolByKey.get(k) || toolOffered(k)).map((key) => {
           const line = toolByKey.get(key);
           const on = !!line?.active;
           const done = line ? (doneToday.get(line.id) ?? false) : false;

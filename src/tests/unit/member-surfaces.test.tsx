@@ -23,6 +23,8 @@ import { isAppRoute } from "./appRoutes";
  */
 
 let mockPathname = "/dashboard/member";
+// These tests are about the non-solo shell; the solo answer is a separate read.
+vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => mockPathname,
