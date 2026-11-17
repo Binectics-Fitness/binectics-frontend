@@ -1,4 +1,14 @@
 export const queryKeys = {
+  solo: {
+    all: ["solo"] as const,
+    state: (userId: string) => [...queryKeys.solo.all, "state", userId] as const,
+    waterToday: () => [...queryKeys.solo.all, "water", "today"] as const,
+    waterSettings: () => [...queryKeys.solo.all, "water", "settings"] as const,
+    checklistToday: () => [...queryKeys.solo.all, "checklist", "today"] as const,
+    checklistItems: () => [...queryKeys.solo.all, "checklist", "items"] as const,
+    latestWeight: () => [...queryKeys.solo.all, "weight", "latest"] as const,
+  },
+
   starter: {
     all: ["starter"] as const,
     options: (q: string) => [...queryKeys.starter.all, "options", q] as const,
