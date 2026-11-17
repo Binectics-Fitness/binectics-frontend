@@ -45,10 +45,14 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
   const [period, setPeriod] = useState<WeightPeriod>("4w");
   const [showDaily, setShowDaily] = useState(false);
   // "Hide for good" is kept on the server, so it follows the member to the phone.
-  // A missing field (an API that predates it) reads as false.
+  // A missing field (an API that predates it) reads as false. An UNKNOWN answer
+  // (still loading, or the read failed) is not "not hidden": the daily list is
+  // neither offered nor fetched until the server has said, as on the phone.
   const settings = useSoloSettings();
   const setHide = useSetHideDailyWeights();
+  const settingsKnown = settings.data !== undefined;
   const hiddenForGood = settings.data?.hide_daily_weights === true;
+  const dailyOffered = settingsKnown && !hiddenForGood;
 
   const compare = useWeightCompare(period as ComparePeriod, tz, true);
   const today = dayKeyOf(new Date());
@@ -60,7 +64,7 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
     tz,
     bucket: "day",
     // Daily weights are only requested once the member asks to see them.
-    enabled: showDaily && !hiddenForGood && !settings.isLoading,
+    enabled: showDaily && dailyOffered,
   });
 
   const data: WeightCompare | undefined = compare.data;
@@ -182,16 +186,16 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
               {WEIGHT_COPY.dailyTitle}
             </h3>
             <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-              {hiddenForGood ? WEIGHT_COPY.dailyHiddenForGood : showDaily ? WEIGHT_COPY.dailyShowing : WEIGHT_COPY.dailyHidden}
+              {!settingsKnown ? null : hiddenForGood ? WEIGHT_COPY.dailyHiddenForGood : showDaily ? WEIGHT_COPY.dailyShowing : WEIGHT_COPY.dailyHidden}
             </p>
           </div>
-          {!hiddenForGood && (
+          {dailyOffered && (
             <button type="button" className="btn-ghost-v2" style={{ height: 44 }} aria-expanded={showDaily} onClick={() => setShowDaily((v) => !v)}>
               {showDaily ? WEIGHT_COPY.hide : WEIGHT_COPY.show}
             </button>
           )}
         </div>
-        {showDaily && !hiddenForGood && (
+        {showDaily && dailyOffered && (
           <div className="mt-2" data-testid="weight-daily">
             {daily.isLoading ? (
               <CardSkeleton height={80} />

@@ -166,8 +166,8 @@ describe("daily weights: hidden by default, hideable for good", () => {
     renderUi(<ProgressContent />);
     await screen.findByTestId("weight-pair");
     expect(series.read.mock.calls.filter(([q]) => q.metric === "weight")).toHaveLength(0);
-    expect(screen.getByText("Hidden until you tap Show")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Show" }));
+    expect(await screen.findByText("Hidden until you tap Show")).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", { name: "Show" }));
     const box = await screen.findByTestId("weight-daily");
     await waitFor(() => expect(within(box).getAllByRole("listitem")).toHaveLength(5));
     expect(within(box).getAllByRole("listitem")[0]).toHaveTextContent("70.4 kg");
@@ -207,7 +207,7 @@ describe("daily weights: hidden by default, hideable for good", () => {
     await userEvent.click(screen.getByRole("switch", { name: "Hide daily weights" }));
     expect(await screen.findByText("That could not be saved. Try again.")).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "false"));
-    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Show" })).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/should not exist/);
   });
 
@@ -216,14 +216,28 @@ describe("daily weights: hidden by default, hideable for good", () => {
     renderUi(<ProgressContent />);
     await screen.findByTestId("weight-pair");
     expect(screen.getByRole("switch", { name: "Hide daily weights" })).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Show" })).toBeInTheDocument();
   });
 
-  it("a failed settings read leaves the page working with daily weights not hidden", async () => {
+  it("a failed settings read fails CLOSED: the weekly page works, the daily list is not offered or fetched", async () => {
     goals.getSettings.mockResolvedValue({ success: false, status: 500, message: "boom" });
     renderUi(<ProgressContent />);
     expect(await screen.findByTestId("weight-pair")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show" })).toBeInTheDocument();
+    await waitFor(() => expect(goals.getSettings).toHaveBeenCalled());
+    // Nothing alarming: no error text for it, and the rest of the card is there.
+    expect(screen.getByRole("switch", { name: "Hide daily weights" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Show" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Hidden until you tap Show")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(series.read.mock.calls.filter(([q]) => q.metric === "weight")).toHaveLength(0);
+  });
+
+  it("while the settings read is still out, the daily list is not offered either", async () => {
+    goals.getSettings.mockReturnValue(new Promise(() => undefined));
+    renderUi(<ProgressContent />);
+    await screen.findByTestId("weight-pair");
+    expect(screen.queryByRole("button", { name: "Show" })).not.toBeInTheDocument();
+    expect(series.read.mock.calls.filter(([q]) => q.metric === "weight")).toHaveLength(0);
   });
 
   it("the weight screen carries no medical-device footer", async () => {
