@@ -206,6 +206,18 @@ describe("the one-time safety check", () => {
     expect(await screen.findByText("How long?")).toBeInTheDocument();
   });
 
+  it("regression: after a pass the start page shows at once, without waiting for the settings re-read or flashing the check again", async () => {
+    fasting.settings.mockResolvedValueOnce(ok({ fasting_screening: null }));
+    fasting.screen.mockResolvedValue(ok({ passed: true }));
+    renderUi(<FastingContent />);
+    await userEvent.click(await screen.findByLabelText("None of these apply to me"));
+    // The re-read after the check is slow, and still says "not screened".
+    fasting.settings.mockReturnValue(new Promise(() => undefined));
+    await userEvent.click(form());
+    expect(await screen.findByText("How long?")).toBeInTheDocument();
+    expect(screen.queryByText("Before your first fast: fasting is not right for everyone")).not.toBeInTheDocument();
+  });
+
   it("a stored 'not passed' is shown as not available, with the check retakeable", async () => {
     fasting.settings.mockResolvedValue(ok({ fasting_screening: { passed: false, at: iso(NOW), version: 1 } }));
     renderUi(<FastingContent />);
@@ -716,6 +728,17 @@ describe("Today: the fast", () => {
     await userEvent.click(within(note).getByRole("button", { name: "Undo" }));
     expect(fasting.undoEnd).toHaveBeenCalledWith("f1");
     expect(await screen.findByTestId("fast-today-card")).toBeInTheDocument();
+  });
+
+  it("regression: ending the only thing the member has used keeps the page on its in-use layout so Undo stays", async () => {
+    fasting.current.mockResolvedValue(ok(running({ started_at: iso(NOW - 3 * HOUR_MS) })));
+    fasting.end.mockResolvedValue(ok(ended({ started_at: iso(NOW - 3 * HOUR_MS) })));
+    // Nothing else used today: no water, no list, no weight.
+    water.today.mockResolvedValue(ok({ local_day: "2026-11-17", glasses: 0, glass_ml: 250, target_glasses: null }));
+    renderUi(<SoloToday />);
+    await userEvent.click(within(await screen.findByTestId("fast-today-card")).getByRole("button", { name: "End fast" }));
+    const note = await screen.findByTestId("fast-today-ended");
+    expect(within(note).getByRole("button", { name: "Undo" })).toBeInTheDocument();
   });
 
   it("offers 'Start a fast' when none is running (and the member has used something else)", async () => {

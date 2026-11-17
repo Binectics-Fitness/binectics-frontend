@@ -33,12 +33,20 @@ import { WriteError } from "./parts";
  * allows. None: the quiet "Start a fast" card. A fast past its limit says so
  * and sends the member to close it. Nothing is invented.
  */
-export function FastTodayCard({ fast }: { fast: FastSession | null }) {
+export function FastTodayCard({
+  fast,
+  justEnded,
+  onEnded,
+}: {
+  fast: FastSession | null;
+  /** The fast ended from this card, kept by the page so the layout does not switch under it. */
+  justEnded: FastSession | null;
+  onEnded: (f: FastSession | null) => void;
+}) {
   const nowMs = useNowMs(fast ? toMs(fast.started_at) : null);
   const online = useOnline();
   const end = useEndFast();
   const undo = useUndoEnd();
-  const [justEnded, setJustEnded] = useState<FastSession | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   if (justEnded && !fast) {
@@ -69,10 +77,10 @@ export function FastTodayCard({ fast }: { fast: FastSession | null }) {
                 onClick={() => {
                   const f = justEnded;
                   setError(null);
-                  setJustEnded(null);
+                  onEnded(null);
                   undo.mutate(f, {
                     onError: (e) => {
-                      setJustEnded(f);
+                      onEnded(f);
                       setError(e.message);
                     },
                   });
@@ -173,7 +181,7 @@ export function FastTodayCard({ fast }: { fast: FastSession | null }) {
                 return;
               }
               setError(null);
-              end.mutate({ id: fast.id }, { onSuccess: (f) => setJustEnded(f), onError: (e) => setError(e.message) });
+              end.mutate({ id: fast.id }, { onSuccess: (f) => onEnded(f), onError: (e) => setError(e.message) });
             }}
           >
             End fast

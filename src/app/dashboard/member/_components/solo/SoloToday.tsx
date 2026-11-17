@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnline } from "@/hooks/useOnline";
 import { useSoloFlags } from "@/hooks/useSoloFlags";
 import { useChecklistToday, useLatestWeight, useWaterToday } from "@/lib/queries/solo";
+import type { FastSession } from "@/lib/api/fasting";
 import { useCurrentFast } from "@/lib/queries/fasting";
 import { useActiveStarter } from "@/lib/queries/starter";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
@@ -72,6 +73,8 @@ export function SoloToday() {
   const water = useWaterToday(flags.water);
   const checklist = useChecklistToday(flags.checklist);
   const fasting = useCurrentFast(flags.fasting);
+  // A fast ended from the card on this page: kept so the page does not swap layouts under its Undo.
+  const [endedHere, setEndedHere] = useState<FastSession | null>(null);
   const weight = useLatestWeight(true);
   const starter = useActiveStarter(starterOn);
 
@@ -88,7 +91,7 @@ export function SoloToday() {
 
   const hasWater = flags.water && (water.data?.glasses ?? 0) > 0;
   const hasList = flags.checklist && (checklist.data?.items.length ?? 0) > 0;
-  const hasFast = flags.fasting && !!fasting.data;
+  const hasFast = flags.fasting && (!!fasting.data || !!endedHere);
   const hasWeight = !!weight.data;
   const hasStarter = starterOn && !!starter.data?.program;
   const firstDay = !hasWater && !hasList && !hasWeight && !hasStarter && !hasFast;
@@ -168,7 +171,7 @@ export function SoloToday() {
         </div>
       ) : (
         <div className="flex flex-col gap-3.5">
-          {flags.fasting && <FastTodayCard fast={fasting.data ?? null} />}
+          {flags.fasting && <FastTodayCard fast={fasting.data ?? null} justEnded={endedHere} onEnded={setEndedHere} />}
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
             {flags.water && <WaterCard variant="compact" />}
             <WeightCard />

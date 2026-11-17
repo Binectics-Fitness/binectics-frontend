@@ -50,6 +50,8 @@ export function FastingContent() {
 
   const [outcome, setOutcome] = useState<ScreeningOutcome | "stored_block" | null>(null);
   const [retaking, setRetaking] = useState(false);
+  // The member passed the check in this visit: do not wait for the settings re-read to say so.
+  const [passedHere, setPassedHere] = useState(false);
   const [justEnded, setJustEnded] = useState<FastSession | null>(null);
   const [editing, setEditing] = useState<FastSession | null>(null);
   const [savedFeeling, setSavedFeeling] = useState<FastingFeelingValue | null>(null);
@@ -207,7 +209,7 @@ export function FastingContent() {
   // ── No fast: the safety check, then the start page ──
   const stored = settings.data?.fasting_screening ?? null;
   const screenedThisVersion = !!stored && stored.version === SCREENING_VERSION;
-  const passed = screenedThisVersion && stored.passed;
+  const passed = passedHere || (screenedThisVersion && stored.passed);
 
   let body: React.ReactNode;
   const outcomeNeedsRead =
@@ -219,13 +221,14 @@ export function FastingContent() {
         onRetake={() => {
           setOutcome(null);
           setRetaking(true);
+          setPassedHere(false);
           setMessage(null);
         }}
         onContinue={() => setOutcome(null)}
       />
     );
-  } else if (screenedThisVersion && !stored.passed && !retaking) {
-    body = <FastCheckOutcome outcome="stored_block" onRetake={() => setRetaking(true)} onContinue={() => undefined} />;
+  } else if (!passedHere && screenedThisVersion && !stored.passed && !retaking) {
+    body = <FastCheckOutcome outcome="stored_block" onRetake={() => { setRetaking(true); setPassedHere(false); }} onContinue={() => undefined} />;
   } else if (!passed || retaking) {
     body = (
       <FastCheck
@@ -238,6 +241,7 @@ export function FastingContent() {
             onSuccess: (o) => {
               setOutcome(o);
               setRetaking(false);
+              setPassedHere(o.passed);
               // Drop the answers (the call's variables) from the mutation cache now.
               screening.reset();
             },

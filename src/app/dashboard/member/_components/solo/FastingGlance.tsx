@@ -120,7 +120,7 @@ export function FastingGlance({ window: ownWindow }: { window: FastingWindow | n
             {average === null ? FASTING_GLANCE_COPY.noFast : fastingAverageSentence(average, days)}
           </p>
 
-          <div className={`${styles.strip} mt-3`} role="group" aria-label={span === 7 ? FASTING_GLANCE_COPY.group7Label : FASTING_GLANCE_COPY.strip30Label} data-testid="fasting-strip">
+          <div className={`${styles.strip} ${span === 7 ? styles.strip7 : ""} mt-3`} role="group" aria-label={span === 7 ? FASTING_GLANCE_COPY.group7Label : FASTING_GLANCE_COPY.strip30Label} data-testid="fasting-strip">
             {band && (
               <span
                 className={styles.band}
@@ -142,7 +142,7 @@ export function FastingGlance({ window: ownWindow }: { window: FastingWindow | n
                   key={c.day}
                   type="button"
                   className={styles.stripCol}
-                  style={{ background: "none", border: 0, padding: 0, minWidth: 44, cursor: "pointer" }}
+                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
                   aria-label={fastingDayLabel(c.label, c.hours)}
                   aria-pressed={c.day === selected.day}
                   onClick={() => setPicked(c.day)}
@@ -157,9 +157,9 @@ export function FastingGlance({ window: ownWindow }: { window: FastingWindow | n
             })}
           </div>
           {span === 7 && (
-            <div className="mt-1 flex gap-1" aria-hidden="true">
+            <div className={`mt-1 flex ${styles.strip7Labels}`} aria-hidden="true">
               {cells.map((c) => (
-                <span key={c.day} className="flex-1 text-center text-[11px]" style={{ color: "var(--fg-3)", minWidth: 44 }}>
+                <span key={c.day} className="min-w-0 flex-1 text-center text-[11px]" style={{ color: "var(--fg-3)" }}>
                   {c.initial}
                 </span>
               ))}
