@@ -51,11 +51,22 @@ describe("client switch", () => {
 });
 
 describe("solo top bar links", () => {
-  it("never ships a dead link: Fasting and Progress are not built in W1", () => {
+  it("never ships a dead link: Fasting and Progress appear only when their flags are passed", () => {
     const labels = soloNavLinks({ water: true }).map((l) => l.label);
     expect(labels).toEqual(["Today", "Water", "Log", "Explore"]);
     expect(labels).not.toContain("Fasting");
     expect(labels).not.toContain("Progress");
+  });
+  it("adds Fasting and Progress in the design's order when their flags are on", () => {
+    expect(soloNavLinks({ water: true, fasting: true, history: true }).map((l) => l.label)).toEqual([
+      "Today",
+      "Fasting",
+      "Water",
+      "Progress",
+      "Log",
+      "Explore",
+    ]);
+    expect(soloNavLinks({ water: false, fasting: true, history: false }).map((l) => l.label)).toEqual(["Today", "Fasting", "Log", "Explore"]);
   });
   it("hides Water until solo_water is on", () => {
     expect(soloNavLinks({ water: false }).map((l) => l.label)).toEqual(["Today", "Log", "Explore"]);
