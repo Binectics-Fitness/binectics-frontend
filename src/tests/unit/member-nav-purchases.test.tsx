@@ -10,6 +10,8 @@ import { paidContentService } from "@/lib/api/paidContent";
  */
 const state = vi.hoisted(() => ({ flag: false, orgId: null as string | null, seenOrg: undefined as unknown, loading: false }));
 
+// These tests are about the non-solo shell; the solo answer is a separate read.
+vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({
     isEnabled: (_key: string, orgId?: string | null) => {

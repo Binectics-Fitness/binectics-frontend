@@ -32,7 +32,7 @@ function unwrap<T>(res: ApiResponse<T>, fallback: string): T {
   return res.data;
 }
 
-export function useFastingSettings(enabled: boolean) {
+export function useFastingSettings(enabled = true) {
   return useQuery<FastingSettings>({
     queryKey: queryKeys.solo.fastingSettings(),
     enabled,
@@ -43,7 +43,7 @@ export function useFastingSettings(enabled: boolean) {
 }
 
 /** The running fast, or null. The server's answer; the clock is computed from its start. */
-export function useCurrentFast(enabled: boolean) {
+export function useCurrentFast(enabled = true) {
   return useQuery<FastSession | null>({
     queryKey: queryKeys.solo.fastingCurrent(),
     enabled,
@@ -174,7 +174,7 @@ export function useDeleteFast() {
 export const HISTORY_PAGE_SIZE = 10;
 
 /** Finished fasts, newest first, one cursor page at a time ("Show more"). */
-export function useFastHistory(enabled: boolean) {
+export function useFastHistory(enabled = true) {
   return useInfiniteQuery<FastHistoryPage, SoloApiError, { pages: FastHistoryPage[] }, readonly unknown[], string | null>({
     queryKey: queryKeys.solo.fastingHistory(),
     enabled,

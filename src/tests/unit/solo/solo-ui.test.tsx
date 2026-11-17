@@ -21,10 +21,6 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children, activeLabel }: { children: ReactNode; activeLabel: string }) => <main data-active={activeLabel}>{children}</main>,
 }));
 
-const flagsState = vi.hoisted(() => ({ on: new Set<string>(), loading: false }));
-vi.mock("@/hooks/useFeatureFlags", () => ({
-  useFeatureFlags: () => ({ isEnabled: (k: string) => flagsState.on.has(k), data: undefined, isLoading: flagsState.loading }),
-}));
 const water = vi.hoisted(() => ({ today: vi.fn(), adjust: vi.fn(), getSettings: vi.fn(), updateSettings: vi.fn() }));
 const list = vi.hoisted(() => ({
   today: vi.fn(), list: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn(),
@@ -57,11 +53,8 @@ function renderUi(ui: ReactNode) {
 const setOnline = (v: boolean) => Object.defineProperty(window.navigator, "onLine", { value: v, configurable: true });
 
 beforeEach(() => {
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "true");
   vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  flagsState.on = new Set(["solo_water", "solo_checklist"]);
-  flagsState.loading = false;
   starterQ.program = null;
   [...Object.values(water), ...Object.values(list), ...Object.values(progress)].forEach((f) => f.mockReset());
   water.today.mockResolvedValue(ok(WATER));
@@ -96,16 +89,6 @@ describe("Today: first day", () => {
     // No fabricated figures, streaks or scores.
     expect(screen.queryByText(/streak|score|badge|missed/i)).toBeNull();
     expect(screen.queryByRole("button", { name: "+ 1 glass" })).toBeNull();
-  });
-
-  it("leaves a card out when its flag is off", async () => {
-    flagsState.on = new Set();
-    renderUi(<SoloToday />);
-    await screen.findByText("Pick one thing to begin with. There is no wrong place to start.");
-    expect(screen.queryByRole("link", { name: "Open water" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Build your list" })).toBeNull();
-    expect(water.today).not.toHaveBeenCalled();
-    expect(list.today).not.toHaveBeenCalled();
   });
 
   it("offers the Starter Program only when the starter flag is on", async () => {
@@ -209,20 +192,7 @@ describe("Today: states", () => {
   });
 });
 
-describe("pages behind their flags", () => {
-  it("Water page says it is not available while solo_water is off, and makes no read", async () => {
-    flagsState.on = new Set();
-    renderUi(<WaterPage />);
-    expect(await screen.findByRole("heading", { name: "Water is not available yet" })).toBeInTheDocument();
-    expect(water.today).not.toHaveBeenCalled();
-  });
-
-  it("Water page with the client switch off is not available either", async () => {
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "");
-    renderUi(<WaterPage />);
-    expect(await screen.findByRole("heading", { name: "Water is not available yet" })).toBeInTheDocument();
-  });
-
+describe("pages", () => {
   it("Water page: set and remove the aim; the aim is never preset", async () => {
     water.getSettings.mockResolvedValue(ok({ target_glasses: null, glass_ml: 250 }));
     water.today.mockResolvedValue(ok({ ...WATER, target_glasses: null }));
@@ -265,8 +235,7 @@ describe("pages behind their flags", () => {
     expect(list.update).toHaveBeenCalledWith("c1", { days: [1, 2, 3] });
     await userEvent.click(screen.getByRole("switch", { name: "Show Log my weight in my list" }));
     expect(list.addSystem).toHaveBeenCalledWith("weight");
-    // Fasting is a later milestone: no switch for it while solo_fasting is off.
-    expect(screen.queryByRole("switch", { name: /Finish a fast/ })).toBeNull();
+    expect(screen.getByRole("switch", { name: /Finish a fast/ })).toBeInTheDocument();
   });
 
   it("Daily list page: a tool-line tick comes from the API, not from a button", async () => {

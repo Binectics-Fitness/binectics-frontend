@@ -5,7 +5,7 @@ import { FastStages } from "../../_components/solo/FastStages";
 
 export default function FastingStagesRoute() {
   return (
-    <SoloPage activeLabel="Fasting" flag="fasting" unavailableTitle="Fasting is not available yet">
+    <SoloPage activeLabel="Fasting">
       <FastStages />
     </SoloPage>
   );

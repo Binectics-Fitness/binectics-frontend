@@ -3,8 +3,7 @@ import type { ApiResponse } from "@/lib/types";
 import { FASTING_ERROR_MESSAGES } from "@/lib/solo/fastingCopy";
 
 /*
- * Fasting client. Contract: binectics-api #340 (src/fasting) and #344. Behind
- * the `solo_fasting` flag: while it is off every route answers 404.
+ * Fasting client. Contract: binectics-api #340 (src/fasting) and #344.
  *   POST   /fasting/screening            { under_18, eating_disorder_history, pregnant_or_breastfeeding, diabetes_or_medication, acknowledged }
  *   GET    /fasting/settings
  *   POST   /fasting/sessions             { started_at, target_hours (1..24), preset, note? }

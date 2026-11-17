@@ -5,7 +5,7 @@ import { ProgressContent } from "../_components/solo/ProgressPage";
 
 export default function ProgressRoute() {
   return (
-    <SoloPage activeLabel="Progress" flag="history" unavailableTitle="Progress is not available yet">
+    <SoloPage activeLabel="Progress">
       <ProgressContent />
     </SoloPage>
   );

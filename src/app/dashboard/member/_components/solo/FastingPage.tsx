@@ -5,7 +5,6 @@ import { useState } from "react";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useOnline, OFFLINE_WRITE_MESSAGE } from "@/hooks/useOnline";
 import { useNowMs } from "@/hooks/useNowMs";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
 import {
   SCREENING_VERSION,
   type FastSession,
@@ -34,10 +33,9 @@ import { CardSkeleton } from "./parts";
 
 /** The one fasting page: safety check, start, the running fast, close-past and done. */
 export function FastingContent() {
-  const flags = useSoloFlags();
   const online = useOnline();
-  const settings = useFastingSettings(flags.fasting);
-  const current = useCurrentFast(flags.fasting);
+  const settings = useFastingSettings();
+  const current = useCurrentFast();
   const fast = current.data ?? null;
   const nowMs = useNowMs(fast ? toMs(fast.started_at) : null);
 

@@ -17,8 +17,6 @@ import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { paidContentOn } from "@/lib/paidContent/helpers";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
-import { isSoloMemberEnabled } from "@/lib/solo/flag";
 import { SOLO_MENU_LINKS, soloActiveLabel, soloNavLinks } from "@/lib/solo/nav";
 
 /* ── Lucide-style icon wrapper ── */
@@ -144,26 +142,19 @@ function writeHoldsCache(userId: string, holds: boolean): void {
 }
 
 /* ── Component ──
- * With NEXT_PUBLIC_FEATURE_SOLO_MEMBER off (a build-time constant) the shell
- * is exactly the view below with no solo reads. With it on, a small wrapper
- * asks whether the member is solo and hands the answer down. */
+ * A small wrapper asks whether the member is solo (see lib/solo/rule.ts) and
+ * hands the answer down; solo members get the short bar. */
 export function MemberDashboardShell(props: MemberDashboardShellProps) {
-  return isSoloMemberEnabled() ? <SoloAwareShell {...props} /> : <MemberShellView {...props} />;
-}
-
-function SoloAwareShell(props: MemberDashboardShellProps) {
   const { solo } = useIsSoloMember();
-  const soloFlags = useSoloFlags();
-  return <MemberShellView {...props} solo={solo === true} soloFlags={soloFlags} />;
+  return <MemberShellView {...props} solo={solo === true} />;
 }
 
 interface MemberShellViewProps extends MemberDashboardShellProps {
   /** The member is solo (see lib/solo/rule.ts): the short bar replaces the full one. */
   solo?: boolean;
-  soloFlags?: { water: boolean; fasting?: boolean; history?: boolean };
 }
 
-function MemberShellView({ activeLabel, children, actions, solo = false, soloFlags }: MemberShellViewProps) {
+function MemberShellView({ activeLabel, children, actions, solo = false }: MemberShellViewProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
@@ -206,11 +197,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false, soloFla
   // While the answer is unknown, or for anyone else, the bar is exactly what
   // it always was.
   const isSolo = solo;
-  const navLinks = isSolo ? soloNavLinks({
-        water: soloFlags?.water ?? false,
-        fasting: soloFlags?.fasting ?? false,
-        history: soloFlags?.history ?? false,
-      }) : memberNavLinks;
+  const navLinks = isSolo ? soloNavLinks() : memberNavLinks;
   const navActiveLabel = isSolo ? soloActiveLabel(activeLabel, pathname) : activeLabel;
   const accountExtras = isSolo ? SOLO_MENU_LINKS : undefined;
   // A gym's staff reach the gym's dashboard from here (F1).

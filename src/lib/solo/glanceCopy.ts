@@ -62,7 +62,7 @@ export const WEIGHT_COPY = {
   hideForGoodNote: "Only weekly averages are shown anywhere.",
   hideSwitchLabel: "Hide daily weights",
   setTargetLabel: "Set a target range",
-  disclaimer: "This app is not a medical device. For advice about your weight, talk to a health worker.",
+  hideSaveFailed: "That could not be saved. Try again.",
   rangeGroupLabel: "Compare with",
 } as const;
 
@@ -237,16 +237,8 @@ export const TARGETS_COPY = {
   notSet: "No target set",
 } as const;
 
-/**
- * PLACEHOLDER copy: needs clinical review. Shown when the API refuses a weight
- * range with 422 TARGET_BELOW_SUPPORTED_RANGE. The real wording and the real
- * limit are for a clinical reviewer (open item in H2-Decision.dc.html). The
- * app never decides the limit; the API does.
- */
-export const TARGET_BELOW_SUPPORTED_RANGE_COPY = {
-  title: "This is lower than we can support here",
-  body: "Please talk to a health worker about your weight. You can still keep tracking without a target.",
-} as const;
+/** Shown next to the weight field when the API answers 422 TARGET_BELOW_SUPPORTED_RANGE. The API decides the limit. */
+export const TARGET_BELOW_SUPPORTED_RANGE_LINE = "The lowest weight we can save is 45 kg.";
 
 export const targetStepLabels = {
   weightLoDown: "Lower the start",

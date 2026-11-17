@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useNowMs } from "@/hooks/useNowMs";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
 import { useCurrentFast } from "@/lib/queries/fasting";
 import { FASTING_STAGES, STAGES_FOOTER, STAGES_INTRO, notPartOfGoal } from "@/lib/solo/fastingCopy";
 import { elapsedMs, stageIndexAt, timeOfDay, toMs } from "@/lib/solo/fastingRules";
@@ -15,8 +14,7 @@ import { SOLO_HREFS } from "@/lib/solo/nav";
  * the last stage says when it is past the member's own length.
  */
 export function FastStages() {
-  const flags = useSoloFlags();
-  const current = useCurrentFast(flags.fasting);
+  const current = useCurrentFast();
   const fast = current.data && current.data.status === "running" ? current.data : null;
   const nowMs = useNowMs(fast ? toMs(fast.started_at) : null);
   const here = fast && nowMs !== null ? stageIndexAt(elapsedMs(fast.started_at, nowMs)) : -1;

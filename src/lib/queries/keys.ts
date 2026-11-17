@@ -16,6 +16,7 @@ export const queryKeys = {
       [...queryKeys.solo.all, "series", metric, from, to, tz, bucket] as const,
     weightCompare: (period: string, tz: string) => [...queryKeys.solo.all, "weight", "compare", period, tz] as const,
     targets: () => [...queryKeys.solo.all, "targets"] as const,
+    settings: () => [...queryKeys.solo.all, "settings"] as const,
   },
 
   starter: {

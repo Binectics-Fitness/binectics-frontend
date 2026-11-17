@@ -2,8 +2,7 @@ import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 
 /*
- * Water client. Contract: binectics-api #341 (src/water). Behind the
- * `solo_water` flag: while it is off every route answers 404.
+ * Water client. Contract: binectics-api #341 (src/water).
  *   GET   /water/today?tz
  *   PUT   /water/today/adjust   { delta: 1|-1, tz, client_op_id?, local_day?, glass_ml? }
  *   GET   /water/summary?from&to&tz

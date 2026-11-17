@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/queries/keys";
 import { readIsSolo } from "@/lib/solo/state";
-import { isSoloMemberEnabled } from "@/lib/solo/flag";
 import { UserRole } from "@/lib/types";
 
 /** A successful read is good for this long; page moves do not re-read seven endpoints. */
@@ -46,9 +45,8 @@ export interface SoloMemberState {
 /**
  * Whether the signed-in account is a solo member (see lib/solo/rule.ts).
  *
- * - OFF (null, no requests) unless NEXT_PUBLIC_FEATURE_SOLO_MEMBER is on and
- *   the account is a plain member, so every other role and a build with the
- *   switch off behave exactly as before.
+ * - OFF (null, no requests) unless the account is a plain member, so every
+ *   other role behaves exactly as before.
  * - No flicker: the previous answer stays while a read runs, a read that fails
  *   never changes the answer (every source must answer), and the last answer
  *   survives a reload for the tab.
@@ -56,7 +54,7 @@ export interface SoloMemberState {
 export function useIsSoloMember(): SoloMemberState {
   const { user } = useAuth();
   const userId = user?.id ?? null;
-  const eligible = isSoloMemberEnabled() && !!userId && user?.role === UserRole.USER;
+  const eligible = !!userId && user?.role === UserRole.USER;
   const role = user?.role;
 
   const query = useQuery<boolean>({

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useOnline, OFFLINE_WRITE_MESSAGE } from "@/hooks/useOnline";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
 import {
   FASTING_BOUNDS,
   FASTING_STEP_HOURS,
@@ -22,7 +21,7 @@ import {
   PROGRESS_PAGE_COPY,
   STATE_COPY,
   TARGETS_COPY,
-  TARGET_BELOW_SUPPORTED_RANGE_COPY,
+  TARGET_BELOW_SUPPORTED_RANGE_LINE,
   type TargetTab,
   fastingPreview,
   fastingWindowSentence,
@@ -106,9 +105,8 @@ const TABS: { key: TargetTab; label: string }[] = [
 
 /** The targets page: always ranges, optional, removable, progress in plain text only. */
 export function TargetsContent() {
-  const flags = useSoloFlags();
   const online = useOnline();
-  const targets = useTargets(flags.targets);
+  const targets = useTargets();
   const [tab, setTab] = useState<TargetTab>("weight");
 
   return (
@@ -118,11 +116,9 @@ export function TargetsContent() {
         title={TARGETS_COPY.title}
         subtitle={TARGETS_COPY.intro}
         actions={
-          flags.history ? (
-            <Link href={SOLO_HREFS.progress} className="btn-ghost-v2" style={{ height: 44 }}>
-              {PROGRESS_PAGE_COPY.backToProgress}
-            </Link>
-          ) : undefined
+          <Link href={SOLO_HREFS.progress} className="btn-ghost-v2" style={{ height: 44 }}>
+            {PROGRESS_PAGE_COPY.backToProgress}
+          </Link>
         }
       />
       {!online && (
@@ -149,7 +145,7 @@ export function TargetsContent() {
       ) : (
         <DSCard className="max-w-[760px] p-6">
           <div className={styles.chips} role="group" aria-label="Which target">
-            {TABS.filter((t) => t.key !== "water" || flags.water).map((t) => (
+            {TABS.map((t) => (
               <button key={t.key} type="button" className={styles.pill} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}>
                 {t.label}
               </button>
@@ -158,7 +154,7 @@ export function TargetsContent() {
           <div className="mt-5">
             {tab === "weight" && <WeightForm targets={targets.data} online={online} />}
             {tab === "fasting" && <FastingForm targets={targets.data} online={online} />}
-            {tab === "water" && flags.water && <WaterForm targets={targets.data} online={online} />}
+            {tab === "water" && <WaterForm targets={targets.data} online={online} />}
           </div>
         </DSCard>
       )}
@@ -194,17 +190,9 @@ function SaveRow({
         </p>
       )}
       {refused && (
-        <div
-          role="alert"
-          className="mb-3 rounded-(--r-2) p-3"
-          style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
-          data-testid="target-refused"
-        >
-          <p className="text-[15px] font-medium">{TARGET_BELOW_SUPPORTED_RANGE_COPY.title}</p>
-          <p className="mt-1 text-[14px]" style={{ color: "var(--fg-2)" }}>
-            {TARGET_BELOW_SUPPORTED_RANGE_COPY.body}
-          </p>
-        </div>
+        <p role="alert" className={`${styles.error} mb-2`} data-testid="target-refused">
+          {TARGET_BELOW_SUPPORTED_RANGE_LINE}
+        </p>
       )}
       {message?.kind === "error" && <WriteError message={message.text} />}
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -259,7 +247,7 @@ function useSaver(online: boolean) {
     update.mutate(input, {
       onSuccess: () => setMessage({ kind: ok === TARGETS_COPY.removed ? "removed" : "saved", text: ok }),
       onError: (e) => {
-        // The API decides the limit; the page only shows the gentle words.
+        // The API decides the limit; the page only shows the one plain line.
         if (e.code === TARGET_BELOW_SUPPORTED_RANGE) setRefused(true);
         else setMessage({ kind: "error", text: TARGETS_COPY.saveFailed });
       },

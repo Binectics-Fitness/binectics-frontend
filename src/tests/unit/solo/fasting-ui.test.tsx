@@ -19,10 +19,6 @@ vi.mock("@/hooks/useRequireAuth", () => ({ useRoleGuard: () => ({ isAuthorized: 
 vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children, activeLabel }: { children: ReactNode; activeLabel: string }) => <main data-active={activeLabel}>{children}</main>,
 }));
-const flagsState = vi.hoisted(() => ({ on: new Set<string>(), loading: false }));
-vi.mock("@/hooks/useFeatureFlags", () => ({
-  useFeatureFlags: () => ({ isEnabled: (k: string) => flagsState.on.has(k), data: undefined, isLoading: flagsState.loading }),
-}));
 const fasting = vi.hoisted(() => ({
   screen: vi.fn(), settings: vi.fn(), start: vi.fn(), current: vi.fn(), history: vi.fn(), summary: vi.fn(),
   edit: vi.fn(), end: vi.fn(), undoEnd: vi.fn(), addFeeling: vi.fn(), remove: vi.fn(),
@@ -84,11 +80,8 @@ function renderUi(ui: ReactNode) {
 const setOnline = (v: boolean) => Object.defineProperty(window.navigator, "onLine", { value: v, configurable: true });
 
 beforeEach(() => {
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "true");
   vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  flagsState.on = new Set(["solo_fasting", "solo_water", "solo_checklist", "solo_history"]);
-  flagsState.loading = false;
   [...Object.values(fasting), ...Object.values(water), ...Object.values(list), ...Object.values(progress)].forEach((f) => f.mockReset());
   fasting.settings.mockResolvedValue(ok(PASSED));
   fasting.current.mockResolvedValue(ok(null));
@@ -107,34 +100,6 @@ afterEach(() => {
   vi.unstubAllEnvs();
   setOnline(true);
   window.dispatchEvent(new Event("online"));
-});
-
-describe("flag gating: off means unchanged", () => {
-  it("shows 'not available yet' and makes no fasting read while solo_fasting is off", async () => {
-    flagsState.on = new Set(["solo_water"]);
-    renderUi(<FastingRoute />);
-    expect(await screen.findByText("Fasting is not available yet")).toBeInTheDocument();
-    expect(screen.getByText("This tool is coming to your account soon. Your other tools work as before.")).toBeInTheDocument();
-    expect(fasting.settings).not.toHaveBeenCalled();
-    expect(fasting.current).not.toHaveBeenCalled();
-  });
-
-  it("shows the same with the client switch off even when the server flag is on", async () => {
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_SOLO_MEMBER", "false");
-    renderUi(<FastingRoute />);
-    expect(await screen.findByText("Fasting is not available yet")).toBeInTheDocument();
-    expect(fasting.settings).not.toHaveBeenCalled();
-  });
-
-  it("Today shows no fasting card and makes no fasting read with the flag off", async () => {
-    flagsState.on = new Set(["solo_water"]);
-    water.today.mockResolvedValue(ok({ local_day: "2026-11-17", glasses: 2, glass_ml: 250, target_glasses: null }));
-    renderUi(<SoloToday />);
-    await screen.findByText(/Hey, /);
-    expect(screen.queryByTestId("fast-today-card")).not.toBeInTheDocument();
-    expect(screen.queryByText("Start a fast")).not.toBeInTheDocument();
-    expect(fasting.current).not.toHaveBeenCalled();
-  });
 });
 
 describe("the one-time safety check", () => {
@@ -758,17 +723,18 @@ describe("Today: the fast", () => {
 });
 
 describe("daily list: the fasting tool line", () => {
-  it("offers a 'Finish a fast' switch once solo_fasting is on", async () => {
+  it("offers a 'Finish a fast' switch", async () => {
     list.list.mockResolvedValue(ok({ items: [] }));
     renderUi(<TodayListPage />);
     expect(await screen.findByRole("switch", { name: /Finish a fast/ })).toBeInTheDocument();
   });
+});
 
-  it("offers none while solo_fasting is off (unchanged from W1)", async () => {
-    flagsState.on = new Set(["solo_checklist", "solo_water"]);
-    list.list.mockResolvedValue(ok({ items: [] }));
-    renderUi(<TodayListPage />);
-    await screen.findByText(/Your daily list/);
-    expect(screen.queryByRole("switch", { name: /Finish a fast/ })).toBeNull();
+describe("always on", () => {
+  it("the Fasting page renders with no flag or switch of any kind", async () => {
+    renderUi(<FastingRoute />);
+    expect(await screen.findByText("Start a fast")).toBeInTheDocument();
+    expect(screen.queryByText(/not available yet|coming to your account/i)).not.toBeInTheDocument();
+    expect(fasting.settings).toHaveBeenCalled();
   });
 });

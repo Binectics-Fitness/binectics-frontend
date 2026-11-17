@@ -3,8 +3,7 @@ import type { ApiResponse } from "@/lib/types";
 
 /*
  * Member series client. Contract: binectics-api #343 (src/member-series).
- * Read-only chart data over the member's own logs, behind `solo_history`
- * (404 while off). A bucket with nothing logged is simply absent: a gap,
+ * Read-only chart data over the member's own logs. A bucket with nothing logged is simply absent: a gap,
  * never a zero.
  *   GET /member-series?metric&from&to&tz&bucket
  *   GET /member-series/weight/compare?tz&period

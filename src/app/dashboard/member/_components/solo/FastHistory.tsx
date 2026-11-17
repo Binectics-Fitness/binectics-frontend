@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { DSCard, PageHeader } from "@/components/ds";
 import { useOnline } from "@/hooks/useOnline";
 import { useNowMs } from "@/hooks/useNowMs";
-import { useSoloFlags } from "@/hooks/useSoloFlags";
 import type { FastSession } from "@/lib/api/fasting";
 import { useDeleteFast, useEditFast, useFastHistory, useFastSummary } from "@/lib/queries/fasting";
 import { deviceTimeZone } from "@/lib/solo/time";
@@ -45,15 +44,14 @@ export function resultLabel(f: FastSession): string {
 
 /** Fasting history (design 06): a week strip with totals from the summary endpoint, then every fast, paged. */
 export function FastHistory() {
-  const flags = useSoloFlags();
   const online = useOnline();
   const nowMs = useNowMs();
   const tz = useMemo(() => deviceTimeZone(), []);
   const today = nowMs === null ? null : dayKeyOf(new Date(nowMs));
   const week = useMemo(() => (today ? weekOfDay(today) : null), [today]);
 
-  const summary = useFastSummary(week?.from ?? "", week?.to ?? "", tz, flags.fasting && !!week);
-  const history = useFastHistory(flags.fasting);
+  const summary = useFastSummary(week?.from ?? "", week?.to ?? "", tz, !!week);
+  const history = useFastHistory();
   const edit = useEditFast();
   const del = useDeleteFast();
   const [editing, setEditing] = useState<FastSession | null>(null);
