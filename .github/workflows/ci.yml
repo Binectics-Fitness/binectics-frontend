@@ -20,6 +20,8 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# The old single job ran tsc and next build one after another. They are now
+# parallel jobs sharing one dependency cache. Required checks: check, build.
 jobs:
   check:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
@@ -27,14 +29,47 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
+        id: node
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      # node_modules is cached, so a warm job skips `npm ci` (about 40-60 s).
+      # npm ci runs only on a miss. Caches saved from a PR are visible to that
+      # PR only; the weekly run on main seeds the cache every PR can read.
+      - name: Restore dependencies
+        id: deps
+        uses: actions/cache@v6
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci
       - run: npx tsc --noEmit
       # Tests run on the developer's machine before every push (the pre-push
       # hook), so PR runs skip them to save Actions minutes. The weekly and
       # manual runs on main still run the full suite.
       - run: npm test
         if: github.event_name != 'pull_request'
+
+  build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        id: node
+        with:
+          node-version: 22
+      # node_modules is cached, so a warm job skips `npm ci` (about 40-60 s).
+      # npm ci runs only on a miss. Caches saved from a PR are visible to that
+      # PR only; the weekly run on main seeds the cache every PR can read.
+      - name: Restore dependencies
+        id: deps
+        uses: actions/cache@v6
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-node${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci
       - run: npx next build
