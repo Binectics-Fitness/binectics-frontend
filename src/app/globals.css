@@ -39,6 +39,26 @@
   --admin: oklch(0.45 0.02 80);
   --admin-soft: oklch(0.93 0.005 85);
 
+  /* Category: what a member tool is about (colour by meaning, owner approval
+     19 Nov 2026). Same lines as binectics-design-system shared.css, so
+     tokens:check keeps them in step. base = the SELECTED chip fill, always
+     with an ink label and a check; -soft = icon tile; -ink = icon on -soft.
+     Tiles and the selected category chip only; weight, notes, the daily list
+     and goals stay neutral. Meta on a tint uses --fg-2 (--fg-3 fails AA).
+     Pick them through src/lib/ui/categories.ts, never by hand in a page. */
+  --fast: var(--trainer);
+  --fast-soft: var(--trainer-soft);
+  --fast-ink: oklch(0.45 0.12 75);
+  --water: oklch(0.74 0.11 232);
+  --water-soft: oklch(0.95 0.03 232);
+  --water-ink: oklch(0.45 0.10 235);
+  --move: oklch(0.76 0.10 180);
+  --move-soft: oklch(0.95 0.035 180);
+  --move-ink: oklch(0.44 0.08 185);
+  --meal: oklch(0.72 0.11 300);
+  --meal-soft: var(--dietitian-soft);
+  --meal-ink: oklch(0.42 0.13 300);
+
   /* Semantic — never decorative */
   --danger: oklch(0.58 0.18 25);
   --danger-soft: oklch(0.95 0.03 25);
@@ -141,6 +161,19 @@
   --color-trainer-soft: oklch(0.95 0.04 75);
   --color-dietitian: oklch(0.58 0.14 300);
   --color-dietitian-soft: oklch(0.95 0.03 300);
+
+  --color-fast: oklch(0.72 0.13 75);
+  --color-fast-soft: oklch(0.95 0.04 75);
+  --color-fast-ink: oklch(0.45 0.12 75);
+  --color-water: oklch(0.74 0.11 232);
+  --color-water-soft: oklch(0.95 0.03 232);
+  --color-water-ink: oklch(0.45 0.10 235);
+  --color-move: oklch(0.76 0.10 180);
+  --color-move-soft: oklch(0.95 0.035 180);
+  --color-move-ink: oklch(0.44 0.08 185);
+  --color-meal: oklch(0.72 0.11 300);
+  --color-meal-soft: oklch(0.95 0.03 300);
+  --color-meal-ink: oklch(0.42 0.13 300);
 
   --color-danger: oklch(0.58 0.18 25);
   --color-danger-soft: oklch(0.95 0.03 25);
@@ -899,4 +932,153 @@ html[data-scroll-locked] body {
 
   .receipt, .invoice, .tax-form { padding: 20mm !important; }
   .page-break { page-break-before: always; }
+}
+
+/* ─── Chips, chip group, toggle, save check, row motion ─────────
+   Web foundations (Nov 2026): the shared forms of 10-System's components,
+   drawn in binectics-plans/design/web-foundations/01-Web-foundations.html
+   and mirroring binectics-mobile Chip / ChipGroup / Toggle / SaveCheck /
+   listMotion. Components: src/components/ds/Chip.tsx, Toggle.tsx,
+   SaveCheck.tsx, src/lib/ui/listMotion.ts. Plain classes, not utilities,
+   so they beat the unlayered `button { color/font-size: inherit }` reset. */
+.bx-chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bx-chip {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
+    color var(--motion-base) var(--ease-out);
+}
+.bx-chip[data-on="true"] {
+  background: var(--chip-fill);
+  border-color: var(--chip-fill);
+  color: var(--chip-label);
+}
+.bx-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bx-chip:disabled { opacity: 0.5; cursor: default; }
+.bx-chip-icon { display: inline-flex; flex: none; color: var(--chip-icon, var(--fg-2)); }
+.bx-chip[data-on="true"] .bx-chip-icon { color: inherit; }
+.bx-chip-check { animation: bx-chip-check var(--motion-fast) var(--ease-out) both; }
+@keyframes bx-chip-check {
+  from { transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+/* A measured group: the chips go see-through over their paper plates, and
+   ONE pill under them carries the selection, sliding to the new chip. */
+.bx-chip-plate,
+.bx-chip-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: var(--r-full);
+  pointer-events: none;
+  display: none;
+}
+.bx-chips[data-slide="on"] > .bx-chip-plate,
+.bx-chips[data-slide="on"] > .bx-chip-pill { display: block; }
+.bx-chip-plate { background: var(--bg); border: 1px solid var(--border-2); }
+.bx-chip-pill {
+  transition:
+    transform var(--motion-base) var(--ease-out),
+    width var(--motion-base) var(--ease-out),
+    height var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    opacity var(--motion-base) var(--ease-out);
+}
+.bx-chip-pill[data-instant="true"] { transition: none; }
+.bx-chips[data-slide="on"] > .bx-chip,
+.bx-chips[data-slide="on"] > .bx-chip[data-on="true"] {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Toggle: 52x44 hit area, 52x32 track, 26px paper knob. */
+.bx-toggle {
+  width: 52px;
+  height: 44px;
+  position: relative;
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.bx-toggle::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 52px;
+  height: 32px;
+  border-radius: var(--r-full);
+  background: var(--border-2);
+  transition: background-color 200ms var(--ease-out);
+}
+.bx-toggle::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-full);
+  background: var(--bg);
+  transition: transform 200ms var(--ease-out);
+}
+.bx-toggle[aria-checked="true"]::before { background: var(--ink); }
+.bx-toggle[aria-checked="true"]::after { transform: translateX(20px); }
+.bx-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bx-toggle:disabled { opacity: 0.5; cursor: default; }
+
+/* Save check: strokes on once a save lands, then holds. */
+.bx-save-check path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 0;
+  animation: bx-save-draw 300ms var(--ease-out) both;
+}
+@keyframes bx-save-draw {
+  from { stroke-dashoffset: 22; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* A row that arrives after its list is on screen: fade in, rise 8px. */
+.bx-row-enter { animation: bx-row-rise 180ms var(--ease-out) both; }
+@keyframes bx-row-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bx-row-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx-chip,
+  .bx-chip-pill,
+  .bx-toggle::before,
+  .bx-toggle::after { transition: none; }
+  .bx-chip-check,
+  .bx-save-check path { animation: none; }
+  /* Still shows the change: a 200ms fade, no rise. Class selectors with
+     !important, because the global `*` rule above cuts every animation to
+     0.01ms. */
+  .bx-row-enter { animation: bx-row-fade 200ms ease-out both !important; animation-delay: 0ms !important; }
 }

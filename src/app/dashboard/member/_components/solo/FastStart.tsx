@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DSCard } from "@/components/ds";
+import { ChipGroup, DSCard } from "@/components/ds";
 import { DEFAULT_PRESET, PRESET_OPTIONS, HOUR_MS, START_MAX_PAST_MS, fromLocalInput, parseCustomHours, presetHint, relativeDay, startProblem, timeOfDay, toLocalInput } from "@/lib/solo/fastingRules";
 import type { FastingPresetKey, StartFastInput } from "@/lib/api/fasting";
 import { CUSTOM_LABEL, EARLIER_LABEL, START_BUTTON, START_CAP_NOTE, START_EARLIER, START_FOOT, START_NOW, START_STEP, START_TITLE } from "@/lib/solo/fastingCopy";
@@ -80,20 +80,17 @@ export function FastStart({
         {START_TITLE}
       </h2>
 
-      <div className={`${styles.chips} mt-3`} role="group" aria-label="Fast length">
-        {PRESET_OPTIONS.map((p) => (
-          <button
-            key={p.key}
-            type="button"
-            className={styles.pill}
-            aria-pressed={preset === p.key}
-            aria-label={p.key === "one_meal" ? "One meal a day" : p.key === "custom" ? "Custom length" : `${p.hours} hours`}
-            onClick={() => setPreset(p.key)}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+      <ChipGroup
+        className="mt-3"
+        label="Fast length"
+        options={PRESET_OPTIONS.map((p) => ({
+          value: p.key,
+          label: p.label,
+          ariaLabel: p.key === "one_meal" ? "One meal a day" : p.key === "custom" ? "Custom length" : `${p.hours} hours`,
+        }))}
+        value={preset}
+        onChange={setPreset}
+      />
 
       {preset === "custom" && (
         <div className="mt-3 flex flex-wrap items-end gap-2">

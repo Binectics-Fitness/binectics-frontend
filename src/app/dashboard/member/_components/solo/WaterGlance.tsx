@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { DSCard } from "@/components/ds";
+import { ChipGroup, DSCard } from "@/components/ds";
 import { useOnline, OFFLINE_WRITE_MESSAGE } from "@/hooks/useOnline";
 import { useSeries } from "@/lib/queries/glance";
 import { useWaterCounter } from "@/lib/queries/solo";
@@ -21,7 +21,6 @@ import { dayKeyOf, railPosition, waterStats, windowOf } from "@/lib/solo/glance"
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { deviceTimeZone } from "@/lib/solo/time";
 import { CardSkeleton, Rail, WriteError } from "./parts";
-import styles from "./fasting.module.css";
 
 /**
  * Water, "sentence and rail": one sentence for today (and the aim, if the
@@ -114,13 +113,15 @@ export function WaterGlance() {
               <h3 className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
                 {WATER_GLANCE_COPY.usualEyebrow}
               </h3>
-              <div className={styles.chips} role="group" aria-label="Usual day period">
-                {(["week", "weeks4"] as WaterSpan[]).map((s) => (
-                  <button key={s} type="button" className={styles.pill} aria-pressed={span === s} onClick={() => setSpan(s)}>
-                    {s === "week" ? WATER_GLANCE_COPY.chipWeek : WATER_GLANCE_COPY.chip4Weeks}
-                  </button>
-                ))}
-              </div>
+              <ChipGroup
+                label="Usual day period"
+                options={(["week", "weeks4"] as WaterSpan[]).map((s) => ({
+                  value: s,
+                  label: s === "week" ? WATER_GLANCE_COPY.chipWeek : WATER_GLANCE_COPY.chip4Weeks,
+                }))}
+                value={span}
+                onChange={setSpan}
+              />
             </div>
             {series.isLoading ? (
               <div className="mt-2">

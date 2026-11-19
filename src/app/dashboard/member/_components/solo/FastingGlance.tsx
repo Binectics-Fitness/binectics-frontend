@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { DSCard } from "@/components/ds";
+import { ChipGroup, DSCard } from "@/components/ds";
 import { useOnline } from "@/hooks/useOnline";
 import type { FastingWindow } from "@/lib/api/memberTargets";
 import { useSeries } from "@/lib/queries/glance";
@@ -58,22 +58,18 @@ export function FastingGlance({ window: ownWindow }: { window: FastingWindow | n
         <h2 className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
           Fasting · last {span} days
         </h2>
-        <div className={styles.chips} role="group" aria-label="Fasting period">
-          {([7, 30] as FastingSpan[]).map((n) => (
-            <button
-              key={n}
-              type="button"
-              className={styles.pill}
-              aria-pressed={span === n}
-              onClick={() => {
-                setSpan(n);
-                setPicked(null);
-              }}
-            >
-              {n === 7 ? FASTING_GLANCE_COPY.chip7 : FASTING_GLANCE_COPY.chip30}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          label="Fasting period"
+          options={([7, 30] as FastingSpan[]).map((n) => ({
+            value: String(n),
+            label: n === 7 ? FASTING_GLANCE_COPY.chip7 : FASTING_GLANCE_COPY.chip30,
+          }))}
+          value={String(span)}
+          onChange={(v) => {
+            setSpan(Number(v) as FastingSpan);
+            setPicked(null);
+          }}
+        />
       </div>
 
       {series.isLoading ? (

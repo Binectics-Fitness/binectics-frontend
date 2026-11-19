@@ -425,6 +425,22 @@ describe("targets", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save target" }));
     await waitFor(() => expect(targetsApi.update).toHaveBeenCalledWith({ weight_range: { min_kg: 69, max_kg: 71.5 } }));
     expect(await screen.findByText("Target saved")).toBeInTheDocument();
+    // The save check draws inside the button only once the save has landed.
+    expect(screen.getByRole("button", { name: "Save changes" }).querySelector("[data-testid=save-check]")).not.toBeNull();
+  });
+
+  it("the target chips: weight stays neutral, fasting and water take their category with a check", async () => {
+    renderTargets();
+    await screen.findByDisplayValue("69");
+    expect(screen.getByRole("group", { name: "Which target" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Weight" }).dataset.category).toBeUndefined();
+    expect(screen.queryByTestId("save-check")).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Fasting" }));
+    const fasting = screen.getByRole("button", { name: "Fasting" });
+    expect(fasting).toHaveAttribute("aria-pressed", "true");
+    expect(fasting.dataset.category).toBe("fast");
+    expect(fasting.querySelector("[data-testid=chip-check]")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Water" }).dataset.category).toBe("water");
   });
 
   it("the preview never shows a percent, a pass mark or a distance", async () => {

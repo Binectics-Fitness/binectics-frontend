@@ -11,6 +11,7 @@ import { useClientNow } from "@/lib/ui/useClientNow";
 import { recentWeights, signedKg, weightChange30d } from "../_lib/logStats";
 import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
+import { useRowEnter } from "@/lib/ui/listMotion";
 
 export default function WeightLogPage() {
   const { user } = useAuth();
@@ -21,6 +22,8 @@ export default function WeightLogPage() {
   const logs = useMemo(() => loadedLogs ?? [], [loadedLogs]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // A weight logged on this page rises into the list; the first load stays still.
+  const rowEnter = useRowEnter(logs.map((l) => l._id), !loading && loadedLogs !== null);
   const [logOpen, setLogOpen] = useState(false);
   const [logWeight, setLogWeight] = useState("");
   const [logSaving, setLogSaving] = useState(false);
@@ -297,8 +300,9 @@ export default function WeightLogPage() {
             <ul className="flex flex-col gap-1.5">
               {logs.map((log) => {
                 const by = loggedByName(log);
+                const enter = rowEnter(log._id);
                 return (
-                  <li key={log._id}>
+                  <li key={log._id} className={enter.className} style={enter.style}>
                     <ListRow
                       title={`${log.weight_kg.toFixed(1)} kg`}
                       meta={[
