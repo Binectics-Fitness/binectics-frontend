@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
-import { DSCard, PageHeader } from "@/components/ds";
+import { ChipGroup, DSCard, PageHeader, SaveCheck } from "@/components/ds";
+import { TARGET_CATEGORY, TARGET_ICON } from "@/lib/ui/categories";
 import { useOnline, OFFLINE_WRITE_MESSAGE } from "@/hooks/useOnline";
 import {
   FASTING_BOUNDS,
@@ -144,13 +145,12 @@ export function TargetsContent() {
         </DSCard>
       ) : (
         <DSCard className="max-w-[760px] p-6">
-          <div className={styles.chips} role="group" aria-label="Which target">
-            {TABS.map((t) => (
-              <button key={t.key} type="button" className={styles.pill} aria-pressed={tab === t.key} onClick={() => setTab(t.key)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <ChipGroup
+            label="Which target"
+            options={TABS.map((t) => ({ value: t.key, label: t.label, category: TARGET_CATEGORY[t.key], icon: TARGET_ICON[t.key] }))}
+            value={tab}
+            onChange={setTab}
+          />
           <div className="mt-5">
             {tab === "weight" && <WeightForm targets={targets.data} online={online} />}
             {tab === "fasting" && <FastingForm targets={targets.data} online={online} />}
@@ -197,6 +197,8 @@ function SaveRow({
       {message?.kind === "error" && <WriteError message={message.text} />}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button type="button" className="btn-primary-v2" style={{ height: 44 }} disabled={!!invalid || pending || !online} onClick={onSave}>
+          {/* Drawn once the save has landed, then held with the status line. */}
+          {message?.kind === "saved" && <SaveCheck />}
           {has ? "Save changes" : TARGETS_COPY.save}
         </button>
         {has && (

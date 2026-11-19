@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Toggle } from "@/components/ds/Toggle";
 import styles from "./solo.module.css";
 
 const CHECK = (
@@ -37,28 +38,9 @@ export function AutoTick({ done, label }: { done: boolean; label: string }) {
   );
 }
 
-export function Switch({
-  on,
-  label,
-  onChange,
-  disabled,
-}: {
-  on: boolean;
-  label: string;
-  onChange: (next: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      disabled={disabled}
-      className={`${styles.switch} ${on ? styles.switchOn : ""}`}
-      onClick={() => onChange(!on)}
-    />
-  );
+/** The solo pages' on/off switch: the design system's Toggle. */
+export function Switch(props: { on: boolean; label: string; onChange: (next: boolean) => void; disabled?: boolean }) {
+  return <Toggle {...props} />;
 }
 
 export function Rail({ fill, aimAt, label }: { fill: number; aimAt: number | null; label: string }) {

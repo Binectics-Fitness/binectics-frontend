@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { DSCard } from "@/components/ds";
+import { ChipGroup, DSCard } from "@/components/ds";
 import { useOnline } from "@/hooks/useOnline";
 import type { ComparePeriod, WeightCompare } from "@/lib/api/memberSeries";
 import type { MemberTargets } from "@/lib/api/memberTargets";
@@ -78,13 +78,12 @@ export function WeightGlance({ targets }: { targets: MemberTargets | null }) {
         <h2 id="weight-glance-title" className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
           {WEIGHT_COPY.title} · weekly average
         </h2>
-        <div className={styles.chips} role="group" aria-label={WEIGHT_COPY.rangeGroupLabel}>
-          {PERIODS.map((p) => (
-            <button key={p} type="button" className={styles.pill} aria-pressed={period === p} onClick={() => setPeriod(p)}>
-              {WEIGHT_PERIODS[p].chip}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          label={WEIGHT_COPY.rangeGroupLabel}
+          options={PERIODS.map((p) => ({ value: p, label: WEIGHT_PERIODS[p].chip }))}
+          value={period}
+          onChange={setPeriod}
+        />
       </div>
 
       {compare.isLoading ? (
