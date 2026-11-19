@@ -27,15 +27,21 @@
   --signal-ink: oklch(0.22 0.05 148);
   --signal-soft: oklch(0.94 0.04 148);
 
-  /* Role accents — matched chroma + lightness so dashboards harmonize */
+  /* Role accents — matched chroma + lightness so dashboards harmonize.
+     Each role has three steps, as in shared.css: base (dots, fills, borders),
+     -soft (badge background), -ink (text or icon on -soft). */
   --consumer: oklch(0.58 0.14 320);
   --consumer-soft: oklch(0.94 0.03 320);
+  --consumer-ink: oklch(0.42 0.05 320);
   --gym: oklch(0.58 0.14 248);
   --gym-soft: oklch(0.94 0.03 248);
+  --gym-ink: oklch(0.42 0.05 248);
   --trainer: oklch(0.72 0.13 75);
   --trainer-soft: oklch(0.95 0.04 75);
+  --trainer-ink: oklch(0.43 0.04 75);
   --dietitian: oklch(0.58 0.14 300);
   --dietitian-soft: oklch(0.95 0.03 300);
+  --dietitian-ink: oklch(0.43 0.05 300);
   --admin: oklch(0.45 0.02 80);
   --admin-soft: oklch(0.93 0.005 85);
 
@@ -59,19 +65,15 @@
   --meal-soft: var(--dietitian-soft);
   --meal-ink: oklch(0.42 0.13 300);
 
-  /* Semantic — never decorative */
+  /* Semantic — never decorative. Hue ramp danger 25 -> warn 45 -> trainer 75
+     (shared.css), so a warning never reads as the trainer accent. -ink is
+     text or an icon on -soft, and also small text on --bg (8:1). */
   --danger: oklch(0.58 0.18 25);
   --danger-soft: oklch(0.95 0.03 25);
-  --warn: oklch(0.72 0.14 75);
-  /* Ink pairs for soft fills. Not shared.css variables, but the literals the
-     design system already draws these badges with, named so the tone set
-     (src/lib/ui/tones.ts) can use them:
-       --warn-soft / --warn-ink  binectics/notifications.html `.pill.warn`
-       --trainer-ink             shared.css `.badge-trainer` text (--trainer
-                                 is too light to read on --trainer-soft). */
-  --warn-soft: oklch(0.96 0.06 75);
-  --warn-ink: oklch(0.45 0.16 75);
-  --trainer-ink: oklch(0.45 0.12 75);
+  --danger-ink: oklch(0.43 0.06 25);
+  --warn: oklch(0.70 0.17 45);
+  --warn-soft: oklch(0.95 0.04 45);
+  --warn-ink: oklch(0.43 0.06 45);
   /* Dark surface (on --ink). App-only, not in shared.css yet: the literals
      binectics/member-streaks.html draws its streak hero with, named so the
      dark hero card, progress track and check-in takeover share one set.
@@ -82,9 +84,6 @@
   --ink-2: oklch(0.30 0.008 80);
   --on-ink-2: oklch(0.85 0.005 85);
   --on-ink-3: oklch(0.75 0.005 85);
-  /* Danger as small TEXT (deltas). --danger is 4.49:1 on --bg, just under
-     AA; this is the same hue one step darker (5.09:1 on --bg, 4.80 on --bg-2). */
-  --danger-ink: oklch(0.55 0.18 25);
 
   /* Stacking: the check-in takeover sits above every fixed app layer
      (cookie banner 7000–9000, toasts/drawers 9998–9999). */
@@ -93,7 +92,7 @@
   /* Typography */
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
-  --font-serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
 
   /* Radii — disciplined, barely rounded */
   --r-1: 3px;

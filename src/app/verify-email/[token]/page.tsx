@@ -122,7 +122,7 @@ export default function VerifyEmailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)" }}>
         <div className="w-full max-w-sm text-center">
-          <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "oklch(0.96 0.06 75)", color: "var(--warn)" }}>
+          <div className="mb-5 w-12 h-12 mx-auto rounded-full flex items-center justify-center" style={{ background: "var(--warn-soft)", color: "var(--warn-ink)" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
             </svg>
