@@ -173,4 +173,14 @@ describe("result formatting", () => {
     expect(resultValue(item({ auto: water, status: "done", auto_evidence: { value: 1, local_day: "d", withdrawn: false } }))?.text).toBe("1 glass");
     expect(resultMeta(item({ type: "measurement" }))).toBe("Measurement");
   });
+
+  it("words a fast as the member app does: hours and zero-padded minutes", () => {
+    expect(C.hours(16.3)).toBe("16 h 18 min");
+    expect(C.hours(17)).toBe("17 h 00 min");
+    expect(C.hours(16.1)).toBe("16 h 06 min");
+    expect(C.hours(14.7)).toBe("14 h 42 min");
+    expect(C.hours(0.5)).toBe("30 min");
+    expect(C.hours(0)).toBe("0 min");
+    expect(resultValue(item({ auto: fast, status: "done", auto_evidence: { value: 16.3, local_day: "d", withdrawn: false } }))?.text).toBe("16 h 18 min");
+  });
 });

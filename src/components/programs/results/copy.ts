@@ -25,7 +25,18 @@ export const RESULTS_COPY = {
   dayCount: (done: number, total: number) => `${done} of ${total} done`,
   targetHours: (n: number) => `target ${n} h`,
   targetGlasses: (n: number) => `target ${n} glasses`,
-  hours: (v: number) => `${v.toFixed(1)} h`,
+  /**
+   * A fast's length the way the member app words it (binectics-mobile
+   * src/utils/fasting.ts durationText): "16 h 18 min", "17 h 00 min",
+   * "45 min". The API sends hours to 0.1, so minutes come in steps of 6;
+   * rounding to the nearest minute only removes float noise (16.3 * 60).
+   */
+  hours: (v: number) => {
+    const total = Math.max(0, Math.round(v * 60));
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return h === 0 ? `${m} min` : `${h} h ${String(m).padStart(2, "0")} min`;
+  },
   glasses: (v: number) => (v === 1 ? "1 glass" : `${v} glasses`),
   soFar: (v: number) => `${v} so far`,
   range: (days: number) => `${days} days`,
