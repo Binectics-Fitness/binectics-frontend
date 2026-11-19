@@ -14,6 +14,8 @@ import type {
   FacilityItem,
   FacilityStatus,
   MarketplaceListing,
+  ListingPriceCadence,
+  ListingPriceDisplay,
   MarketplaceRequest,
   MarketplaceSearchParams,
   MarketplaceSearchResult,
@@ -211,6 +213,9 @@ export interface CreateListingRequest {
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
+  price_cadence?: ListingPriceCadence;
+  /** Solo listings: "auto" (cheapest session) or "custom" (the typed price). */
+  price_display?: ListingPriceDisplay;
   accepting_clients?: boolean;
   max_clients?: number;
 }
@@ -234,6 +239,9 @@ export interface UpdateListingRequest {
   /** Minor units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
+  price_cadence?: ListingPriceCadence;
+  /** Solo listings: "auto" (cheapest session) or "custom" (the typed price). */
+  price_display?: ListingPriceDisplay;
   accepting_clients?: boolean;
   max_clients?: number;
 }
@@ -286,6 +294,27 @@ export interface CreateOrgMembershipPlanRequest {
   compare_to_plan_id?: string | null;
   /** Saving shown against compare_to_plan_id, whole percent 0–90. */
   discount_percent?: number;
+  /**
+   * The listing (location) that sells the plan. Required by the API when the
+   * organization has two or more listings; defaulted when it has one.
+   */
+  listing_id?: string;
+}
+
+/** One of an organization's listings, as the plan form's location picker reads it. */
+export interface OrgLocationListing {
+  _id: string;
+  headline?: string;
+  city?: string;
+  address?: string;
+  is_published?: boolean;
+}
+
+/** GET /marketplace/my-listing/session-price: the cheapest priced session, or null. */
+export interface SessionPrice {
+  /** Minor units (kobo/cents). */
+  price_minor: number;
+  currency: string;
 }
 
 export type UpdateOrgMembershipPlanRequest =
@@ -655,6 +684,13 @@ export const marketplaceService = {
     return await apiClient.get<MarketplaceListing>("/marketplace/my-listing");
   },
 
+  /** What an "auto" listing price shows: the caller's cheapest priced session. */
+  async getMySessionPrice(): Promise<ApiResponse<SessionPrice | null>> {
+    return await apiClient.get<SessionPrice | null>(
+      "/marketplace/my-listing/session-price",
+    );
+  },
+
   async updateMyListing(
     data: UpdateListingRequest,
   ): Promise<ApiResponse<MarketplaceListing>> {
@@ -758,6 +794,15 @@ export const marketplaceService = {
   },
 
   // ─── Membership Plans ───
+
+  /** The organization's listings (one per location), oldest first. */
+  async getOrgLocations(
+    organizationId: string,
+  ): Promise<ApiResponse<OrgLocationListing[]>> {
+    return await apiClient.get<OrgLocationListing[]>(
+      `/marketplace/organizations/${organizationId}/locations`,
+    );
+  },
 
   async getOrgMembershipPlans(
     organizationId: string,

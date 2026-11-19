@@ -92,6 +92,10 @@ export const queryKeys = {
     search: (params?: Record<string, unknown>) =>
       [...queryKeys.marketplace.all, "search", params] as const,
     myListing: () => [...queryKeys.marketplace.all, "myListing"] as const,
+    mySessionPrice: () =>
+      [...queryKeys.marketplace.all, "mySessionPrice"] as const,
+    orgLocations: (orgId: string) =>
+      [...queryKeys.marketplace.all, "orgLocations", orgId] as const,
     saved: () => [...queryKeys.marketplace.all, "saved"] as const,
     savedIds: () => [...queryKeys.marketplace.all, "savedIds"] as const,
     myListings: () => [...queryKeys.marketplace.all, "myListings"] as const,

@@ -17,7 +17,11 @@ import {
   useUpdateOrgListing,
   usePublishOrgListing,
   useCreateOrgListing,
+  useMySessionPrice,
 } from "@/lib/queries/marketplace";
+import { ListingPriceFields, type ListingPriceValue } from "@/components/provider/ListingPriceFields";
+import { LISTING_PRICE_COPY } from "@/lib/marketplace/listingPriceLocationCopy";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { useCountries } from "@/lib/queries/utility";
 import SearchableSelect from "@/components/SearchableSelect";
 import type {
@@ -50,6 +54,10 @@ interface ListingForm {
   specialties: string[];
   certifications: string[];
   accepting_clients: boolean;
+  /** Solo listings: where the "from" price comes from, and the typed one. */
+  price_display: "auto" | "custom";
+  price_from_minor: number | null;
+  price_cadence: "session" | "recurring" | "one_off";
 }
 
 interface AccountForm {
@@ -79,6 +87,9 @@ function seedListing(l: MarketplaceListing): ListingForm {
     specialties: l.specialties ?? [],
     certifications: l.certifications ?? [],
     accepting_clients: l.accepting_clients ?? true,
+    price_display: l.price_display ?? "auto",
+    price_from_minor: l.price_from_minor ?? null,
+    price_cadence: l.price_cadence ?? "session",
   };
 }
 
@@ -90,6 +101,12 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
       : base[k] !== next[k];
     if (changed) (out as Record<string, unknown>)[k] = next[k];
   });
+  // On "auto" the API prices the listing from the sessions; the typed price
+  // is not sent. An empty typed price is never sent as a number.
+  if (next.price_display === "auto" || next.price_from_minor === null) {
+    delete out.price_from_minor;
+    if (next.price_display === "auto") delete out.price_cadence;
+  }
   return out;
 }
 
@@ -150,6 +167,9 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priceText, setPriceText] = useState("");
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const sessionPrice = useMySessionPrice(!isGym && !!listing);
 
   // Seed on first arrival of the listing (render-time adjustment pattern).
   if (listing && listing._id !== seededId) {
@@ -157,6 +177,13 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
     setSeededId(listing._id);
     setBaseline(seeded);
     setForm(seeded);
+    // The field shows the saved price verbatim (re-parsing a formatted
+    // string would round it); the minor value is what is sent.
+    setPriceText(
+      seeded.price_from_minor !== null && listing.currency
+        ? formatMinorForInput(seeded.price_from_minor, { currency: listing.currency })
+        : "",
+    );
   }
   if (user && account === null) {
     const seeded: AccountForm = {
@@ -182,6 +209,12 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
 
   const onSave = async () => {
     if (!dirty || saving) return;
+    // A typed price the card should show (board P4).
+    if (!isGym && form?.price_display === "custom" && form.price_from_minor === null) {
+      setPriceError(LISTING_PRICE_COPY.customPriceError);
+      return;
+    }
+    setPriceError(null);
     setSaving(true);
     setError(null);
     let ok = true;
@@ -189,7 +222,19 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
       const res = isGym
         ? await updateOrg.mutateAsync(listingPayload)
         : await updateSolo.mutateAsync(listingPayload);
-      if (res.success) setBaseline(form);
+      if (res.success) {
+        // The API may re-price the listing ("auto" follows the sessions):
+        // take the saved price back from the response.
+        const saved = res.data
+          ? (({ price_display, price_from_minor, price_cadence }) => ({ price_display, price_from_minor, price_cadence }))(seedListing(res.data))
+          : {};
+        const next = { ...form, ...saved };
+        setBaseline(next);
+        setForm(next);
+        if (res.data && next.price_from_minor !== null && res.data.currency) {
+          setPriceText(formatMinorForInput(next.price_from_minor, { currency: res.data.currency }));
+        }
+      }
       else {
         ok = false;
         setError(res.message || "Couldn't save your profile.");
@@ -339,6 +384,30 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
           <span className="text-[11px] self-end" style={{ color: "var(--fg-4)" }}>{form?.bio.length ?? 0} / 3000</span>
         </div>
       </Card>
+
+      {/* Price on the listing card: solo only, a gym's plans price its listing */}
+      {!isGym && form && (
+        <Card title={LISTING_PRICE_COPY.cardTitle} desc={LISTING_PRICE_COPY.cardDesc}>
+          <ListingPriceFields
+            value={{
+              display: form.price_display,
+              priceText,
+              priceMinor: form.price_from_minor,
+              cadence: form.price_cadence,
+            } satisfies ListingPriceValue}
+            onChange={(v) => {
+              setPriceText(v.priceText);
+              setPriceError(null);
+              setForm((f) =>
+                f ? { ...f, price_display: v.display, price_from_minor: v.priceMinor, price_cadence: v.cadence } : f,
+              );
+            }}
+            sessionPrice={sessionPrice.data ?? null}
+            currency={listing?.currency ?? sessionPrice.data?.currency ?? ""}
+            error={priceError}
+          />
+        </Card>
+      )}
 
       {/* Specializations */}
       <Card title="Specializations & credentials" desc="Shown as tags on your listing. Credentials appear next to your name.">

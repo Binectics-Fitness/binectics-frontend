@@ -309,6 +309,9 @@ export interface PlanComparison {
   discount_percent: number;
 }
 
+export type ListingPriceCadence = "session" | "recurring" | "one_off";
+export type ListingPriceDisplay = "auto" | "custom";
+
 export interface MarketplaceListing {
   _id: string;
   organization_id?: string | { _id: string; name: string; logo?: string };
@@ -345,6 +348,13 @@ export interface MarketplaceListing {
   /** Display "from" price in the currency's MINOR unit (kobo/cents). */
   price_from_minor?: number;
   price_label?: string;
+  /** What price_from_minor buys: one session, a recurring membership, or once. */
+  price_cadence?: ListingPriceCadence;
+  /**
+   * Solo listings: "auto" shows the provider's cheapest priced session and
+   * follows it; "custom" shows the typed price. Organization listings ignore it.
+   */
+  price_display?: ListingPriceDisplay;
   accepting_clients: boolean;
   max_clients?: number;
   is_published: boolean;
