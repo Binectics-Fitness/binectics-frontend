@@ -7,8 +7,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useRegion } from "@/contexts/RegionContext";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
-import { formatCurrency } from "@/utils/format";
-import { minorToMajor } from "@/lib/money/minorMoney";
+import { EXPLORE_CARD_COPY, listingPriceParts } from "@/lib/marketplace/exploreCardCopy";
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import {
@@ -37,6 +36,11 @@ interface Listing {
   /** MINOR units (kobo/cents) — see MarketplaceListing.price_from_minor. */
   price_from_minor?: number;
   price_label?: string;
+  /** How the "from" price repeats (api #350); absent = unknown, no suffix. */
+  price_cadence?: "session" | "recurring" | "one_off";
+  price_period_days?: number;
+  /** A solo provider with their own active free session (api #354). */
+  has_free_intro?: boolean;
   verification_badge?: string;
   average_rating: number;
   review_count: number;
@@ -94,6 +98,48 @@ function listingStatus(l: Listing): { text: string; muted: boolean } {
   if (l.licensed) return { text: "Licensed", muted: false };
   if (l.verification_badge === "none") return { text: "Pending verification", muted: true };
   return { text: "", muted: true };
+}
+
+/**
+ * "From ₦25,000/month": the amount in ink, "From" and the cadence in grey
+ * (board web-explore-card). Falls back to the stored label, then a dash.
+ */
+function CardPrice({ l, big = false }: { l: Listing; big?: boolean }) {
+  const parts = listingPriceParts(l);
+  // <small> would shrink to 80%; the board draws it at the line's size (13px on the featured card).
+  const small = big ? "text-[13px] font-normal" : "text-[length:inherit] font-normal";
+  return (
+    <span
+      className={`font-mono ${big ? "text-[16px]" : "text-[13.5px]"} font-medium whitespace-nowrap`}
+      style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
+      data-testid="card-price"
+    >
+      {parts ? (
+        <>
+          <small className={small} style={{ color: "var(--fg-3)" }}>{EXPLORE_CARD_COPY.from} </small>
+          {parts.amount}
+          {parts.rest && <small className={small} style={{ color: "var(--fg-3)" }}>{parts.rest}</small>}
+        </>
+      ) : (
+        l.price_label || "–"
+      )}
+    </span>
+  );
+}
+
+function FreeFirstSessionTag() {
+  return (
+    <span
+      className="inline-flex items-center h-5 px-1.5 rounded-(--r-1) font-mono text-[10.5px] uppercase tracking-[0.04em]"
+      style={{ background: "var(--signal-soft)", color: "var(--signal-ink)" }}
+    >
+      {EXPLORE_CARD_COPY.freeFirstSession}
+    </span>
+  );
+}
+
+function NotTakingLine() {
+  return <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{EXPLORE_CARD_COPY.notTakingClients}</div>;
 }
 
 /* ─── Design tokens ──────────────────────────────────────── */
@@ -395,10 +441,8 @@ export default function MarketplacePage() {
                 const sub = listingSubline(l);
                 const tags = listingTags(l);
                 const status = listingStatus(l);
-                const price = l.price_from_minor && l.currency
-                  ? formatCurrency(minorToMajor(l.price_from_minor, l.currency), l.currency)
-                  : l.price_label || "–";
-                const per = l.price_label?.replace(/^From\s+\S+\s*/, "") || "plan";
+                // Only `false` says not taking: an older API without the field is accepting.
+                const notTaking = l.accepting_clients === false;
                 const isVerified = l.verification_badge && l.verification_badge !== "none";
                 const photoUrl = l.photos?.[0] || l.profile_image;
 
@@ -450,20 +494,20 @@ export default function MarketplacePage() {
                           <div className="flex flex-col gap-1.5">
                             <div className="text-[22px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
                             <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{l.review_count} reviews · {sub}</div>
+                            {notTaking && <NotTakingLine />}
                             <div className="flex flex-wrap gap-1.25 mt-1">
                               {tags.map((t) => (
                                 <span key={t} className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--fg-2)" }}>{t}</span>
                               ))}
                             </div>
                           </div>
-                          <div className="flex flex-col gap-1.5 items-end text-right">
+                          <div className="flex flex-col gap-1.5 items-start sm:items-end text-left sm:text-right">
                             <div className="flex items-center gap-1.5 text-[12.5px]">
                               <span style={{ color: "var(--ink)" }}><Star /></span>
                               <span style={{ color: "var(--ink)", fontWeight: 500 }}>{l.average_rating || "–"}</span>
                             </div>
-                            <span className="font-mono text-[16px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
-                              {price} <small className="text-[13px] font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
-                            </span>
+                            <CardPrice l={l} big />
+                            {l.has_free_intro && <FreeFirstSessionTag />}
                             <span className="btn-primary-v2 sm">View profile →</span>
                           </div>
                         </div>
@@ -476,16 +520,18 @@ export default function MarketplacePage() {
                           </div>
                           <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
                           <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{sub}</div>
+                          {notTaking && <NotTakingLine />}
                           <div className="flex flex-wrap gap-1.25 mt-1">
                             {tags.map((t) => (
                               <span key={t} className="inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium bg-bg-3 border border-border" style={{ color: "var(--fg-2)" }}>{t}</span>
                             ))}
                           </div>
-                          <div className="flex justify-between items-center mt-2 pt-3 border-t border-border">
-                            <span className="font-mono text-[13.5px] font-medium" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
-                              {price} <small className="font-normal" style={{ color: "var(--fg-3)" }}>/ {per}</small>
-                            </span>
-                            <span className="font-mono text-[11.5px]" style={{ color: status.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>
+                          <div className="flex flex-wrap justify-between items-start gap-x-2 gap-y-1 mt-2 pt-3 border-t border-border">
+                            <div className="flex flex-col items-start gap-1.5">
+                              <CardPrice l={l} />
+                              {l.has_free_intro && <FreeFirstSessionTag />}
+                            </div>
+                            <span className="ml-auto whitespace-nowrap font-mono text-[11.5px] leading-5" style={{ color: status.muted ? "var(--fg-3)" : "var(--signal-ink)" }}>
                               {status.text}
                             </span>
                           </div>
