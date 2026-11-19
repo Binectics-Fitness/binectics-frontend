@@ -16,8 +16,15 @@ import type {
   ProgramPhase,
   ProgramTemplateVersion,
   ProgramExercise,
+  ProgramAutoRule,
   GoalDirection,
 } from "@/lib/api/programs";
+import {
+  OWN_LOG_COPY,
+  isOwnLogMetric,
+  parseOwnLogThreshold,
+  type OwnLogMetric,
+} from "./ownLogRules";
 import {
   MAX_INLINE_EXERCISES,
   PROGRAM_EXERCISE_NAME_MAX,
@@ -106,6 +113,15 @@ export interface BlockFormRow {
   start_offset_days: string;
   duration_days: string;
   times_per_week: string;
+  /** Habit only: "" for none, or the client's own log that ticks it. */
+  own_log_metric: OwnLogMetric | "";
+  /** The own-log target as typed (whole hours or glasses). */
+  own_log_threshold: string;
+  /**
+   * Any other auto rule (a health-app rule made through the API), carried
+   * through untouched so editing a program never drops it.
+   */
+  kept_auto_rule?: ProgramAutoRule;
 }
 
 export interface PhaseFormRow {
@@ -151,6 +167,8 @@ export function emptyBlockRow(
     start_offset_days: "",
     duration_days: "",
     times_per_week: "",
+    own_log_metric: "",
+    own_log_threshold: "",
   };
 }
 
@@ -263,7 +281,39 @@ function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
     const exercises = exerciseRowsToPayload(row.exercises);
     if (exercises.length > 0) block.exercises = exercises;
   }
+  const own = ownLogRule(row);
+  if (own) {
+    block.auto_rule = own;
+    if (!block.title) block.title = OWN_LOG_COPY.defaultTitle[own.metric as OwnLogMetric](own.threshold!);
+  } else if (row.kept_auto_rule && !(row.type === "habit" && row.own_log_metric)) {
+    block.auto_rule = row.kept_auto_rule;
+  }
   return block;
+}
+
+/** The own-log rule a habit row asks for, or null (none, or an invalid number). */
+function ownLogRule(row: BlockFormRow): ProgramAutoRule | null {
+  if (row.type !== "habit" || !row.own_log_metric) return null;
+  const threshold = parseOwnLogThreshold(row.own_log_metric, row.own_log_threshold);
+  if (threshold === null) return null;
+  return { metric: row.own_log_metric, comparator: "gte", threshold, window: "scheduled_day" };
+}
+
+/**
+ * Habit tasks that tick themselves from a fast or water log but whose number
+ * is blank, fractional or out of bounds, as "phase N, task M" labels.
+ */
+export function blocksWithBadOwnLogNumber(rows: PhaseFormRow[]): string[] {
+  const bad: string[] = [];
+  rows.forEach((phase, pi) =>
+    phase.blocks.forEach((b, bi) => {
+      if (b.type !== "habit" || !b.own_log_metric) return;
+      if (parseOwnLogThreshold(b.own_log_metric, b.own_log_threshold) === null) {
+        bad.push(`phase ${pi + 1}, task ${bi + 1}`);
+      }
+    }),
+  );
+  return bad;
 }
 
 /**
@@ -273,6 +323,7 @@ function blockRowToPayload(row: BlockFormRow, order: number): ProgramBlock {
 function blockHasContent(row: BlockFormRow): boolean {
   return (
     row.title.trim().length > 0 ||
+    ownLogRule(row) !== null ||
     (row.type === "measurement" && row.metric.trim().length > 0) ||
     (row.type === "meal_plan" && row.meal_plan_id.trim().length > 0) ||
     (row.type === "form" && row.form_id.trim().length > 0) ||
@@ -399,6 +450,7 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
           start_offset_days: numToStr(b.start_offset_days),
           duration_days: numToStr(b.duration_days),
           times_per_week: numToStr(b.times_per_week),
+          ...autoRuleToForm(b.type, b.auto_rule),
         })),
     }));
   return {
@@ -418,6 +470,20 @@ export function versionToForm(v: ProgramTemplateVersion): ProgramFormState {
       target: numToStr(g.target),
       target_offset_days: numToStr(g.target_offset_days),
     })),
+  };
+}
+
+function autoRuleToForm(
+  type: ProgramBlock["type"],
+  rule: ProgramAutoRule | undefined,
+): Pick<BlockFormRow, "own_log_metric" | "own_log_threshold" | "kept_auto_rule"> {
+  if (rule && type === "habit" && isOwnLogMetric(rule.metric)) {
+    return { own_log_metric: rule.metric, own_log_threshold: numToStr(rule.threshold) };
+  }
+  return {
+    own_log_metric: "",
+    own_log_threshold: "",
+    ...(rule ? { kept_auto_rule: rule } : {}),
   };
 }
 

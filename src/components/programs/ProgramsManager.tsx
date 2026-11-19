@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
@@ -25,6 +25,13 @@ import WorkoutExercisesEditor from "./WorkoutExercisesEditor";
 import { leftoverProtocolsText } from "./protocol-retirement";
 import type { ProgramsRoleConfig } from "./config";
 import {
+  OWN_LOG_BOUNDS,
+  OWN_LOG_COPY,
+  OWN_LOG_METRICS,
+  parseOwnLogThreshold,
+  type OwnLogMetric,
+} from "./ownLogRules";
+import {
   programsService,
   type ProgramTemplate,
   type ProgramComponentType,
@@ -43,6 +50,7 @@ import {
   MAX_CATCH_UP_DAYS,
   EMPTY_PROGRAM_FORM,
   blocksMissingContent,
+  blocksWithBadOwnLogNumber,
   emptyPhaseRow,
   emptyBlockRow,
   emptyGoalRow,
@@ -95,6 +103,77 @@ function IconButton({
   );
 }
 
+/**
+ * A habit task that ticks itself from the client's own fasting or water log.
+ * What the coach gets is said right beside it (owner ruling, 19 Nov 2026).
+ */
+function OwnLogRuleFields({
+  block,
+  showErrors,
+  onChange,
+}: {
+  block: BlockFormRow;
+  showErrors: boolean;
+  onChange: (patch: Partial<BlockFormRow>) => void;
+}) {
+  const metric = block.own_log_metric;
+  const raw = block.own_log_threshold;
+  const invalid =
+    metric !== "" && (showErrors || raw.trim() !== "") && parseOwnLogThreshold(metric, raw) === null;
+  const errorId = useId();
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="col-span-2 flex flex-col gap-1">
+          <FieldLabel>{OWN_LOG_COPY.label}</FieldLabel>
+          <SearchableSelect
+            value={metric}
+            onChange={(v) => onChange({ own_log_metric: v as OwnLogMetric | "" })}
+            options={[
+              { label: OWN_LOG_COPY.none, value: "" },
+              ...OWN_LOG_METRICS.map((m) => ({ label: OWN_LOG_COPY.option[m], value: m })),
+            ]}
+          />
+        </div>
+        {metric !== "" && (
+          <div className="flex flex-col gap-1">
+            <FieldLabel>{OWN_LOG_COPY.thresholdLabel[metric]}</FieldLabel>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={OWN_LOG_BOUNDS[metric].min}
+              max={OWN_LOG_BOUNDS[metric].max}
+              step={1}
+              value={raw}
+              onChange={(e) => onChange({ own_log_threshold: e.target.value })}
+              aria-label={OWN_LOG_COPY.thresholdLabel[metric]}
+              aria-invalid={invalid || undefined}
+              aria-describedby={invalid ? errorId : undefined}
+              placeholder={metric === "fasting_hours" ? "16" : "8"}
+              className="h-9 rounded-(--r-2) px-3 text-[13px]"
+              style={{
+                ...fieldStyle,
+                fontVariantNumeric: "tabular-nums",
+                ...(invalid ? { border: "1px solid var(--danger)" } : {}),
+              }}
+            />
+          </div>
+        )}
+      </div>
+      {invalid && (
+        <span id={errorId} className="text-[12px]" style={{ color: "var(--danger)" }}>
+          {OWN_LOG_COPY.boundsError[metric as OwnLogMetric]}
+        </span>
+      )}
+      {metric !== "" && (
+        <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+          {OWN_LOG_COPY.privacy[metric]} {OWN_LOG_COPY.clientSees}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function clientName(c: ClientProfile): string {
   if (typeof c.client_id === "object" && c.client_id !== null) {
     return `${c.client_id.first_name} ${c.client_id.last_name}`.trim();
@@ -136,6 +215,8 @@ function ProgramFormModal({
 }) {
   const [form, setForm] = useState<ProgramFormState>(initial);
   const [saving, setSaving] = useState(false);
+  // After a refused save, every own-log number says what's wrong, even blank.
+  const [triedSave, setTriedSave] = useState(false);
   const [mealPlans, setMealPlans] = useState<{ label: string; value: string }[]>([]);
   const [mealPlansLoading, setMealPlansLoading] = useState(true);
   const [forms, setForms] = useState<{ label: string; value: string }[]>([]);
@@ -243,6 +324,12 @@ function ProgramFormModal({
     const missing = blocksMissingContent(form.phases);
     if (missing.length > 0) {
       toast.error(`Link content to ${missing.join("; ")} before saving.`);
+      return;
+    }
+    const badNumbers = blocksWithBadOwnLogNumber(form.phases);
+    if (badNumbers.length > 0) {
+      setTriedSave(true);
+      toast.error(OWN_LOG_COPY.saveError(badNumbers.join("; ")));
       return;
     }
     setSaving(true);
@@ -412,7 +499,13 @@ function ProgramFormModal({
                           <div className="w-[130px] shrink-0">
                             <SearchableSelect
                               value={block.type}
-                              onChange={(v) => setBlock(pi, bi, { type: v as ProgramComponentType })}
+                              // A rule made for the old type wouldn't fit the new one.
+                              onChange={(v) =>
+                                setBlock(pi, bi, {
+                                  type: v as ProgramComponentType,
+                                  ...(v !== block.type ? { kept_auto_rule: undefined } : {}),
+                                })
+                              }
                               options={
                                 // A type the builder doesn't offer (a workout plan task
                                 // made through the API) stays selectable on its own block.
@@ -508,6 +601,18 @@ function ProgramFormModal({
                             />
                           </div>
                         )}
+
+                        {block.kept_auto_rule ? (
+                          <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                            {OWN_LOG_COPY.keptRule}
+                          </div>
+                        ) : block.type === "habit" ? (
+                          <OwnLogRuleFields
+                            block={block}
+                            showErrors={triedSave}
+                            onChange={(patch) => setBlock(pi, bi, patch)}
+                          />
+                        ) : null}
 
                         {block.type === "meal_plan" && (
                           <div className="flex flex-col gap-1">

@@ -57,6 +57,32 @@ export interface ProgramExercise {
   media_id?: string;
 }
 
+/**
+ * A rule that completes (habit, workout_plan) or fills (measurement) a task
+ * by itself. Health-app metrics come from connected apps; `fasting_hours` and
+ * `water_glasses` come from the client's own logs in Binectics (habit only,
+ * `gte` only, the task's own day only).
+ */
+export type ProgramAutoRuleMetric =
+  | "steps"
+  | "sleep_minutes"
+  | "resting_hr_bpm"
+  | "weight_kg"
+  | "exercise_minutes"
+  | "exercise_session"
+  | "fasting_hours"
+  | "water_glasses";
+
+export interface ProgramAutoRule {
+  metric: ProgramAutoRuleMetric;
+  comparator: "gte" | "lte" | "any";
+  threshold?: number;
+  window?: "scheduled_day" | "open_window";
+  activity_types?: string[];
+  sources?: string[];
+  recording_methods?: string[];
+}
+
 export interface ProgramBlock {
   _id?: string;
   type: ProgramComponentType;
@@ -74,6 +100,8 @@ export interface ProgramBlock {
   exercises?: ProgramExercise[];
   /** Form (questionnaire) the client fills in to complete a form task. */
   form_id?: string;
+  /** Completes or fills the task by itself (see ProgramAutoRule). */
+  auto_rule?: ProgramAutoRule;
 }
 
 export interface ProgramPhase {
