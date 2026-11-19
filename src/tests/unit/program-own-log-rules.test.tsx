@@ -13,6 +13,7 @@ import {
 } from "@/components/programs/mapper";
 import { OWN_LOG_COPY, parseOwnLogThreshold } from "@/components/programs/ownLogRules";
 import { programsService, type ProgramTemplateVersion } from "@/lib/api/programs";
+import { providerBillingApi } from "@/lib/api/providerBilling";
 import { progressService } from "@/lib/api/progress";
 import { formsService } from "@/lib/api/forms";
 import { toast } from "@/components/Toast";
@@ -31,7 +32,11 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/link", () => ({
   default: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
-vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner1" }, isLoading: false }) }));
+const authState: { user: { id: string; first_name?: string }; isLoading: boolean } = {
+  user: { id: "owner1", first_name: "Tunde" },
+  isLoading: false,
+};
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => authState }));
 const org = { _id: "o1", name: "Iron Temple", owner_id: "owner1", currency: "NGN" };
 const orgState = { currentOrg: org, organizations: [org], isLoading: false };
 vi.mock("@/contexts/OrganizationContext", () => ({
@@ -130,6 +135,7 @@ describe("the template editor", () => {
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [] });
     vi.spyOn(progressService, "getProviderDietPlans").mockResolvedValue({ success: true, data: [] } as never);
     vi.spyOn(formsService, "getMyForms").mockResolvedValue({ success: true, data: [] } as never);
+    authState.user = { id: "owner1", first_name: "Tunde" };
   });
 
   async function openHabit() {
@@ -155,10 +161,10 @@ describe("the template editor", () => {
     const user = await openHabit();
     expect(screen.getByText(OWN_LOG_COPY.label)).toBeInTheDocument();
     await pick(user, OWN_LOG_COPY.option.fasting_hours);
-    expect(screen.getByText(`${OWN_LOG_COPY.privacy.fasting_hours} ${OWN_LOG_COPY.clientSees}`)).toBeInTheDocument();
+    expect(screen.getByText(`${OWN_LOG_COPY.privacy.fasting_hours} ${OWN_LOG_COPY.clientSees("Tunde")}`)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: OWN_LOG_COPY.option.fasting_hours }));
     await user.click(await screen.findByText(OWN_LOG_COPY.option.water_glasses, { selector: "li *, li" }));
-    expect(screen.getByText(`${OWN_LOG_COPY.privacy.water_glasses} ${OWN_LOG_COPY.clientSees}`)).toBeInTheDocument();
+    expect(screen.getByText(`${OWN_LOG_COPY.privacy.water_glasses} ${OWN_LOG_COPY.clientSees("Tunde")}`)).toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.water_glasses })).toBeInTheDocument();
   });
 
@@ -204,5 +210,64 @@ describe("the template editor", () => {
       title: "Fast 16 hours",
       auto_rule: { metric: "fasting_hours", comparator: "gte", threshold: 16, window: "scheduled_day" },
     });
+  });
+});
+
+describe("copy", () => {
+  it("names the coach in what the client sees, and says you only without a name", () => {
+    expect(OWN_LOG_COPY.clientSees("Tunde")).toBe('Your client sees "Shared with Tunde" on this task.');
+    expect(OWN_LOG_COPY.clientSees("")).toBe('Your client sees "Shared with you" on this task.');
+    expect(OWN_LOG_COPY.clientSees(undefined)).toBe('Your client sees "Shared with you" on this task.');
+  });
+
+  it("labels the options by what is counted", () => {
+    expect(OWN_LOG_COPY.option).toEqual({ fasting_hours: "Fasting hours", water_glasses: "Glasses of water" });
+    expect(OWN_LOG_COPY.none).toBe("No, the client ticks it");
+  });
+});
+
+describe("plan gating (owner, 19 Nov 2026: fasting and water are ungated)", () => {
+  const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+
+  it("a plan without health-app tasks can pick and save fasting and water", async () => {
+    vi.restoreAllMocks();
+    vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(progressService, "getProviderDietPlans").mockResolvedValue({ success: true, data: [] } as never);
+    vi.spyOn(formsService, "getMyForms").mockResolvedValue({ success: true, data: [] } as never);
+    vi.spyOn(providerBillingApi, "getStatus").mockResolvedValue({
+      success: true,
+      data: { plan_tier: "free", features: { health_auto_tasks_enabled: false } },
+    } as never);
+    const create = vi
+      .spyOn(programsService, "createTemplate")
+      .mockResolvedValue({ success: true, data: { template: { _id: "t1" }, version: {} } as never });
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ProgramsManager config={config} />
+      </QueryClientProvider>,
+    );
+    await user.click((await screen.findAllByRole("button", { name: /New program/ }))[0]);
+    await user.type(screen.getByPlaceholderText("e.g. 12-week gut reset"), "Lean 28");
+    await user.click(screen.getByRole("button", { name: "Instruction" }));
+    await user.click(await screen.findByText("Habit", { selector: "li *, li" }));
+    await user.click(screen.getByRole("button", { name: "+ Add task" }));
+    const types = screen.getAllByRole("button", { name: "Instruction" });
+    await user.click(types[types.length - 1]);
+    await user.click(await screen.findByText("Habit", { selector: "li *, li" }));
+    const pickers = () => screen.getAllByRole("button", { name: OWN_LOG_COPY.none });
+    await user.click(pickers()[0]);
+    await user.click(await screen.findByText(OWN_LOG_COPY.option.fasting_hours, { selector: "li *, li" }));
+    await user.type(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours }), "16");
+    await user.click(pickers()[0]);
+    await user.click(await screen.findByText(OWN_LOG_COPY.option.water_glasses, { selector: "li *, li" }));
+    await user.type(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.water_glasses }), "8");
+    await user.click(screen.getByRole("button", { name: "Create draft" }));
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    const blocks = create.mock.calls[0][0].phases[0].blocks;
+    expect(blocks.map((b) => b.auto_rule?.metric)).toEqual(["fasting_hours", "water_glasses"]);
+    expect(screen.queryByTestId("plan-gate")).toBeNull();
+    expect(screen.queryByText(/health apps/)).toBeNull();
   });
 });

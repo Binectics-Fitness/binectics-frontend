@@ -29,8 +29,8 @@ export const OWN_LOG_COPY = {
   /** The picker's "no rule" option. */
   none: "No, the client ticks it",
   option: {
-    fasting_hours: "Fast at least N hours",
-    water_glasses: "Drink at least N glasses",
+    fasting_hours: "Fasting hours",
+    water_glasses: "Glasses of water",
   } satisfies Record<OwnLogMetric, string>,
   /** Label above the number input. */
   thresholdLabel: {
@@ -44,8 +44,12 @@ export const OWN_LOG_COPY = {
     water_glasses:
       "Your client's own water log ticks this task. You see whether they reached it and the glasses that day, nothing else.",
   } satisfies Record<OwnLogMetric, string>,
-  /** Board 07-Risks L3: the client sees the task marked as shared. */
-  clientSees: 'Your client sees "Shared with you" on this task.',
+  /**
+   * Board 07-Risks L3: the client sees the task marked as shared with this
+   * coach, by first name ("Shared with you" only when there is no name).
+   */
+  clientSees: (firstName?: string | null) =>
+    `Your client sees "Shared with ${firstName?.trim() || "you"}" on this task.`,
   /** Inline error when the number is missing, fractional or out of bounds. */
   boundsError: {
     fasting_hours: "Set the fast in whole hours, 1 to 24.",

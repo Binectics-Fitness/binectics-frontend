@@ -12,6 +12,7 @@ import { toast } from "@/components/Toast";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { useAuth } from "@/contexts/AuthContext";
 import { progressService, type ClientProfile, type DietPlan } from "@/lib/api/progress";
 import { ContentPricingModal } from "@/components/content/ContentPricingModal";
 import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
@@ -121,6 +122,7 @@ function OwnLogRuleFields({
   const invalid =
     metric !== "" && (showErrors || raw.trim() !== "") && parseOwnLogThreshold(metric, raw) === null;
   const errorId = useId();
+  const { user } = useAuth();
   return (
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -167,7 +169,7 @@ function OwnLogRuleFields({
       )}
       {metric !== "" && (
         <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-          {OWN_LOG_COPY.privacy[metric]} {OWN_LOG_COPY.clientSees}
+          {OWN_LOG_COPY.privacy[metric]} {OWN_LOG_COPY.clientSees(user?.first_name)}
         </div>
       )}
     </div>
