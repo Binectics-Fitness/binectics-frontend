@@ -58,6 +58,8 @@ interface ListingForm {
   price_display: "auto" | "custom";
   price_from_minor: number | null;
   price_cadence: "session" | "recurring" | "one_off";
+  /** Recurring: how often (required); one-off: how long (optional). */
+  price_period_days: number | null;
 }
 
 interface AccountForm {
@@ -90,6 +92,7 @@ function seedListing(l: MarketplaceListing): ListingForm {
     price_display: l.price_display ?? "auto",
     price_from_minor: l.price_from_minor ?? null,
     price_cadence: l.price_cadence ?? "session",
+    price_period_days: l.price_period_days ?? null,
   };
 }
 
@@ -107,6 +110,9 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
     delete out.price_from_minor;
     if (next.price_display === "auto") delete out.price_cadence;
   }
+  if (next.price_display === "auto") delete out.price_period_days;
+  // A cadence change carries its period, so the API checks them together.
+  else if (out.price_cadence !== undefined) out.price_period_days = next.price_period_days;
   return out;
 }
 
@@ -226,7 +232,7 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
         // The API may re-price the listing ("auto" follows the sessions):
         // take the saved price back from the response.
         const saved = res.data
-          ? (({ price_display, price_from_minor, price_cadence }) => ({ price_display, price_from_minor, price_cadence }))(seedListing(res.data))
+          ? (({ price_display, price_from_minor, price_cadence, price_period_days }) => ({ price_display, price_from_minor, price_cadence, price_period_days }))(seedListing(res.data))
           : {};
         const next = { ...form, ...saved };
         setBaseline(next);
@@ -394,12 +400,13 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
               priceText,
               priceMinor: form.price_from_minor,
               cadence: form.price_cadence,
+              periodDays: form.price_period_days,
             } satisfies ListingPriceValue}
             onChange={(v) => {
               setPriceText(v.priceText);
               setPriceError(null);
               setForm((f) =>
-                f ? { ...f, price_display: v.display, price_from_minor: v.priceMinor, price_cadence: v.cadence } : f,
+                f ? { ...f, price_display: v.display, price_from_minor: v.priceMinor, price_cadence: v.cadence, price_period_days: v.periodDays } : f,
               );
             }}
             sessionPrice={sessionPrice.data ?? null}

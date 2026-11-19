@@ -355,6 +355,8 @@ export interface MarketplaceListing {
    * follows it; "custom" shows the typed price. Organization listings ignore it.
    */
   price_display?: ListingPriceDisplay;
+  /** Days the "from" price recurs every (recurring) or covers (one-off). */
+  price_period_days?: number;
   accepting_clients: boolean;
   max_clients?: number;
   is_published: boolean;

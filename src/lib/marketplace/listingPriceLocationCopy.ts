@@ -19,7 +19,33 @@ export const LISTING_PRICE_COPY = {
   customPriceLabel: "Price",
   customPerLabel: "Per",
   customPriceError: "Enter the price your card should show.",
+  customEveryLabel: "Every",
+  customCoversLabel: "Covers",
 } as const;
+
+/**
+ * How often a recurring typed price repeats (owner, 19 Nov 2026), in days:
+ * the periods org plans use and mobile Explore words ("/week", "/month",
+ * "/3 months", "/year"). The API accepts exactly these.
+ */
+export const LISTING_PRICE_EVERY_OPTIONS: { days: number; label: string }[] = [
+  { days: 7, label: "Weekly" },
+  { days: 30, label: "Monthly" },
+  { days: 90, label: "Every 3 months" },
+  { days: 365, label: "Yearly" },
+];
+
+/** How long a one-off typed price covers; optional ("No set length"). */
+export const LISTING_PRICE_COVERS_NONE = "No set length";
+export const LISTING_PRICE_COVERS_OPTIONS: { days: number; label: string }[] = [
+  { days: 7, label: "1 week" },
+  { days: 30, label: "1 month" },
+  { days: 90, label: "3 months" },
+  { days: 365, label: "1 year" },
+];
+
+/** A new recurring price starts monthly. */
+export const DEFAULT_RECURRING_DAYS = 30;
 
 /** "Per" options for a typed price, in the order the board draws them. */
 export const LISTING_PRICE_CADENCE_OPTIONS: { value: ListingPriceCadence; label: string }[] = [

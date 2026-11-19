@@ -216,6 +216,8 @@ export interface CreateListingRequest {
   price_cadence?: ListingPriceCadence;
   /** Solo listings: "auto" (cheapest session) or "custom" (the typed price). */
   price_display?: ListingPriceDisplay;
+  /** Custom solo price: 7, 30, 90 or 365 days; required with "recurring", null clears. */
+  price_period_days?: number | null;
   accepting_clients?: boolean;
   max_clients?: number;
 }
@@ -242,6 +244,8 @@ export interface UpdateListingRequest {
   price_cadence?: ListingPriceCadence;
   /** Solo listings: "auto" (cheapest session) or "custom" (the typed price). */
   price_display?: ListingPriceDisplay;
+  /** Custom solo price: 7, 30, 90 or 365 days; required with "recurring", null clears. */
+  price_period_days?: number | null;
   accepting_clients?: boolean;
   max_clients?: number;
 }

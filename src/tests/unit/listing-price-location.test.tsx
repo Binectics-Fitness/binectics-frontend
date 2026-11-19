@@ -5,6 +5,9 @@ import userEvent from "@testing-library/user-event";
 import { ListingPriceFields, type ListingPriceValue } from "@/components/provider/ListingPriceFields";
 import { PlanForm } from "@/app/dashboard/gym-owner/plans/GymPlansClient";
 import {
+  LISTING_PRICE_COVERS_NONE,
+  LISTING_PRICE_COVERS_OPTIONS,
+  LISTING_PRICE_EVERY_OPTIONS,
   LISTING_PRICE_CADENCE_OPTIONS,
   LISTING_PRICE_COPY,
   PLAN_LOCATION_COPY,
@@ -50,7 +53,7 @@ function PriceHarness({ initial, sessionPrice }: { initial: ListingPriceValue; s
   );
 }
 
-const AUTO: ListingPriceValue = { display: "auto", priceText: "", priceMinor: null, cadence: "session" };
+const AUTO: ListingPriceValue = { display: "auto", priceText: "", priceMinor: null, cadence: "session", periodDays: null };
 
 describe("ListingPriceFields (P1-P3)", () => {
   it("P1: auto selected, the cheapest session's price in the option", () => {
@@ -76,6 +79,55 @@ describe("ListingPriceFields (P1-P3)", () => {
     }
     const state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
     expect(state).toMatchObject({ display: "custom", priceMinor: 1_500_000, cadence: "session" });
+  });
+
+  it("P5: a recurring price asks how often, starting on Monthly; switching to Session drops it", async () => {
+    const user = userEvent.setup();
+    render(
+      <PriceHarness
+        initial={{ display: "custom", priceText: "₦15,000", priceMinor: 1_500_000, cadence: "session", periodDays: null }}
+        sessionPrice={null}
+      />,
+    );
+    expect(screen.queryByText(LISTING_PRICE_COPY.customEveryLabel)).toBeNull();
+    const [per] = screen.getAllByRole("combobox");
+    await user.selectOptions(per, "recurring");
+    expect(screen.getByText(LISTING_PRICE_COPY.customEveryLabel)).toBeInTheDocument();
+    for (const o of LISTING_PRICE_EVERY_OPTIONS) {
+      expect(screen.getByRole("option", { name: o.label })).toBeInTheDocument();
+    }
+    let state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
+    expect(state).toMatchObject({ cadence: "recurring", periodDays: 30 });
+
+    await user.selectOptions(screen.getAllByRole("combobox")[1], "90");
+    state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
+    expect(state.periodDays).toBe(90);
+
+    await user.selectOptions(screen.getAllByRole("combobox")[0], "session");
+    state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
+    expect(state).toMatchObject({ cadence: "session", periodDays: null });
+    expect(screen.queryByText(LISTING_PRICE_COPY.customEveryLabel)).toBeNull();
+  });
+
+  it("P6: a one-off may say how long it covers, none by default", async () => {
+    const user = userEvent.setup();
+    render(
+      <PriceHarness
+        initial={{ display: "custom", priceText: "₦15,000", priceMinor: 1_500_000, cadence: "session", periodDays: null }}
+        sessionPrice={null}
+      />,
+    );
+    await user.selectOptions(screen.getAllByRole("combobox")[0], "one_off");
+    expect(screen.getByText(LISTING_PRICE_COPY.customCoversLabel)).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: LISTING_PRICE_COVERS_NONE })).toBeInTheDocument();
+    for (const o of LISTING_PRICE_COVERS_OPTIONS) {
+      expect(screen.getByRole("option", { name: o.label })).toBeInTheDocument();
+    }
+    let state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
+    expect(state).toMatchObject({ cadence: "one_off", periodDays: null });
+    await user.selectOptions(screen.getAllByRole("combobox")[1], "90");
+    state = JSON.parse(screen.getByTestId("state").textContent ?? "{}");
+    expect(state.periodDays).toBe(90);
   });
 
   it("P3: no priced session says so", () => {

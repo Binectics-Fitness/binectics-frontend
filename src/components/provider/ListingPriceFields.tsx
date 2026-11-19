@@ -5,8 +5,12 @@ import { MoneyInput } from "@/components/ds/MoneyInput";
 import SearchableSelect from "@/components/SearchableSelect";
 import { formatMinor } from "@/lib/currencies/helpers";
 import {
+  DEFAULT_RECURRING_DAYS,
   LISTING_PRICE_CADENCE_OPTIONS,
   LISTING_PRICE_COPY as COPY,
+  LISTING_PRICE_COVERS_NONE,
+  LISTING_PRICE_COVERS_OPTIONS,
+  LISTING_PRICE_EVERY_OPTIONS,
 } from "@/lib/marketplace/listingPriceLocationCopy";
 import type { SessionPrice } from "@/lib/api/marketplace";
 import type { ListingPriceCadence, ListingPriceDisplay } from "@/lib/types";
@@ -27,6 +31,18 @@ export interface ListingPriceValue {
   /** The typed price in MINOR units; null when the field holds no number. */
   priceMinor: number | null;
   cadence: ListingPriceCadence;
+  /**
+   * Recurring: how often it repeats (required). One-off: how long it covers
+   * (optional). Session: none. Days: 7, 30, 90 or 365.
+   */
+  periodDays: number | null;
+}
+
+/** The period a cadence keeps when the provider switches to it. */
+function periodFor(cadence: ListingPriceCadence, current: number | null): number | null {
+  if (cadence === "session") return null;
+  if (cadence === "recurring") return current ?? DEFAULT_RECURRING_DAYS;
+  return current;
 }
 
 /**
@@ -71,7 +87,7 @@ export function ListingPriceFields({
         />
       </div>
       {value.display === "custom" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className={`grid grid-cols-1 gap-3.5 ${value.cadence === "session" ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
           <label className="flex flex-col gap-1.5">
             <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{COPY.customPriceLabel}</span>
             <MoneyInput
@@ -89,10 +105,36 @@ export function ListingPriceFields({
             <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{COPY.customPerLabel}</span>
             <SearchableSelect
               value={value.cadence}
-              onChange={(v) => onChange({ ...value, cadence: v as ListingPriceCadence })}
+              onChange={(v) => {
+                const cadence = v as ListingPriceCadence;
+                onChange({ ...value, cadence, periodDays: periodFor(cadence, value.periodDays) });
+              }}
               options={LISTING_PRICE_CADENCE_OPTIONS}
             />
           </label>
+          {value.cadence === "recurring" && (
+            <label className="flex flex-col gap-1.5">
+              <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{COPY.customEveryLabel}</span>
+              <SearchableSelect
+                value={String(value.periodDays ?? DEFAULT_RECURRING_DAYS)}
+                onChange={(v) => onChange({ ...value, periodDays: Number(v) })}
+                options={LISTING_PRICE_EVERY_OPTIONS.map((o) => ({ value: String(o.days), label: o.label }))}
+              />
+            </label>
+          )}
+          {value.cadence === "one_off" && (
+            <label className="flex flex-col gap-1.5">
+              <span className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{COPY.customCoversLabel}</span>
+              <SearchableSelect
+                value={value.periodDays ? String(value.periodDays) : "none"}
+                onChange={(v) => onChange({ ...value, periodDays: v === "none" ? null : Number(v) })}
+                options={[
+                  { value: "none", label: LISTING_PRICE_COVERS_NONE },
+                  ...LISTING_PRICE_COVERS_OPTIONS.map((o) => ({ value: String(o.days), label: o.label })),
+                ]}
+              />
+            </label>
+          )}
         </div>
       )}
       {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
