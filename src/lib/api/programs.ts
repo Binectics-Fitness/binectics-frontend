@@ -308,6 +308,39 @@ export interface ClientProgramOverview {
   today: Array<{ _id: string; title?: string; status: OccurrenceStatus; scheduled_for: string }>;
 }
 
+/**
+ * One task on the coach results page (GET /programs/clients/:id/results).
+ * For a fasting or water task this is all the coach gets (owner ruling,
+ * 19 Nov 2026): the day's state and one number.
+ */
+export interface ProgramResultItem {
+  id: string;
+  title: string | null;
+  type: ProgramComponentType;
+  /** A past pending task whose catch-up window closed reads as missed. */
+  status: OccurrenceStatus;
+  completed_late: boolean;
+  completion_source: "member" | "auto" | null;
+  auto: { metric: ProgramAutoRuleMetric; comparator: string; threshold: number | null } | null;
+  auto_evidence: { value: number; local_day: string; withdrawn: boolean } | null;
+  /** Today only: pending water's glasses so far, or a health-app total. */
+  auto_progress: { value: number; threshold: number | null } | null;
+}
+
+export interface ProgramResultProgram {
+  id: string;
+  name: string;
+  status: ProgramInstanceStatus;
+  /** The program's own day today (YYYY-MM-DD, its timezone). */
+  today: string;
+  days: Array<{ day: string; items: ProgramResultItem[] }>;
+}
+
+export interface ClientProgramResults {
+  days: number;
+  programs: ProgramResultProgram[];
+}
+
 export const programsService = {
   // ── Authoring ──────────────────────────────────────────────────
   listTemplates(includeArchived = false): Promise<ApiResponse<ProgramTemplate[]>> {
@@ -387,6 +420,11 @@ export const programsService = {
 
   getClientOverview(clientProfileId: string): Promise<ApiResponse<ClientProgramOverview>> {
     return apiClient.get<ClientProgramOverview>(`/programs/clients/${clientProfileId}/overview`);
+  },
+
+  /** The client's program tasks from me, day by day (last `days` days to today). */
+  getClientResults(clientProfileId: string, days: number): Promise<ApiResponse<ClientProgramResults>> {
+    return apiClient.get<ClientProgramResults>(`/programs/clients/${clientProfileId}/results?days=${days}`);
   },
 
   // ── One-off tasks ──────────────────────────────────────────────

@@ -13,6 +13,7 @@ import { programsService, type ClientProgramSummary } from "@/lib/api/programs";
 import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
+import ProgramResultsSection from "@/components/programs/results/ProgramResultsSection";
 import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
 
@@ -212,6 +213,10 @@ export default function ClientDetailPage() {
           </DSCard>
         ))}
       </div>
+
+      {clientId && profile.is_active && (
+        <ProgramResultsSection clientProfileId={clientId} clientFirstName={firstName} summaries={programs ?? []} />
+      )}
 
       {clientId && <OneOffTasksCard clientProfileId={clientId} />}
 
