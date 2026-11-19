@@ -8,7 +8,16 @@ import { SuccessTakeover } from "@/components/ds/SuccessTakeover";
 import { HeroStatCard } from "@/components/ds/HeroStatCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkinsService } from "@/lib/api/checkins";
-import { dayUnit, isPersonalBest, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
+import { memberGoalsService } from "@/lib/api/memberGoals";
+import { countVisitsThisWeek, toWeekStart } from "@/lib/checkins/visits";
+import {
+  ALREADY_AFTER,
+  ALREADY_BEFORE,
+  ALREADY_TITLE,
+  SUCCESS_THIS_WEEK,
+  visitUnit,
+} from "@/lib/checkins/visitsCopy";
+import { CheckInHistoryPeriod, type MyCheckInDashboardStats } from "@/lib/types";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { holdAtGym, holdRefusalCopy } from "@/lib/billing/membershipHolds";
 import { useCheckInPoints } from "@/lib/loyalty/checkInPoints";
@@ -23,7 +32,9 @@ type Outcome =
       /** When the API recorded it (the scan response), not the device clock. */
       checkedInAt: string | null;
       /** Read after the scan; null if that read failed. */
-      stats: StreakStats | null;
+      stats: MyCheckInDashboardStats | null;
+      /** Visits this week, this one included; null if unknown. */
+      weekVisits: number | null;
       /** The gym the API checked the member in at (its points ledger). */
       organizationId: string | null;
     }
@@ -97,19 +108,29 @@ function CheckInScanContent() {
         token: qrToken ?? undefined,
       });
       if (res.success) {
-        // Streak is a nice-to-have — never block the success screen on it.
-        let stats: StreakStats | null = null;
-        try {
-          const statsRes = await checkinsService.getMyDashboardStats();
-          stats = statsRes.success ? ((statsRes.data as StreakStats | undefined) ?? null) : null;
-        } catch {
-          stats = null;
-        }
+        // The counts are a nice-to-have: never block the success screen on
+        // them. A failed read shows no card rather than a guess.
+        const [statsRes, weekRes, goalsRes] = await Promise.allSettled([
+          checkinsService.getMyDashboardStats(),
+          checkinsService.getMyHistory(CheckInHistoryPeriod.WEEK),
+          memberGoalsService.getSettings(),
+        ]);
+        const stats =
+          statsRes.status === "fulfilled" && statsRes.value.success ? (statsRes.value.data ?? null) : null;
+        const weekStart = toWeekStart(
+          goalsRes.status === "fulfilled" && goalsRes.value.success ? goalsRes.value.data?.week_start : undefined,
+        );
+        const weekVisits =
+          weekRes.status === "fulfilled" && weekRes.value.success
+            ? // This check-in is in this week, so the count is at least one.
+              Math.max(1, countVisitsThisWeek(weekRes.value.data ?? [], new Date(), weekStart))
+            : null;
         setOutcome({
           state: "success",
           gymName,
           checkedInAt: res.data?.checked_in_at ?? null,
           stats,
+          weekVisits,
           organizationId: res.data?.organization_id ?? null,
         });
         return;
@@ -194,6 +215,7 @@ function CheckInScanContent() {
             gymName={outcome.gymName}
             checkedInAt={outcome.checkedInAt}
             stats={outcome.stats}
+            weekVisits={outcome.weekVisits}
             organizationId={outcome.organizationId}
             firstName={user?.first_name?.trim() || null}
             onDone={() => router.push("/dashboard/member")}
@@ -203,11 +225,12 @@ function CheckInScanContent() {
         {outcome.state === "already" && (
           <>
             <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>
-              Already counted.
+              {ALREADY_TITLE}
             </h1>
             <p className="mt-2 text-[15px]" style={{ color: "var(--fg-2)" }}>
-              You&rsquo;ve already checked in at <strong>{outcome.gymName}</strong>{" "}
-              today, your streak is safe. Come back tomorrow!
+              {ALREADY_BEFORE}
+              <strong>{outcome.gymName}</strong>
+              {ALREADY_AFTER}
             </p>
             <div className="mt-8">
               <Link href="/dashboard/member" className="btn-ghost-v2" style={{ textDecoration: "none" }}>
@@ -296,7 +319,7 @@ function CheckInScanContent() {
  * "welcome back" only when the stats say this isn't the first visit; if the
  * stats read failed we don't know, so just the gym.
  */
-function subtitleFor(gymName: string, stats: StreakStats | null): string {
+function subtitleFor(gymName: string, stats: MyCheckInDashboardStats | null): string {
   const total = stats?.total_check_ins;
   if (typeof total === "number" && total > 1) return `${gymName} · welcome back`;
   if (total === 1) return `${gymName} · your first check-in`;
@@ -313,10 +336,11 @@ function clockOf(iso: string | null): string | null {
 
 /**
  * The dark check-in success (mosaic FlowBCheckin): "● CHECKED IN · 14:42",
- * "You're in, Tunde.", the gym, and the streak on a raised card. Every
- * figure is real: the time is the API's checked_in_at, the streak comes
- * from dashboard-stats after the scan, and "Personal best" appears only
- * when the API sends a longest streak (API #191) that this one has reached.
+ * "You're in, Tunde.", the gym, and this week's visits on a raised card
+ * (board web-visits C1; mobile N1. Owner 19 Nov 2026: no platform streaks).
+ * Every figure is real: the time is the API's checked_in_at, the count is
+ * this week's my-history after the scan, in the member's week. Unknown
+ * count: no card.
  * Where the gym runs its own loyalty program, one line says what this
  * check-in earned there (F14); everywhere else, nothing.
  */
@@ -324,22 +348,22 @@ function CheckInSuccess({
   gymName,
   checkedInAt,
   stats,
+  weekVisits,
   organizationId,
   firstName,
   onDone,
 }: {
   gymName: string;
   checkedInAt: string | null;
-  stats: StreakStats | null;
+  stats: MyCheckInDashboardStats | null;
+  weekVisits: number | null;
   organizationId: string | null;
   firstName: string | null;
   onDone: () => void;
 }) {
   const time = clockOf(checkedInAt);
-  const streak = stats?.current_streak_days ?? 0;
-  const best = stats ? isPersonalBest(stats) : false;
   const pointsLine = useCheckInPoints(organizationId, checkedInAt);
-  const showStreak = !!stats && streak > 0;
+  const showVisits = weekVisits !== null && weekVisits > 0;
   return (
     <SuccessTakeover
       status={time ? `Checked in · ${time}` : "Checked in"}
@@ -349,21 +373,20 @@ function CheckInSuccess({
       primaryAction={{ label: "Done", onClick: onDone }}
       onDismiss={onDone}
     >
-      {showStreak || pointsLine ? (
+      {showVisits || pointsLine ? (
         <>
-          {showStreak && (
+          {showVisits && (
             <HeroStatCard
               surface="raised"
               align="center"
-              eyebrow="Streak"
-              value={streak}
-              unit={dayUnit(streak)}
-              footnote={best ? <span style={{ color: "var(--signal)" }}>Personal best</span> : (longestStreakLine(stats) ?? undefined)}
+              eyebrow={SUCCESS_THIS_WEEK}
+              value={weekVisits}
+              unit={visitUnit(weekVisits)}
             />
           )}
           {pointsLine && (
             <p
-              className={`${showStreak ? "mt-3" : ""} text-[13.5px]`}
+              className={`${showVisits ? "mt-3" : ""} text-[13.5px]`}
               style={{ color: "var(--on-ink-2)" }}
               aria-live="polite"
               data-testid="checkin-points"

@@ -154,8 +154,8 @@ describe("resolveNotificationLink", () => {
 });
 
 describe("nudge and milestone links (API buildActionUrl)", () => {
-  it("a streak milestone opens the member's streaks page", () => {
-    expect(resolveNotificationLink("/dashboard/member/streaks", UserRole.USER)).toBe("/dashboard/member/streaks");
+  it("an old streak milestone opens the member's Activity page", () => {
+    expect(resolveNotificationLink("/dashboard/member/streaks", UserRole.USER)).toBe("/dashboard/member/activity");
   });
 
   it("the inactivity nudge opens the member's home", () => {

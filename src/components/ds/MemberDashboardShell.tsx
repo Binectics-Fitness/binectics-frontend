@@ -40,7 +40,7 @@ const BASE_MEMBER_NAV_LINKS = [
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
   { label: "Workouts",    href: "/dashboard/member/workouts" },
-  { label: "Activity",    href: "/dashboard/member/streaks" },
+  { label: "Activity",    href: "/dashboard/member/activity" },
   { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
   { label: "Billing",     href: "/dashboard/member/billing" },

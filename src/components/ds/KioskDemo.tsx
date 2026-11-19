@@ -16,12 +16,13 @@ type Scenario = {
   tag: string;
   ok: boolean;
   time: string;
-  streak: number;
+  /** Visits this week, this one included. */
+  visits: number;
 };
 
 const SCENARIOS: Scenario[] = [
-  { id: "ada", name: "Ada O.", first: "Ada", tag: "Active plan", ok: true, time: "07:42", streak: 24 },
-  { id: "kemi", name: "Kemi B.", first: "Kemi", tag: "No active plan", ok: false, time: "07:44", streak: 0 },
+  { id: "ada", name: "Ada O.", first: "Ada", tag: "Active plan", ok: true, time: "07:42", visits: 3 },
+  { id: "kemi", name: "Kemi B.", first: "Kemi", tag: "No active plan", ok: false, time: "07:44", visits: 0 },
 ];
 
 const EARLIER = [
@@ -191,9 +192,9 @@ export function KioskDemo() {
                 <div className="kd-status">Checked in · {member.time}</div>
                 <div className="kd-hello">You&rsquo;re in, {member.first}.</div>
                 <div className="kd-gym">Iron Lab</div>
-                <div className="kd-streak">
-                  <span className="kd-streak-num">{member.streak}</span>
-                  <span className="kd-streak-lbl">day streak</span>
+                <div className="kd-visits">
+                  <span className="kd-visits-num">{member.visits}</span>
+                  <span className="kd-visits-lbl">{member.visits === 1 ? "visit this week" : "visits this week"}</span>
                 </div>
               </div>
             )}
@@ -301,12 +302,12 @@ const KIOSK_CSS = `
 .kd-hello-light { color: var(--ink); font-size: 18px; }
 .kd-gym { font-size: 13px; color: var(--on-ink-2); }
 .kd-gym-light { color: var(--fg-3); }
-.kd-streak {
+.kd-visits {
   margin-top: 10px; display: flex; align-items: baseline; gap: 8px;
   padding: 12px 14px; border-radius: var(--r-2); background: var(--ink-2);
 }
-.kd-streak-num { font-size: 28px; font-weight: 500; color: var(--bg); font-variant-numeric: tabular-nums; }
-.kd-streak-lbl { font-size: 12px; color: var(--on-ink-3); }
+.kd-visits-num { font-size: 28px; font-weight: 500; color: var(--bg); font-variant-numeric: tabular-nums; }
+.kd-visits-lbl { font-size: 12px; color: var(--on-ink-3); }
 
 @media (prefers-reduced-motion: reduce) {
   .kd-rotate-fill, .kd-row-new, .kd-result, .kd-scanline { animation: none; }

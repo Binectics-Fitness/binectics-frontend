@@ -47,7 +47,8 @@ const BY_TYPE: Record<string, { icon: NotificationIconKey; tone?: Tone }> = {
   PROGRAM_REMINDER: { icon: "program" },
   PROGRAM_HALFWAY: { icon: "program" },
   PROGRAM_COMPLETED: { icon: "program", tone: "success" },
-  // The check-in streak is a gym's; the nudge is news, not a warning.
+  // Streak milestones are no longer sent (owner 19 Nov 2026); old ones in
+  // the inbox keep the gym check-in icon. The nudge is news, not a warning.
   STREAK_MILESTONE: { icon: "checkin", tone: "gym" },
   INACTIVITY_NUDGE: { icon: "checkin" },
   JOURNAL_ENTRY_ADDED: { icon: "journal" },

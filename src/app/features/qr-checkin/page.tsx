@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "QR check-in for gyms: a screen at your door shows a QR code that changes every minute, members scan it with their phone, and each visit lands on your dashboard.",
   keywords:
-    "gym check-in, QR attendance, touchless check-in, gym kiosk, attendance tracking, member streaks, gym access control",
+    "gym check-in, QR attendance, touchless check-in, gym kiosk, attendance tracking, member visits, gym access control",
 };
 
 const HOW_IT_WORKS = [
@@ -26,7 +26,7 @@ const HOW_IT_WORKS = [
   {
     step: "03",
     title: "Members scan with their phone",
-    desc: "With the Binectics app or their phone camera. Members with an active plan are checked in and see their streak on their phone. Anyone else is turned away.",
+    desc: "With the Binectics app or their phone camera. Members with an active plan are checked in and see their visits this week on their phone. Anyone else is turned away.",
   },
 ];
 
@@ -41,9 +41,9 @@ const GYM_OWNER_FEATURES = [
 
 const MEMBER_FEATURES = [
   { title: "Scan with your phone", desc: "Open Check in in the Binectics app, or use your phone's camera, and point it at the code at the door. No card, no PIN." },
-  { title: "Streaks", desc: "Your current and longest check-in streak, counted per day at your gym. Miss a day and the current streak starts again." },
+  { title: "Visits this week", desc: "How many times you have been in this week, and when you last checked in. Nothing resets and nothing counts days in a row." },
   { title: "Visit history", desc: "Every check-in is kept with its date and time, and shows in your activity in the app." },
-  { title: "Milestone badges", desc: "The streaks page on the web shows badges for streaks of 7, 30, 50, 100 and 365 days, and for 10 to 500 total check-ins." },
+  { title: "Your activity", desc: "Your visits over the last 30 days and all time, with a 30-day view of the days you went." },
 ];
 
 export default function QRCheckinFeaturePage() {
@@ -209,8 +209,8 @@ export default function QRCheckinFeaturePage() {
           className="text-[16px] max-w-[56ch] leading-[1.5] mb-8"
           style={{ color: "var(--fg-2)" }}
         >
-          Checking in takes a few seconds and counts toward the
-          member&rsquo;s streak.
+          Checking in takes a few seconds and counts as a visit in the
+          member&rsquo;s activity.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {MEMBER_FEATURES.map((f) => (

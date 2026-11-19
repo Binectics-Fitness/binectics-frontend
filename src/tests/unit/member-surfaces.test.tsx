@@ -284,7 +284,7 @@ describe("member home: one membership card and the app line", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
     resetClientNowForTests();
-    vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 0 }));
+    vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(ok({ has_checked_in_today: false, total_check_ins: 0 }));
     vi.spyOn(checkinsService, "getMyHistory").mockReturnValue(ok([]));
     vi.spyOn(consultationsService, "getMyBookings").mockReturnValue(ok([]));
     vi.spyOn(classBookingsService, "getMyClassBookings").mockReturnValue(ok([]));

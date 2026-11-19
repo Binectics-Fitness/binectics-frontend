@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import NotificationPreferencesPanel from "@/app/dashboard/settings/NotificationPreferencesPanel";
+import { MILESTONES_PREF } from "@/lib/checkins/visitsCopy";
 
 const mockUseNotificationPreferences = vi.fn();
 const mockUseUpdateNotificationPreferences = vi.fn();
@@ -166,6 +167,9 @@ describe("NotificationPreferencesPanel nudges", () => {
 
     expect(screen.getByText("Milestones")).toBeInTheDocument();
     expect(screen.getByText("Check-in nudges")).toBeInTheDocument();
+    // Board web-visits S1: no streak milestones any more (owner 19 Nov 2026).
+    expect(screen.getByText(MILESTONES_PREF)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/streak/i);
     fireEvent.click(screen.getAllByRole("button", { name: /Check-in nudges/i }).find((b) => !b.hasAttribute("disabled"))!);
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ inAppNudges: false }));
   });

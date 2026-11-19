@@ -32,7 +32,10 @@ import { currentProgramDay, myProgramsService, type ProgramDay } from "@/lib/api
 import { progressService } from "@/lib/api/progress";
 import type { WeightLog } from "@/lib/api/progress";
 import type { LoyaltyProgram } from "@/lib/types";
-import { dayUnit, longestStreakLine, type StreakStats } from "@/lib/checkins/streak";
+import type { MyCheckInDashboardStats } from "@/lib/types";
+import { memberGoalsService } from "@/lib/api/memberGoals";
+import { countVisitsThisWeek, toWeekStart, visitsRow, weekStartsOn, type WeekStart } from "@/lib/checkins/visits";
+import { VisitsRow } from "./_components/VisitsRow";
 import {
   activeGyms,
   lastCheckInLabel,
@@ -50,9 +53,11 @@ import { useIsSoloMember } from "@/hooks/useIsSoloMember";
 import { SoloToday, SoloTodayLoading } from "./_components/solo/SoloToday";
 
 interface MemberSnapshot {
-  checkins: StreakStats | null;
+  checkins: MyCheckInDashboardStats | null;
   /** Check-in moments from the last 7 days; null when the read failed. */
   weekCheckIns: string[] | null;
+  /** The member's week (Goals setting); Monday when unset or unread. */
+  weekStart: WeekStart;
   next: NextUpItem | null;
   /**
    * The member's providers' loyalty programs (only those switched on). Empty,
@@ -71,6 +76,7 @@ interface MemberSnapshot {
 const EMPTY: MemberSnapshot = {
   checkins: null,
   weekCheckIns: [],
+  weekStart: "monday",
   next: null,
   loyalty: [],
   weights: [],
@@ -128,7 +134,7 @@ function MemberHomeContent() {
     let isMounted = true;
     void (async () => {
       try {
-        const [checkinsRes, historyRes, bookingsRes, classesRes, loyaltyRes, profilesRes, subsRes, programsRes] =
+        const [checkinsRes, historyRes, bookingsRes, classesRes, loyaltyRes, profilesRes, subsRes, programsRes, goalsRes] =
           await Promise.allSettled([
             checkinsService.getMyDashboardStats(),
             checkinsService.getMyHistory(CheckInHistoryPeriod.WEEK),
@@ -138,6 +144,7 @@ function MemberHomeContent() {
             progressService.getMyOwnProfiles(),
             marketplaceService.getMyMembershipSubscriptions(),
             myProgramsService.listMine(),
+            memberGoalsService.getSettings(),
           ]);
         if (!isMounted) return;
 
@@ -157,8 +164,9 @@ function MemberHomeContent() {
 
         const at = Date.now();
         setSnapshot({
-          checkins: (settled(checkinsRes) as StreakStats | undefined) ?? null,
+          checkins: settled(checkinsRes) ?? null,
           weekCheckIns: succeeded(historyRes) ? (settled(historyRes) ?? []).map((c) => c.checked_in_at) : null,
+          weekStart: toWeekStart(succeeded(goalsRes) ? settled(goalsRes)?.week_start : undefined),
           next: nextUp(settled(bookingsRes) ?? [], settled(classesRes) ?? [], at),
           loyalty: settled(loyaltyRes) ?? [],
           weights,
@@ -179,8 +187,9 @@ function MemberHomeContent() {
   }, [reloadKey]);
 
   const week = useMemo(
-    () => (now && snapshot.weekCheckIns ? weekStrip(snapshot.weekCheckIns, now) : null),
-    [snapshot.weekCheckIns, now],
+    () =>
+      now && snapshot.weekCheckIns ? weekStrip(snapshot.weekCheckIns, now, weekStartsOn(snapshot.weekStart)) : null,
+    [snapshot.weekCheckIns, snapshot.weekStart, now],
   );
   const weight = useMemo(
     () => (now && snapshot.weights ? weightSummary(snapshot.weights, now.getTime()) : null),
@@ -189,9 +198,13 @@ function MemberHomeContent() {
 
   const stats = snapshot.checkins;
   // Check-ins only mean something to a gym member, or to someone who has
-  // checked in before (a lapsed membership): everyone else gets no streak
-  // hero, no week strip and no check-in stat.
+  // checked in before (a lapsed membership): everyone else gets no visits
+  // row, no week strip and no check-in stat.
   const checksIn = snapshot.gyms.length > 0 || (stats?.total_check_ins ?? 0) > 0;
+  // This week's visits, in the member's week (null while unknown).
+  const weekCount =
+    now && snapshot.weekCheckIns ? countVisitsThisWeek(snapshot.weekCheckIns, now, snapshot.weekStart) : null;
+  const visits = checksIn ? visitsRow({ stats, weekCount }) : null;
   const firstName = user?.first_name?.trim() || "there";
   const dateLine = now
     ? `${now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}${
@@ -229,13 +242,19 @@ function MemberHomeContent() {
             <div aria-hidden="true" className="h-36 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
           ) : (
             <div>
-              <MemberHero program={snapshot.program} stats={checksIn ? stats : null} />
+              {snapshot.program && <ProgramHero program={snapshot.program} />}
               {/* Program tasks are ticked in the app; the web has no task
                   list (owner decision, F17), so say where they are. */}
               {snapshot.program && (
                 <p className="mt-2 text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="tasks-in-app">
                   Your daily tasks are in the Binectics app on your phone.
                 </p>
+              )}
+              {/* Gym visits where the check-in streak was (board web-visits H1). */}
+              {visits && (
+                <div className={snapshot.program ? "mt-3.5" : undefined}>
+                  <VisitsRow row={visits} href="/dashboard/member/activity" />
+                </div>
               )}
             </div>
           )}
@@ -280,7 +299,7 @@ function MemberHomeContent() {
               <DSStatCard
                 size="sm"
                 label="Check-ins · this week"
-                value={loading || !week ? "–" : week.reduce((n, d) => n + d.count, 0)}
+                value={loading || weekCount === null ? "–" : weekCount}
                 delta={
                   stats && now
                     ? stats.last_check_in_at
@@ -435,42 +454,23 @@ function MemberHomeContent() {
 
 /**
  * The dark hero (owner ruling, Oct 2026): a program client sees "Day N of
- * M"; otherwise a gym member sees their check-in streak; anyone with
- * neither sees nothing. Programs have no streaks, so a member with both
- * gets the program; the streak stays one tap away under Activity.
+ * M". The check-in streak that stood here for everyone else is gone (owner
+ * 19 Nov 2026: no platform streaks); gym visits show as the visits row.
  */
-function MemberHero({ program, stats }: { program: ProgramDay | null; stats: StreakStats | null }) {
-  if (program) {
-    const { day, totalDays, week, name } = program;
-    return (
-      <HeroStatCard
-        eyebrow="Your program"
-        value={`Day ${day}`}
-        unit={totalDays ? `of ${totalDays}` : undefined}
-        sub={name}
-        progress={
-          totalDays
-            ? { value: day, max: totalDays, label: `Progress through ${name}`, valueText: `Day ${day} of ${totalDays}` }
-            : undefined
-        }
-        footnote={week ? `${week.done} of ${week.scheduled} tasks done · last 7 days` : undefined}
-      />
-    );
-  }
-  if (!stats) return null;
-  const streak = stats.current_streak_days ?? 0;
-  let sub: string;
-  if (stats.has_checked_in_today) sub = "Checked in today";
-  else if (stats.streak_at_risk) sub = "Check in today to keep it going";
-  else if (streak === 0) sub = "Check in at your gym to start one";
-  else sub = "Check in to grow it";
+function ProgramHero({ program }: { program: ProgramDay }) {
+  const { day, totalDays, week, name } = program;
   return (
     <HeroStatCard
-      eyebrow="Check-in streak"
-      value={streak}
-      unit={dayUnit(streak)}
-      sub={sub}
-      footnote={longestStreakLine(stats) ?? undefined}
+      eyebrow="Your program"
+      value={`Day ${day}`}
+      unit={totalDays ? `of ${totalDays}` : undefined}
+      sub={name}
+      progress={
+        totalDays
+          ? { value: day, max: totalDays, label: `Progress through ${name}`, valueText: `Day ${day} of ${totalDays}` }
+          : undefined
+      }
+      footnote={week ? `${week.done} of ${week.scheduled} tasks done · last 7 days` : undefined}
     />
   );
 }
