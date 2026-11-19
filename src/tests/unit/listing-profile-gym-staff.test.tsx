@@ -50,6 +50,7 @@ vi.mock("@/lib/queries/marketplace", () => ({
   useUpdateOrgListing: () => mutation(),
   usePublishOrgListing: () => mutation(),
   useCreateOrgListing: () => mutation(),
+  useMySessionPrice: () => ({ data: null }),
 }));
 
 const staffOrg = (permissions: string[]) => ({

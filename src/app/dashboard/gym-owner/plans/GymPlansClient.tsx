@@ -11,7 +11,9 @@ import {
   useUpdateOrgMembershipPlan,
   useSetOrgMembershipPlanActive,
   useDeleteOrgMembershipPlan,
+  useOrgLocations,
 } from "@/lib/queries/marketplace";
+import { PLAN_LOCATION_COPY, locationOptionLabel } from "@/lib/marketplace/listingPriceLocationCopy";
 import { countMembersByPlan } from "@/lib/constants/membershipStatus";
 import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
@@ -21,7 +23,7 @@ import {
   MembershipPlanType,
   type MarketplaceMembershipPlan,
 } from "@/lib/types";
-import type { CreateOrgMembershipPlanRequest } from "@/lib/api/marketplace";
+import type { CreateOrgMembershipPlanRequest, OrgLocationListing } from "@/lib/api/marketplace";
 import { ChipEditor, DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
 import { planPerLabel as perLabel } from "@/lib/marketplace/planDisplay";
 import { PlanComparisonFields, comparisonFromPlan, comparisonPayload, ownerSavingLabel } from "@/components/plans/PlanComparisonFields";
@@ -57,6 +59,11 @@ export function GymPlansClient() {
   const { data: subscriptions = [] } = useOrgMembershipSubscriptions(orgId);
   const membersByPlan = countMembersByPlan(subscriptions);
   const membersOf = (planId: string) => membersByPlan.get(planId) ?? 0;
+  // The gym's listings: with two or more, each plan names the one that sells it.
+  const { data: locations = [] } = useOrgLocations(orgId);
+  const pickLocation = locations.length >= 2;
+  const locationOf = (p: MarketplaceMembershipPlan) =>
+    pickLocation ? locations.find((l) => l._id === String(p.listing_id ?? "")) : undefined;
   const create = useCreateOrgMembershipPlan(orgId);
   const setActive = useSetOrgMembershipPlanActive(orgId);
   const remove = useDeleteOrgMembershipPlan(orgId);
@@ -132,7 +139,7 @@ export function GymPlansClient() {
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 overflow-visible!">
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New plan</h2>
-          <PlanForm plans={plans} saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
+          <PlanForm plans={plans} locations={pickLocation ? locations : []} saving={create.isPending} error={error} defaultCurrency={currentOrg?.currency ?? ""} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create plan" />
         </DSCard>
       )}
 
@@ -174,6 +181,7 @@ export function GymPlansClient() {
                   )}
                   <div className="font-mono text-[11px] mt-1" style={{ color: "var(--fg-3)" }}>
                     {fmtNumber(membersOf(p._id))} member{membersOf(p._id) === 1 ? "" : "s"}
+                    {locationOf(p) && ` · ${PLAN_LOCATION_COPY.rowLocation(locationOf(p)?.headline?.trim() || locationOptionLabel(locationOf(p)!))}`}
                   </div>
                   {ownerSavingLabel(p, plans) && (
                     <div className="text-[12px] mt-1" style={{ color: "var(--fg-2)" }}>
@@ -201,7 +209,7 @@ export function GymPlansClient() {
               </div>
               {editingId === p._id && (
                 <div className="px-5.5 pb-4">
-                  <EditPlanForm plan={p} plans={plans} orgId={orgId} onDone={() => setEditingId(null)} />
+                  <EditPlanForm plan={p} plans={plans} locations={pickLocation ? locations : []} orgId={orgId} onDone={() => setEditingId(null)} />
                 </div>
               )}
             </div>
@@ -213,7 +221,7 @@ export function GymPlansClient() {
   );
 }
 
-function EditPlanForm({ plan, plans, orgId, onDone }: { plan: MarketplaceMembershipPlan; plans: MarketplaceMembershipPlan[]; orgId: string | undefined; onDone: () => void }) {
+function EditPlanForm({ plan, plans, locations, orgId, onDone }: { plan: MarketplaceMembershipPlan; plans: MarketplaceMembershipPlan[]; locations: OrgLocationListing[]; orgId: string | undefined; onDone: () => void }) {
   const update = useUpdateOrgMembershipPlan(orgId);
   const [error, setError] = useState<string | null>(null);
   const onSave = async (data: CreateOrgMembershipPlanRequest) => {
@@ -222,13 +230,18 @@ function EditPlanForm({ plan, plans, orgId, onDone }: { plan: MarketplaceMembers
     if (res.success) onDone();
     else setError(writeErrorMessage(res, "Couldn't save the plan."));
   };
-  return <PlanForm initial={plan} plans={plans} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
+  return <PlanForm initial={plan} plans={plans} locations={locations} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
 }
 
-function PlanForm({ initial, plans, saving, error, defaultCurrency, onSubmit, onCancel, submitLabel = "Save plan" }: {
+export function PlanForm({ initial, plans, locations = [], saving, error, defaultCurrency, onSubmit, onCancel, submitLabel = "Save plan" }: {
   initial?: MarketplaceMembershipPlan;
   /** The gym's plans, for "Show a saving" against another of them. */
   plans: MarketplaceMembershipPlan[];
+  /**
+   * The gym's listings when it has two or more: the plan names the one that
+   * sells it (board L1-L3). Empty hides the picker; the API then defaults.
+   */
+  locations?: OrgLocationListing[];
   saving: boolean;
   error?: string | null;
   defaultCurrency: string;
@@ -266,12 +279,15 @@ function PlanForm({ initial, plans, saving, error, defaultCurrency, onSubmit, on
   const [features, setFeatures] = useState<string[]>(initial?.features ?? []);
   const [isPublic, setIsPublic] = useState(initial?.is_public ?? true);
   const [comparison, setComparison] = useState(() => comparisonFromPlan(initial));
+  const [listingId, setListingId] = useState(() => (initial?.listing_id ? String(initial.listing_id) : ""));
   const [localError, setLocalError] = useState<string | null>(null);
+  const pickLocation = locations.length > 0;
 
   const oneTime = planType === MembershipPlanType.ONE_TIME;
   const durationDays = period === "custom" ? customDays : Number(period);
 
   const submit = () => {
+    if (pickLocation && !listingId) return setLocalError(PLAN_LOCATION_COPY.required);
     if (!name.trim()) return setLocalError("Give the plan a name.");
     // Plans price in the org's default currency; there is no guessed one.
     if (!defaultCurrency) return setLocalError("Choose your default currency in Settings before adding a plan.");
@@ -292,11 +308,26 @@ function PlanForm({ initial, plans, saving, error, defaultCurrency, onSubmit, on
       features,
       is_public: isPublic,
       ...comparisonPayload(comparison),
+      ...(pickLocation && listingId ? { listing_id: listingId } : {}),
     });
   };
 
   return (
     <div className="flex flex-col gap-3.5">
+      {pickLocation && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5">
+            <Eyebrow as="span">{PLAN_LOCATION_COPY.label}</Eyebrow>
+            <SearchableSelect
+              value={listingId}
+              onChange={(v) => { setListingId(v); setLocalError(null); }}
+              options={locations.map((l) => ({ label: locationOptionLabel(l), value: l._id }))}
+              placeholder={PLAN_LOCATION_COPY.placeholder}
+            />
+            <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>{PLAN_LOCATION_COPY.hint}</span>
+          </label>
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
           <Eyebrow as="span">Plan name</Eyebrow>

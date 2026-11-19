@@ -6,6 +6,8 @@ import {
   type OrgEnrollmentOffer,
   type OrgConnectedClient,
   type OrgPaymentConfig,
+  type OrgLocationListing,
+  type SessionPrice,
 } from "@/lib/api/marketplace";
 import type {
   AmenityKey,
@@ -126,6 +128,30 @@ export function useMyListing(enabled = true) {
       return res.success && res.data ? res.data : null;
     },
     enabled,
+  });
+}
+
+/** The caller's cheapest priced session: what an "auto" listing price shows. */
+export function useMySessionPrice(enabled = true) {
+  return useQuery<SessionPrice | null>({
+    queryKey: queryKeys.marketplace.mySessionPrice(),
+    queryFn: async () => {
+      const res = await marketplaceService.getMySessionPrice();
+      return res.success && res.data ? res.data : null;
+    },
+    enabled,
+  });
+}
+
+/** The organization's listings (locations), oldest first, for the plan form. */
+export function useOrgLocations(orgId?: string, enabled = true) {
+  return useQuery<OrgLocationListing[]>({
+    queryKey: queryKeys.marketplace.orgLocations(orgId ?? ""),
+    queryFn: async () => {
+      const res = await marketplaceService.getOrgLocations(orgId!);
+      return res.success && res.data ? res.data : [];
+    },
+    enabled: enabled && !!orgId,
   });
 }
 
