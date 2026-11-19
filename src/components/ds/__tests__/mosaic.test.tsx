@@ -19,8 +19,8 @@ const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026
 
 describe("Eyebrow", () => {
   it("uses the one spec: mono 11px uppercase .06em, fg-3", () => {
-    render(<Eyebrow>Current streak</Eyebrow>);
-    const el = screen.getByText("Current streak");
+    render(<Eyebrow>This week</Eyebrow>);
+    const el = screen.getByText("This week");
     expect(el.className).toContain("font-mono");
     expect(el.className).toContain("text-[11px]");
     expect(el.className).toContain("uppercase");
@@ -169,7 +169,7 @@ describe("HeroStatCard", () => {
   it("renders a dark card with value, unit, sub line and an optional bar", () => {
     const { container } = render(
       <HeroStatCard
-        eyebrow="Current streak"
+        eyebrow="This week"
         value={32}
         unit="days"
         sub="Started 4 Sep"
@@ -188,7 +188,7 @@ describe("HeroStatCard", () => {
   });
 
   it("can centre every line, value row included", () => {
-    const { container } = render(<HeroStatCard eyebrow="Streak" value={33} unit="days" align="center" />);
+    const { container } = render(<HeroStatCard eyebrow="This week" value={33} unit="days" align="center" />);
     const card = container.firstElementChild as HTMLElement;
     expect(card.className).toContain("text-center");
     expect(card.querySelector("[data-hero-row]")!.className).toContain("justify-center");
@@ -197,7 +197,7 @@ describe("HeroStatCard", () => {
   it("draws a dark-track bar on the raised surface used in the takeover", () => {
     render(
       <HeroStatCard
-        eyebrow="Streak"
+        eyebrow="This week"
         value={33}
         surface="raised"
         progress={{ value: 33, max: 50, label: "To 50 days" }}
@@ -209,7 +209,7 @@ describe("HeroStatCard", () => {
   });
 
   it("draws no bar without a real target, and a raised surface inside a takeover", () => {
-    const { container } = render(<HeroStatCard eyebrow="Streak" value={3} surface="raised" />);
+    const { container } = render(<HeroStatCard eyebrow="This week" value={3} surface="raised" />);
     expect(screen.queryByRole("progressbar")).toBeNull();
     expect((container.firstElementChild as HTMLElement).style.background).toBe("var(--ink-2)");
   });
@@ -368,7 +368,7 @@ describe("SuccessTakeover", () => {
         subtitle="Iron Lab · welcome back"
         primaryAction={{ label: "Done", href: "/dashboard/member" }}
       >
-        <HeroStatCard eyebrow="Streak" value={33} unit="days" surface="raised" />
+        <HeroStatCard eyebrow="This week" value={33} unit="days" surface="raised" />
       </SuccessTakeover>,
     );
     const dialog = screen.getByRole("dialog", { name: /You're in/ });
@@ -420,11 +420,11 @@ describe("SuccessTakeover", () => {
   it("wraps Tab and Shift+Tab across several focusables", () => {
     render(
       <SuccessTakeover status="s" title={{ emphasis: "in" }} primaryAction={{ label: "Done", onClick: () => {} }}>
-        <a href="/streaks">See streak</a>
+        <a href="/activity">See activity</a>
         <button type="button">Share</button>
       </SuccessTakeover>,
     );
-    const link = screen.getByRole("link", { name: "See streak" });
+    const link = screen.getByRole("link", { name: "See activity" });
     const share = screen.getByRole("button", { name: "Share" });
     const done = screen.getByRole("button", { name: "Done" });
     expect(document.activeElement).toBe(done);

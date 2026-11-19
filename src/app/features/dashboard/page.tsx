@@ -65,7 +65,7 @@ const ROLE_VIEWS = [
     headline: "Your fitness in one place",
     items: [
       "Active memberships and plans with renewal dates",
-      "Check-in streak, with your current and longest streak",
+      "Gym visits: this week, the last 30 days and all time",
       "Upcoming sessions with your trainer or dietitian",
       "Your own weight, meal and workout logs, next to your provider's notes",
       "A receipt page for every booking, printable from your browser",

@@ -6,6 +6,7 @@ import {
 } from "@/lib/queries/notifications";
 import type { NotificationPreferences } from "@/lib/api/notifications";
 import { Eyebrow } from "@/components/ds";
+import { MILESTONES_PREF } from "@/lib/checkins/visitsCopy";
 
 type PreferenceKey = keyof NotificationPreferences;
 
@@ -40,7 +41,7 @@ const ROWS: PreferenceRow[] = [
   },
   {
     label: "Milestones",
-    sub: "Check-in streaks of 7, 30, 50, 100 and 365 days; halfway through or finishing a program",
+    sub: MILESTONES_PREF,
     inAppKey: "inAppMilestones",
   },
   {

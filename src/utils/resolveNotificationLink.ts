@@ -101,6 +101,12 @@ export function resolveNotificationLink(
 
   // ── Path corrections (backend typos / mismatches) ─────────
 
+  // Old streak-milestone notices link to the Streaks page, which is now
+  // Activity (owner 19 Nov 2026: no platform streaks).
+  if (path === "/dashboard/member/streaks") {
+    return "/dashboard/member/activity";
+  }
+
   // Workout notifications: there is no /dashboard/workouts route at all —
   // the member's workout content lives at the workout log.
   if (url.startsWith("/dashboard/workout")) {

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import CheckInScanPage from "@/app/check-in/[gymId]/page";
 import { checkinsService } from "@/lib/api/checkins";
+import { memberGoalsService } from "@/lib/api/memberGoals";
+import { ALREADY_AFTER, ALREADY_BEFORE, ALREADY_TITLE, SUCCESS_THIS_WEEK, visitUnit } from "@/lib/checkins/visitsCopy";
 import { loyaltyService } from "@/lib/api/loyalty";
 import { checkInPoints } from "@/lib/loyalty/checkInPoints";
 import { LoyaltyEventType, type LoyaltyPointsTransaction } from "@/lib/types";
@@ -25,8 +27,14 @@ vi.mock("@/components/BinecticsLogo", () => ({ BinecticsLockup: () => <span>Bine
 const CHECKED_IN_AT = new Date(2026, 9, 7, 14, 42).toISOString();
 const clock = new Date(CHECKED_IN_AT).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
-describe("check-in success takeover", () => {
+const day = (d: number, h = 7) => new Date(2026, 9, d, h, 30).toISOString();
+const history = (days: number[]) =>
+  days.map((d, i) => ({ _id: `c${i}`, organization_id: "g1", member_user_id: "u", checked_in_at: day(d), created_at: "", updated_at: "" }));
+
+describe("check-in success takeover (board web-visits C1, C2)", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 7, 15, 0)); // Wed 7 Oct 2026
     token = "fresh";
     push.mockReset();
     vi.spyOn(checkinsService, "getGymInfo").mockResolvedValue({ success: true, data: { name: "Dapo Fitness Hub", listing_id: null } });
@@ -34,14 +42,21 @@ describe("check-in success takeover", () => {
       success: true,
       data: { _id: "x", organization_id: "g1", member_user_id: "u", checked_in_at: CHECKED_IN_AT, created_at: "", updated_at: "" },
     });
+    // Mon 5, Tue 6 and today: three visits this (Monday) week; Sun 4 is last week.
+    vi.spyOn(checkinsService, "getMyHistory").mockResolvedValue({ success: true, data: history([7, 6, 5, 4]) });
+    vi.spyOn(memberGoalsService, "getSettings").mockResolvedValue({ success: true, data: { week_start: "monday" } });
     // No loyalty program at this gym unless a test says so.
     vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({ success: true, data: [] });
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
-  it("is the dark takeover with the API's time, the member's name, the gym and the real streak", async () => {
+  it("is the dark takeover with the API's time, the member's name, the gym and this week's visits", async () => {
     vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
       success: true,
+      // The API still sends its streak fields; the page reads none of them.
       data: { has_checked_in_today: true, current_streak_days: 6, total_check_ins: 15, longest_streak_days: 6 } as never,
     });
     render(<CheckInScanPage />);
@@ -52,28 +67,45 @@ describe("check-in success takeover", () => {
     expect(dialog).toHaveAccessibleDescription(`Checked in · ${clock}`);
     expect(dialog.querySelector("em")).toBeNull();
     expect(screen.getByText("Dapo Fitness Hub · welcome back")).toBeInTheDocument();
-    const card = dialog.querySelector("[data-surface='raised']") as HTMLElement;
+    const card = (await waitFor(() => {
+      const el = dialog.querySelector("[data-surface='raised']");
+      if (!el) throw new Error("no card yet");
+      return el;
+    })) as HTMLElement;
     expect(card).toHaveAttribute("data-align", "center");
-    expect(card.textContent).toContain("6");
-    expect(card.textContent).toContain("Personal best");
+    expect(card.textContent).toBe(`${SUCCESS_THIS_WEEK}3${visitUnit(3)}`);
+    expect(dialog.textContent).not.toMatch(/streak|Personal best|Longest|days/i);
 
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(push).toHaveBeenCalledWith("/dashboard/member");
   });
 
-  it("leaves out the best line against an API without longest_streak_days", async () => {
+  it("counts in the member's week (Sunday start)", async () => {
+    vi.spyOn(memberGoalsService, "getSettings").mockResolvedValue({ success: true, data: { week_start: "sunday" } });
     vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
       success: true,
-      data: { has_checked_in_today: true, current_streak_days: 3, total_check_ins: 15 },
+      data: { has_checked_in_today: true, total_check_ins: 15 },
     });
     render(<CheckInScanPage />);
     const dialog = await screen.findByRole("dialog");
-    expect(dialog.textContent).toContain("Streak");
-    expect(dialog.textContent).not.toMatch(/Personal best|Longest/);
+    expect(dialog.querySelector("[data-surface='raised']")?.textContent).toBe(`${SUCCESS_THIS_WEEK}4${visitUnit(4)}`);
   });
 
-  it("still celebrates, without a streak card, if the stats read fails", async () => {
+  it("counts this check-in even when the history read lags it", async () => {
+    vi.spyOn(checkinsService, "getMyHistory").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
+      success: true,
+      data: { has_checked_in_today: true, total_check_ins: 1 },
+    });
+    render(<CheckInScanPage />);
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.querySelector("[data-surface='raised']")?.textContent).toBe(`${SUCCESS_THIS_WEEK}1${visitUnit(1)}`);
+    expect(screen.getByText("Dapo Fitness Hub · your first check-in")).toBeInTheDocument();
+  });
+
+  it("still celebrates, without a card, if the reads fail", async () => {
     vi.spyOn(checkinsService, "getMyDashboardStats").mockRejectedValue(new Error("offline"));
+    vi.spyOn(checkinsService, "getMyHistory").mockRejectedValue(new Error("offline"));
     render(<CheckInScanPage />);
     const dialog = await screen.findByRole("dialog");
     expect(dialog.querySelector("[data-surface='raised']")).toBeNull();
@@ -83,16 +115,13 @@ describe("check-in success takeover", () => {
     expect(dialog.textContent).not.toMatch(/welcome back|first check-in/);
   });
 
-  it("says it is the first check-in when it is", async () => {
-    vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
-      success: true,
-      data: { has_checked_in_today: true, current_streak_days: 1, total_check_ins: 1, longest_streak_days: 1 },
-    });
+  it("says a second scan today already counted, with no streak talk", async () => {
+    vi.spyOn(checkinsService, "scan").mockResolvedValue({ success: false, message: "Already checked in today" } as never);
     render(<CheckInScanPage />);
-    const dialog = await screen.findByRole("dialog");
-    expect(screen.getByText("Dapo Fitness Hub · your first check-in")).toBeInTheDocument();
-    // 1 day, longest 1: no footnote that only repeats the streak.
-    expect(dialog.textContent).not.toMatch(/Longest|Personal best/);
+    expect(await screen.findByRole("heading", { name: ALREADY_TITLE })).toBeInTheDocument();
+    const body = screen.getByText((_, el) => el?.tagName === "P" && el.textContent === `${ALREADY_BEFORE}Dapo Fitness Hub${ALREADY_AFTER}`);
+    expect(body).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/streak/i);
   });
 });
 
@@ -118,8 +147,10 @@ describe("points on check-in (F14)", () => {
     });
     vi.spyOn(checkinsService, "getMyDashboardStats").mockResolvedValue({
       success: true,
-      data: { has_checked_in_today: true, current_streak_days: 3, total_check_ins: 15 },
+      data: { has_checked_in_today: true, total_check_ins: 15 },
     });
+    vi.spyOn(checkinsService, "getMyHistory").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(memberGoalsService, "getSettings").mockResolvedValue({ success: true, data: { week_start: "monday" } });
   });
   afterEach(() => vi.restoreAllMocks());
 
