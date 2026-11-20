@@ -16,6 +16,7 @@ import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { TrainerCard } from "./TrainerCard";
 import { MemberActivityCard } from "./MemberActivityCard";
+import { HealthFormCard } from "./HealthFormCard";
 import {
   canPause,
   canSuspend,
@@ -284,6 +285,11 @@ export default function GymSingleMemberPage({ params }: { params: Promise<{ memb
           </DSCard>
         ))}
       </div>
+
+      {/* The gym's PAR-Q health form (board parq W1-W3): member managers only. */}
+      {currentOrg && memberUserId && canManageMembers && (
+        <HealthFormCard orgId={currentOrg._id} memberUserId={memberUserId} />
+      )}
 
       {/* Subscription details + trainer */}
       <div className="grid lg:grid-cols-[3fr_2fr] gap-3.5">
