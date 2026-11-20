@@ -48,7 +48,7 @@ function wrap(node: ReactNode) {
 }
 
 const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" } as never;
+const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false } as never;
 
 let nativeConfirm: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
