@@ -108,7 +108,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
           <span className="font-mono text-[10px] px-2 py-0.5 rounded-full uppercase tracking-[0.04em]"
             style={b.status === "confirmed"
               ? { background: "var(--signal-soft)", color: "var(--signal-ink)" }
-              : { background: "oklch(0.96 0.06 75)", color: "oklch(0.45 0.16 75)" }}>
+              : { background: "var(--warn-soft)", color: "var(--warn-ink)" }}>
             {b.status === "confirmed" ? "Confirmed" : "Waitlist"}
           </span>
           {b.status === "confirmed" && (

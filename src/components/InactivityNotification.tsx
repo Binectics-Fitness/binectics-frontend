@@ -15,6 +15,8 @@ export function InactivityNotification() {
     const time = sessionStorage.getItem('logoutTime');
 
     if (reason === 'inactivity') {
+      // sessionStorage only exists after mount, so this read has to happen here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLogoutReason(reason);
       setLogoutTime(time);
       setShow(true);
@@ -45,7 +47,7 @@ export function InactivityNotification() {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-slide-down">
-      <div className="rounded-(--r-2) border-2 border-border-2 p-4" style={{ background: "oklch(0.96 0.06 75)" }}>
+      <div className="rounded-(--r-2) border-2 border-border-2 p-4" style={{ background: "var(--warn-soft)" }}>
         <div className="flex items-start gap-3">
           <div className="shrink-0">
             <svg
