@@ -42,7 +42,7 @@ export function renewalsPrerequisite(configs: OrgPaymentConfig[]): { text: strin
   const paystack = configs.find((c) => c.gateway === "paystack" && c.is_active);
   if (!paystack) {
     return {
-      text: "Card renewals charge on your own Paystack account. Add your Paystack keys so members can renew by card.",
+      text: "Card renewals need your own Paystack account.",
       action: "Add Paystack keys",
     };
   }
@@ -50,7 +50,7 @@ export function renewalsPrerequisite(configs: OrgPaymentConfig[]): { text: strin
   if (paystack.webhook_last_received_at === null) {
     return {
       // Null until Paystack's first payment notice, so this can't say "wrong".
-      text: "No webhook from Paystack yet. Renewals confirm through it: add the webhook URL in your Paystack dashboard. If you already have, this clears after the first payment.",
+      text: "Paystack hasn't sent a payment notice yet. Add the webhook URL in your Paystack dashboard. This clears after the first payment.",
       action: "Get the webhook URL",
     };
   }
@@ -132,7 +132,7 @@ export default function CardRenewalsClient() {
       <PageHeader
         className="mb-0!"
         title="Card renewals"
-        subtitle="Memberships renewing on a member's saved card that are due, being retried or have failed."
+        subtitle="Due, retrying and failed."
         actions={
           <Link href="/dashboard/gym-owner/members" className="btn-ghost-v2 md">
             Back to members

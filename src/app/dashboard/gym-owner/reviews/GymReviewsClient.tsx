@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
@@ -55,7 +56,8 @@ export function GymReviewsClient() {
 
       {!listingId && !isLoading && (
         <DSCard className="px-6 py-10 text-center">
-          <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Reviews appear once your marketplace listing is live.</p>
+          <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Reviews start once your listing is live.</p>
+          <Link href="/dashboard/profile-edit" className="btn-ghost-v2 sm mt-4 inline-flex">Open listing</Link>
         </DSCard>
       )}
 

@@ -345,6 +345,11 @@ describe("Staff List Page", () => {
       expect(screen.getAllByText(/No staff match your filters/).length).toBeGreaterThan(0);
       expect(screen.queryAllByText(/No staff yet/)).toHaveLength(0);
     });
+
+    // The slate carries the way out instead of telling you to search again.
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(screen.getByLabelText("Search staff")).toHaveValue("");
+    expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
   });
 
   it("labels each member with their status", async () => {

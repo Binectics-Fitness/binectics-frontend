@@ -38,7 +38,7 @@ export function ClassForm({ initial, saving, error, onSubmit, onCancel, submitLa
 
   const submit = () => {
     if (!name.trim()) return setLocalError("Give the class a name.");
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return setLocalError("Start time must be HH:mm (24-hour).");
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return setLocalError("Choose a start time.");
     setLocalError(null);
     onSubmit({
       name: name.trim(),
@@ -74,8 +74,10 @@ export function ClassForm({ initial, saving, error, onSubmit, onCancel, submitLa
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <Eyebrow as="span">Start (24h)</Eyebrow>
-          <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="06:30" className={INPUT_CLASS} style={INPUT_STYLE} />
+          <Eyebrow as="span">Start time</Eyebrow>
+          {/* Native time picker: its value is always 24-hour HH:mm, whatever
+              clock the browser displays, so the format can't be typed wrong. */}
+          <input type="time" step={60} required value={time} onChange={(e) => setTime(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} />
         </label>
         <label className="flex flex-col gap-1.5">
           <Eyebrow as="span">Minutes</Eyebrow>

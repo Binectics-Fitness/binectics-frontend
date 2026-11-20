@@ -67,7 +67,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
     if (res.success) {
       await queryClient.invalidateQueries({ queryKey: ["classRoster", orgId, classId, date] });
     } else {
-      toast.error(res.message ?? "We couldn't save that. Try again.");
+      toast.error(res.message ?? "Couldn't save attendance. Try again.");
     }
   };
 
@@ -100,7 +100,7 @@ function OccurrenceRoster({ orgId, classId, dayOfWeek }: { orgId: string; classI
         </p>
       )}
       {!isLoading && roster.length === 0 && (
-        <p className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>No bookings for this occurrence yet.</p>
+        <p className="px-5.5 py-6 text-[13px]" style={{ color: "var(--fg-3)" }}>No bookings yet.</p>
       )}
       {roster.map((b, i) => (
         <div key={b._id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5.5 py-2.5" style={{ borderBottom: i < roster.length - 1 ? "1px solid var(--border)" : "none" }}>

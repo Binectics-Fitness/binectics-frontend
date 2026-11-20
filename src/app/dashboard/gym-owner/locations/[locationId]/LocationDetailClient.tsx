@@ -57,7 +57,7 @@ export default function LocationDetailClient() {
             setCountry(found.country ?? "");
             setError(null);
           } else {
-            setError("Location not found in this organization.");
+            setError("Location not found.");
           }
         } else {
           setError(res.message || "We couldn't load this location.");

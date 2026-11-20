@@ -30,10 +30,7 @@ export default function GymOwnerMessagesPage() {
             </p>
           )
         ) : isOwner ? (
-          <MessagingCenter
-            broadcastOrg={broadcastOrg}
-            emptyHint="Conversations with your members and staff appear here. Start one from a member's or staff profile, or post an announcement."
-          />
+          <MessagingCenter broadcastOrg={broadcastOrg} />
         ) : (
           // A gym's staff answer the gym's inbox here, as the gym. Their own
           // conversations stay in Messages on their member home.

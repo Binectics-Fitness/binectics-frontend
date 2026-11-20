@@ -198,8 +198,19 @@ export default function GymStaffPage() {
         <DSCard className="px-4.5 py-6">
           <EmptySlate
             message="No staff match your filters."
-            hint="Try a different search term or status."
             mt="mt-0"
+            action={
+              <button
+                type="button"
+                className="btn-ghost-v2 sm"
+                onClick={() => {
+                  setQuery("");
+                  setStatusFilter("All");
+                }}
+              >
+                Clear filters
+              </button>
+            }
           />
         </DSCard>
       ) : members.length > 0 ? (

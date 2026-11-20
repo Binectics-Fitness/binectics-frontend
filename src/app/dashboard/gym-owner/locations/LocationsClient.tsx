@@ -107,7 +107,7 @@ export default function LocationsClient() {
         subtitle={
           activeLocations.length > 0
             ? `${activeLocations.length} active location${activeLocations.length === 1 ? "" : "s"}`
-            : "Your branches and where members can train"
+            : undefined
         }
       />
 
