@@ -84,7 +84,7 @@ export default function TrainerRevenueClient() {
       )}
 
       {!orgId && !orgLoading ? (
-        <EmptySlate message="Select an organization to see its revenue by trainer." />
+        <EmptySlate message="Choose a gym to see revenue by trainer." />
       ) : error?.noAccess && !data ? (
         <EmptySlate
           message="You don't have access to revenue by trainer."
@@ -108,7 +108,7 @@ export default function TrainerRevenueClient() {
             <DSCard>
               <DSCardHead
                 title="This window"
-                subtitle="Net member payments to the gym, and the part of them attributed to a trainer. Per currency."
+                subtitle="Net member payments, and the part attributed to a trainer, per currency."
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4.5">
                 {data.totals.map((t) => (

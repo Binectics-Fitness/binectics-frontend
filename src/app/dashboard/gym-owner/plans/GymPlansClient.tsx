@@ -118,7 +118,7 @@ export function GymPlansClient() {
       <PageHeader
         className="mb-0!"
         title="Plans & pricing"
-        subtitle={<span className="block max-w-[60ch]">The memberships members can buy on your listing. Deactivated plans stay valid for existing subscribers.</span>}
+        subtitle={<span className="block max-w-[60ch]">Deactivated plans stay valid for existing members.</span>}
       />
 
       {/* KPIs */}
@@ -202,7 +202,7 @@ export function GymPlansClient() {
                   <button
                     className="btn-ghost-v2 sm disabled:opacity-40"
                     disabled={remove.isPending || membersOf(p._id) > 0}
-                    title={membersOf(p._id) > 0 ? "Has members on it, deactivate instead so existing subscriptions keep working" : undefined}
+                    title={membersOf(p._id) > 0 ? "Has members. Deactivate it instead." : undefined}
                     onClick={() => onDelete(p)}
                   >Delete</button>
                 </div>

@@ -351,7 +351,6 @@ function GymOverviewContent() {
               <div className="px-4.5 py-4">
                 <EmptySlate
                   message="No members yet."
-                  hint="New subscriptions will appear here."
                   mt="mt-0"
                   action={
                     canSeeMembers ? (

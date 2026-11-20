@@ -111,7 +111,7 @@ describe("class detail: delete", () => {
   it("isn't offered to staff without manage_organization", async () => {
     viewer.current = { isOwner: false, permissions: new Set<string>() } as unknown as GymViewer;
     wrap(<ClassDetailClient />);
-    expect(await screen.findByText("No bookings for this occurrence yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No bookings yet.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
   });
 });

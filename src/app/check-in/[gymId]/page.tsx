@@ -160,7 +160,7 @@ function CheckInScanContent() {
       } else {
         setOutcome({
           state: "error",
-          message: res.message || "Check-in failed. Please see the front desk.",
+          message: res.message || "Check-in failed. See the front desk.",
         });
       }
     };

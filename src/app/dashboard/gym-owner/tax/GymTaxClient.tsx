@@ -89,7 +89,7 @@ export function GymTaxClient() {
       <PageHeader
         className="mb-0!"
         title="Tax"
-        subtitle={<span className="block max-w-[60ch]">Your configured tax settings and an estimate against recorded revenue.</span>}
+        subtitle={<span className="block max-w-[60ch]">An estimate from recorded revenue.</span>}
       />
 
       {/* Settings summary */}

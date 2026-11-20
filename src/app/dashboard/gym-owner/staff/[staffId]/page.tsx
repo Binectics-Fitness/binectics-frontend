@@ -176,6 +176,8 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
   const withinYours = !ownersRow && covers(viewer, theirRole?.permissions);
   const canEdit = !isSelf && withinYours && holds(viewer, TeamPermission.UPDATE_MEMBER_ROLE);
   const canRemove = !isSelf && withinYours && holds(viewer, TeamPermission.REMOVE_MEMBER);
+  // Members is gated on manage_listing (gymStaffNav NAV.Members).
+  const canOpenMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
 
   // Only roles you could give (assertCanGrant).
   const roleOptions = useMemo(
@@ -189,7 +191,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
     const res = await teamsService.updateMember(orgId, member._id, { team_role_id: nextRoleId });
     setSavingRole(false);
     if (!res.success) {
-      toast.error(res.message || "Could not update member role.");
+      toast.error(res.message || "Couldn't change their role. Try again.");
       return;
     }
     const nextRole = roles.find((r) => r._id === nextRoleId);
@@ -350,7 +352,11 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
           ) : assigned.kind === "error" ? (
             <div className="text-[13px]" style={{ color: "var(--danger)" }}>{assigned.message}</div>
           ) : assigned.subs.length === 0 ? (
-            <EmptySlate message="No members assigned yet." hint="Open a member from Members and choose this trainer." mt="mt-0" />
+            <EmptySlate
+              message="No members assigned yet."
+              mt="mt-0"
+              action={canOpenMembers ? <Link href="/dashboard/gym-owner/members" className="btn-ghost-v2 sm">Go to Members</Link> : undefined}
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {assigned.subs.map((sub) => {

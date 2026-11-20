@@ -225,7 +225,7 @@ export default function GymCheckinsPage() {
       <PageHeader
         className="mb-0!"
         title={headline}
-        subtitle={stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
+        subtitle={stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : undefined}
       />
 
       {!currentOrg && !orgLoading ? (
@@ -325,7 +325,7 @@ export default function GymCheckinsPage() {
           {(loading && isOnline && stream.length === 0) ? (
             <div className="px-4.5 py-4"><AsyncSpinner label="Loading live check-ins" /></div>
           ) : stream.length === 0 ? (
-            <div className="px-4.5 py-4"><EmptySlate message="No check-ins found for this period." mt="mt-0" /></div>
+            <div className="px-4.5 py-4"><EmptySlate message="No check-ins in this period." mt="mt-0" /></div>
           ) : (
             stream.map((checkIn) => {
               const member = personName(checkIn);

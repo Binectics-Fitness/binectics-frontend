@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Tax",
-  description: "View tax summaries, withholding, and download tax documents.",
+  description: "Tax settings and an estimate from recorded revenue.",
 };
 
 export default function GymTaxPage() {
