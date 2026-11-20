@@ -960,7 +960,7 @@ function InvitesStep({
     {
       value: "later",
       title: "Add them now, invite them later",
-      body: "No one is emailed. Members who sign in or sign up with their email still find their membership waiting. Send the invites from the Members page when you're ready.",
+      body: "No one is emailed. Members still find their membership when they sign in with that email. Send invites from Members when you're ready.",
     },
     {
       value: "now",
@@ -1059,7 +1059,7 @@ function ResultStep({
   const lines: Array<[string, number | undefined]> = [
     ["Imported", r.imported],
     ["Already imported before", r.already_imported],
-    ["Already your members (or already offered)", r.already_member],
+    ["Already members or offered", r.already_member],
     ["Not imported: need fixing", r.errors],
     ["Not imported: no seat left", r.over_cap],
   ];

@@ -35,7 +35,6 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
     <DSCard>
       <div className="px-5.5 pt-4 pb-3" style={{ borderBottom: "1px solid var(--border)" }}>
         <h2 className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>Activity</h2>
-        <div className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>Check-ins and classes booked at this gym</div>
       </div>
 
       {!memberUserId ? (
@@ -47,7 +46,7 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
           We couldn&rsquo;t load this member&rsquo;s activity. Try again shortly.
         </div>
       ) : empty ? (
-        <div className="px-5.5 py-5"><EmptySlate message="No activity yet." hint="Check-ins and class bookings appear here." mt="mt-0" /></div>
+        <div className="px-5.5 py-5"><EmptySlate message="No activity yet." mt="mt-0" /></div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 p-4">

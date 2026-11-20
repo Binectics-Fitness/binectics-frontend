@@ -97,6 +97,8 @@ describe("MemberActivityCard", () => {
     renderCard();
     expect(await screen.findByText("No activity yet.")).toBeInTheDocument();
     expect(screen.queryByText("Check-ins, all time")).not.toBeInTheDocument();
+    // The heading and the empty line say it; no "appear here" hint.
+    expect(screen.queryByText(/appear here/)).not.toBeInTheDocument();
   });
 
   it("shows a booking-only member's classes without inventing check-ins", async () => {

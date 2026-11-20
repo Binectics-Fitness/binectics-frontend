@@ -95,6 +95,9 @@ describe("gym members: the Connected list", () => {
     expect(items[1]).toHaveTextContent("Ben");
     expect(items[1]).not.toHaveTextContent("accepted by");
     expect(screen.getByText("Connected · 2")).toBeInTheDocument();
+    expect(
+      screen.getByText("Clients without a membership. Each uses a seat until removed. Trainers' own clients aren't listed."),
+    ).toBeInTheDocument();
     expect(list).toHaveBeenCalledWith("o1");
   });
 

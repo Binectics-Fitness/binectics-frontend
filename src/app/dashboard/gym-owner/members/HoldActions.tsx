@@ -120,7 +120,7 @@ export function SuspendMemberModal({
       onDone(mergeHoldChange(sub, res.data));
       onClose();
     } else {
-      setError(holdErrorCopy(res, "We couldn't suspend this membership. Please try again."));
+      setError(holdErrorCopy(res, "Couldn't suspend this membership. Try again."));
     }
   };
 
@@ -232,7 +232,7 @@ export function LiftSuspensionModal({
       onDone(mergeHoldChange(sub, res.data));
       onClose();
     } else {
-      setError(holdErrorCopy(res, "We couldn't lift the suspension. Please try again."));
+      setError(holdErrorCopy(res, "Couldn't lift the suspension. Try again."));
     }
   };
 
@@ -351,7 +351,7 @@ export function PauseMemberModal({
     } else if (res.code === "RENEWAL_CHARGE_IN_PROGRESS") {
       setError("A card renewal for this membership is being processed. Try again in a few minutes.");
     } else {
-      setError(holdErrorCopy(res, "We couldn't pause this membership. Please try again."));
+      setError(holdErrorCopy(res, "Couldn't pause this membership. Try again."));
     }
   };
 
@@ -428,7 +428,7 @@ export function ResumeMemberModal({
       onDone(mergeHoldChange(sub, res.data));
       onClose();
     } else {
-      setError(holdErrorCopy(res, "We couldn't resume this membership. Please try again."));
+      setError(holdErrorCopy(res, "Couldn't resume this membership. Try again."));
     }
   };
 

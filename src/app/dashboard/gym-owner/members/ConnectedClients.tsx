@@ -75,7 +75,7 @@ export function ConnectedClients({
     <DSCard>
       <DSCardHead
         title={`Connected · ${people.length}`}
-        subtitle="The gym's clients without a membership: requests you accepted, and people you added. Your trainers' own clients aren't listed. Each counts toward your seats until removed."
+        subtitle="Clients without a membership. Each uses a seat until removed. Trainers' own clients aren't listed."
       />
       <ul aria-label="Connected without a membership">
         {people.map((person, i) => {
