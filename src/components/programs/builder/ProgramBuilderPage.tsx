@@ -11,6 +11,9 @@ import { BUILDER_COPY, TASK_TYPE_COPY } from "./copy";
 import { Btn, LinkBtn, TaskTile, metaStyle } from "./controls";
 import { ClientWeek } from "./ClientWeek";
 import { TaskInspector } from "./TaskInspector";
+import { TaskTypeFields } from "./TaskTypeFields";
+import { NewContentSheet } from "./NewContentSheet";
+import { useContentOptions } from "./useContentOptions";
 import { useAutosave } from "./useAutosave";
 import {
   TASK_KINDS,
@@ -46,6 +49,9 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
   const [week, setWeek] = useState(1);
   /** Set once "Start a client" can be pressed (next change); until then problems show as typed. */
   const tried = false;
+  const [sheet, setSheet] = useState<"form" | "meal" | null>(null);
+  const sheetBefore = useRef<{ kind: "form" | "meal"; ids: Set<string>; taskKey: string } | null>(null);
+  const { forms, mealPlans, reload } = useContentOptions(config.mealPlans);
 
   const autosave = useAutosave(id, (detail) => setTemplate({ ...detail.template, publish_state: detail.publish_state ?? detail.template.publish_state }));
 
@@ -80,7 +86,7 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
 
   const addTask = (kind: TaskKind, phase: number) => {
     if (!program) return;
-    const t = newTask(kind, { phase, existing: program.tasks });
+    const t = newTask(kind, { phase, existing: program.tasks, forms });
     edit({ ...program, tasks: [...program.tasks, t] });
     setSel(t.key);
     setMenuPhase(null);
@@ -106,6 +112,23 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
     });
   };
 
+  // "+ New form / + New meal plan": remember what existed, pick what's new on close.
+  const openSheet = (kind: "form" | "meal") => {
+    if (!sel) return;
+    sheetBefore.current = { kind, ids: new Set((kind === "form" ? forms : mealPlans).map((o) => o.id)), taskKey: sel };
+    setSheet(kind);
+  };
+  const closeSheet = async () => {
+    setSheet(null);
+    const before = sheetBefore.current;
+    sheetBefore.current = null;
+    const lists = await reload();
+    if (!before) return;
+    const made = (before.kind === "form" ? lists.forms : lists.mealPlans).find((o) => !before.ids.has(o.id));
+    if (made) {
+      patchTask(before.taskKey, before.kind === "form" ? { form_id: made.id, contentTitle: made.title } : { meal_plan_id: made.id, contentTitle: made.title });
+    }
+  };
 
   if (loadError) {
     return (
@@ -239,6 +262,16 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
                 program={program}
                 task={selected}
                 showIssues={tried}
+                typeFields={
+                  <TaskTypeFields
+                    task={selected}
+                    showIssues={tried}
+                    forms={forms}
+                    mealPlans={mealPlans}
+                    onChange={(p) => patchTask(selected.key, p)}
+                    onNewContent={openSheet}
+                  />
+                }
                 onChange={(p) => patchTask(selected.key, p)}
                 onRemove={() => removeTask(selected.key)}
                 onClose={() => setSel(null)}
@@ -250,6 +283,7 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
         </div>
       </div>
 
+      <NewContentSheet kind={sheet} onClose={() => void closeSheet()} />
     </Shell>
   );
 }

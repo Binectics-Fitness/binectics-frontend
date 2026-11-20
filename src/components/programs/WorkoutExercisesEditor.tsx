@@ -25,11 +25,11 @@ const fieldStyle: React.CSSProperties = {
   color: "var(--ink)",
 };
 
-type LibraryState = { status: "loading" } | { status: "ready"; library: ExerciseLibrary } | { status: "failed" };
+export type LibraryState = { status: "loading" } | { status: "ready"; library: ExerciseLibrary } | { status: "failed" };
 
 // One fetch per page load; the list changes only when the API redeploys.
 let cached: Promise<LibraryState> | null = null;
-function loadLibrary(): Promise<LibraryState> {
+export function loadLibrary(): Promise<LibraryState> {
   cached ??= exerciseLibraryService.getLibrary().then<LibraryState>((res) =>
     res.success && res.data ? { status: "ready", library: res.data } : { status: "failed" },
   ).catch<LibraryState>(() => ({ status: "failed" }));
