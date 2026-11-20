@@ -179,6 +179,8 @@ export interface ProgramInstance {
   client_id:
     | string
     | { _id: string; first_name: string; last_name: string };
+  /** "First Last" on GET /programs/:id/assignments (api #360); null without a name. */
+  client_name?: string | null;
   provider_id: string;
   organization_id: string | null;
   status: ProgramInstanceStatus;

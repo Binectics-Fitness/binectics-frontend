@@ -164,9 +164,10 @@ export function emptyBlockRow(
     form_id: "",
     workout_plan_id: "",
     exercises: [],
-    start_offset_days: "",
+    // Real starting values, not grey placeholders that read as values.
+    start_offset_days: "0",
     duration_days: "",
-    times_per_week: "",
+    times_per_week: "3",
     own_log_metric: "",
     own_log_threshold: "",
   };
@@ -330,6 +331,48 @@ function blockHasContent(row: BlockFormRow): boolean {
     (row.type === "workout_plan" && row.workout_plan_id.trim().length > 0) ||
     (row.type === "workout_plan" && exerciseRowsToPayload(row.exercises).length > 0)
   );
+}
+
+/** Inline copy for a task the builder can't save as it is. */
+export const BLOCK_ISSUE_COPY = {
+  title: "Give this task a title, or remove it.",
+  form: "Pick the form your client fills in.",
+  meal_plan: "Pick the meal plan your client follows.",
+  workout_plan: "Add at least one exercise.",
+} as const;
+
+/**
+ * Why this task can't be saved as it is, said next to the task, or null.
+ * A task with only a note used to be dropped on save without a word; it now
+ * asks for a title. An untouched empty row is still dropped.
+ */
+export function blockIssue(row: BlockFormRow): string | null {
+  // Checked first: a habit whose rule has no valid number has no content yet.
+  if (
+    row.type === "habit" &&
+    row.own_log_metric &&
+    parseOwnLogThreshold(row.own_log_metric, row.own_log_threshold) === null
+  ) {
+    return OWN_LOG_COPY.boundsError[row.own_log_metric];
+  }
+  if (!blockHasContent(row)) {
+    return row.detail.trim().length > 0 ? BLOCK_ISSUE_COPY.title : null;
+  }
+  if (row.type === "form" && !row.form_id.trim()) return BLOCK_ISSUE_COPY.form;
+  if (row.type === "meal_plan" && !row.meal_plan_id.trim()) return BLOCK_ISSUE_COPY.meal_plan;
+  if (
+    row.type === "workout_plan" &&
+    !row.workout_plan_id.trim() &&
+    exerciseRowsToPayload(row.exercises).length === 0
+  ) {
+    return BLOCK_ISSUE_COPY.workout_plan;
+  }
+  return null;
+}
+
+/** Number of tasks with an issue (blockIssue). */
+export function countBlockIssues(rows: PhaseFormRow[]): number {
+  return rows.reduce((n, p) => n + p.blocks.filter((b) => blockIssue(b) !== null).length, 0);
 }
 
 /**
