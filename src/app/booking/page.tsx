@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
+import { bookingAssurances } from "@/lib/bookings/assurances";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { PromoCodeField } from "@/components/coupons/PromoCodeField";
 import { couponsService, type CouponQuote } from "@/lib/api/coupons";
@@ -567,10 +568,7 @@ function BookingPageInner() {
         )}
 
         <div className="flex flex-col gap-3 text-[12.5px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-          {(isPaid
-            ? ["Pay with Paystack right after booking", "Slot held for 30 minutes while you pay", "Free cancellation up to 24h before"]
-            : ["Confirmed as soon as you book", "Free cancellation up to 24h before", "You'll be notified of any changes"]
-          ).map((t) => (
+          {bookingAssurances(isPaid, name).map((t) => (
             <div key={t} className="flex gap-2.5 items-start">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--signal-ink)" }}><path d="m5 12 5 5L20 7"/></svg>
               {t}
