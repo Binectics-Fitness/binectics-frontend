@@ -202,14 +202,14 @@ function AuthContent() {
                   {apiError && (
                     <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "var(--danger-soft, oklch(0.95 0.03 25))", border: "1px solid oklch(0.85 0.06 25)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-                      <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
+                      <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{apiError}</p>
                     </div>
                   )}
 
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email or phone</label>
                     <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: errors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...registerField("email")} />
-                    {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
+                    {errors.email && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.email.message}</p>}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -223,7 +223,7 @@ function AuthContent() {
                         {showPw ? "Hide" : "Show"}
                       </button>
                     </div>
-                    {errors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>}
+                    {errors.password && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.password.message}</p>}
                   </div>
 
                   <label className="flex items-center gap-2 cursor-pointer" onClick={() => setRememberMe(!rememberMe)}>
@@ -314,7 +314,7 @@ function AuthContent() {
                   {apiError && (
                     <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-(--r-2)" style={{ background: "var(--danger-soft, oklch(0.95 0.03 25))", border: "1px solid oklch(0.85 0.06 25)" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
-                      <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
+                      <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{apiError}</p>
                     </div>
                   )}
 
@@ -322,18 +322,18 @@ function AuthContent() {
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>First name</label>
                       <input required placeholder="Tunde" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.firstName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("firstName")} />
-                      {signupErrors.firstName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.firstName.message}</p>}
+                      {signupErrors.firstName && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{signupErrors.firstName.message}</p>}
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Last name</label>
                       <input required placeholder="Adebayo" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.lastName ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("lastName")} />
-                      {signupErrors.lastName && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.lastName.message}</p>}
+                      {signupErrors.lastName && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{signupErrors.lastName.message}</p>}
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Email</label>
                     <input type="email" required placeholder="you@example.com" className="h-10.5 rounded-(--r-2) px-3.5 text-[14px]" style={{ border: signupErrors.email ? "1px solid var(--danger)" : "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit" }} {...signupField("email")} />
-                    {signupErrors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.email.message}</p>}
+                    {signupErrors.email && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{signupErrors.email.message}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Password</label>
@@ -343,7 +343,7 @@ function AuthContent() {
                         {showSignupPw ? "Hide" : "Show"}
                       </button>
                     </div>
-                    {signupErrors.password && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.password.message}</p>}
+                    {signupErrors.password && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{signupErrors.password.message}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>Confirm password</label>
@@ -353,7 +353,7 @@ function AuthContent() {
                         {showSignupPw ? "Hide" : "Show"}
                       </button>
                     </div>
-                    {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{signupErrors.confirmPassword.message}</p>}
+                    {signupErrors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{signupErrors.confirmPassword.message}</p>}
                   </div>
                   <button type="button" className="flex items-center gap-2 cursor-pointer text-left" onClick={() => { const next = !signupAcceptTos; setSignupAcceptTos(next); setSignupValue("acceptTos", next, { shouldValidate: true }); }}>
                     <span className={`w-4 h-4 rounded-[3px] border flex items-center justify-center shrink-0 ${signupAcceptTos ? "bg-ink border-ink" : ""}`} style={{ background: signupAcceptTos ? "var(--ink)" : "var(--bg)", borderColor: signupErrors.acceptTos ? "var(--danger)" : signupAcceptTos ? "var(--ink)" : "var(--border-2)" }}>
@@ -361,7 +361,7 @@ function AuthContent() {
                     </span>
                     <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>I agree to the <Link href="/terms" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Terms</Link> and <Link href="/privacy" className="underline underline-offset-3" style={{ color: "var(--ink)", textDecorationColor: "var(--border-2)" }}>Privacy</Link></span>
                   </button>
-                  {signupErrors.acceptTos && <p className="text-[12px] -mt-2" style={{ color: "var(--danger)" }}>{signupErrors.acceptTos.message}</p>}
+                  {signupErrors.acceptTos && <p className="text-[12px] -mt-2" style={{ color: "var(--danger-ink)" }}>{signupErrors.acceptTos.message}</p>}
                   <button type="submit" disabled={isLoading || authLoading} className="btn-primary-v2 lg w-full justify-center">
                     {isLoading || authLoading ? "Creating account…" : "Create account →"}
                   </button>
