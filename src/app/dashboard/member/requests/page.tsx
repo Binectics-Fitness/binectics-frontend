@@ -201,11 +201,7 @@ function MemberRequestsContent() {
 
       {isEmpty && (
         <DSCard style={cardStyle}>
-          <EmptySlate
-            message="Nothing waiting on you."
-            hint="When a trainer or dietitian asks to add you as a client, it shows up here."
-            mt="mt-0"
-          />
+          <EmptySlate message="Nothing waiting on you." mt="mt-0" />
         </DSCard>
       )}
 

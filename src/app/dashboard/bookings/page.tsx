@@ -272,7 +272,8 @@ function BookingActions({
 function EmptyState({ tab }: { tab: TabKey }) {
   const copy = {
     upcoming: { title: "No upcoming sessions", sub: "Book a new session from the marketplace." },
-    past: { title: "No past sessions yet", sub: "Once you complete a booking it appears here." },
+    // The title says it all (text audit, 19 Nov 2026).
+    past: { title: "No past sessions yet", sub: null },
     cancelled: { title: "No cancelled sessions", sub: "Your cancellation history will appear here." },
   };
   const c = copy[tab];
@@ -285,9 +286,11 @@ function EmptyState({ tab }: { tab: TabKey }) {
       <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
         {c.title}
       </div>
-      <div className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
-        {c.sub}
-      </div>
+      {c.sub && (
+        <div className="text-[13px] mt-1.5" style={{ color: "var(--fg-3)" }}>
+          {c.sub}
+        </div>
+      )}
       {tab === "upcoming" && (
         <Link href="/marketplace" className="btn-primary-v2 sm mt-4 inline-flex">
           Browse marketplace

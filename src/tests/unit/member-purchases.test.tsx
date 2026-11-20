@@ -85,7 +85,7 @@ describe("My purchases", () => {
       .mockResolvedValue(ok({ items: [ent({ title: "Back again" })], nextCursor: null }));
     render(<PurchasesClient />);
     expect(await screen.findByText("We couldn't load your purchases.")).toBeInTheDocument();
-    expect(screen.queryByText("Nothing here yet.")).not.toBeInTheDocument();
+    expect(screen.queryByText("No programs or meal plans yet.")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByText("Back again")).toBeInTheDocument();
     expect(owned).toHaveBeenCalledTimes(2);
@@ -106,7 +106,7 @@ describe("My purchases", () => {
     vi.spyOn(paidContentService, "myPurchases").mockResolvedValue(ok([]));
     vi.spyOn(paidContentService, "myEntitlements").mockResolvedValue(ok({ items: [], nextCursor: null }));
     render(<PurchasesClient />);
-    expect(await screen.findByText("Nothing here yet.")).toBeInTheDocument();
+    expect(await screen.findByText("No programs or meal plans yet.")).toBeInTheDocument();
   });
 });
 
