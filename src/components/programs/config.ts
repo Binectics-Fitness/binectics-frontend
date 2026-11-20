@@ -26,6 +26,8 @@ export interface ProgramsRoleConfig {
    * roles that authored protocols (dietitians) have one.
    */
   protocolsPath?: string;
+  /** Meal plan tasks are offered (dietitians: "+ Add task" → Meal plan). */
+  mealPlans: boolean;
 }
 
 export const DIETITIAN_PROGRAMS_CONFIG: ProgramsRoleConfig = {
@@ -34,6 +36,7 @@ export const DIETITIAN_PROGRAMS_CONFIG: ProgramsRoleConfig = {
   basePath: "/dashboard/dietitian/programs",
   accentSoft: "var(--dietitian-soft)",
   protocolsPath: "/dashboard/dietitian/protocols",
+  mealPlans: true,
 };
 
 export const TRAINER_PROGRAMS_CONFIG: ProgramsRoleConfig = {
@@ -42,4 +45,5 @@ export const TRAINER_PROGRAMS_CONFIG: ProgramsRoleConfig = {
   basePath: "/dashboard/trainer/programs",
   // --trainer (0.72 L) is too light for text; use the badge ink like badge-trainer.
   accentSoft: "var(--trainer-soft)",
+  mealPlans: false,
 };

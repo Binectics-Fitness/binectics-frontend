@@ -65,6 +65,23 @@
   --meal-soft: var(--dietitian-soft);
   --meal-ink: oklch(0.42 0.13 300);
 
+  /* Task types (owner, 20 Nov 2026; binectics-design-system shared.css).
+     Workout uses --move and a meal plan --meal; a habit that ticks itself
+     takes its source's colour (water, fast, move). Tiles only; never a
+     button. Pick them through src/components/programs/builder/taskTypes.ts. */
+  --habit: oklch(0.78 0.12 130);
+  --habit-soft: oklch(0.95 0.045 130);
+  --habit-ink: oklch(0.44 0.10 130);
+  --checkin: oklch(0.72 0.10 272);
+  --checkin-soft: oklch(0.95 0.03 272);
+  --checkin-ink: oklch(0.44 0.12 272);
+  --measure: oklch(0.74 0.11 340);
+  --measure-soft: oklch(0.95 0.03 340);
+  --measure-ink: oklch(0.45 0.12 340);
+  --note: oklch(0.80 0.06 85);
+  --note-soft: oklch(0.94 0.03 85);
+  --note-ink: oklch(0.44 0.06 85);
+
   /* Semantic — never decorative. Hue ramp danger 25 -> warn 45 -> trainer 75
      (shared.css), so a warning never reads as the trainer accent. -ink is
      text or an icon on -soft, and also small text on --bg (~7:1). --danger-ink
@@ -175,6 +192,18 @@
   --color-meal: oklch(0.72 0.11 300);
   --color-meal-soft: oklch(0.95 0.03 300);
   --color-meal-ink: oklch(0.42 0.13 300);
+  --color-habit: oklch(0.78 0.12 130);
+  --color-habit-soft: oklch(0.95 0.045 130);
+  --color-habit-ink: oklch(0.44 0.10 130);
+  --color-checkin: oklch(0.72 0.10 272);
+  --color-checkin-soft: oklch(0.95 0.03 272);
+  --color-checkin-ink: oklch(0.44 0.12 272);
+  --color-measure: oklch(0.74 0.11 340);
+  --color-measure-soft: oklch(0.95 0.03 340);
+  --color-measure-ink: oklch(0.45 0.12 340);
+  --color-note: oklch(0.80 0.06 85);
+  --color-note-soft: oklch(0.94 0.03 85);
+  --color-note-ink: oklch(0.44 0.06 85);
 
   --color-danger: oklch(0.58 0.18 25);
   --color-danger-soft: oklch(0.95 0.03 25);

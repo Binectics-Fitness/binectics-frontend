@@ -102,6 +102,12 @@ export interface ProgramBlock {
   form_id?: string;
   /** Completes or fills the task by itself (see ProgramAutoRule). */
   auto_rule?: ProgramAutoRule;
+  /**
+   * Measurement only: the value the client works toward. Saving it makes or
+   * updates the program goal for this metric (api #361); removing it removes
+   * a goal it made.
+   */
+  target?: number;
 }
 
 export interface ProgramPhase {
@@ -119,6 +125,22 @@ export interface ProgramGoalDef {
   direction: GoalDirection;
   target?: number;
   target_offset_days?: number;
+  /** Made from a measurement task's target (api #361); the API keeps it in step. */
+  from_block?: boolean;
+}
+
+/**
+ * Whether clients would get something new by publishing (api #361). Comes
+ * back on list rows, GET /programs/:id and create/update/publish/assign.
+ */
+export interface ProgramPublishState {
+  /** Paid: sold on its own, included in a plan, or shown on a listing. */
+  sold_or_listed: boolean;
+  /** Version clients get today; 0 = never published. */
+  published_version_no: number;
+  has_unpublished_changes: boolean;
+  /** sold_or_listed && has_unpublished_changes: show "Publish changes" (D1). */
+  needs_publish: boolean;
 }
 
 export interface ProgramTemplate {
@@ -132,6 +154,8 @@ export interface ProgramTemplate {
   latest_published_version_no: number;
   /** Raw paid-content block (read with normalizeAccess); absent means free. */
   access?: unknown;
+  /** On list rows (api #361). */
+  publish_state?: ProgramPublishState;
   created_at: string;
   updated_at: string;
 }
@@ -158,6 +182,17 @@ export interface ProgramTemplateVersion {
 export interface ProgramTemplateDetail {
   template: ProgramTemplate;
   version: ProgramTemplateVersion;
+  publish_state?: ProgramPublishState;
+}
+
+/** POST /programs/:id/assign with publish_latest (api #361): all or nothing. */
+export interface StartClientResult {
+  instance: ProgramInstance;
+  template: ProgramTemplate;
+  version: ProgramTemplateVersion;
+  /** True when this call published the latest draft. */
+  published: boolean;
+  publish_state: ProgramPublishState;
 }
 
 // ── Instance (a client's assigned program) ───────────────────────────
@@ -241,6 +276,12 @@ export interface AssignProgramRequest {
   client_profile_id: string;
   start_date?: string;
   timezone?: string;
+  /**
+   * Publish the latest draft and assign it in one transaction (api #361).
+   * Refused with 409 PROGRAM_UNPUBLISHED_CHANGES while
+   * publish_state.needs_publish (a sold or listed program with edits).
+   */
+  publish_latest?: boolean;
 }
 
 // ── One-off tasks (sent outside any program) ─────────────────────────
@@ -367,6 +408,11 @@ export const programsService = {
     return apiClient.patch<ProgramTemplateDetail>(`/programs/${id}`, payload);
   },
 
+  /** Copy a program (its latest version) into a new draft named "<name> (copy)". */
+  duplicateTemplate(id: string): Promise<ApiResponse<ProgramTemplateDetail>> {
+    return apiClient.post<ProgramTemplateDetail>(`/programs/${id}/duplicate`, {});
+  },
+
   publishTemplate(id: string): Promise<ApiResponse<ProgramTemplateDetail>> {
     return apiClient.post<ProgramTemplateDetail>(`/programs/${id}/publish`, {});
   },
@@ -389,6 +435,14 @@ export const programsService = {
     payload: AssignProgramRequest,
   ): Promise<ApiResponse<ProgramInstance>> {
     return apiClient.post<ProgramInstance>(`/programs/${id}/assign`, payload);
+  },
+
+  /** "Start a client": publish the latest draft if needed and assign, in one call. */
+  startClient(
+    id: string,
+    payload: Omit<AssignProgramRequest, "publish_latest">,
+  ): Promise<ApiResponse<StartClientResult>> {
+    return apiClient.post<StartClientResult>(`/programs/${id}/assign`, { ...payload, publish_latest: true });
   },
 
   listAssignments(id: string): Promise<ApiResponse<ProgramInstance[]>> {

@@ -248,7 +248,7 @@ describe("Invite client on a full plan", () => {
 
 describe("Programs when the plan refuses a publish", () => {
   const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false };
 
   it("says what the plan leaves out, instead of a raw toast", async () => {
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({
@@ -270,7 +270,7 @@ describe("Programs when the plan refuses a publish", () => {
     expect(screen.getByRole("link", { name: "See plans" })).toBeInTheDocument();
   });
 
-  it("never carries a publish refusal into the builder", async () => {
+  it("never carries a publish refusal into the New program dialog", async () => {
     const draft = {
       _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
       latest_version_no: 1, latest_published_version_no: 0, created_at: "", updated_at: "",
@@ -282,14 +282,14 @@ describe("Programs when the plan refuses a publish", () => {
     await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /New program/ }));
-    expect(await screen.findByRole("button", { name: "Create draft" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Create" })).toBeInTheDocument();
     expect(screen.queryByTestId("plan-gate")).toBeNull();
   });
 });
 
 describe("Programs: refused, then successful", () => {
   const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false };
 
   it("shows no stale gate after the next publish works", async () => {
     const draft = {
