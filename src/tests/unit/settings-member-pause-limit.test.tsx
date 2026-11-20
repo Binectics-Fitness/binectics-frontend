@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SettingsClient } from "@/app/dashboard/gym-owner/settings/SettingsClient";
+import { HEALTH_FORM_COPY } from "@/lib/constants/healthFormCopy";
 
 /**
  * Settings → Membership rules → "Member pauses per year" (owner ruling,
@@ -137,14 +138,14 @@ describe("Settings: country guessed from the IP", () => {
 });
 
 describe("Settings: copy that must stay true", () => {
-  it("booking rules apply to every location, and PAR-Q makes no sending promise", () => {
+  it("booking rules apply to every location, and PAR-Q says what it now does", () => {
     h.currentOrg = { ...h.org, is_owner: true };
     render(<SettingsClient />);
     // No per-location overrides exist (owner decision, 20 Nov 2026).
     expect(screen.getByText("Apply to all your locations.")).toBeInTheDocument();
     expect(screen.queryByText(/can override/)).toBeNull();
-    // The API stores require_parq but sends nothing, so no "sent automatically".
-    expect(screen.getByText("Standard health questionnaire.")).toBeInTheDocument();
-    expect(screen.queryByText(/Sent automatically/)).toBeNull();
+    // The switch now sends the health form (API health-forms, board parq W4).
+    expect(screen.getByText(HEALTH_FORM_COPY.switchHelp)).toBeInTheDocument();
+    expect(screen.queryByText("Standard health questionnaire.")).toBeNull();
   });
 });

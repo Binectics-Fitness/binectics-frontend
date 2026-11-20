@@ -11,7 +11,9 @@ import type {
 
 export const DEFAULT_BOOKING_RULES: BookingRules = {
   auto_confirm: true,
-  require_parq: true,
+  // Off until the gym turns it on: on, it sends members the health form, and
+  // an org that never saved booking rules has not asked for that.
+  require_parq: false,
   // No fee until the gym sets one: the API reads an org without booking
   // rules as having none, and members are shown exactly that.
   cancellation_fee_percent: 0,

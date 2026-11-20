@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { HEALTH_FORM_COPY } from "@/lib/constants/healthFormCopy";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
@@ -68,7 +69,7 @@ const SECTIONS = [
  */
 const BOOKING_TOGGLE_DEFS = [
   { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Members are booked without your approval." },
-  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health questionnaire." },
+  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: HEALTH_FORM_COPY.switchHelp },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
   { key: "public_reviews" as const, t: "Public reviews on listing", s: "Ratings and reviews show on your listing." },
 ];
