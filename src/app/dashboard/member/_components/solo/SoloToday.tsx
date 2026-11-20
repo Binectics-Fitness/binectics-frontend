@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
-import { DSCard, PageHeader } from "@/components/ds";
+import { ListChecks, type LucideIcon } from "lucide-react";
+import { DSCard, IconTile, PageHeader } from "@/components/ds";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOnline } from "@/hooks/useOnline";
 import { useChecklistToday, useLatestWeight, useWaterToday } from "@/lib/queries/solo";
@@ -13,6 +14,8 @@ import { useActiveStarter } from "@/lib/queries/starter";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { useClientNow } from "@/lib/ui/useClientNow";
+import { LOG_CATEGORY, LOG_ICON } from "@/lib/ui/categories";
+import { categoryTone, type Tone } from "@/lib/ui/tones";
 import { ChecklistCard } from "./ChecklistCard";
 import { FastTodayCard } from "./FastTodayCard";
 import { CardSkeleton } from "./parts";
@@ -41,9 +44,15 @@ export function SoloTodayLoading() {
   );
 }
 
-function StartCard({ title, text, href, action }: { title: string; text: string; href: string; action: string }) {
+/**
+ * One tool to start with. The icon tile (category colour, as in the Log hub)
+ * says what the tool is, so the page needs no "pick one" instruction above
+ * the cards (text audit, 19 Nov 2026).
+ */
+function StartCard({ title, text, href, action, icon, tone }: { title: string; text: string; href: string; action: string; icon: LucideIcon; tone: Tone }) {
   return (
     <DSCard className="flex flex-col gap-1.5 p-5.5">
+      <IconTile icon={icon} tone={tone} className="mb-1.5" />
       <h2 className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
         {title}
       </h2>
@@ -110,7 +119,6 @@ export function SoloToday() {
       <PageHeader
         eyebrow={dateLine ?? <span aria-hidden="true">&nbsp;</span>}
         title={{ before: "Hey, ", emphasis: firstName, after: "." }}
-        subtitle={firstDay && !allFailed ? "Pick one thing to begin with. There is no wrong place to start." : undefined}
       />
 
       {!online && (
@@ -139,13 +147,13 @@ export function SoloToday() {
       ) : firstDay ? (
         <div className="flex flex-col gap-3.5">
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-            <StartCard title="Start a fast" text="Pick a length, and the time is kept for you. You choose when to stop." href={SOLO_HREFS.fasting} action="Start a fast" />
-            <StartCard title="Count today's water" text="Tap once for each glass. You choose whether to set an aim." href={SOLO_HREFS.water} action="Open water" />
-            <StartCard title="Log your weight" text="Weigh in when you like. Once a week is plenty." href="/dashboard/member/weight-log" action="Log weight" />
+            <StartCard title="Start a fast" text="Pick a length, and the time is kept for you. You choose when to stop." href={SOLO_HREFS.fasting} action="Start a fast" icon={LOG_ICON.fast} tone={categoryTone(LOG_CATEGORY.fast)} />
+            <StartCard title="Count today's water" text="Tap once for each glass. You choose whether to set an aim." href={SOLO_HREFS.water} action="Open water" icon={LOG_ICON.water} tone={categoryTone(LOG_CATEGORY.water)} />
+            <StartCard title="Log your weight" text="Weigh in when you like. Once a week is plenty." href="/dashboard/member/weight-log" action="Log weight" icon={LOG_ICON.weight} tone={categoryTone(LOG_CATEGORY.weight)} />
             {starterOn && (
-              <StartCard title="Start a free program" text="Beginner workouts. Three questions to pick one." href="/dashboard/member/starter" action="Find a program" />
+              <StartCard title="Start a free program" text="Beginner workouts. Three questions to pick one." href="/dashboard/member/starter" action="Find a program" icon={LOG_ICON.session} tone={categoryTone(LOG_CATEGORY.session)} />
             )}
-            <StartCard title="Make a daily list" text="A few lines you want to do each day. Tool lines tick themselves." href={SOLO_HREFS.todayList} action="Build your list" />
+            <StartCard title="Make a daily list" text="A few lines you want to do each day. Tool lines tick themselves." href={SOLO_HREFS.todayList} action="Build your list" icon={ListChecks} tone="neutral" />
           </div>
           <DSCard flat className="p-5">
             <h2 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>

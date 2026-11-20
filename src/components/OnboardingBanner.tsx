@@ -38,7 +38,7 @@ const ROLE_CONFIG: Record<
 > = {
   GYM_OWNER: {
     title: "Complete your gym setup",
-    desc: "Add your locations, facilities, and business details to publish your listing and start accepting members.",
+    desc: "Finish your listing to accept members.",
     steps: ["Gym details & location", "Facilities & amenities", "Business registration", "Pricing & plans"],
     accent: "var(--gym)",
     soft: "var(--gym-soft)",
@@ -46,7 +46,7 @@ const ROLE_CONFIG: Record<
   },
   TRAINER: {
     title: "Complete your trainer profile",
-    desc: "Add your certifications and specialties to get verified and appear in the marketplace.",
+    desc: "Add certifications to get verified.",
     steps: ["Certifications & credentials", "Specialties & expertise", "Professional bio", "Pricing & availability"],
     accent: "var(--trainer)",
     soft: "var(--trainer-soft)",
@@ -54,7 +54,7 @@ const ROLE_CONFIG: Record<
   },
   DIETITIAN: {
     title: "Complete your dietitian profile",
-    desc: "Add your credentials and license to get verified and start taking client intakes.",
+    desc: "Add your licence to get verified.",
     steps: ["Professional credentials", "License information", "Specialties & approach", "Consultation pricing"],
     accent: "var(--dietitian)",
     soft: "var(--dietitian-soft)",
@@ -62,7 +62,7 @@ const ROLE_CONFIG: Record<
   },
   USER: {
     title: "Complete your profile",
-    desc: "Add your goals and preferences to get matched with verified providers near you.",
+    desc: "Add your goals to see matched providers.",
     steps: ["Fitness goals", "Preferences & interests", "Location", "Subscription plan"],
     accent: "var(--consumer)",
     soft: "var(--consumer-soft)",

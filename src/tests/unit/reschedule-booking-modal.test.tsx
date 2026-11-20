@@ -62,6 +62,8 @@ describe("RescheduleBookingModal", () => {
       localTimeKey(at(14)),
     ]);
     expect(screen.getByRole("button", { name: "Confirm reschedule" })).toBeDisabled();
+    // The picker says "pick a time"; the line only says who hears about it (text audit, 19 Nov 2026).
+    expect(screen.getByText("We'll let your provider know.")).toBeInTheDocument();
   });
 
   it("sends the slot's own start, unchanged", async () => {

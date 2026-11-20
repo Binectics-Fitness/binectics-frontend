@@ -42,6 +42,10 @@ describe("login page ?email= prefill", () => {
     render(<AuthPage />);
     expect(screen.getAllByDisplayValue("new@example.com").length).toBeGreaterThan(0);
     expect(register).not.toHaveBeenCalled();
+    // Each provider sets its own cancellation policy (Oct 18 ruling), so
+    // sign-up promises no blanket window (owner decision, 20 Nov 2026).
+    expect(screen.getByText("Free to join. Pay only for what you book.")).toBeInTheDocument();
+    expect(screen.queryByText(/24h/)).toBeNull();
   });
   it("ignores a malformed value", () => {
     query = "email=" + encodeURIComponent("<script>alert(1)</script>");

@@ -119,10 +119,10 @@ export function RescheduleBookingModal({
       title="Reschedule booking"
       description={
         audience === "provider"
-          ? "Pick one of your open times for this session. We'll let your client know."
+          ? "We'll let your client know."
           : audience === "staff"
-            ? "Pick one of the provider's open times. We'll let the client and the provider know."
-            : "Pick one of your provider's open times. We'll let them know."
+            ? "We'll let the client and the provider know."
+            : "We'll let your provider know."
       }
       footer={
         <>

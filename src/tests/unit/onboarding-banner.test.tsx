@@ -90,13 +90,16 @@ describe("OnboardingBanner", () => {
   });
 
   it.each([
-    [UserRole.TRAINER, /Complete your trainer profile/i, "Certifications & credentials"],
-    [UserRole.DIETITIAN, /Complete your dietitian profile/i, "License information"],
-    [UserRole.GYM_OWNER, /Complete your gym setup/i, "Facilities & amenities"],
-  ])("renders role-specific content for %s", (role, title, step) => {
+    [UserRole.TRAINER, /Complete your trainer profile/i, "Certifications & credentials", "Add certifications to get verified."],
+    [UserRole.DIETITIAN, /Complete your dietitian profile/i, "License information", "Add your licence to get verified."],
+    [UserRole.GYM_OWNER, /Complete your gym setup/i, "Facilities & amenities", "Finish your listing to accept members."],
+    [UserRole.USER, /Complete your profile/i, "Fitness goals", "Add your goals to see matched providers."],
+  ])("renders role-specific content for %s", (role, title, step, desc) => {
     arrange(makeUser({ role, first_name: undefined }));
     expect(screen.getByText(title)).toBeInTheDocument();
     expect(screen.getByText(step)).toBeInTheDocument();
+    // One short line: the step list below says what setup covers (text audit, 19 Nov 2026).
+    expect(screen.getByText(desc)).toBeInTheDocument();
   });
 
   it("renders nothing when signed out", () => {

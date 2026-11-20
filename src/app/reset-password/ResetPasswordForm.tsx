@@ -120,7 +120,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                 </h1>
                 <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
                   {invite
-                    ? "Choose a password to finish setting up your account, then sign in to check in, book classes, and track your progress."
+                    ? "Choose a password to finish setting up your account."
                     : "Your new password must be different from previously used passwords."}
                 </p>
               </div>

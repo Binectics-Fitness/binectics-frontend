@@ -308,7 +308,7 @@ function AuthContent() {
                 <h1 className="text-[30px] font-medium leading-[1.1] mt-3" style={{ letterSpacing: "-0.025em", color: "var(--ink)" }}>
                   Find your people.<br />It takes a minute.
                 </h1>
-                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book. Cancel any session up to 24h before.</p>
+                <p className="text-[14px] mt-3 leading-relaxed" style={{ color: "var(--fg-3)" }}>Free to join. Pay only for what you book.</p>
 
                 <form className="flex flex-col gap-3.5 mt-8" onSubmit={handleSignup(onSignup)}>
                   {apiError && (

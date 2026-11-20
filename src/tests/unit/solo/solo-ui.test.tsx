@@ -79,7 +79,9 @@ describe("Today: first day", () => {
   it("offers where to start and invents nothing", async () => {
     emptyEverything();
     renderUi(<SoloToday />);
-    expect(await screen.findByText("Pick one thing to begin with. There is no wrong place to start.")).toBeInTheDocument();
+    // The tool cards are the choice: no "pick one" instruction above them (text audit, 19 Nov 2026).
+    expect(await screen.findByRole("link", { name: "Start a fast" })).toBeInTheDocument();
+    expect(screen.queryByText(/Pick one thing to begin with/)).toBeNull();
     expect(screen.getByRole("link", { name: "Open water" })).toHaveAttribute("href", "/dashboard/member/water");
     expect(screen.getByRole("link", { name: "Log weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");
     expect(screen.getByRole("link", { name: "Build your list" })).toBeInTheDocument();
