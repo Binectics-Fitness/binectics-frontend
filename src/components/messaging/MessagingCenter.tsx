@@ -17,8 +17,8 @@ function isWide(): boolean {
 }
 
 export interface MessagingCenterProps {
-  /** Who this inbox is for, in the empty state. */
-  emptyHint: string;
+  /** Who this inbox is for, in the empty state. Leave it out where the heading says enough. */
+  emptyHint?: string;
   /** When set, the owner can post an announcement to this gym. */
   broadcastOrg?: { id: string; name: string } | null;
   /**
@@ -210,9 +210,11 @@ export function MessagingCenter({ emptyHint, broadcastOrg, gymInboxOf }: Messagi
             <p className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
               No conversation selected
             </p>
-            <p className="max-w-[34ch] text-[14px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
-              {threads.length > 0 ? "Choose a conversation to read and reply." : emptyHint}
-            </p>
+            {threads.length === 0 && emptyHint && (
+              <p className="max-w-[34ch] text-[14px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+                {emptyHint}
+              </p>
+            )}
           </div>
         )}
       </div>

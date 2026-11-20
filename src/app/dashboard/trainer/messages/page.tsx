@@ -12,7 +12,7 @@ export default function TrainerMessagesPage() {
   return (
     <TrainerDashboardShell activeItem="Inbox" crumb="Messages">
       <Suspense fallback={null}>
-        <MessagingCenter emptyHint="Conversations with your clients appear here. Start one from a client's profile." />
+        <MessagingCenter />
       </Suspense>
     </TrainerDashboardShell>
   );

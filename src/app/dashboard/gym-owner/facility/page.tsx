@@ -128,7 +128,7 @@ export default function GymLocationsPage() {
         )}
         {!loading && locations.length === 0 && (
           <DSCard className="px-4.5 py-6">
-            <EmptySlate message="No listings found." hint="Add a location to get started." mt="mt-0" />
+            <EmptySlate message="No locations yet." mt="mt-0" action={canAddLocation ? <AddLocationButton /> : undefined} />
           </DSCard>
         )}
       </div>

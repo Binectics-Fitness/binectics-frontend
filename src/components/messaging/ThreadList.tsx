@@ -46,7 +46,7 @@ export function ThreadList({
   threads: ThreadSummary[];
   status: "loading" | "error" | "ready";
   activeId: string | null;
-  emptyHint: string;
+  emptyHint?: string;
   onOpen: (threadId: string) => void;
   onRetry: () => void;
   /** Replaces the generic load error; with it, there is no retry button. */
@@ -80,9 +80,11 @@ export function ThreadList({
           <p className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>
             No conversations yet
           </p>
-          <p className="max-w-[32ch] text-[14px] leading-normal md:text-[13px]" style={{ color: "var(--fg-3)" }}>
-            {emptyHint}
-          </p>
+          {emptyHint && (
+            <p className="max-w-[32ch] text-[14px] leading-normal md:text-[13px]" style={{ color: "var(--fg-3)" }}>
+              {emptyHint}
+            </p>
+          )}
         </div>
       ) : (
         <ul className="min-h-0 flex-1 overflow-y-auto" aria-label="Conversations">

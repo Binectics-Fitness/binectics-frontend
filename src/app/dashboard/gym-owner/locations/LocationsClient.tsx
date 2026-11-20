@@ -126,7 +126,11 @@ export default function LocationsClient() {
         <AsyncSpinner size="page" label="Loading locations" />
       ) : activeLocations.length === 0 && !error && currentOrg ? (
         <DSCard className="px-4.5 py-6">
-          <EmptySlate message="No locations yet." hint="Add your first branch to get started." mt="mt-0" />
+          <EmptySlate
+            message="No locations yet."
+            mt="mt-0"
+            action={canManage ? <button className="btn-primary-v2 sm" onClick={() => setAddOpen(true)}>+ Add location</button> : undefined}
+          />
         </DSCard>
       ) : activeLocations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

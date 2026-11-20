@@ -188,7 +188,11 @@ export default function GymStaffPage() {
         <AsyncSpinner size="page" label="Loading staff" />
       ) : members.length === 0 && !error && currentOrg ? (
         <DSCard className="px-4.5 py-6">
-          <EmptySlate message="No staff yet." hint="Add your first team member to get started." mt="mt-0" />
+          <EmptySlate
+            message="No staff yet."
+            mt="mt-0"
+            action={canInvite ? <button className="btn-primary-v2 sm" onClick={() => setAddStaffOpen(true)}>+ Add staff</button> : undefined}
+          />
         </DSCard>
       ) : members.length > 0 && visibleMembers.length === 0 ? (
         <DSCard className="px-4.5 py-6">

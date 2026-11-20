@@ -22,7 +22,7 @@ export default function TrainerSettingsPage() {
         description={
           gym
             ? `Set the weekly hours the members you coach at ${gym.name} can book 1:1 sessions with you, plus any blocked dates.`
-            : "Set the weekly hours members can book 1:1 sessions with you, plus any blocked dates. Members book from your marketplace listing."
+            : "Weekly hours and blocked dates."
         }
       />
       {/* A gym's trainer is paid through the gym: its payment account takes
