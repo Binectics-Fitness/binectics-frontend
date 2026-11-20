@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ProgramsManager from "@/components/programs/ProgramsManager";
 import {
+  BLOCK_ISSUE_COPY,
   blocksWithBadOwnLogNumber,
   emptyBlockRow,
   phaseRowsToPayload,
@@ -173,6 +174,7 @@ describe("the template editor", () => {
     const user = await openHabit();
     await pick(user, OWN_LOG_COPY.option.fasting_hours);
     const hours = screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours });
+    await user.clear(hours);
     await user.type(hours, "25");
     expect(screen.getByText(OWN_LOG_COPY.boundsError.fasting_hours)).toBeInTheDocument();
     expect(hours).toHaveAttribute("aria-invalid", "true");
@@ -186,9 +188,13 @@ describe("the template editor", () => {
     const create = vi.spyOn(programsService, "createTemplate");
     const user = await openHabit();
     await pick(user, OWN_LOG_COPY.option.water_glasses);
+    // It starts from a real number (8), not a grey placeholder.
+    const glasses = screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.water_glasses });
+    expect(glasses).toHaveValue(8);
+    await user.clear(glasses);
     expect(screen.queryByText(OWN_LOG_COPY.boundsError.water_glasses)).toBeNull();
     await user.click(screen.getByRole("button", { name: "Create draft" }));
-    expect(toast.error).toHaveBeenCalledWith(OWN_LOG_COPY.saveError("phase 1, task 1"));
+    expect(toast.error).toHaveBeenCalledWith("Fix the task marked in red before saving.");
     expect(screen.getByText(OWN_LOG_COPY.boundsError.water_glasses)).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
   });
@@ -200,7 +206,7 @@ describe("the template editor", () => {
     const user = await openHabit();
     await user.type(screen.getByPlaceholderText("Task title"), "Fast 16 hours");
     await pick(user, OWN_LOG_COPY.option.fasting_hours);
-    await user.type(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours }), "16");
+    expect(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours })).toHaveValue(16);
     expect(screen.queryByText(OWN_LOG_COPY.boundsError.fasting_hours)).toBeNull();
     await user.click(screen.getByRole("button", { name: "Create draft" }));
     await waitFor(() => expect(create).toHaveBeenCalled());
@@ -210,6 +216,24 @@ describe("the template editor", () => {
       title: "Fast 16 hours",
       auto_rule: { metric: "fasting_hours", comparator: "gte", threshold: 16, window: "scheduled_day" },
     });
+  });
+
+  // Create Program UX review (20 Nov 2026) P0 fixes.
+  it("asks before the bottom Cancel throws away typed work, like the X", async () => {
+    const user = await openHabit();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(await screen.findByText("Discard changes?")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("e.g. 12-week gut reset")).toHaveValue("Lean 28");
+  });
+
+  it("says next to the task when a task with only a note has no title, instead of dropping it", async () => {
+    const create = vi.spyOn(programsService, "createTemplate");
+    const user = await openHabit();
+    await user.type(screen.getByPlaceholderText("Details / instructions (optional)"), "Walk after dinner");
+    await user.click(screen.getByRole("button", { name: "Create draft" }));
+    expect(toast.error).toHaveBeenCalledWith("Fix the task marked in red before saving.");
+    expect(screen.getByRole("alert")).toHaveTextContent(BLOCK_ISSUE_COPY.title);
+    expect(create).not.toHaveBeenCalled();
   });
 });
 
@@ -259,10 +283,10 @@ describe("plan gating (owner, 19 Nov 2026: fasting and water are ungated)", () =
     const pickers = () => screen.getAllByRole("button", { name: OWN_LOG_COPY.none });
     await user.click(pickers()[0]);
     await user.click(await screen.findByText(OWN_LOG_COPY.option.fasting_hours, { selector: "li *, li" }));
-    await user.type(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours }), "16");
+    expect(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.fasting_hours })).toHaveValue(16);
     await user.click(pickers()[0]);
     await user.click(await screen.findByText(OWN_LOG_COPY.option.water_glasses, { selector: "li *, li" }));
-    await user.type(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.water_glasses }), "8");
+    expect(screen.getByRole("spinbutton", { name: OWN_LOG_COPY.thresholdLabel.water_glasses })).toHaveValue(8);
     await user.click(screen.getByRole("button", { name: "Create draft" }));
     await waitFor(() => expect(create).toHaveBeenCalled());
     const blocks = create.mock.calls[0][0].phases[0].blocks;

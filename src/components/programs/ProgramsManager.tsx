@@ -50,10 +50,11 @@ import {
   INTENSITY_OPTIONS,
   MAX_CATCH_UP_DAYS,
   EMPTY_PROGRAM_FORM,
-  blocksMissingContent,
-  blocksWithBadOwnLogNumber,
   emptyPhaseRow,
   emptyBlockRow,
+  BLOCK_ISSUE_COPY,
+  blockIssue,
+  countBlockIssues,
   emptyGoalRow,
   formToPayload,
   versionToForm,
@@ -130,7 +131,13 @@ function OwnLogRuleFields({
           <FieldLabel>{OWN_LOG_COPY.label}</FieldLabel>
           <SearchableSelect
             value={metric}
-            onChange={(v) => onChange({ own_log_metric: v as OwnLogMetric | "" })}
+            onChange={(v) =>
+              onChange({
+                own_log_metric: v as OwnLogMetric | "",
+                // Start from a real number the coach can change, not a placeholder.
+                ...(v && raw.trim() === "" ? { own_log_threshold: v === "fasting_hours" ? "16" : "8" } : {}),
+              })
+            }
             options={[
               { label: OWN_LOG_COPY.none, value: "" },
               ...OWN_LOG_METRICS.map((m) => ({ label: OWN_LOG_COPY.option[m], value: m })),
@@ -151,7 +158,6 @@ function OwnLogRuleFields({
               aria-label={OWN_LOG_COPY.thresholdLabel[metric]}
               aria-invalid={invalid || undefined}
               aria-describedby={invalid ? errorId : undefined}
-              placeholder={metric === "fasting_hours" ? "16" : "8"}
               className="h-9 rounded-(--r-2) px-3 text-[13px]"
               style={{
                 ...fieldStyle,
@@ -184,6 +190,7 @@ function clientName(c: ClientProfile): string {
 }
 
 function instanceClientName(i: ProgramInstance): string {
+  if (i.client_name?.trim()) return i.client_name.trim();
   if (typeof i.client_id === "object" && i.client_id !== null) {
     return `${i.client_id.first_name} ${i.client_id.last_name}`.trim();
   }
@@ -323,15 +330,16 @@ function ProgramFormModal({
     if (!form.name.trim()) return;
     // A form or meal plan task with nothing linked can't be done by the
     // client; it would sit on their Today with no way to complete it.
-    const missing = blocksMissingContent(form.phases);
-    if (missing.length > 0) {
-      toast.error(`Link content to ${missing.join("; ")} before saving.`);
-      return;
-    }
-    const badNumbers = blocksWithBadOwnLogNumber(form.phases);
-    if (badNumbers.length > 0) {
+    // Each problem is said next to its task; the toast only says how many.
+    const issues = countBlockIssues(form.phases);
+    if (issues > 0) {
       setTriedSave(true);
-      toast.error(OWN_LOG_COPY.saveError(badNumbers.join("; ")));
+      toast.error(
+        issues === 1 ? "Fix the task marked in red before saving." : `Fix the ${issues} tasks marked in red before saving.`,
+      );
+      requestAnimationFrame(() =>
+        document.querySelector("[data-block-issue]")?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      );
       return;
     }
     setSaving(true);
@@ -495,8 +503,17 @@ function ProgramFormModal({
 
                   {/* Blocks in this phase */}
                   <div className="flex flex-col gap-2 sm:pl-7">
-                    {phase.blocks.map((block, bi) => (
-                      <div key={bi} className="rounded-(--r-2) p-3 flex flex-col gap-2" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                    {phase.blocks.map((block, bi) => {
+                      const issue = triedSave ? blockIssue(block) : null;
+                      // The own-log number shows its own error under the input.
+                      const ownLogIssue = block.type === "habit" && !!block.own_log_metric;
+                      return (
+                      <div
+                        key={bi}
+                        data-block-issue={issue ? "" : undefined}
+                        className="rounded-(--r-2) p-3 flex flex-col gap-2"
+                        style={{ background: "var(--bg)", border: `1px solid ${issue ? "var(--danger)" : "var(--border)"}` }}
+                      >
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="w-[130px] shrink-0">
                             <SearchableSelect
@@ -522,6 +539,7 @@ function ProgramFormModal({
                             value={block.title}
                             onChange={(e) => setBlock(pi, bi, { title: e.target.value })}
                             placeholder="Task title"
+                            aria-invalid={issue === BLOCK_ISSUE_COPY.title || undefined}
                             className="order-last h-9 min-w-0 basis-full sm:order-none sm:basis-0 sm:flex-1 rounded-(--r-2) px-3 text-[13px]"
                             style={fieldStyle}
                           />
@@ -547,7 +565,6 @@ function ProgramFormModal({
                               type="number" min={0}
                               value={block.start_offset_days}
                               onChange={(e) => setBlock(pi, bi, { start_offset_days: e.target.value })}
-                              placeholder="0"
                               className="h-9 rounded-(--r-2) px-3 text-[13px]"
                               style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums" }}
                             />
@@ -558,7 +575,7 @@ function ProgramFormModal({
                               type="number" min={1}
                               value={block.duration_days}
                               onChange={(e) => setBlock(pi, bi, { duration_days: e.target.value })}
-                              placeholder="phase"
+                              placeholder="Whole phase"
                               className="h-9 rounded-(--r-2) px-3 text-[13px]"
                               style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums" }}
                             />
@@ -570,7 +587,6 @@ function ProgramFormModal({
                                 type="number" min={1} max={7}
                                 value={block.times_per_week}
                                 onChange={(e) => setBlock(pi, bi, { times_per_week: e.target.value })}
-                                placeholder="3"
                                 className="h-9 rounded-(--r-2) px-3 text-[13px]"
                                 style={{ ...fieldStyle, fontVariantNumeric: "tabular-nums" }}
                               />
@@ -686,8 +702,14 @@ function ProgramFormModal({
                           className="h-9 rounded-(--r-2) px-3 text-[13px]"
                           style={fieldStyle}
                         />
+                        {issue && !ownLogIssue && (
+                          <p role="alert" className="text-[12px]" style={{ color: "var(--danger-ink)" }}>
+                            {issue}
+                          </p>
+                        )}
                       </div>
-                    ))}
+                      );
+                    })}
                     <button
                       type="button"
                       onClick={() => addBlock(pi)}
@@ -810,7 +832,8 @@ function ProgramFormModal({
             <div className="flex justify-end gap-2 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
               <button
                 type="button"
-                onClick={onClose}
+                // Same guard as the X: unsaved work asks before it is thrown away.
+                onClick={requestClose}
                 className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium"
                 style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
               >
