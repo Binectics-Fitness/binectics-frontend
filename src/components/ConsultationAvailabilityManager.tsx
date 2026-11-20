@@ -28,6 +28,9 @@ type DayRange = { id: string; startTime: string; endTime: string };
 type DaySchedule = { enabled: boolean; ranges: DayRange[] };
 type WeekSchedule = Record<number, DaySchedule>;
 
+/** Why the copy-Monday buttons are disabled, and their guard message. */
+const SET_MONDAY_FIRST = "Set Monday first.";
+
 const weekDays = [
   "Sunday",
   "Monday",
@@ -183,6 +186,8 @@ export default function ConsultationAvailabilityManager({
     reason: "",
   });
 
+  const mondayHasHours = schedule[1].enabled && schedule[1].ranges.length > 0;
+
   const enabledDayCount = useMemo(
     () =>
       Object.values(schedule).filter(
@@ -334,7 +339,7 @@ export default function ConsultationAvailabilityManager({
     }
     // The API needs a currency with any price, a free one (0) included.
     if (!activeCurrency) {
-      fail("Choose the currency your session is priced in.");
+      fail("Choose a currency.");
       return;
     }
 
@@ -447,7 +452,7 @@ export default function ConsultationAvailabilityManager({
     const monday = schedule[1];
     if (!monday.enabled || monday.ranges.length === 0) {
       setMessage({
-        text: "Set Monday's hours first to copy them to the rest of the week.",
+        text: SET_MONDAY_FIRST,
         type: "error",
       });
       return;
@@ -469,7 +474,7 @@ export default function ConsultationAvailabilityManager({
     const monday = schedule[1];
     if (!monday.enabled || monday.ranges.length === 0) {
       setMessage({
-        text: "Set Monday's hours first to copy them to the weekend.",
+        text: SET_MONDAY_FIRST,
         type: "error",
       });
       return;
@@ -566,7 +571,7 @@ export default function ConsultationAvailabilityManager({
   const createException = async () => {
     if (!newException.date) {
       setMessage({
-        text: "Date is required for the exception.",
+        text: "Choose a date.",
         type: "error",
       });
       return;
@@ -577,7 +582,7 @@ export default function ConsultationAvailabilityManager({
     if (exceptionMode === "range") {
       if (!newException.endDate) {
         setMessage({
-          text: "End date is required for a date range.",
+          text: "Choose an end date.",
           type: "error",
         });
         return;
@@ -596,7 +601,7 @@ export default function ConsultationAvailabilityManager({
         1;
       if (diffDays > 31) {
         setMessage({
-          text: "Date range cannot exceed 31 days at a time.",
+          text: "A range can be up to 31 days.",
           type: "error",
         });
         return;
@@ -608,7 +613,7 @@ export default function ConsultationAvailabilityManager({
       // Range only makes sense for full-day blocks
       if (newException.type === AvailabilityExceptionType.CUSTOM_HOURS) {
         setMessage({
-          text: "Date ranges only support full-day blocks.",
+          text: "A date range blocks whole days.",
           type: "error",
         });
         return;
@@ -756,22 +761,29 @@ export default function ConsultationAvailabilityManager({
                   </h2>
                   <p className="mt-0.5 text-xs text-fg-3">
                     {enabledDayCount === 0
-                      ? "Toggle days to set when you accept bookings"
+                      ? "Not available any day"
                       : `Available on ${enabledDayCount} day${enabledDayCount === 1 ? "" : "s"}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {!mondayHasHours && (
+                    <span className="hidden sm:inline text-xs text-fg-3">{SET_MONDAY_FIRST}</span>
+                  )}
                   <button
                     type="button"
                     onClick={copyToWeekdays}
-                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors"
+                    disabled={!mondayHasHours}
+                    title={mondayHasHours ? undefined : SET_MONDAY_FIRST}
+                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
                   >
                     Copy Mon to Tue–Fri
                   </button>
                   <button
                     type="button"
                     onClick={copyToWeekend}
-                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors"
+                    disabled={!mondayHasHours}
+                    title={mondayHasHours ? undefined : SET_MONDAY_FIRST}
+                    className="hidden sm:inline-flex h-9 items-center rounded-(--r-2) border border-border px-3 text-xs font-medium text-fg-2 hover:bg-bg-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
                   >
                     Copy Mon to weekend
                   </button>
@@ -915,11 +927,11 @@ export default function ConsultationAvailabilityManager({
                   <h2 className="text-lg font-bold text-fg">
                     Session Settings
                   </h2>
-                  <p className="mt-0.5 text-xs text-fg-3">
-                    {sessionLoadState === "ready" && !ownTypeId
-                      ? "Clients book the standard session until you save your own."
-                      : "Length, buffer time, price, and minimum booking notice."}
-                  </p>
+                  {sessionLoadState === "ready" && !ownTypeId && (
+                    <p className="mt-0.5 text-xs text-fg-3">
+                      Clients book the standard session until you save your own.
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"

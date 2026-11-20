@@ -114,7 +114,7 @@ describe("food library: archive", () => {
     render(<DietitianFoodsPage />);
     await user.click((await screen.findAllByRole("button", { name: "Archive" }))[0]);
     const dialog = await findConfirmDialog('Archive "Oats"?');
-    expect(dialog).toHaveTextContent("Meal plans that already use it don't change.");
+    expect(dialog).toHaveTextContent("Plans that use it don't change. This can't be undone.");
     expect(archive).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Archive food" }));
     await waitFor(() => expect(archive).toHaveBeenCalledWith("f1"));

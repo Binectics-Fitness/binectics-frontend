@@ -30,7 +30,7 @@ import type {
 } from "@/lib/api/marketplace";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 import { AccountType, UserRole } from "@/lib/types";
-import { ChipEditor } from "@/components/ds";
+import { ChipEditor, StatusPill } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -309,6 +309,9 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
         <div className="flex items-center gap-2">
           {dirty && (
             <button className="btn-primary-v2 sm" disabled={saving} onClick={() => void onSave()}>Save changes</button>
+          )}
+          {hasListing && (
+            <StatusPill label={listing?.is_published ? "Live" : "Draft"} tone={listing?.is_published ? "success" : "neutral"} />
           )}
           {hasListing && (
             <button className="btn-ghost-v2 sm" disabled={publishBusy} onClick={() => void onTogglePublish()}>

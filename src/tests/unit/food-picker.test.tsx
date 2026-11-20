@@ -38,7 +38,7 @@ function Harness({ initial = [] as string[] }: { initial?: string[] }) {
 }
 
 const type = (text: string) =>
-  fireEvent.change(screen.getByPlaceholderText(/search your food library|add another/i), {
+  fireEvent.change(screen.getByPlaceholderText(/search foods or add one|add another/i), {
     target: { value: text },
   });
 
@@ -91,7 +91,7 @@ describe("FoodPicker", () => {
 
     type("gre");
     await screen.findByText("Greek Yoghurt Bowl");
-    fireEvent.keyDown(screen.getByPlaceholderText(/search your food library|add another/i), {
+    fireEvent.keyDown(screen.getByPlaceholderText(/search foods or add one|add another/i), {
       key: "Enter",
     });
 

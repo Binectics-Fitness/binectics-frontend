@@ -70,10 +70,10 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       } else if (res.status === 404 || res.status === 403 || res.status === 400) {
         setState({ kind: "missing" });
       } else {
-        setState({ kind: "error", message: res.message ?? "We couldn't load this session. Try again shortly." });
+        setState({ kind: "error", message: res.message ?? "Couldn't load this session. Try again." });
       }
     } catch {
-      setState({ kind: "error", message: "We couldn't load this session. Try again shortly." });
+      setState({ kind: "error", message: "Couldn't load this session. Try again." });
     }
   }, [sessionId]);
 
@@ -213,7 +213,7 @@ function PaymentSummary({
   const amount = bookingAmountLabel(booking);
 
   if (money === "free") {
-    return <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }} data-testid="payment-state">Free session. Nothing to pay.</p>;
+    return <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }} data-testid="payment-state">Free session.</p>;
   }
 
   return (

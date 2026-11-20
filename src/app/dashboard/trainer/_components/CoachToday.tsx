@@ -223,7 +223,7 @@ export function CoachToday({
                   <div className="px-4.5 py-4">
                     <EmptySlate
                       message="Nothing on today."
-                      hint={next ? `Your next ${noun}: ${when(next.startsAt)}.` : "New bookings will show up here."}
+                      hint={next ? `Your next ${noun}: ${when(next.startsAt)}.` : undefined}
                       mt="mt-0"
                     />
                   </div>

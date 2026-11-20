@@ -957,10 +957,13 @@ function AssignmentsModal({
   template,
   basePath,
   onClose,
+  onAssign,
 }: {
   template: ProgramTemplate;
   basePath: string;
   onClose: () => void;
+  /** Set when the program can be assigned (published, not archived). */
+  onAssign?: () => void;
 }) {
   const [instances, setInstances] = useState<ProgramInstance[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1001,7 +1004,22 @@ function AssignmentsModal({
           ) : instances === null ? (
             <AsyncSpinner size="page" label="Loading clients" />
           ) : instances.length === 0 ? (
-            <EmptySlate message="No clients on this program yet." hint="Use Assign to add one." mt="mt-0" />
+            <EmptySlate
+              message="No clients on this program."
+              mt="mt-0"
+              action={
+                onAssign && (
+                  <button
+                    type="button"
+                    onClick={onAssign}
+                    className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+                    style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}
+                  >
+                    Assign
+                  </button>
+                )
+              }
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {instances.map((i) => (
@@ -1220,7 +1238,7 @@ export default function ProgramsManager({
         setTemplates(res.data);
         setError(null);
       } else {
-        setError(res.message || "We couldn't load your programs. Try again shortly.");
+        setError(res.message || "Couldn't load your programs. Try again.");
       }
       setLoading(false);
     })();
@@ -1353,8 +1371,8 @@ export default function ProgramsManager({
       title: `Restore "${t.name}"?`,
       description:
         t.latest_version_no === t.latest_published_version_no
-          ? "It goes back to your programs as published, ready to assign."
-          : "It goes back to your programs as a draft, ready to edit and publish.",
+          ? "It returns as published."
+          : "It returns as a draft.",
       confirmLabel: "Restore program",
       confirmVariant: "primary",
       onConfirm: async () => {
@@ -1445,8 +1463,15 @@ export default function ProgramsManager({
         </div>
       ) : !error && filtered.length === 0 ? (
         <EmptySlate
-          message={activeFilter === "All" ? "No live programs. Restore one from Archived, or create a new one." : `No ${activeFilter.toLowerCase()} programs.`}
+          message={activeFilter === "All" ? "No live programs." : `No ${activeFilter.toLowerCase()} programs.`}
           mt="mt-2"
+          action={
+            activeFilter === "All" && (
+              <button type="button" onClick={openCreate} className="h-8 px-3.5 rounded-(--r-2) text-[12.5px] font-medium cursor-pointer" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>
+                New program
+              </button>
+            )
+          }
         />
       ) : !error ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -1509,7 +1534,19 @@ export default function ProgramsManager({
       )}
 
       {clientsTemplate && (
-        <AssignmentsModal template={clientsTemplate} basePath={basePath} onClose={() => setClientsTemplate(null)} />
+        <AssignmentsModal
+          template={clientsTemplate}
+          basePath={basePath}
+          onClose={() => setClientsTemplate(null)}
+          onAssign={
+            clientsTemplate.latest_published_version_no > 0 && clientsTemplate.status !== "archived"
+              ? () => {
+                  setAssignTemplate(clientsTemplate);
+                  setClientsTemplate(null);
+                }
+              : undefined
+          }
+        />
       )}
       {confirmationModal}
     </Shell>

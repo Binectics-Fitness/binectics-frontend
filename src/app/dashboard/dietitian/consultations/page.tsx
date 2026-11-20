@@ -82,7 +82,7 @@ export default function DietitianConsultationsPage() {
     // The list is only trustworthy when the bookings call itself succeeded —
     // a failure must never render as "no consultations".
     setNow(Date.now());
-    setError(bookingsOk ? null : "We couldn't load your consultations. Try again shortly.");
+    setError(bookingsOk ? null : "Couldn't load your consultations. Try again.");
   }, []);
 
   useEffect(() => {
@@ -161,7 +161,6 @@ export default function DietitianConsultationsPage() {
       <PageHeader
         className="mb-0!"
         title={{ emphasis: "Consultations" }}
-        subtitle="Manage your consultation schedule and history"
         actions={
           <Link
             href="/dashboard/dietitian/calendar"

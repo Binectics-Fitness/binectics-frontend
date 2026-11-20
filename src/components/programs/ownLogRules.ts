@@ -63,7 +63,7 @@ export const OWN_LOG_COPY = {
     water_glasses: (n: number) => `Drink at least ${n} glasses`,
   } satisfies Record<OwnLogMetric, (n: number) => string>,
   /** A rule made outside this editor (e.g. steps from a health app) on this task. */
-  keptRule: "Ticks itself from a health app. Kept as it is when you save.",
+  keptRule: "Ticks from a health app. Kept when you save.",
 } as const;
 
 /**

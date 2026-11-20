@@ -186,7 +186,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
     requestConfirmation({
       title: `Archive "${food.name}"?`,
       description:
-        "It's hidden from your library, so you can't add it to new meal plans. Meal plans that already use it don't change. You can't bring it back from here.",
+        "It's hidden from your library and can't be added to new meal plans. Plans that use it don't change. This can't be undone.",
       confirmLabel: "Archive food",
       confirmVariant: "danger",
       onConfirm: async () => {

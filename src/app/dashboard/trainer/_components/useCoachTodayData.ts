@@ -53,7 +53,7 @@ export function useCoachTodayData(): CoachTodayData {
         anyOk = true;
       }
       setLoadedAt(Date.now());
-      setError(anyOk ? null : "We couldn't load your dashboard. Try again shortly.");
+      setError(anyOk ? null : "Couldn't load your dashboard. Try again.");
       setLoading(false);
     };
     const kick = window.setTimeout(() => void run(), 0);

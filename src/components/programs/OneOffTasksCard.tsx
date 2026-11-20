@@ -378,12 +378,12 @@ function SendTaskModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            {label("Note", id("note"))}
+            {label("Note (optional)", id("note"))}
             <textarea
               id={id("note")}
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
-              placeholder="Optional, e.g. Before our call on Friday."
+              placeholder="e.g. Before our call on Friday."
               rows={2}
               maxLength={2000}
               className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"

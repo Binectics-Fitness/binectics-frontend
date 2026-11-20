@@ -70,8 +70,8 @@ export function AsyncSpinner({ size = "inline", label = "Loading" }: AsyncSpinne
 export interface EmptySlateProps {
   /** Primary message, e.g. "No members found." */
   message: string;
-  /** Optional secondary hint shown smaller below the message. */
-  hint?: string;
+  /** Optional secondary hint shown smaller below the message (may hold a link). */
+  hint?: ReactNode;
   /** Extra top margin class. Defaults to "mt-4". */
   mt?: string;
   /**
