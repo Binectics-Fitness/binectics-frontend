@@ -1,0 +1,60 @@
+/**
+ * Every string on the coach client page, copied from the board
+ * (binectics-plans/design/coach-client-page/build.py, `C`). Tests assert the
+ * page renders these, so a wording change happens here and on the board.
+ * The program results section and the forms-and-tasks card keep their own copy.
+ */
+export const CLIENT_PAGE_COPY = {
+  message: "Message",
+  openProgram: "Open program",
+  assignProgram: "Assign a program",
+  activeClient: "Active client",
+  formerClient: "Former client",
+  clientSince: (date: string) => `Client since ${date}`,
+  goals: "Goals",
+  noGoals: "No goals set",
+  nextSession: "Next session",
+  noneBooked: "None booked",
+  thisWeek: "This week",
+  notOnProgram: "Not on a program",
+  nothingDue: "Nothing due yet",
+  weekDone: (done: number, scheduled: number) => `${done} of ${scheduled} done`,
+  missed: (n: number) => `${n} missed`,
+  noteTo: (first: string) => `Note to ${first}`,
+  notePlaceholder: "How the training is going, what to work on next",
+  noteHint: (first: string) => `${first} sees this in their journal.`,
+  saveNote: "Save note",
+  saving: "Saving…",
+  noteSaved: "Note saved.",
+  noteFailed: "Couldn't save the note.",
+  lastNote: (date: string) => `Last note · ${date}`,
+  noNotes: "No notes yet.",
+  allNotes: (n: number) => `All notes (${n})`,
+  fewerNotes: "Show the last note only",
+  sessions: "Sessions",
+  noSessions: "No sessions yet.",
+  allSessions: "All sessions",
+  next: "Next",
+  body: "Body measurements",
+  latestWeight: "Latest weight",
+  logged: (date: string) => `Logged ${date}`,
+  target: (kg: number) => `target ${kg} kg`,
+  noWeight: "No weight logged",
+  showTrend: "Show trend",
+  hideTrend: "Hide trend",
+  offline: (time: string) => `You are offline. Showing what was loaded at ${time}.`,
+  refreshFailed: (time: string) => `Could not refresh. Showing what was loaded at ${time}.`,
+  retry: "Try again",
+  errorTitle: "We could not load this client",
+  errorBody: "Nothing was changed. Try again in a moment.",
+  offlineNoSaved: "You are offline. Connect to see this client.",
+  loading: "Loading client",
+} as const;
+
+export const SESSION_LABEL: Record<string, string> = {
+  PENDING: "Awaiting payment",
+  CONFIRMED: "Confirmed",
+  COMPLETED: "Done",
+  NO_SHOW: "No-show",
+  CANCELLED: "Cancelled",
+};
