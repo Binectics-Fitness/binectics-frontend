@@ -97,7 +97,7 @@ describe("program page", () => {
     expect(screen.getByText(C.plan.empty)).toBeInTheDocument();
   });
 
-  it("offers the task types (no meal plan for a trainer), each with its cadence", async () => {
+  it("offers the task types (no meal plan for a trainer), each with its defaults", async () => {
     mockApi();
     const user = renderPage();
     await screen.findByText(C.plan.empty);
@@ -107,6 +107,8 @@ describe("program page", () => {
       (["workout", "habit", "checkin", "measure", "note"] as const).map((k) => TASK_TYPE_COPY[k].label + TASK_TYPE_COPY[k].meta),
     );
     await user.click(within(menu).getByRole("menuitem", { name: /Check-in form/ }));
+    // The coach's only form is picked, weekly.
+    expect(screen.getByRole("button", { name: "Session readiness" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("group", { name: C.inspector.howOften }).querySelector("[aria-pressed=true]")).toHaveTextContent("Weekly");
   });
 
@@ -139,6 +141,52 @@ describe("program page", () => {
     renderPage();
     expect(await screen.findByText(C.issue.form)).toBeInTheDocument();
   });
+  it("saves by itself: a habit that ticks itself from the water log", async () => {
+    const update = mockApi();
+    const user = renderPage();
+    await screen.findByText(C.plan.empty);
+    await addTask(user, "habit");
+    await user.type(screen.getByLabelText(C.inspector.title), "Drink water");
+    await user.click(screen.getByRole("button", { name: C.ticks.water }));
+    expect(screen.getByRole("textbox", { name: C.ticks.waterSuffix })).toHaveValue("8");
+    expect(screen.getByText(C.ticks.ownLogHelp)).toBeInTheDocument();
+    await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 3000 });
+    await waitFor(() =>
+      expect(lastBlocks(update)[0]).toMatchObject({
+        type: "habit", cadence: "daily", title: "Drink water",
+        auto_rule: { metric: "water_glasses", comparator: "gte", threshold: 8, window: "scheduled_day" },
+      }),
+    );
+    await waitFor(() => expect(screen.getByText(C.header.draftSaved)).toBeInTheDocument());
+  });
+
+  it("ticks from a health app: sleep asked in hours, sent in minutes; says when Health Connect is needed", async () => {
+    const update = mockApi();
+    const user = renderPage();
+    await screen.findByText(C.plan.empty);
+    await addTask(user, "habit");
+    await user.type(screen.getByLabelText(C.inspector.title), "Sleep");
+    await user.click(screen.getByRole("button", { name: C.ticks.health }));
+    expect(screen.getByText(C.ticks.healthHelp)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sleep" }));
+    expect(screen.getByRole("textbox", { name: "hours of sleep" })).toHaveValue("7");
+    await waitFor(() => expect(lastBlocks(update)[0].auto_rule).toEqual({ metric: "sleep_minutes", comparator: "gte", threshold: 420 }), { timeout: 3000 });
+    await user.clear(screen.getByRole("textbox", { name: "hours of sleep" }));
+    await user.type(screen.getByRole("textbox", { name: "hours of sleep" }), "20");
+    expect(screen.getByText("Set the hours, 1 to 16.")).toBeInTheDocument();
+  });
+
+  it("sends a measurement's target on the task (the API makes the goal)", async () => {
+    const update = mockApi();
+    const user = renderPage();
+    await screen.findByText(C.plan.empty);
+    await addTask(user, "measure");
+    expect(screen.getByLabelText(C.inspector.title)).toHaveValue("Weigh in");
+    await user.type(screen.getByLabelText(C.measure.target), "78");
+    expect(screen.getByText(C.measure.byTheEnd("kg"))).toBeInTheDocument();
+    await waitFor(() => expect(lastBlocks(update)[0]).toMatchObject({ type: "measurement", metric: "weight_kg", target: 78, cadence: "weekly" }), { timeout: 3000 });
+  });
+
 });
 
 describe("New program dialog", () => {
