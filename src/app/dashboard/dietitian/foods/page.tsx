@@ -313,7 +313,7 @@ export default function DietitianFoodsPage() {
       } else {
         setItems([]);
         setTotal(0);
-        setError(res.message ?? "Failed to load your food library.");
+        setError(res.message ?? "Couldn't load your food library.");
       }
       setLoading(false);
     };
@@ -384,7 +384,7 @@ export default function DietitianFoodsPage() {
     requestConfirmation({
       title: `Archive "${food.name}"?`,
       description:
-        "It's hidden from your library, so you can't add it to new meal plans. Meal plans that already use it don't change. You can't bring it back from here.",
+        "It's hidden from your library and can't be added to new meal plans. Plans that use it don't change. This can't be undone.",
       confirmLabel: "Archive food",
       confirmVariant: "danger",
       onConfirm: async () => {
@@ -531,7 +531,23 @@ export default function DietitianFoodsPage() {
               {!loading && filtered.length === 0 && !emptyLibrary && (
                 <tr>
                   <td colSpan={8} className="px-4.5 py-4">
-                    <EmptySlate message="No foods match the current search or filter." mt="mt-0" />
+                    <EmptySlate
+                      message="No foods match."
+                      mt="mt-0"
+                      action={
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuery("");
+                            setCategoryFilter("All");
+                          }}
+                          className="text-[13px] underline cursor-pointer"
+                          style={{ background: "none", border: "none", padding: 0, color: "var(--ink)" }}
+                        >
+                          Clear filters
+                        </button>
+                      }
+                    />
                   </td>
                 </tr>
               )}

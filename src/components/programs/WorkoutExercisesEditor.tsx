@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import ExercisePicker, { DemoTag, ExerciseThumb } from "./ExercisePicker";
 import { hasExerciseIllustration } from "@/components/ExerciseIllustration";
+import { DEMO_ART_NOTE } from "@/lib/exercises/clientArt";
 import { exerciseLibraryService } from "@/lib/api/exerciseLibrary";
 import {
   MAX_INLINE_EXERCISES,
@@ -243,7 +244,7 @@ export default function WorkoutExercisesEditor({
       )}
       {exercises.some((e) => e.library_exercise_id) && (
         <div className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-          Library art is illustrated demo art, not professionally reviewed.
+          {DEMO_ART_NOTE}
         </div>
       )}
     </div>

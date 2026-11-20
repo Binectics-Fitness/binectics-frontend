@@ -21,7 +21,7 @@ export default function DietitianSettingsPage() {
       <div className="mt-8">
         <GatewaysSection
           title="Payment account"
-          description="Connect your own payment account to collect membership plan payments directly, and to price plans in the currencies it has enabled. Secret keys are encrypted and never shown again."
+          description="Collect plan payments into your own account and price plans in its currencies. Secret keys are encrypted and never shown again."
         />
       </div>
       <div className="mt-8">

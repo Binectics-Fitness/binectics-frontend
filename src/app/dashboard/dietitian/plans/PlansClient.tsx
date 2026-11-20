@@ -86,6 +86,7 @@ function PlanModal({
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [currencyError, setCurrencyError] = useState<string | null>(null);
   // Only currencies prices can be set in right now, including those only the
   // org's own Paystack account can take. Editing keeps the plan's saved one
   // visible (the API accepts it unchanged), labelled as such.
@@ -118,9 +119,10 @@ function PlanModal({
     e.preventDefault();
     if (!form.name.trim()) return;
     if (!form.currency) {
-      setFormError("Choose the currency this plan is priced in.");
+      setCurrencyError("Choose a currency.");
       return;
     }
+    setCurrencyError(null);
     setFormError(null);
     setSaving(true);
     const error = await onSave({ ...form, ...comparisonPayload(comparison) });
@@ -182,7 +184,7 @@ function PlanModal({
             <textarea
               value={form.description ?? ""}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Brief description shown on your profile"
+              placeholder="Shown on your profile"
               rows={3}
               className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"
               style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
@@ -240,10 +242,16 @@ function PlanModal({
               <Eyebrow as="label">Currency</Eyebrow>
               <SearchableSelect
                 value={form.currency ?? ""}
-                onChange={(v) => set("currency", v)}
+                onChange={(v) => {
+                  set("currency", v);
+                  setCurrencyError(null);
+                }}
                 options={options}
                 placeholder={currencies ? (options.length ? "Choose currency" : "No currency available") : "Loading..."}
               />
+              {currencyError && (
+                <span role="alert" className="text-[11.5px] leading-snug" style={{ color: "var(--danger)" }}>{currencyError}</span>
+              )}
               {routeNote && (
                 <span className="text-[11.5px] leading-snug" style={{ color: "var(--fg-3)" }}>{routeNote}</span>
               )}
@@ -537,7 +545,7 @@ export default function DietitianPlansClient() {
     if (res.success && res.data) {
       setPlans((p) => p.map((pl) => (pl._id === res.data!._id ? res.data! : pl)));
     } else {
-      toast.error(res.message ?? "Failed to update plan status.");
+      toast.error(res.message ?? "Couldn't update the plan status.");
     }
   };
 

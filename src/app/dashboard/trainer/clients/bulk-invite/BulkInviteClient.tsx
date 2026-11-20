@@ -164,7 +164,7 @@ export default function BulkInviteClient() {
         <PageHeader
           className="mb-5.5!"
           title={{ before: "Bulk ", emphasis: "invite", after: " · CSV" }}
-          subtitle="Upload a CSV with columns name, email, phone and we will send invitation links to valid rows."
+          subtitle="Upload a CSV with name, email and phone columns."
         />
 
         <input

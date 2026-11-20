@@ -162,13 +162,16 @@ describe("programs: restore", () => {
     } as never);
     const user = userEvent.setup();
     wrap(<ProgramsManager config={config} />);
-    expect(await screen.findByText("No live programs. Restore one from Archived, or create a new one.")).toBeInTheDocument();
+    expect(await screen.findByText("No live programs.")).toBeInTheDocument();
+    // The way out is on screen, not described: a New program action and the Archived tab.
+    expect(screen.getAllByRole("button", { name: "New program" }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole("button", { name: /^Archived/ })).toBeInTheDocument();
     expect(list).toHaveBeenCalledWith(true);
 
     await user.click(screen.getByRole("button", { name: /^Archived/ }));
     await user.click(await screen.findByRole("button", { name: "Restore" }));
     const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
-    expect(dialog).toHaveTextContent("It goes back to your programs as published, ready to assign.");
+    expect(dialog).toHaveTextContent("It returns as published.");
     expect(restore).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Restore program" }));
     await waitFor(() => expect(restore).toHaveBeenCalledWith("t2"));
@@ -222,7 +225,7 @@ describe("programs: restore", () => {
     await user.click(await screen.findByRole("button", { name: /^Archived/ }));
     await user.click(await screen.findByRole("button", { name: "Restore" }));
     const dialog = await findConfirmDialog('Restore "Couch to 5k"?');
-    expect(dialog).toHaveTextContent("It goes back to your programs as a draft, ready to edit and publish.");
+    expect(dialog).toHaveTextContent("It returns as a draft.");
   });
 });
 

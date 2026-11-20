@@ -321,7 +321,8 @@ function PlanFormModal({
                     <input
                       value={meal.title}
                       onChange={(e) => setMeal(i, { title: e.target.value })}
-                      placeholder="Meal title, e.g. Greek yogurt bowl"
+                      aria-label="Meal title"
+                      placeholder="e.g. Greek yogurt bowl"
                       className="h-9 flex-1 rounded-(--r-2) px-3 text-[13.5px]"
                       style={{ ...fieldStyle, background: "var(--bg)" }}
                     />
@@ -674,7 +675,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         setPlans(res.data);
         setError(null);
       } else {
-        setError(res.message || "We couldn't load your meal plans. Try again shortly.");
+        setError(res.message || "Couldn't load your meal plans. Try again.");
       }
       setLoading(false);
     };
@@ -757,7 +758,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         ),
       );
     } else {
-      toast.error(res.message ?? "Failed to update plan status.");
+      toast.error(res.message ?? "Couldn't update the plan status.");
     }
   };
 
@@ -776,7 +777,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
           setPlans((p) => p.filter((pl) => pl._id !== plan._id));
           toast.success("Meal plan archived.");
         } else {
-          toast.error(res.message ?? "Failed to archive meal plan.");
+          toast.error(res.message ?? "Couldn't archive the meal plan.");
         }
       },
     });

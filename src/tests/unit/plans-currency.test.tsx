@@ -89,7 +89,7 @@ describe("trainer plan currency", () => {
     const user = await openCreate();
     expect(currencySelect().value).toBe("");
     await user.click(screen.getByRole("button", { name: "Create plan" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Choose the currency this plan is priced in.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Choose a currency.");
     expect(create).not.toHaveBeenCalled();
   });
 

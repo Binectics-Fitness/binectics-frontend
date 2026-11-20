@@ -542,7 +542,20 @@ export default function DietitianCalendarPage() {
             <DSCard>
               {upcomingExceptions.length === 0 ? (
                 <div className="px-3.5 py-3">
-                  <EmptySlate message="No upcoming blocked time." hint="Use “Block off” to mark days you're unavailable." mt="mt-0" />
+                  <EmptySlate
+                    message="Nothing blocked off."
+                    mt="mt-0"
+                    action={
+                      <button
+                        type="button"
+                        onClick={openBlockModal}
+                        className="px-3 py-1 rounded-(--r-2) text-[12.5px] cursor-pointer"
+                        style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}
+                      >
+                        Block off
+                      </button>
+                    }
+                  />
                 </div>
               ) : (
                 upcomingExceptions.map((exc) => (

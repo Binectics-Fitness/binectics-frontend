@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, Eyebrow, StatusPill } from "@/components/ds";
@@ -118,7 +119,15 @@ function TemplatePickerModal({
               {error}
             </div>
           ) : !loading && templates.length === 0 ? (
-            <EmptySlate message="No templates yet." hint="Create one under Meal plans first." mt="mt-0" />
+            <EmptySlate
+              message="No templates yet."
+              mt="mt-0"
+              action={
+                <Link href="/dashboard/dietitian/meal-plans" className="text-[13px] underline" style={{ color: "var(--ink)" }}>
+                  New meal plan
+                </Link>
+              }
+            />
           ) : (
             <SearchableSelect
               value={selected}
@@ -186,7 +195,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
       } else {
         setError(
           (summaryRes.status === "fulfilled" && summaryRes.value.message) ||
-            "We couldn't load this client. Try again shortly.",
+            "Couldn't load this client. Try again.",
         );
       }
       setLoading(false);
@@ -336,7 +345,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             ) : plansError ? (
               <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>{plansError}</div>
             ) : plans.length === 0 ? (
-              <div className="px-5.5 py-4"><EmptySlate message="No diet plans yet." hint="Create one from a template above." mt="mt-0" /></div>
+              <div className="px-5.5 py-4"><EmptySlate message="No diet plans yet." mt="mt-0" /></div>
             ) : (
               plans.map((p, i, arr) => (
                 <div key={p._id} className="flex items-center gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>

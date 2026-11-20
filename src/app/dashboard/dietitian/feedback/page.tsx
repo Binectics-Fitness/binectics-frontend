@@ -235,7 +235,7 @@ export default function DietitianFeedbackPage() {
         )}
         {!loading && rows.length === 0 && (
           <DSCard className="px-4.5 py-6">
-            <EmptySlate message="No meal feedback entries yet." mt="mt-0" />
+            <EmptySlate message="No meal feedback yet." mt="mt-0" />
           </DSCard>
         )}
       </div>
