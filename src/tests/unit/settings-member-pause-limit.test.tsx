@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { SettingsClient } from "@/app/dashboard/gym-owner/settings/SettingsClient";
 import { HEALTH_FORM_COPY } from "@/lib/constants/healthFormCopy";
+import { DEFAULT_BOOKING_RULES } from "@/lib/constants/orgSettingsDefaults";
 
 /**
  * Settings → Membership rules → "Member pauses per year" (owner ruling,
@@ -147,5 +148,29 @@ describe("Settings: copy that must stay true", () => {
     // The switch now sends the health form (API health-forms, board parq W4).
     expect(screen.getByText(HEALTH_FORM_COPY.switchHelp)).toBeInTheDocument();
     expect(screen.queryByText("Standard health questionnaire.")).toBeNull();
+  });
+});
+
+describe("Settings: the PAR-Q 'new' notice (board parq W5)", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("shows above the switch while it is off; Dismiss keeps it gone for this user", async () => {
+    h.currentOrg = { ...h.org, is_owner: true };
+    const first = render(<SettingsClient />);
+    expect(await screen.findByText(HEALTH_FORM_COPY.switchNotice)).toBeInTheDocument();
+    await userEvent.click(screen.getByText(HEALTH_FORM_COPY.dismiss));
+    expect(screen.queryByText(HEALTH_FORM_COPY.switchNotice)).toBeNull();
+    expect(localStorage.getItem("parq_notice_dismissed_owner1")).toBe("1");
+    first.unmount();
+    render(<SettingsClient />);
+    await waitFor(() => expect(screen.queryByText(HEALTH_FORM_COPY.switchNotice)).toBeNull());
+  });
+
+  it("is hidden once the switch is on", async () => {
+    h.org = { ...h.org, booking_rules: { ...DEFAULT_BOOKING_RULES, require_parq: true } };
+    h.currentOrg = { ...h.org, is_owner: true };
+    render(<SettingsClient />);
+    await screen.findByText(HEALTH_FORM_COPY.switchHelp);
+    expect(screen.queryByText(HEALTH_FORM_COPY.switchNotice)).toBeNull();
   });
 });

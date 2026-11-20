@@ -21,4 +21,7 @@ export const HEALTH_FORM_COPY = {
   answersFailed: "We couldn't load the answers. Try again.",
   saveFailed: "That didn't save. Try again.",
   switchHelp: "Members get the health form when they join. You'll see answers that need a follow-up.",
+  /** One-time, above the switch while it is off (board parq W5). */
+  switchNotice: "New: health form. Turn this on to send the PAR-Q form to your members.",
+  dismiss: "Dismiss",
 } as const;

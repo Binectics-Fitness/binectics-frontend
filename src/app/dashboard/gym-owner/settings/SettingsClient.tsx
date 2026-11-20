@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HEALTH_FORM_COPY } from "@/lib/constants/healthFormCopy";
+import { ParqSwitchNotice } from "./ParqSwitchNotice";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
@@ -480,7 +481,13 @@ export function SettingsClient() {
             id="booking"
             title="Booking rules"
             desc="Apply to all your locations."
-            items={BOOKING_TOGGLE_DEFS.map((d) => ({ ...d, on: bookingOn(d.key), onToggle: () => toggleBooking(d.key) }))}
+            items={BOOKING_TOGGLE_DEFS.map((d) => ({
+              ...d,
+              on: bookingOn(d.key),
+              onToggle: () => toggleBooking(d.key),
+              // Every gym starts off (design lead, 20 Nov 2026): say it is new (board parq W5).
+              before: d.key === "require_parq" ? <ParqSwitchNotice switchOn={bookingOn(d.key)} /> : undefined,
+            }))}
             disabled={!form}
           >
             <ClassCancellationPolicyEditor
@@ -727,18 +734,21 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle?: () => void
   );
 }
 
-function WiredToggleSection({ id, title, desc, items, disabled, children }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void }[]; disabled?: boolean; children?: ReactNode }) {
+function WiredToggleSection({ id, title, desc, items, disabled, children }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void; before?: ReactNode }[]; disabled?: boolean; children?: ReactNode }) {
   return (
     <section id={id}>
       <SectionHeading title={title} desc={desc} />
       <DSCard>
         {items.map((t, i) => (
-          <div key={t.key} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
+          <div key={t.key} className="px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
+            {t.before}
+            <div className="flex items-start gap-3.5">
             <div className="flex-1">
               <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{t.t}</div>
               <div className="text-[12.5px] mt-0.75 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{t.s}</div>
             </div>
             <Toggle on={t.on} onToggle={t.onToggle} disabled={disabled} />
+            </div>
           </div>
         ))}
       </DSCard>
