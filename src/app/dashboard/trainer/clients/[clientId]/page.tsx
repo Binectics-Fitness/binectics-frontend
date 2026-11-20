@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
-import { DSCard, Eyebrow, StatusPill } from "@/components/ds";
 import { useParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DSCard, Eyebrow, StatusPill } from "@/components/ds";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { toast } from "@/components/Toast";
@@ -12,18 +13,49 @@ import type { ClientProfile, ClientJournalEntry, WeightLog } from "@/lib/api/pro
 import { programsService, type ClientProgramSummary } from "@/lib/api/programs";
 import { consultationsService, type ConsultationBooking } from "@/lib/api/consultations";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { useOnline } from "@/hooks/useOnline";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
 import ProgramResultsSection from "@/components/programs/results/ProgramResultsSection";
 import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
+import { CLIENT_PAGE_COPY as C, SESSION_LABEL } from "./copy";
 
 /**
- * A client, for the trainer at their desk: where they are on their programs,
- * their sessions, notes, and what's been sent. Everything shown is real.
- * The page used to carry prototype content (a "32-day streak", a "shoulder
- * monitor", pack balances, tabs that did nothing and a note box that didn't
- * save), which a trainer could mistake for this client's data.
+ * A client, for the trainer at their desk (board:
+ * binectics-plans/design/coach-client-page, frames D1-D7, M1-M2). In the
+ * owner's order (20 Nov 2026): when I see them next and this week, what they
+ * did on their programs with the note beside it, the record, and body
+ * measurements last. Everything shown is real.
  */
+
+interface ClientPageData {
+  profile: ClientProfile;
+  journals: ClientJournalEntry[];
+  weights: WeightLog[];
+  programs: ClientProgramSummary[];
+  bookings: ConsultationBooking[];
+}
+
+/** Read everything the page shows. Only the profile is required; the rest degrade to empty. */
+async function loadClient(clientId: string): Promise<ClientPageData> {
+  const [p, j, w, o, b] = await Promise.allSettled([
+    progressService.getClientProfile(clientId),
+    progressService.getClientJournalEntries(clientId, 20),
+    progressService.getWeightLogs(clientId, 5),
+    programsService.getClientOverview(clientId),
+    consultationsService.getProviderBookings(),
+  ]);
+  if (p.status !== "fulfilled" || !p.value.success || !p.value.data) throw new Error(C.errorTitle);
+  return {
+    profile: p.value.data,
+    journals: j.status === "fulfilled" && j.value.success ? (j.value.data ?? []) : [],
+    weights: w.status === "fulfilled" && w.value.success ? (w.value.data ?? []) : [],
+    programs: o.status === "fulfilled" && o.value.success ? (o.value.data?.programs ?? []) : [],
+    bookings: b.status === "fulfilled" && b.value.success ? (b.value.data ?? []) : [],
+  };
+}
+
+const clientPageKey = (clientId: string) => ["coach-client-page", clientId] as const;
 
 function clientName(profile: ClientProfile): string {
   if (typeof profile.client_id === "object") {
@@ -41,64 +73,123 @@ function initials(name: string): string {
   return parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
 }
 
-const SESSION_LABEL: Record<string, string> = {
-  PENDING: "Awaiting payment",
-  CONFIRMED: "Booked",
-  COMPLETED: "Done",
-  NO_SHOW: "No-show",
-  CANCELLED: "Cancelled",
-};
+function timeLabel(at: number): string {
+  return new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+const h2 = "text-[15px] font-medium";
+const ink = { color: "var(--ink)" } as const;
+const muted = { color: "var(--fg-3)" } as const;
 
 export default function ClientDetailPage() {
   const params = useParams<{ clientId: string }>();
   const clientId = params?.clientId;
-  const { fmtDate, fmtDateTime } = useOrgFormat();
+  const online = useOnline();
+  const query = useQuery({
+    queryKey: clientPageKey(clientId ?? ""),
+    queryFn: () => loadClient(clientId!),
+    enabled: !!clientId,
+    // A coach coming back to the tab, or back online, sees fresh results; a
+    // failed refresh keeps the page and says when it was loaded.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+  const data = query.data;
 
-  const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [journals, setJournals] = useState<ClientJournalEntry[]>([]);
-  const [weights, setWeights] = useState<WeightLog[]>([]);
-  const [programs, setPrograms] = useState<ClientProgramSummary[] | null>(null);
-  const [bookings, setBookings] = useState<ConsultationBooking[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  let body: ReactNode;
+  if (data) {
+    const banner = !online
+      ? C.offline(timeLabel(query.dataUpdatedAt))
+      : query.isError
+        ? C.refreshFailed(timeLabel(query.dataUpdatedAt))
+        : null;
+    body = <ClientPage clientId={clientId!} data={data} banner={banner} onRetry={() => void query.refetch()} />;
+  } else if (query.isError || (!online && !query.isFetching)) {
+    body = (
+      <DSCard className="px-5.5 py-5">
+        <div role="alert">
+          <p className="text-[15px] font-medium" style={ink}>{online ? C.errorTitle : C.offlineNoSaved}</p>
+          {online && <p className="mt-1 text-[14px]" style={muted}>{C.errorBody}</p>}
+          <button type="button" className="btn-ghost-v2 mt-3" style={{ height: 44 }} onClick={() => void query.refetch()}>
+            {C.retry}
+          </button>
+        </div>
+      </DSCard>
+    );
+  } else {
+    body = <PageSkeleton />;
+  }
+
+  return (
+    <TrainerDashboardShell activeItem="Clients" crumb={data ? clientName(data.profile) : "Client"}>
+      {body}
+    </TrainerDashboardShell>
+  );
+}
+
+/** Loading: the page's own layout in grey (board D2/M2). */
+function PageSkeleton() {
+  const block = (style: CSSProperties) => <div className="rounded-(--r-1)" style={{ background: "var(--bg-3)", ...style }} />;
+  const card = (height: number) => <div className="rounded-(--r-3)" style={{ background: "var(--bg-3)", height }} />;
+  return (
+    <div role="status" aria-label={C.loading} className="contents">
+      <div className="flex items-start gap-4" aria-hidden="true">
+        <div className="w-18 h-18 rounded-full shrink-0" style={{ background: "var(--bg-3)" }} />
+        <div className="flex flex-col gap-2.5 pt-2">
+          {block({ width: 180, height: 26 })}
+          {block({ width: 220, height: 14 })}
+          {block({ width: 160, height: 14 })}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" aria-hidden="true">
+        {card(92)}
+        {card(92)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 items-start" aria-hidden="true">
+        <div className="flex flex-col gap-4">
+          {block({ width: 140, height: 18 })}
+          {card(360)}
+        </div>
+        <div className="flex flex-col gap-4">
+          {card(150)}
+          {card(110)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClientPage({
+  clientId,
+  data,
+  banner,
+  onRetry,
+}: {
+  clientId: string;
+  data: ClientPageData;
+  banner: string | null;
+  onRetry: () => void;
+}) {
+  const { profile, journals, weights, programs, bookings } = data;
+  const { fmtDate, fmtDateTime } = useOrgFormat();
+  const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [allNotes, setAllNotes] = useState(false);
+  const [trend, setTrend] = useState(false);
   // "Now" for splitting next from past sessions, fixed when the page opens.
   const [now] = useState(() => Date.now());
 
-  useEffect(() => {
-    if (!clientId) return;
-    let active = true;
-    void Promise.allSettled([
-      progressService.getClientProfile(clientId),
-      progressService.getClientJournalEntries(clientId, 20),
-      progressService.getWeightLogs(clientId, 5),
-      programsService.getClientOverview(clientId),
-      consultationsService.getProviderBookings(),
-    ]).then(([p, j, w, o, b]) => {
-      if (!active) return;
-      if (p.status === "fulfilled" && p.value.success && p.value.data) setProfile(p.value.data);
-      else setError("Couldn't load this client.");
-      if (j.status === "fulfilled" && j.value.success) setJournals(j.value.data ?? []);
-      if (w.status === "fulfilled" && w.value.success) setWeights(w.value.data ?? []);
-      setPrograms(o.status === "fulfilled" && o.value.success ? (o.value.data?.programs ?? []) : []);
-      setBookings(b.status === "fulfilled" && b.value.success ? (b.value.data ?? []) : []);
-      setLoading(false);
-    });
-    return () => {
-      active = false;
-    };
-  }, [clientId]);
-
-  const name = profile ? clientName(profile) : "Client";
+  const name = clientName(profile);
   const firstName = name.split(" ")[0];
-  const userId = profile ? clientUserId(profile) : null;
+  const userId = clientUserId(profile);
+  const livePrograms = programs.filter((p) => p.kind === "program" && (p.status === "active" || p.status === "paused"));
+  const lead = livePrograms[0];
+  const week = lead?.progress?.last_7_days;
+  const latestWeight = weights[0];
 
-  const livePrograms = (programs ?? []).filter(
-    (p) => p.kind === "program" && (p.status === "active" || p.status === "paused"),
-  );
   const { next, recent } = useMemo(() => {
-    const mine = (bookings ?? []).filter((b) => b.clientUserId === userId);
+    const mine = bookings.filter((b) => b.clientUserId === userId);
     const upcoming = mine
       .filter((b) => (b.status === "CONFIRMED" || b.status === "PENDING") && Date.parse(b.endsAt) > now)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
@@ -109,221 +200,204 @@ export default function ClientDetailPage() {
     return { next: upcoming[0] ?? null, recent: past };
   }, [bookings, userId, now]);
 
-  const latestWeight = weights[0];
-  const lead = livePrograms[0];
-
   const saveNote = async () => {
-    if (!clientId || !draft.trim()) return;
+    if (!draft.trim()) return;
     setSaving(true);
     const res = await progressService.createClientJournalEntry(clientId, { notes: draft.trim() });
     setSaving(false);
     if (res.success && res.data) {
-      setJournals((j) => [res.data!, ...j]);
+      const entry = res.data;
+      queryClient.setQueryData<ClientPageData>(clientPageKey(clientId), (d) => (d ? { ...d, journals: [entry, ...d.journals] } : d));
       setDraft("");
-      toast.success("Note saved.");
+      toast.success(C.noteSaved);
     } else {
-      toast.error(res.message ?? "Couldn't save the note.");
+      toast.error(res.message ?? C.noteFailed);
     }
   };
 
-  if (loading) {
-    return (
-      <TrainerDashboardShell activeItem="Clients" crumb="Client">
-        <DSCard className="p-6 text-[14px]" style={{ color: "var(--fg-3)" }}>
-          Loading client…
-        </DSCard>
-      </TrainerDashboardShell>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <TrainerDashboardShell activeItem="Clients" crumb="Client">
-        <div className="rounded-(--r-3) p-6 text-[14px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
-          {error ?? "Client not found"}
-        </div>
-      </TrainerDashboardShell>
-    );
-  }
-
-  const kpis = [
-    {
-      label: "Latest weight",
-      value: latestWeight ? String(latestWeight.weight_kg) : "-",
-      suffix: latestWeight ? "kg" : undefined,
-      sub: latestWeight
-        ? `${fmtDate(latestWeight.recorded_at)}${profile.target_weight_kg ? ` · target ${profile.target_weight_kg} kg` : ""}`
-        : "No weight logged",
-    },
-    {
-      label: "Program adherence",
-      value: lead?.adherence_pct != null ? String(lead.adherence_pct) : "-",
-      suffix: lead?.adherence_pct != null ? "%" : undefined,
-      sub: lead ? lead.name : "Not on a program",
-    },
-    {
-      label: "Next session",
-      value: next ? fmtDateTime(next.startsAt) : "-",
-      sub: next ? SESSION_LABEL[next.status] : "None booked",
-      small: true,
-    },
-  ];
+  const nextSub = next
+    ? [next.consultationTypeName, SESSION_LABEL[next.status]?.toLowerCase()].filter(Boolean).join(" · ")
+    : C.noneBooked;
+  const weekSub = lead
+    ? [lead.name, week && week.missed > 0 ? C.missed(week.missed) : null].filter(Boolean).join(" · ")
+    : C.notOnProgram;
+  const shownNotes = allNotes ? journals : journals.slice(0, 1);
 
   return (
-    <TrainerDashboardShell activeItem="Clients" crumb={name}>
-      {/* Hero */}
+    <>
+      {/* Header */}
       <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-6">
         <div className="flex items-start gap-4">
           <span className="w-18 h-18 rounded-full flex items-center justify-center text-[18px] font-semibold shrink-0" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
             {initials(name)}
           </span>
           <div>
-            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{name}</h1>
+            <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", ...ink }}>{name}</h1>
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <StatusPill tone={profile.is_active ? "success" : "neutral"} label={profile.is_active ? "Active client" : "Former client"} />
+              <StatusPill tone={profile.is_active ? "success" : "neutral"} label={profile.is_active ? C.activeClient : C.formerClient} />
               <span className="inline-flex items-center font-mono text-[10.5px] uppercase tracking-[0.05em] px-2 py-0.5 rounded-full" style={{ color: "var(--fg-2)", background: "var(--bg-3)", border: "1px solid var(--border)" }}>
-                Client since {fmtDate(profile.created_at)}
+                {C.clientSince(fmtDate(profile.created_at))}
               </span>
             </div>
-            <div className="mt-2.5 text-[13px]" style={{ color: "var(--fg-3)" }}>
-              <strong style={{ color: "var(--ink)" }}>Goals</strong> {profile.goals?.length ? profile.goals.join(" · ") : "No goals set"}
+            <div className="mt-2.5 text-[13px]" style={muted}>
+              <strong style={ink}>{C.goals}</strong> {profile.goals?.length ? profile.goals.join(" · ") : C.noGoals}
             </div>
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          {userId && (
-            <StartConversationButton recipientUserId={userId} messagesHref="/dashboard/trainer/messages" label="Message" />
-          )}
-          <Link href={TRAINER_PROGRAMS_CONFIG.basePath} className="btn-primary-v2 sm">
-            {livePrograms.length ? "Programs" : "Assign a program"}
+          {userId && <StartConversationButton recipientUserId={userId} messagesHref="/dashboard/trainer/messages" label={C.message} />}
+          <Link
+            href={lead ? `${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${lead.id}` : TRAINER_PROGRAMS_CONFIG.basePath}
+            className="btn-primary-v2 sm"
+          >
+            {lead ? C.openProgram : C.assignProgram}
           </Link>
         </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {kpis.map((k) => (
-          <DSCard key={k.label} className="px-4.5 py-4">
-            <Eyebrow>{k.label}</Eyebrow>
-            <div className={`${k.small ? "text-[17px]" : "text-[24px]"} font-medium mt-1.5`} style={{ letterSpacing: "-0.02em", color: "var(--ink)", fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
-              {k.value}
-              {k.suffix && <small className="font-mono text-[12px] font-normal ml-1" style={{ color: "var(--fg-3)" }}>{k.suffix}</small>}
-            </div>
-            <div className="text-[12px] mt-1 truncate" style={{ color: "var(--fg-3)" }}>{k.sub}</div>
-          </DSCard>
-        ))}
-      </div>
-
-      {clientId && profile.is_active && (
-        <ProgramResultsSection clientProfileId={clientId} clientFirstName={firstName} summaries={programs ?? []} />
+      {banner && (
+        <p role="status" className="rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>
+          {banner}{" "}
+          <button type="button" className="underline underline-offset-2" style={ink} onClick={onRetry}>
+            {C.retry}
+          </button>
+        </p>
       )}
 
-      {clientId && <OneOffTasksCard clientProfileId={clientId} />}
+      {/* When I see them next, and this week */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Tile label={C.nextSession} value={next ? fmtDateTime(next.startsAt) : "-"} sub={nextSub} />
+        <Tile
+          label={C.thisWeek}
+          value={week && week.scheduled > 0 ? C.weekDone(week.done, week.scheduled) : "-"}
+          sub={lead && (!week || week.scheduled === 0) ? `${lead.name} · ${C.nothingDue}` : weekSub}
+        />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
-        {/* Notes */}
-        <section aria-labelledby="notes-heading" className="flex flex-col gap-3">
-          <h2 id="notes-heading" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>Notes</h2>
+      {/* What they did, and the note it prompts */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 items-start">
+        <div className="min-w-0">
+          {profile.is_active && <ProgramResultsSection clientProfileId={clientId} clientFirstName={firstName} summaries={programs} />}
+        </div>
+        <div className="flex flex-col gap-4">
           <DSCard>
-            <label htmlFor="client-note" className="sr-only">Note for {firstName}</label>
+            <div className="px-4 pt-3.5">
+              <h2 className={h2} style={ink}>
+                <label htmlFor="client-note">{C.noteTo(firstName)}</label>
+              </h2>
+            </div>
             <textarea
               id="client-note"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               className="w-full px-4 py-3 text-[14px] resize-none"
               style={{ border: "none", background: "transparent", fontFamily: "inherit", color: "var(--ink)", minHeight: "72px" }}
-              placeholder={`How ${firstName}'s training is going, what to work on next`}
+              placeholder={C.notePlaceholder}
               maxLength={2000}
             />
-            <div className="flex items-center justify-between gap-3 px-4 py-2.5 flex-wrap" style={{ borderTop: "1px solid var(--border)" }}>
-              <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>
-                {firstName} sees notes in their journal. Private session notes live on each session.
-              </span>
+            <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
+              <span className="text-[12px]" style={muted}>{C.noteHint(firstName)}</span>
               <button type="button" className="btn-primary-v2 sm" onClick={() => void saveNote()} disabled={!draft.trim() || saving}>
-                {saving ? "Saving…" : "Save note"}
+                {saving ? C.saving : C.saveNote}
               </button>
             </div>
           </DSCard>
-          <DSCard>
+          <DSCard className="px-4 py-3.5">
             {journals.length === 0 ? (
-              <div className="px-4 py-5 text-[13px]" style={{ color: "var(--fg-3)" }}>No notes yet.</div>
+              <div className="text-[12.5px]" style={muted}>{C.noNotes}</div>
             ) : (
-              journals.map((n, i) => (
-                <div key={n._id} className="px-4 py-3.5" style={{ borderBottom: i < journals.length - 1 ? "1px solid var(--border)" : "none" }}>
-                  <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{fmtDateTime(n.entry_date)}</div>
-                  <p className="text-[14px] leading-relaxed mt-1" style={{ color: "var(--fg-2)" }}>{n.notes || "No note"}</p>
+              <>
+                {shownNotes.map((n, i) => (
+                  <div key={n._id} className={i > 0 ? "mt-3 pt-3" : ""} style={i > 0 ? { borderTop: "1px solid var(--border)" } : undefined}>
+                    <div className="text-[13.5px] font-medium" style={ink}>{i === 0 ? C.lastNote(fmtDate(n.entry_date)) : fmtDate(n.entry_date)}</div>
+                    <p className="text-[14px] leading-relaxed mt-1" style={{ color: "var(--fg-2)" }}>{n.notes || "-"}</p>
+                  </div>
+                ))}
+                {journals.length > 1 && (
+                  <button type="button" className="text-[12.5px] underline mt-2" style={ink} aria-expanded={allNotes} onClick={() => setAllNotes((v) => !v)}>
+                    {allNotes ? C.fewerNotes : C.allNotes(journals.length)}
+                  </button>
+                )}
+              </>
+            )}
+          </DSCard>
+          <OneOffTasksCard clientProfileId={clientId} />
+        </div>
+      </div>
+
+      {/* The record */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <DSCard className="p-3.5">
+          <section aria-labelledby="sessions-heading">
+            <h2 id="sessions-heading" className={`${h2} mb-2`} style={ink}>{C.sessions}</h2>
+            {!next && recent.length === 0 ? (
+              <div className="text-[12.5px]" style={muted}>{C.noSessions}</div>
+            ) : (
+              [...(next ? [next] : []), ...recent].map((b) => (
+                <div key={b.id} className="py-2" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="flex justify-between gap-2 text-[12.5px]">
+                    <span style={{ ...ink, fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(b.startsAt)}</span>
+                    <span style={muted}>{b === next ? C.next : SESSION_LABEL[b.status]}</span>
+                  </div>
+                  {b.completionNote && <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-2)" }}>{b.completionNote}</div>}
                 </div>
               ))
             )}
-          </DSCard>
-        </section>
-
-        {/* Right rail */}
-        <aside className="flex flex-col gap-4">
-          {clientId && profile.is_active && <ClientReportsCard clientProfileId={clientId} clientFirstName={firstName} />}
-
-          <DSCard className="p-3.5">
-            <section aria-labelledby="programs-heading">
-              <Eyebrow as="h2" id="programs-heading" className="mb-2">Programs</Eyebrow>
-              {programs === null ? (
-                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
-              ) : livePrograms.length === 0 ? (
-                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Not on a program.</div>
-              ) : (
-                livePrograms.map((p) => {
-                  const week = p.progress?.last_7_days;
-                  const day = p.progress?.day;
-                  return (
-                    <Link key={p.id} href={`${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${p.id}`} className="block py-2" style={{ borderTop: "1px solid var(--border)" }}>
-                      <div className="flex justify-between gap-2">
-                        <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{p.name}</span>
-                        {p.adherence_pct != null && (
-                          <span className="font-mono text-[12.5px]" style={{ color: "var(--ink)" }}>{p.adherence_pct}%</span>
-                        )}
-                      </div>
-                      <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                        {[
-                          p.status === "paused" ? "Paused" : day != null ? (p.progress?.total_days ? `Day ${day} of ${p.progress.total_days}` : `Day ${day}`) : null,
-                          week && week.scheduled > 0 ? `${week.done} of ${week.scheduled} this week` : null,
-                          p.counts.missed > 0 ? `${p.counts.missed} missed` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </div>
-                    </Link>
-                  );
-                })
-              )}
-            </section>
-          </DSCard>
-
-          <DSCard className="p-3.5">
-            <section aria-labelledby="sessions-heading">
-              <Eyebrow as="h2" id="sessions-heading" className="mb-2">Sessions</Eyebrow>
-              {bookings === null ? (
-                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading…</div>
-              ) : !next && recent.length === 0 ? (
-                <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>No sessions yet.</div>
-              ) : (
-                [...(next ? [next] : []), ...recent].map((b) => (
-                  <div key={b.id} className="py-2" style={{ borderTop: "1px solid var(--border)" }}>
-                    <div className="flex justify-between gap-2 text-[12.5px]">
-                      <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(b.startsAt)}</span>
-                      <span style={{ color: "var(--fg-3)" }}>{b === next ? "Next" : SESSION_LABEL[b.status]}</span>
-                    </div>
-                    {b.completionNote && (
-                      <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-2)" }}>{b.completionNote}</div>
-                    )}
-                  </div>
-                ))
-              )}
-              <Link href="/dashboard/trainer/sessions" className="block text-[12.5px] underline mt-2" style={{ color: "var(--ink)" }}>
-                All sessions
-              </Link>
-            </section>
-          </DSCard>
-        </aside>
+            <Link href="/dashboard/trainer/sessions" className="inline-block text-[12.5px] underline mt-2" style={ink}>
+              {C.allSessions}
+            </Link>
+          </section>
+        </DSCard>
+        {profile.is_active && <ClientReportsCard clientProfileId={clientId} clientFirstName={firstName} />}
       </div>
-    </TrainerDashboardShell>
+
+      {/* Body measurements: last (owner, 20 Nov 2026), trend one tap away */}
+      <section aria-labelledby="body-heading">
+        <h2 id="body-heading" className={`${h2} mb-3`} style={ink}>{C.body}</h2>
+        <DSCard>
+          <div className="flex items-start justify-between gap-3 px-4.5 py-4">
+            <div>
+              <Eyebrow>{C.latestWeight}</Eyebrow>
+              <div className="text-[24px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", ...ink, fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
+                {latestWeight ? latestWeight.weight_kg : "-"}
+                {latestWeight && <small className="font-mono text-[12px] font-normal ml-1" style={muted}>kg</small>}
+              </div>
+              <div className="text-[12px] mt-1" style={muted}>
+                {latestWeight
+                  ? [C.logged(fmtDate(latestWeight.recorded_at)), profile.target_weight_kg ? C.target(profile.target_weight_kg) : null].filter(Boolean).join(" · ")
+                  : C.noWeight}
+              </div>
+            </div>
+            {weights.length > 1 && (
+              <button type="button" className="btn-ghost-v2 sm" aria-expanded={trend} aria-controls="weight-trend" onClick={() => setTrend((v) => !v)}>
+                {trend ? C.hideTrend : C.showTrend}
+              </button>
+            )}
+          </div>
+          {trend && (
+            <ul id="weight-trend" className="px-4.5 pt-1 pb-2.5" style={{ borderTop: "1px solid var(--border)" }}>
+              {weights.map((w, i) => (
+                <li key={w._id} className="flex justify-between text-[13px] py-1.5" style={{ borderTop: i ? "1px solid var(--border)" : "none" }}>
+                  <span style={{ color: "var(--fg-2)" }}>{fmtDate(w.recorded_at)}</span>
+                  <span className="font-mono" style={ink}>{w.weight_kg} kg</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DSCard>
+      </section>
+    </>
+  );
+}
+
+function Tile({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <DSCard className="px-4.5 py-4">
+      <Eyebrow>{label}</Eyebrow>
+      <div className="text-[17px] font-medium mt-1.5" style={{ letterSpacing: "-0.02em", ...ink, fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
+        {value}
+      </div>
+      <div className="text-[12px] mt-1 truncate" style={muted}>{sub}</div>
+    </DSCard>
   );
 }
