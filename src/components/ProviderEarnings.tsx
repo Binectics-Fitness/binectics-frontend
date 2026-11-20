@@ -121,7 +121,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
         setSeries(seriesRes.value.data);
         ok = true;
       }
-      setLedgerError(ok ? null : "We couldn't load settled revenue. Try again shortly.");
+      setLedgerError(ok ? null : "Couldn't load settled revenue. Try again.");
       setLedgerLoading(false);
     };
     const kick = window.setTimeout(() => void run(), 0);

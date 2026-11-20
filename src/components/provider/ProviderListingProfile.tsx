@@ -503,8 +503,8 @@ function CreateListingCard({
       title={isGym ? "Create your gym listing" : "Create your marketplace listing"}
       desc={
         isGym
-          ? "Publish your gym to the marketplace so members can find and subscribe. You can refine every detail after it's created."
-          : "Set up your public profile so clients can find and book you. You can refine every detail after it's created."
+          ? "Publish your gym so members can find and join it."
+          : "Set up your public profile so clients can find and book you."
       }
     >
       <Field label="Headline (required)" value={headline} maxLength={200} onChange={setHeadline} />

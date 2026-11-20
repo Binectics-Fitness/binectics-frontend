@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import SearchableSelect from "@/components/SearchableSelect";
 import {
@@ -63,7 +63,10 @@ export default function FacilityItemFormModal({
 
   useEffect(() => {
     if (!open) return;
+    // Opening the modal resets the form to the item being edited (or blank);
+    // `open` and `initial` come from the parent, not from this form's state.
     if (initial) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setValues({
         name: initial.name,
         category: initial.category,
@@ -106,7 +109,8 @@ export default function FacilityItemFormModal({
     await onSubmit(values);
   }
 
-  const Icon = getFacilityIcon(values.icon_key);
+  // A module-level lucide icon looked up by key, not a component made here.
+  const icon = createElement(getFacilityIcon(values.icon_key), { className: "h-14 w-14 text-bg/90" });
   const gradientClass = getFacilityGradient(values.gradient);
 
   return (
@@ -129,7 +133,7 @@ export default function FacilityItemFormModal({
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
-            <Icon className="h-14 w-14 text-bg/90" />
+            icon
           )}
         </div>
 
@@ -202,7 +206,7 @@ export default function FacilityItemFormModal({
             onChange={(e) => update("description", e.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="Short description shown on marketplace"
+            placeholder="Shown on your listing"
             className="w-full rounded-(--r-2) border border-border px-3 py-2.5 text-sm focus:border-signal focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/20 resize-none"
           />
           <p className="mt-1 text-xs text-fg-4">

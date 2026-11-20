@@ -100,13 +100,13 @@ export function closureErrorMessage(
 ): string {
   switch (code) {
     case "ORG_CLOSE_CONFIRMATION_MISMATCH":
-      return "That does not match. Type the gym's exact name, or the word CLOSE.";
+      return "That doesn't match. Type the gym's name or CLOSE.";
     case "ORG_CLOSE_NOT_SUPPORTED":
-      return "Only a gym workspace can be closed here. Trainer and dietitian workspaces are not supported.";
+      return "Only a gym workspace can be closed.";
     case "ORG_ALREADY_CLOSED":
       return "This gym is already closed.";
     case "ORG_NOT_CLOSED":
-      return "This gym is not closed, so there is nothing to reopen.";
+      return "This gym isn't closed.";
     case "ORG_REOPEN_WINDOW_EXPIRED":
       return "The 30-day reopen window has ended, so this gym cannot be reopened from here. Your records stay available to export. Contact support if you need it reopened.";
     case "ORG_CLOSED":
@@ -116,7 +116,7 @@ export function closureErrorMessage(
   }
   if (status === 404) return "Only the gym's owner can do this.";
   if (status === 429) return "Too many attempts. Wait a minute and try again.";
-  return fallback || "Something went wrong. Please try again.";
+  return fallback || "Couldn't finish that. Try again.";
 }
 
 export type ExportKind = "revenue" | "sales" | "ledger";

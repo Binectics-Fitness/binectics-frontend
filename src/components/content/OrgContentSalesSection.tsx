@@ -101,7 +101,7 @@ export function OrgContentSalesSection({ orgId, canRefund = false }: { orgId: st
 
   return (
     <DSCard>
-      <DSCardHead title="Programs & meal plan sales" subtitle="What people bought from this gym on its own price. Dates are UTC." />
+      <DSCardHead title="Programs & meal plan sales" subtitle="Sales of this gym's programs and meal plans. Dates are UTC." />
       <div className="px-4.5 pb-4.5">
         <div role="group" aria-label="Sale status" className="flex flex-wrap gap-2 mb-3">
           {FILTERS.map((f) => (
@@ -136,7 +136,6 @@ export function OrgContentSalesSection({ orgId, canRefund = false }: { orgId: st
         ) : rows.length === 0 ? (
           <EmptySlate
             message={status === "all" ? "No sales yet." : `No ${status} sales.`}
-            hint="When someone buys a program or meal plan from this gym, it shows up here."
           />
         ) : (
           <>

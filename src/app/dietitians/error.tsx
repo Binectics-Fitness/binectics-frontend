@@ -15,9 +15,9 @@ export default function DietitiansError({
       reset={reset}
       eyebrow="Dietitians error"
       title="Something went wrong."
-      description="We were unable to load dietitians. Try again, or head back to browse dietitians."
+      description="Couldn't load dietitians. Try again."
       homeHref="/dietitians"
-      homeLabel="Back to dietitians"
+      homeLabel="Browse dietitians"
     />
   );
 }

@@ -109,7 +109,7 @@ export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }
 
           {!hasRows ? (
             <DSCard className="p-5.5">
-              <EmptySlate message={`Nothing recorded in ${data.year}.`} hint="Payments, refunds and adjustments appear here as they settle." mt="mt-0" />
+              <EmptySlate message={`Nothing recorded in ${data.year}.`} mt="mt-0" />
             </DSCard>
           ) : (
             data.currencies.map((c) => (

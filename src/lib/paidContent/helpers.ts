@@ -104,6 +104,14 @@ export function draftFingerprint(d: PricingDraft): string {
   });
 }
 
+/** Why a paid draft can't be saved yet; shown beside the disabled Save. */
+export const NOTHING_TO_SELL = "Add a price or include it in a plan.";
+
+/** A paid draft with no price typed and no plan picked: nobody could get it. */
+export function hasNothingToSell(d: PricingDraft): boolean {
+  return d.mode === "paid" && d.planIds.length === 0 && d.prices.every((row) => row.display.trim() === "");
+}
+
 /**
  * The body to send, or the first thing wrong with the draft. A free item
  * sends no prices and no plans. An empty price row is dropped; a row with
@@ -122,7 +130,7 @@ export function buildAccessInput(d: PricingDraft): { input: SetAccessInput } | {
     prices.push({ currency: row.currency, amountMinor: row.minor });
   }
   if (prices.length === 0 && d.planIds.length === 0) {
-    return { error: "Add a price, or include it in a plan, so someone can get it." };
+    return { error: NOTHING_TO_SELL };
   }
   return { input: { mode: "paid", prices, includedPlanIds: d.planIds, showOnListing: d.showOnListing } };
 }

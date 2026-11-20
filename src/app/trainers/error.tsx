@@ -15,9 +15,9 @@ export default function TrainersError({
       reset={reset}
       eyebrow="Trainers error"
       title="Something went wrong."
-      description="We were unable to load trainers. Try again, or head back to browse trainers."
+      description="Couldn't load trainers. Try again."
       homeHref="/trainers"
-      homeLabel="Back to trainers"
+      homeLabel="Browse trainers"
     />
   );
 }

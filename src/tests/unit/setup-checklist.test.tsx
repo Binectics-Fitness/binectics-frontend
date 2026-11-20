@@ -188,7 +188,7 @@ describe("SetupChecklist", () => {
     renderWithQuery(<SetupChecklist kind="trainer" people={0} />);
     const card = await screen.findByTestId("setup-checklist");
     expect(within(card).getByText("0 of 4 done")).toBeInTheDocument();
-    expect(within(card).getByText("Saved but not published, so nobody can see it yet.")).toBeInTheDocument();
+    expect(within(card).getByText("Saved, not published. Nobody can see it yet.")).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: /Publish your profile/ })).toHaveAttribute("href", "/dashboard/trainer/profile");
     expect(within(card).getByRole("link", { name: /Set your hours/ })).toHaveAttribute("href", "/dashboard/trainer/settings#hours");
     expect(within(card).getByRole("link", { name: /Set your session/ })).toHaveAttribute("href", "/dashboard/trainer/settings#session");

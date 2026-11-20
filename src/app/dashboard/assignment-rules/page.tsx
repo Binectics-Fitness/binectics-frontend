@@ -69,6 +69,7 @@ export default function AssignmentRulesPage() {
     AssignmentStrategy.ROUND_ROBIN,
   );
   const [staffIds, setStaffIds] = useState<string>("");
+  const [staffError, setStaffError] = useState<string | null>(null);
   const [selectedTiers, setSelectedTiers] = useState<ClientTier[]>([]);
   const [selectedPlans, setSelectedPlans] = useState<string>("");
 
@@ -110,6 +111,7 @@ export default function AssignmentRulesPage() {
     setMinAmountDisplay("");
     setStrategy(AssignmentStrategy.ROUND_ROBIN);
     setStaffIds("");
+    setStaffError(null);
     setSelectedTiers([]);
     setSelectedPlans("");
     setFormError(null);
@@ -154,6 +156,7 @@ export default function AssignmentRulesPage() {
     event.preventDefault();
     setFormError(null);
     setFormSuccess(null);
+    setStaffError(null);
 
     if (!name.trim()) {
       setFormError("Rule name is required");
@@ -171,7 +174,7 @@ export default function AssignmentRulesPage() {
       .filter((id) => id);
 
     if (parsedStaffIds.length === 0) {
-      setFormError("At least one staff member ID is required");
+      setStaffError("Add at least one staff member.");
       return;
     }
 
@@ -208,7 +211,7 @@ export default function AssignmentRulesPage() {
         resetForm();
         setFormMode(null);
       } else {
-        setFormError("Failed to create rule. Please try again.");
+        setFormError("Couldn't create the rule. Try again.");
       }
     } else if (formMode === "edit" && editingId) {
       const update: UpdateAssignmentRuleRequest = {
@@ -229,7 +232,7 @@ export default function AssignmentRulesPage() {
         resetForm();
         setFormMode(null);
       } else {
-        setFormError("Failed to update rule. Please try again.");
+        setFormError("Couldn't update the rule. Try again.");
       }
     }
   }
@@ -260,7 +263,7 @@ export default function AssignmentRulesPage() {
         <div className="flex flex-col gap-5">
           <OrganizationContextBanner
             label="Assignment organization"
-            helperText="Assignment rules are scoped per organization. Select a workspace to continue."
+            helperText="Choose a workspace."
             organizations={organizations}
             currentOrg={null}
             onChange={() => {}}
@@ -283,7 +286,6 @@ export default function AssignmentRulesPage() {
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Assignment organization"
-          helperText="Assignment rules are scoped per organization."
           organizations={organizations}
           currentOrg={currentOrg}
           onChange={() => {}}
@@ -353,7 +355,7 @@ export default function AssignmentRulesPage() {
           {isLoading ? (
             <AsyncSpinner label="Loading rules" />
           ) : sortedRules.length === 0 ? (
-            <EmptySlate message="No assignment rules yet. Create one to start auto-routing." />
+            <EmptySlate message="No assignment rules yet." />
           ) : (
             <div className="overflow-x-auto mt-4">
               <table className="w-full min-w-[1000px] border-collapse text-sm">
@@ -611,12 +613,21 @@ export default function AssignmentRulesPage() {
                 </label>
                 <textarea
                   value={staffIds}
-                  onChange={(e) => setStaffIds(e.target.value)}
+                  onChange={(e) => {
+                    setStaffIds(e.target.value);
+                    setStaffError(null);
+                  }}
                   placeholder="user_id_1, user_id_2, user_id_3"
+                  aria-invalid={staffError ? true : undefined}
                   className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm font-mono"
-                  style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                  style={{ borderColor: staffError ? "var(--danger)" : "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
                   rows={2}
                 />
+                {staffError && (
+                  <p role="alert" className="mt-1 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
+                    {staffError}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
