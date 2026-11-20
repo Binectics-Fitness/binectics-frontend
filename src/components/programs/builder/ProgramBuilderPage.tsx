@@ -2,10 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AsyncSpinner } from "@/components/ds";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { toast } from "@/components/Toast";
-import { programsService, type ProgramTemplate } from "@/lib/api/programs";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
+import { ContentPricingModal } from "@/components/content/ContentPricingModal";
+import { accessToRaw, normalizeAccess } from "@/lib/api/paidContent";
+import { accessSummary, isPaid } from "@/lib/paidContent/helpers";
+import { libraryErrorMessage } from "@/lib/exercises/library";
+import { parseBillingError } from "@/lib/utils/billingErrors";
+import { programsService, type ProgramInstance, type ProgramTemplate } from "@/lib/api/programs";
 import type { ProgramsRoleConfig } from "../config";
 import { BUILDER_COPY, TASK_TYPE_COPY } from "./copy";
 import { Btn, LinkBtn, TaskTile, metaStyle } from "./controls";
@@ -14,6 +22,9 @@ import { TaskInspector } from "./TaskInspector";
 import { TaskTypeFields } from "./TaskTypeFields";
 import { NewContentSheet } from "./NewContentSheet";
 import { useContentOptions } from "./useContentOptions";
+import { SettingsDrawer } from "./SettingsDrawer";
+import { StartClientDialog, type Started } from "./StartClientDialog";
+import { draftAhead } from "./startClient";
 import { useAutosave } from "./useAutosave";
 import {
   TASK_KINDS,
@@ -22,6 +33,7 @@ import {
   fromVersion,
   newTask,
   phaseStartDay,
+  startBlocker,
   summaryLine,
   taskIssue,
   taskLabel,
@@ -34,24 +46,39 @@ import {
 
 const C = BUILDER_COPY;
 
+function instanceName(i: ProgramInstance): string | null {
+  if (i.client_name?.trim()) return i.client_name.trim();
+  if (typeof i.client_id === "object" && i.client_id) return `${i.client_id.first_name} ${i.client_id.last_name}`.trim();
+  return null;
+}
+
 /**
  * The program page (P2-1): the plan on the left; on the right the selected
  * task, or "What your client sees" when nothing is selected. Every change
- * saves itself (P2-3).
+ * saves itself (P2-3). "Start a client" is the one finishing action (P1-1).
  */
 export default function ProgramBuilderPage({ config, id }: { config: ProgramsRoleConfig; id: string }) {
   const { Shell, basePath, navItem } = config;
+  const router = useRouter();
   const [template, setTemplate] = useState<ProgramTemplate | null>(null);
   const [program, setProgram] = useState<BuilderProgram | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [menuPhase, setMenuPhase] = useState<number | null>(null);
   const [week, setWeek] = useState(1);
-  /** Set once "Start a client" can be pressed (next change); until then problems show as typed. */
-  const tried = false;
+  /** "Start a client" was pressed while something was unfinished: every problem shows. */
+  const [tried, setTried] = useState(false);
+  const [settings, setSettings] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [started, setStarted] = useState<Started | null>(null);
+  const [pricing, setPricing] = useState(false);
+  const [onProgram, setOnProgram] = useState<string[]>([]);
   const [sheet, setSheet] = useState<"form" | "meal" | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const sheetBefore = useRef<{ kind: "form" | "meal"; ids: Set<string>; taskKey: string } | null>(null);
   const { forms, mealPlans, reload } = useContentOptions(config.mealPlans);
+  const { on: sellingOn, canPrice } = usePaidContentSeller();
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const autosave = useAutosave(id, (detail) => setTemplate({ ...detail.template, publish_state: detail.publish_state ?? detail.template.publish_state }));
 
@@ -65,6 +92,11 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
       } else {
         setLoadError(res.status === 404 ? C.notFound : (res.message ?? C.loadFailed));
       }
+    });
+    void programsService.listAssignments(id).then((res) => {
+      if (!live || !res.success || !res.data) return;
+      const live_ = res.data.filter((i) => i.status === "active" || i.status === "assigned" || i.status === "paused");
+      setOnProgram(live_.map(instanceName).filter((n): n is string => !!n));
     });
     return () => {
       live = false;
@@ -130,6 +162,60 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
     }
   };
 
+  const pressStart = () => {
+    if (!program) return;
+    if (blocker) {
+      setTried(true);
+      const first = program.tasks.find((t) => taskIssue(t));
+      if (first) setSel(first.key);
+      else if (!program.tasks.length) setMenuPhase(0);
+      return;
+    }
+    setStarting(true);
+  };
+
+  const publishChanges = async () => {
+    if (!template) return;
+    setPublishing(true);
+    await autosave.flush();
+    const res = await programsService.publishTemplate(template._id);
+    setPublishing(false);
+    if (res.success && res.data) {
+      setTemplate({ ...res.data.template, publish_state: res.data.publish_state ?? res.data.template.publish_state });
+      toast.success(C.header.published);
+    } else if (!parseBillingError(res)) {
+      toast.error(libraryErrorMessage(res) ?? res.message ?? C.loadFailed);
+    }
+  };
+
+  const duplicate = async () => {
+    await autosave.flush();
+    const res = await programsService.duplicateTemplate(id);
+    if (res.success && res.data) {
+      toast.success(C.settings.duplicated);
+      setSettings(false);
+      router.push(`${basePath}/${res.data.template._id}`);
+    } else {
+      toast.error(res.message ?? C.loadFailed);
+    }
+  };
+
+  const archive = () => {
+    if (!program) return;
+    requestConfirmation({
+      title: C.settings.archiveTitle(program.name),
+      description: C.settings.archiveBody,
+      confirmLabel: C.settings.archiveConfirm,
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        await autosave.flush();
+        const res = await programsService.archiveTemplate(id);
+        if (res.success) router.push(basePath);
+        else toast.error(res.message ?? C.loadFailed);
+      },
+    });
+  };
+
   if (loadError) {
     return (
       <Shell activeItem={navItem} crumb={navItem}>
@@ -149,11 +235,35 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
   }
 
   const selected = program.tasks.find((t) => t.key === sel) ?? null;
-
+  const access = normalizeAccess(template.access);
+  // D1: sold or listed programs keep a visible publish step; others publish on Start.
+  const sold = template.publish_state?.sold_or_listed ?? isPaid(access);
+  const showPublish = template.publish_state ? template.publish_state.needs_publish : sold && draftAhead(template);
+  const blocker = startBlocker(program) ?? (showPublish ? C.startBlocked.publishFirst : null);
   const savedText =
-    autosave.state === "saving" ? C.header.saving : autosave.state === "error" ? C.header.notSaved : template.latest_published_version_no >= 1 && !template.publish_state?.has_unpublished_changes ? C.header.saved : C.header.draftSaved;
+    autosave.state === "saving" ? C.header.saving : autosave.state === "error" ? C.header.notSaved : template.latest_published_version_no >= 1 && !draftAhead(template) ? C.header.saved : C.header.draftSaved;
   const phases = program.split ? program.phases : [program.phases[0]];
   const kinds = TASK_KINDS.filter((k) => k !== "meal" || config.mealPlans);
+  const priceText = canPrice && (sellingOn || sold) ? (sold ? accessSummary(access) : C.settings.free) : null;
+
+  if (started) {
+    const first = started.clientName.split(" ")[0];
+    return (
+      <Shell activeItem={navItem} crumb={navItem}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-3.5 text-center p-8" style={{ minHeight: "60vh" }}>
+          <div className="flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 999, background: "var(--signal-soft)", color: "var(--signal-ink)" }} aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg>
+          </div>
+          <h2 className="text-[22px] font-medium" style={{ color: "var(--ink)" }}>{C.done.title(first, started.when)}</h2>
+          <p className="max-w-[360px]" style={{ color: "var(--fg-2)" }}>{C.done.body(program.name)}</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Btn onClick={() => router.push(`${basePath}/instances/${started.instanceId}`)}>{C.done.seePlan(first)}</Btn>
+            <Btn variant="ghost" onClick={() => { setStarted(null); setSel(null); }}>{C.done.back}</Btn>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
 
   return (
     <Shell activeItem={navItem} crumb={navItem}>
@@ -180,8 +290,25 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
             )}
           </span>
           <span className="hidden lg:block flex-1" />
+          <div className="flex items-start gap-2 w-full lg:w-auto">
+            {showPublish && (
+              <Btn variant="ghost" size="sm" disabled={publishing} onClick={() => void publishChanges()}>
+                {publishing ? C.header.publishing : C.header.publishChanges}
+              </Btn>
+            )}
+            <Btn variant="ghost" size="sm" onClick={() => setSettings(true)}>{C.header.settings}</Btn>
+            <div className="flex flex-col items-end ml-auto lg:ml-0">
+              <Btn size="sm" softDisabled={!!blocker} onClick={pressStart}>{C.header.startClient}</Btn>
+              {blocker && <span className="text-[13px] mt-[3px]" style={metaStyle}>{blocker}</span>}
+            </div>
+          </div>
         </div>
 
+        {onProgram.length > 0 && (
+          <div className="mx-4 lg:mx-7 mt-3.5 text-[13.5px]" style={{ background: "var(--bg-3)", borderRadius: 8, padding: "10px 12px", color: "var(--fg-2)" }}>
+            {C.banner(onProgram)}
+          </div>
+        )}
         {autosave.gate && (
           <div className="mx-4 lg:mx-7 mt-3.5">
             <PlanGate gate={autosave.gate} />
@@ -284,6 +411,44 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
       </div>
 
       <NewContentSheet kind={sheet} onClose={() => void closeSheet()} />
+      {settings && (
+        <SettingsDrawer
+          program={program}
+          price={priceText}
+          onChange={edit}
+          onPrice={() => setPricing(true)}
+          onDuplicate={() => void duplicate()}
+          onArchive={archive}
+          onClose={() => setSettings(false)}
+        />
+      )}
+      {pricing && (
+        <ContentPricingModal
+          open
+          onClose={() => setPricing(false)}
+          kind="program"
+          itemId={template._id}
+          title={program.name}
+          rawAccess={template.access}
+          needsPublish={template.latest_published_version_no < 1}
+          onSaved={(a) => setTemplate((t) => (t ? { ...t, access: accessToRaw(a) } : t))}
+        />
+      )}
+      {starting && (
+        <StartClientDialog
+          template={template}
+          program={program}
+          beforeStart={autosave.flush}
+          onClose={() => setStarting(false)}
+          onStarted={(s, t) => {
+            setStarting(false);
+            setTemplate(t);
+            setOnProgram((cur) => [...cur, s.clientName]);
+            setStarted(s);
+          }}
+        />
+      )}
+      {confirmationModal}
     </Shell>
   );
 }

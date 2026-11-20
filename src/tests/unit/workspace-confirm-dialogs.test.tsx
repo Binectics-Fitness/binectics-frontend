@@ -48,7 +48,7 @@ function wrap(node: ReactNode) {
 }
 
 const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false } as never;
+const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" } as never;
 
 let nativeConfirm: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
@@ -177,8 +177,8 @@ describe("programs: restore", () => {
     await waitFor(() => expect(restore).toHaveBeenCalledWith("t2"));
     expect(toast.success).toHaveBeenCalledWith("Program restored.");
     expect(nativeConfirm).not.toHaveBeenCalled();
-    // Back in the live list, assignable, and the empty Archived filter is gone.
-    expect(await screen.findByRole("button", { name: "Assign" })).toBeInTheDocument();
+    // Back in the live list, editable, and the empty Archived filter is gone.
+    expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Archived/ })).not.toBeInTheDocument();
   });
 
@@ -200,7 +200,7 @@ describe("programs: restore", () => {
     expect(toast.success).not.toHaveBeenCalled();
     // Still archived: still behind the Archived filter, still restorable.
     expect(await screen.findByRole("button", { name: "Restore" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Assign" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
   });
 
   it("falls back to a generic message when the refusal carries none", async () => {
