@@ -219,7 +219,7 @@ export default function CheckInKioskPage() {
                             className="rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em]"
                             style={
                               r.reason === "no_subscription"
-                                ? { background: "var(--danger-soft)", color: "var(--danger)" }
+                                ? { background: "var(--danger-soft)", color: "var(--danger-ink)" }
                                 : { background: "var(--bg-2)", color: "var(--fg-3)" }
                             }
                           >

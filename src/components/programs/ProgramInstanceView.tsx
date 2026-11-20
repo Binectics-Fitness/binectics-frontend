@@ -127,7 +127,7 @@ export default function ProgramInstanceView({
       {loading ? (
         <AsyncSpinner size="page" label="Loading program" />
       ) : error || !detail || !instance ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}>
           {error ?? "Program not found."}
         </div>
       ) : (

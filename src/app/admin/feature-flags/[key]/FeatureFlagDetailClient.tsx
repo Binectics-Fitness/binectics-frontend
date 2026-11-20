@@ -106,7 +106,7 @@ export default function FeatureFlagDetailClient() {
           <div
             role="alert"
             className="rounded-(--r-3) p-4 mt-4 text-[13px]"
-            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+            style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }}
           >
             {(detail.error as Error).message}
           </div>

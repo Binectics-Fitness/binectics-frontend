@@ -184,7 +184,7 @@ export function ActivityLogPanel({ organizationId }: ActivityLogPanelProps) {
         <div
           role="alert"
           className="rounded-(--r-3) p-4 text-[13px]"
-          style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+          style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }}
         >
           <div className="font-medium">Couldn&apos;t load the activity log</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>

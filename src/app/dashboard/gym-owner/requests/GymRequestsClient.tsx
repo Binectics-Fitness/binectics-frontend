@@ -186,7 +186,7 @@ export function GymRequestsClient() {
               <div
                 role="alert"
                 className="rounded-(--r-2) px-4 py-3 text-[13px] flex flex-wrap items-center justify-between gap-2"
-                style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}
+                style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}
               >
                 <span>We couldn&apos;t load the gym&apos;s requests. Try again shortly.</span>
                 <button type="button" className="underline" onClick={() => active.refetch()}>

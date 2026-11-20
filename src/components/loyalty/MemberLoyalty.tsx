@@ -82,7 +82,7 @@ export function MemberLoyalty() {
 
   if (programsQuery.isError) {
     return (
-      <div className="rounded-(--r-3) p-4 text-sm" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}>
+      <div className="rounded-(--r-3) p-4 text-sm" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
         Couldn&apos;t load your loyalty programs. Refresh to try again.
       </div>
     );
@@ -138,7 +138,7 @@ export function MemberLoyalty() {
           role={message.tone === "error" ? "alert" : "status"}
           style={
             message.tone === "error"
-              ? { border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }
+              ? { border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }
               : { border: "1px solid var(--signal)", background: "var(--signal-soft)", color: "var(--signal)" }
           }
         >

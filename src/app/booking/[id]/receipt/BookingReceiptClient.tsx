@@ -131,7 +131,7 @@ export function BookingReceiptClient({ bookingId }: { bookingId: string }) {
         )}
 
         {state.kind === "error" && (
-          <div className="rounded-(--r-3) p-6" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }} role="alert">
+          <div className="rounded-(--r-3) p-6" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }} role="alert">
             <div className="text-[14px] font-medium">Couldn&apos;t load the receipt</div>
             <div className="text-[13px] mt-1" style={{ color: "var(--ink)" }}>{state.message}</div>
             <button type="button" className="btn-ghost-v2 sm mt-3" onClick={() => void load()}>Try again</button>

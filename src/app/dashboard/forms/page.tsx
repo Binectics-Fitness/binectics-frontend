@@ -389,7 +389,7 @@ export default function FormsPage() {
             style={{
               border: `1px solid ${messageType === "success" ? "var(--signal)" : "var(--danger)"}`,
               background: messageType === "success" ? "var(--signal-soft)" : "var(--danger-soft)",
-              color: messageType === "success" ? "var(--signal)" : "var(--danger)",
+              color: messageType === "success" ? "var(--signal)" : "var(--danger-ink)",
             }}
           >
             {message}

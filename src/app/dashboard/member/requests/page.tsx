@@ -169,7 +169,7 @@ function MemberRequestsContent() {
           style={{
             background: "var(--danger-soft)",
             border: "1px solid var(--danger)",
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
           }}
           role="alert"
         >

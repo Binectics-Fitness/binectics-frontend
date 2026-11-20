@@ -292,7 +292,7 @@ export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () =
     <div
       role="alert"
       className="rounded-(--r-3) p-4 text-[14px]"
-      style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}
+      style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}
     >
       <p>{message}</p>
       {onRetry && (

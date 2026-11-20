@@ -468,7 +468,7 @@ function CheckoutContent() {
               </h2>
 
               {paymentError && (
-                <div role="alert" className="bg-danger-soft border border-danger text-danger px-4 py-3 rounded-(--r-2) mb-6 text-sm">
+                <div role="alert" className="bg-danger-soft border border-danger text-danger-ink px-4 py-3 rounded-(--r-2) mb-6 text-sm">
                   {paymentError}
                 </div>
               )}

@@ -266,7 +266,7 @@ export default function ProviderBillingPage() {
         {error && (
           <div
             className="rounded-(--r-3) p-3 text-sm"
-            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
           >
             {error}
           </div>

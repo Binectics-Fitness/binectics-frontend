@@ -114,7 +114,7 @@ function TemplatePickerModal({
         <div className="p-6 flex flex-col gap-2">
           <Eyebrow as="label">Template</Eyebrow>
           {error ? (
-            <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+            <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
               {error}
             </div>
           ) : !loading && templates.length === 0 ? (
@@ -247,7 +247,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
       {loading && !client ? (
         <AsyncSpinner size="page" label="Loading client" />
       ) : error || !client ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load client</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error ?? "Client not found."}</div>
         </div>

@@ -220,7 +220,7 @@ export function RescheduleBookingModal({
           />
         </div>
         {error && (
-          <p role="alert" className="rounded-(--r-2) bg-danger-soft p-3 text-[13px] text-danger">
+          <p role="alert" className="rounded-(--r-2) bg-danger-soft p-3 text-[13px] text-danger-ink">
             {error}
           </p>
         )}

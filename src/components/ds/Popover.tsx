@@ -83,7 +83,7 @@ export function PopoverItem({ children, onClick, danger }: PopoverItemProps) {
       onClick={onClick}
       className={`flex w-full items-center gap-2 rounded-(--r-2) px-3 py-2 text-left text-[13.5px] font-medium transition-colors ${
         danger
-          ? "text-danger hover:bg-danger-soft"
+          ? "text-danger-ink hover:bg-danger-soft"
           : "text-ink hover:bg-bg-2"
       }`}
       style={{ transitionDuration: "var(--motion-fast)" }}

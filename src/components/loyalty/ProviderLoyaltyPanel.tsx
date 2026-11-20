@@ -118,7 +118,7 @@ export function ProviderLoyaltyPanel() {
   }
   if (settings.isError) {
     return (
-      <div className="rounded-(--r-3) p-4 text-sm" role="alert" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}>
+      <div className="rounded-(--r-3) p-4 text-sm" role="alert" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
         Couldn&apos;t load your loyalty settings. Refresh to try again.
       </div>
     );

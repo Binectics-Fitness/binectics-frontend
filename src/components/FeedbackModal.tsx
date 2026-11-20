@@ -168,7 +168,7 @@ export function FeedbackModal({
             {error && (
               <div
                 className="mt-3 rounded-(--r-2) p-3 text-sm"
-                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
               >
                 {error}
               </div>

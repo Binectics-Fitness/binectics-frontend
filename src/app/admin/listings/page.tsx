@@ -212,7 +212,7 @@ export default function AdminListingsPage() {
           style={{
             background: "var(--danger-soft)",
             border: "1px solid oklch(0.92 0.05 25)",
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
           }}
         >
           <div className="font-medium">Couldn&apos;t load listings</div>

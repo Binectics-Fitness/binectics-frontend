@@ -313,7 +313,7 @@ export default function AssignmentRulesPage() {
         {error && (
           <div
             className="rounded-(--r-3) p-3 text-sm"
-            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
           >
             {error}
           </div>
@@ -483,7 +483,7 @@ export default function AssignmentRulesPage() {
             {formError && (
               <div
                 className="mt-4 rounded-(--r-2) p-3 text-sm"
-                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
               >
                 {formError}
               </div>

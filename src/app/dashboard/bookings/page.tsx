@@ -506,7 +506,7 @@ export default function MyBookingsPage() {
               {!loading && error && (
                 <div
                   className="rounded-(--r-3) p-5"
-                  style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
+                  style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}
                 >
                   <div className="text-[14px] font-medium">Couldn&apos;t load bookings</div>
                   <div className="text-[13px] mt-1" style={{ color: "var(--ink)" }}>
