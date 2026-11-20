@@ -95,6 +95,8 @@ describe("program page", () => {
     expect(screen.getByText(C.clientView.eyebrow)).toBeInTheDocument();
     expect(screen.getAllByText(C.clientView.rest)).toHaveLength(7);
     expect(screen.getByText(C.plan.empty)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: C.header.startClient })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText(C.startBlocked.noTasks)).toBeInTheDocument();
   });
 
   it("offers the task types (no meal plan for a trainer), each with its defaults", async () => {
@@ -112,35 +114,19 @@ describe("program page", () => {
     expect(screen.getByRole("group", { name: C.inspector.howOften }).querySelector("[aria-pressed=true]")).toHaveTextContent("Weekly");
   });
 
-  it("saves by itself, and a task arrives selected with its defaults", async () => {
-    const update = mockApi();
+  it("says inline what an unfinished task needs once Start a client is pressed", async () => {
+    mockApi();
     const user = renderPage();
     await screen.findByText(C.plan.empty);
-    await addTask(user, "workout");
-    expect(screen.getByLabelText(C.inspector.title)).toHaveValue("Workout A");
-    expect(screen.getByText("3 times a week")).toBeInTheDocument();
-        await user.click(screen.getByRole("button", { name: C.inspector.moreFrom }));
-    expect(screen.getByText("3 times a week · weeks 2–4")).toBeInTheDocument();
-    await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 3000 });
-    await waitFor(() =>
-      expect(lastBlocks(update)[0]).toMatchObject({ type: "workout_plan", cadence: "n_per_week", times_per_week: 3, title: "Workout A", start_offset_days: 7 }),
-    );
-    await waitFor(() => expect(screen.getByText(C.header.draftSaved)).toBeInTheDocument());
+    await addTask(user, "habit");
+    expect(screen.getByText(C.startBlocked.fix(1))).toBeInTheDocument();
+    expect(screen.queryByText(C.inspector.titleError)).toBeNull();
+    await user.click(screen.getByRole("button", { name: C.header.startClient }));
+    expect(screen.getByText(C.inspector.titleError)).toBeInTheDocument();
+    expect(screen.getByText(C.issue.title)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("shows what the client sees, by week, with the API's spread", async () => {
-    mockApi(version([{ type: "workout_plan", order: 0, cadence: "n_per_week", times_per_week: 3, title: "Workout A" }]));
-    renderPage();
-    const week = await screen.findByTestId("client-week");
-    const days = within(week).getAllByRole("listitem").map((li) => li.textContent);
-    expect(days).toEqual(["Day 1Workout A", "Day 2Rest", "Day 3Workout A", "Day 4Rest", "Day 5Workout A", "Day 6Rest", "Day 7Rest"]);
-  });
-
-  it("says why a task isn't finished on its row", async () => {
-    mockApi(version([{ type: "form", order: 0, cadence: "weekly" }]));
-    renderPage();
-    expect(await screen.findByText(C.issue.form)).toBeInTheDocument();
-  });
   it("saves by itself: a habit that ticks itself from the water log", async () => {
     const update = mockApi();
     const user = renderPage();
@@ -187,6 +173,43 @@ describe("program page", () => {
     await waitFor(() => expect(lastBlocks(update)[0]).toMatchObject({ type: "measurement", metric: "weight_kg", target: 78, cadence: "weekly" }), { timeout: 3000 });
   });
 
+  it("starts a client in one call (publish_latest) and says who starts when", async () => {
+    mockApi(version([{ type: "instruction", order: 0, cadence: "once", title: "Warm up" }]));
+    vi.spyOn(progressService, "getMyClientProfiles").mockResolvedValue({
+      success: true,
+      data: [{ _id: "cp1", is_active: true, client_id: { _id: "u1", first_name: "Amaka", last_name: "Eze" } }],
+    } as never);
+    const start = vi.spyOn(programsService, "startClient").mockResolvedValue({
+      success: true,
+      data: { instance: { _id: "i1" }, template: { ...template, latest_published_version_no: 1 }, version: version(), published: true, publish_state: { ...unsold, has_unpublished_changes: false, published_version_no: 1 } },
+    } as never);
+    const user = renderPage();
+    await user.click(await screen.findByRole("button", { name: C.header.startClient }));
+    const dialog = screen.getByRole("dialog", { name: C.start.title("Strength base") });
+    expect(within(dialog).getByText(C.start.pickClient)).toBeInTheDocument();
+    await user.click(await within(dialog).findByRole("button", { name: "Amaka Eze" }));
+    await user.click(within(dialog).getByRole("button", { name: C.start.button("Amaka") }));
+    await waitFor(() => expect(start).toHaveBeenCalledWith("t1", { client_profile_id: "cp1", start_date: undefined }));
+    expect(await screen.findByText(C.done.title("Amaka", C.done.today))).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: C.done.back }));
+    expect(screen.getByText(C.banner(["Amaka Eze"]))).toBeInTheDocument();
+  });
+
+  it("D1: a sold program with edits asks for Publish changes before anyone new starts", async () => {
+    mockApi(version([{ type: "instruction", order: 0, cadence: "once", title: "Warm up" }]), {
+      sold_or_listed: true, published_version_no: 1, has_unpublished_changes: true, needs_publish: true,
+    });
+    const publish = vi.spyOn(programsService, "publishTemplate").mockResolvedValue({
+      success: true,
+      data: { template: { ...template, latest_published_version_no: 1 }, version: version(), publish_state: { sold_or_listed: true, published_version_no: 2, has_unpublished_changes: false, needs_publish: false } },
+    });
+    const user = renderPage();
+    expect(await screen.findByText(C.startBlocked.publishFirst)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: C.header.publishChanges }));
+    await waitFor(() => expect(publish).toHaveBeenCalledWith("t1"));
+    await waitFor(() => expect(screen.queryByRole("button", { name: C.header.publishChanges })).toBeNull());
+    expect(screen.queryByText(C.startBlocked.publishFirst)).toBeNull();
+  });
 });
 
 describe("New program dialog", () => {

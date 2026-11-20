@@ -6,8 +6,6 @@ import Link from "next/link";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { instanceStatusTone, templateStatusTone } from "@/lib/ui/statusTones";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
-import SearchableSelect from "@/components/SearchableSelect";
-import { progressService, type ClientProfile } from "@/lib/api/progress";
 import { toast } from "@/components/Toast";
 import { PlanGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
@@ -21,6 +19,7 @@ import { libraryErrorMessage } from "@/lib/exercises/library";
 import { leftoverProtocolsText } from "./protocol-retirement";
 import type { ProgramsRoleConfig } from "./config";
 import { NewProgramDialog } from "./builder/NewProgramDialog";
+import { draftAhead } from "./builder/startClient";
 import { programsService, type ProgramTemplate, type ProgramInstance } from "@/lib/api/programs";
 
 function instanceClientName(i: ProgramInstance): string {
@@ -29,146 +28,6 @@ function instanceClientName(i: ProgramInstance): string {
     return `${i.client_id.first_name} ${i.client_id.last_name}`.trim();
   }
   return "Client";
-}
-
-const fieldStyle: React.CSSProperties = {
-  background: "var(--bg-2)",
-  border: "1px solid var(--border-2)",
-  color: "var(--ink)",
-};
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-      {children}
-    </label>
-  );
-}
-
-function clientName(c: ClientProfile): string {
-  if (typeof c.client_id === "object" && c.client_id !== null) {
-    return `${c.client_id.first_name} ${c.client_id.last_name}`.trim();
-  }
-  return "Client";
-}
-
-// ─── Assign-to-client modal ──────────────────────────────────────────────────
-
-function AssignProgramModal({
-  template,
-  onClose,
-  onAssigned,
-}: {
-  template: ProgramTemplate;
-  onClose: () => void;
-  onAssigned: () => void;
-}) {
-  const [clients, setClients] = useState<ClientProfile[]>([]);
-  const [loadingClients, setLoadingClients] = useState(true);
-  const [clientsError, setClientsError] = useState<string | null>(null);
-  const [selected, setSelected] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [assigning, setAssigning] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      const res = await progressService.getMyClientProfiles();
-      if (!active) return;
-      if (res.success && res.data) {
-        setClients(res.data.filter((c) => c.is_active));
-        setClientsError(null);
-      } else {
-        setClientsError(res.message || "We couldn't load your clients.");
-      }
-      setLoadingClients(false);
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleAssign = async () => {
-    if (!selected) return;
-    setAssigning(true);
-    const res = await programsService.assign(template._id, {
-      client_profile_id: selected,
-      start_date: startDate || undefined,
-    });
-    setAssigning(false);
-    if (res.success && res.data) {
-      const target = clients.find((c) => c._id === selected);
-      toast.success(`"${template.name}" assigned to ${target ? clientName(target) : "client"}.`);
-      onAssigned();
-      onClose();
-    } else {
-      toast.error(res.message ?? "Failed to assign program.");
-    }
-  };
-
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(3,20,30,0.55)" }}
-      onClick={(e) => e.target === overlayRef.current && onClose()}
-    >
-      <div className="w-full max-w-md rounded-(--r-3)" style={{ background: "var(--bg)", border: "1px solid var(--border)", boxShadow: "0 24px 64px rgba(3,20,30,0.2)" }}>
-        <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-          <h2 className="text-[17px] font-medium" style={{ color: "var(--ink)", letterSpacing: "-0.015em" }}>Assign program</h2>
-          <p className="text-[12.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-            Gives the client their own copy of &ldquo;{template.name}&rdquo; with a schedule of tasks.
-          </p>
-        </div>
-        <div className="p-6 flex flex-col gap-3">
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Client</FieldLabel>
-            {clientsError ? (
-              <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
-                {clientsError}
-              </div>
-            ) : !loadingClients && clients.length === 0 ? (
-              <EmptySlate message="No active clients yet." hint="Add a client first, then assign programs." mt="mt-0" />
-            ) : (
-              <SearchableSelect
-                value={selected}
-                onChange={setSelected}
-                options={clients.map((c) => ({ label: clientName(c), value: c._id }))}
-                placeholder={loadingClients ? "Loading clients…" : "Pick a client…"}
-                loading={loadingClients}
-              />
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Start date</FieldLabel>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-9 rounded-(--r-2) px-3 text-[13.5px]"
-              style={fieldStyle}
-            />
-            <span className="text-[11.5px]" style={{ color: "var(--fg-4)" }}>Leave blank to start today.</span>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 px-6 py-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <button type="button" onClick={onClose} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}>
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleAssign}
-            disabled={!selected || assigning}
-            className="h-9 px-5 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50"
-            style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
-          >
-            {assigning ? "Assigning..." : "Assign program"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─── Assignments (clients) modal ─────────────────────────────────────────────
@@ -182,7 +41,7 @@ function AssignmentsModal({
   template: ProgramTemplate;
   basePath: string;
   onClose: () => void;
-  /** Set when the program can be assigned (published, not archived). */
+  /** Set when the program can take a client (not archived): opens its page. */
   onAssign?: () => void;
 }) {
   const [instances, setInstances] = useState<ProgramInstance[] | null>(null);
@@ -235,7 +94,7 @@ function AssignmentsModal({
                     className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
                     style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}
                   >
-                    Assign
+                    Start a client
                   </button>
                 )
               }
@@ -272,7 +131,6 @@ function ProgramCard({
   template,
   onEdit,
   onPublish,
-  onAssign,
   onViewClients,
   onArchive,
   onRestore,
@@ -282,7 +140,6 @@ function ProgramCard({
   template: ProgramTemplate;
   onEdit: () => void;
   onPublish: () => void;
-  onAssign: () => void;
   onViewClients: () => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -297,7 +154,9 @@ function ProgramCard({
     archived: "Archived",
   };
   const isPublished = template.latest_published_version_no >= 1;
-  const draftAhead = template.status !== "archived" && template.latest_version_no > template.latest_published_version_no;
+  const ahead = draftAhead(template);
+  // D1: only a sold or listed program keeps a visible publish step.
+  const sold = template.publish_state?.sold_or_listed ?? isPaid(access);
 
   return (
     <div className="rounded-(--r-3) flex flex-col overflow-hidden" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
@@ -306,7 +165,7 @@ function ProgramCard({
           {/* Published is ready to assign (success), on every role: the role
               accent says whose program it is, which the page already does. */}
           <StatusPill tone={templateStatusTone(template.status)} label={STATUS_LABEL[template.status]} />
-          {draftAhead && isPublished && (
+          {ahead && isPublished && sold && (
             // Neutral fill (not an accent) so it stays distinct from the
             // "Published" pill on every role, incl. the amber trainer accent.
             <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
@@ -338,14 +197,9 @@ function ProgramCard({
               Edit
             </button>
           )}
-          {template.status !== "archived" && (draftAhead || !isPublished) && (
+          {template.status !== "archived" && sold && (ahead || !isPublished) && (
             <button type="button" onClick={onPublish} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--signal-ink)", background: "transparent" }}>
               Publish
-            </button>
-          )}
-          {isPublished && template.status !== "archived" && (
-            <button type="button" onClick={onAssign} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--ink)", background: "transparent" }}>
-              Assign
             </button>
           )}
           {onPricing && template.status !== "archived" && (
@@ -398,7 +252,6 @@ export default function ProgramsManager({
   const [filter, setFilter] = useState<Filter>("All");
 
   const [creating, setCreating] = useState(initialCreateOpen);
-  const [assignTemplate, setAssignTemplate] = useState<ProgramTemplate | null>(null);
   // A publish the plan refused (F4), shown above the list.
   const [gate, setGate] = useState<BillingError | null>(null);
   /** Takes a failed response: true when it was the plan, now on screen. */
@@ -635,7 +488,6 @@ export default function ProgramsManager({
               fmtDate={fmtDate}
               onEdit={() => openProgram(t)}
               onPublish={() => handlePublish(t)}
-              onAssign={() => setAssignTemplate(t)}
               onViewClients={() => setClientsTemplate(t)}
               onArchive={() => handleArchive(t)}
               onRestore={() => handleRestore(t)}
@@ -646,14 +498,6 @@ export default function ProgramsManager({
       ) : null}
 
       {creating && <NewProgramDialog programs={templates} basePath={basePath} onClose={() => setCreating(false)} />}
-
-      {assignTemplate && (
-        <AssignProgramModal
-          template={assignTemplate}
-          onClose={() => setAssignTemplate(null)}
-          onAssigned={() => setClientsTemplate(assignTemplate)}
-        />
-      )}
 
       {pricingTemplate && (
         <ContentPricingModal
@@ -677,14 +521,7 @@ export default function ProgramsManager({
           template={clientsTemplate}
           basePath={basePath}
           onClose={() => setClientsTemplate(null)}
-          onAssign={
-            clientsTemplate.latest_published_version_no > 0 && clientsTemplate.status !== "archived"
-              ? () => {
-                  setAssignTemplate(clientsTemplate);
-                  setClientsTemplate(null);
-                }
-              : undefined
-          }
+          onAssign={clientsTemplate.status !== "archived" ? () => openProgram(clientsTemplate) : undefined}
         />
       )}
       {confirmationModal}
