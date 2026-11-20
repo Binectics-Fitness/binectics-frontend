@@ -67,10 +67,10 @@ const SECTIONS = [
  * cancellation fee has its own editor below them (ClassCancellationPolicyEditor).
  */
 const BOOKING_TOGGLE_DEFS = [
-  { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed." },
-  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
+  { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Members are booked without your approval." },
+  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health questionnaire." },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
-  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Members see ratings and reviews on your listing page." },
+  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Ratings and reviews show on your listing." },
 ];
 
 const INPUT_STYLE = {
@@ -399,7 +399,7 @@ export function SettingsClient() {
           {/* Cards holding a SearchableSelect stay overflow-visible: its list
               opens in flow and DSCard would otherwise clip it. */}
           <section id="org">
-            <SectionHeading title="Organization" desc="Legal entity, trading name, primary contact. Used on receipts and tax documents." />
+            <SectionHeading title="Organization" desc="Shown on receipts and tax documents." />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <TextField label="Legal name" value={form?.legal_name ?? ""} onChange={(v) => set("legal_name", v)} disabled={!form} />
@@ -418,7 +418,7 @@ export function SettingsClient() {
 
           {/* Currency & locale */}
           <section id="currency">
-            <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
+            <SectionHeading title="Currency & locale" />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint={providerRouteNote(form?.currency, currencies, providerHint) ?? "Used for new membership plans, listings, and revenue display."}
@@ -439,7 +439,7 @@ export function SettingsClient() {
 
           {/* Tax & VAT */}
           <section id="tax">
-            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet, this is what your documents display." />
+            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Binectics doesn't calculate tax for you." />
             <DSCard className="flex flex-col gap-4 p-5.5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
@@ -478,7 +478,7 @@ export function SettingsClient() {
           <WiredToggleSection
             id="booking"
             title="Booking rules"
-            desc="Defaults that apply to all locations · individual locations can override."
+            desc="Apply to all your locations."
             items={BOOKING_TOGGLE_DEFS.map((d) => ({ ...d, on: bookingOn(d.key), onToggle: () => toggleBooking(d.key) }))}
             disabled={!form}
           >
@@ -502,10 +502,7 @@ export function SettingsClient() {
               (owner ruling, Oct 20 2026). Saved with the rest of the page,
               so gated like it (team:manage_organization). */}
           <section id="membership">
-            <SectionHeading
-              title="Membership rules"
-              desc="How members can use their memberships."
-            />
+            <SectionHeading title="Membership rules" />
             <DSCard className="flex flex-col gap-3 p-5.5">
               <div className="flex flex-col gap-1.5 max-w-[220px]">
                 <Eyebrow as="label" htmlFor="member-pause-limit">Member pauses per year</Eyebrow>
@@ -545,7 +542,7 @@ export function SettingsClient() {
           {/* Kiosk & QR. The kiosk has no settings of its own yet; this
               explains how check-in works and links to the kiosk page. */}
           <section id="kiosk">
-            <SectionHeading title="Kiosk & QR" desc="Check-in runs in a web browser, so there is nothing to install or pair." />
+            <SectionHeading title="Kiosk & QR" />
             <DSCard className="flex flex-col gap-3 p-5.5">
               <p className="text-[14px] leading-relaxed max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
                 Open the check-in kiosk on any tablet, phone or computer at your door and leave it on. It shows a QR code that changes every minute. Members scan it with the Binectics app or their phone camera, and only members with an active plan are let in.
@@ -567,7 +564,7 @@ export function SettingsClient() {
           {/* Payout schedule */}
           {isOwner && (
           <section id="payouts">
-            <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
+            <SectionHeading title="Payout schedule" desc="How often earnings are paid to your bank, where your payment provider supports it." />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}
@@ -620,11 +617,11 @@ function StatusPill({ tone, dot, label }: { tone: "signal" | "muted"; dot: strin
   );
 }
 
-function SectionHeading({ title, desc }: { title: string; desc: string }) {
+function SectionHeading({ title, desc }: { title: string; desc?: string }) {
   return (
     <>
-      <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
-      <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{desc}</p>
+      <h2 className={`text-[16px] font-medium${desc ? "" : " mb-4"}`} style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
+      {desc && <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{desc}</p>}
     </>
   );
 }

@@ -175,6 +175,12 @@ describe("provider settings: the policy editor", () => {
   it("sets the window, the fee and a note, with a live preview of what members see", async () => {
     render(<Harness />);
     expect(screen.getByTestId("class-cancellation-policy-none")).toBeInTheDocument();
+    // Late-cancel fees are never charged, so the example must not talk
+    // about waiving one.
+    expect(screen.getByLabelText("Policy note (optional)")).toHaveAttribute(
+      "placeholder",
+      "For example: tell the front desk if you can't make it.",
+    );
 
     await userEvent.clear(screen.getByLabelText("Window (hours before class)"));
     await userEvent.type(screen.getByLabelText("Window (hours before class)"), "24");

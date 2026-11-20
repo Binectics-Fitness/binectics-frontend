@@ -69,7 +69,7 @@ export function RecentImports({ orgId, refreshKey }: { orgId: string | undefined
 
   return (
     <DSCard>
-      <DSCardHead title="Imports" subtitle="Members you brought over from another system." />
+      <DSCardHead title="Imports" />
       <ul>
         {items.map((item, i) => (
           <li

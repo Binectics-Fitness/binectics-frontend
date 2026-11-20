@@ -135,3 +135,16 @@ describe("Settings: country guessed from the IP", () => {
     expect(h.mutateAsync).not.toHaveBeenCalled();
   });
 });
+
+describe("Settings: copy that must stay true", () => {
+  it("booking rules apply to every location, and PAR-Q makes no sending promise", () => {
+    h.currentOrg = { ...h.org, is_owner: true };
+    render(<SettingsClient />);
+    // No per-location overrides exist (owner decision, 20 Nov 2026).
+    expect(screen.getByText("Apply to all your locations.")).toBeInTheDocument();
+    expect(screen.queryByText(/can override/)).toBeNull();
+    // The API stores require_parq but sends nothing, so no "sent automatically".
+    expect(screen.getByText("Standard health questionnaire.")).toBeInTheDocument();
+    expect(screen.queryByText(/Sent automatically/)).toBeNull();
+  });
+});
