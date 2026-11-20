@@ -48,7 +48,7 @@ describe("ChargeRefundPanel", () => {
       .mockResolvedValueOnce({ success: false, message: "Network error" })
       .mockResolvedValueOnce({ success: true, data: refund });
     renderWithProviders(<ChargeRefundPanel mode="provider" orgId="o1" chargeId="tx1" />);
-    expect(await screen.findByText(/your own Paystack account/)).toBeTruthy();
+    expect(await screen.findByText(/your Paystack account/)).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Full amount" }));
     await userEvent.click(screen.getByRole("button", { name: "Refund" }));
     await userEvent.click(await screen.findByRole("button", { name: /^Refund .+/ }));
@@ -104,7 +104,7 @@ describe("ChargeRefundPanel: a direct refund asks first (owner ruling 6)", () =>
   async function openForm() {
     svc.orgQuote.mockResolvedValue({ success: true, data: quote() });
     renderWithProviders(<ChargeRefundPanel mode="provider" orgId="o1" chargeId="tx1" payerName="Ada Obi" />);
-    await screen.findByText(/your own Paystack account/);
+    await screen.findByText(/your Paystack account/);
     await userEvent.click(screen.getByRole("button", { name: "Full amount" }));
   }
 
@@ -114,7 +114,7 @@ describe("ChargeRefundPanel: a direct refund asks first (owner ruling 6)", () =>
     await userEvent.click(screen.getByRole("button", { name: "Refund" }));
     const dialog = await screen.findByRole("alertdialog");
     expect(dialog.textContent).toMatch(/to Ada Obi\?/);
-    expect(dialog.textContent).toMatch(/your own Paystack account/);
+    expect(dialog.textContent).toMatch(/your Paystack account/);
     expect(svc.orgRefund).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("alertdialog")).toBeNull();

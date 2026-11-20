@@ -90,7 +90,7 @@ export function ProviderCurrenciesPanel({
   const onAdd = async () => {
     const next = code.trim().toUpperCase();
     if (!/^[A-Z]{3}$/.test(next)) {
-      setAddError("Choose a currency, or type its three-letter code.");
+      setAddError("Choose a currency or type its code.");
       return;
     }
     setAddError(null);

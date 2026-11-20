@@ -255,7 +255,7 @@ export default function BulkInviteClient() {
                               ? { background: "var(--signal-soft)", color: "var(--signal-ink)" }
                               : row.ok
                                 ? { background: "var(--bg-2)", color: "var(--ink)", border: "1px solid var(--border)" }
-                                : { background: "var(--danger-soft)", color: "var(--danger)" }
+                                : { background: "var(--danger-soft)", color: "var(--danger-ink)" }
                           }
                         >
                           {row.status}

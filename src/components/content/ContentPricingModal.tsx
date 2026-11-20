@@ -26,6 +26,8 @@ import {
   draftFingerprint,
   paidContentCopy,
   type PricingDraft,
+  NOTHING_TO_SELL,
+  hasNothingToSell,
 } from "@/lib/paidContent/helpers";
 
 function clientUserId(c: ClientProfile): string {
@@ -151,6 +153,7 @@ export function ContentPricingModal({
   }, [open, savedPaid, kind, itemId, peopleAttempt]);
 
   const dirty = draftFingerprint(draft) !== baseline;
+  const nothingToSell = hasNothingToSell(draft);
   const used = new Set(draft.prices.map((p) => p.currency));
   const addable = options.filter((o) => !used.has(o.value));
 
@@ -188,7 +191,7 @@ export function ContentPricingModal({
     const res = await paidContentService.grant(kind, itemId, pickClient);
     if (!res.success) {
       const e = paidContentErrorOf(res);
-      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't give it. Try again.");
+      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't give access. Try again.");
     }
     const g = await paidContentService.listGrants(kind, itemId);
     if (g.success && g.data) setGrants(g.data);
@@ -200,7 +203,7 @@ export function ContentPricingModal({
     const res = await paidContentService.revokeGrant(grant.id);
     if (!res.success) {
       const e = paidContentErrorOf(res);
-      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't withdraw it. Try again.");
+      return toast.error(e ? paidContentCopy(e) : res.message || "Couldn't withdraw access. Try again.");
     }
     setGrants((list) => list.filter((x) => x.id !== grant.id));
     toast.success("Free access withdrawn");
@@ -227,11 +230,22 @@ export function ContentPricingModal({
       size="lg"
       footer={
         quiet ? undefined : (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {nothingToSell && (
+              <span id="pricing-save-reason" className="mr-auto text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                {NOTHING_TO_SELL}
+              </span>
+            )}
             <button type="button" className="btn-ghost-v2" onClick={requestClose}>
               Close
             </button>
-            <button type="button" className="btn-primary-v2" disabled={saving || !dirty} onClick={() => void save()}>
+            <button
+              type="button"
+              className="btn-primary-v2"
+              disabled={saving || !dirty || nothingToSell}
+              aria-describedby={nothingToSell ? "pricing-save-reason" : undefined}
+              onClick={() => void save()}
+            >
               {saving ? "Saving..." : "Save pricing"}
             </button>
           </div>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import TeamWorkspacePage from "@/app/dashboard/team/page";
 import { teamsService } from "@/lib/api/teams";
 
@@ -82,5 +82,15 @@ describe("Team page: pending invitations", () => {
     expect(getInvitations).not.toHaveBeenCalled();
     expect(screen.queryByText("Pending invitations")).toBeNull();
     expect(screen.queryByText("new.coach@example.com")).toBeNull();
+  });
+
+  it("says no one matches a search, with a way to clear it", async () => {
+    render(<TeamWorkspacePage />);
+    await vi.waitFor(() => expect(teamsService.getMembers).toHaveBeenCalledWith("o1"));
+    fireEvent.change(screen.getByLabelText("Search members"), { target: { value: "zzz-nobody" } });
+    expect(await screen.findByText("No one matches.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear filter" }));
+    expect(screen.queryByText("No one matches.")).toBeNull();
+    expect((screen.getByLabelText("Search members") as HTMLInputElement).value).toBe("");
   });
 });

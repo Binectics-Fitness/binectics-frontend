@@ -85,7 +85,7 @@ export default function FeatureFlagsClient() {
           <div
             role="alert"
             className="rounded-(--r-3) p-4 mt-4 text-[13px] flex items-center justify-between gap-3"
-            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+            style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }}
           >
             <span>{(error as Error).message}</span>
             <button type="button" className="btn-ghost-v2 sm" onClick={() => void refetch()}>

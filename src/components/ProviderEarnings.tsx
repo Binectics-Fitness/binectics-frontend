@@ -64,7 +64,7 @@ function SectionCard({ title, sub, children }: { title: string; sub?: string; ch
 
 function ErrorBanner({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+    <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
       <div className="font-medium">{title}</div>
       <div className="mt-1" style={{ color: "var(--ink)" }}>{body}</div>
     </div>
@@ -121,7 +121,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
         setSeries(seriesRes.value.data);
         ok = true;
       }
-      setLedgerError(ok ? null : "We couldn't load settled revenue. Try again shortly.");
+      setLedgerError(ok ? null : "Couldn't load settled revenue. Try again.");
       setLedgerLoading(false);
     };
     const kick = window.setTimeout(() => void run(), 0);
@@ -304,7 +304,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
             {/* Transactions */}
             <SectionCard title="Transactions" sub="Most recent first">
               {txError && (
-                <div className="mx-4.5 mt-3 rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+                <div className="mx-4.5 mt-3 rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
                   {txError}
                 </div>
               )}

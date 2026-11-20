@@ -176,7 +176,7 @@ export default function ProviderBillingPage() {
       });
 
       if (!res.success || !res.data) {
-        setError("Could not create checkout session. Please try again.");
+        setError("Couldn't start checkout. Try again.");
         setCheckoutLoading(null);
         return;
       }
@@ -210,7 +210,7 @@ export default function ProviderBillingPage() {
       if (checkout_url) {
         router.push(checkout_url); // navigates away
       } else {
-        setError("Could not create checkout session. Please try again.");
+        setError("Couldn't start checkout. Try again.");
         setCheckoutLoading(null);
       }
     } catch (err) {
@@ -256,7 +256,7 @@ export default function ProviderBillingPage() {
         {(ownedOrgs.length > 1 || (!ownsCurrent && ownedOrgs.length > 0)) && (
           <OrganizationContextBanner
             label="Billing organization"
-            helperText="Switch organizations before reviewing plan usage or invoices."
+            helperText="Choose the workspace to bill."
             organizations={ownedOrgs}
             currentOrg={currentOrg}
             onChange={setCurrentOrg}
@@ -266,7 +266,7 @@ export default function ProviderBillingPage() {
         {error && (
           <div
             className="rounded-(--r-3) p-3 text-sm"
-            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+            style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
           >
             {error}
           </div>

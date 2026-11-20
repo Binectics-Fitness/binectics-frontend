@@ -89,9 +89,9 @@ describe("the policy wording", () => {
   });
 
   it("the cancel copy carries the fee sentence and note only when the gym has them", () => {
-    expect(confirmedCancelCopy(null)).toBe("If anyone is waiting, your spot goes to them. To come back, you'd book again.");
+    expect(confirmedCancelCopy(null)).toBe("If anyone is waiting, your spot goes to them. To come back, book again.");
     expect(confirmedCancelCopy(POLICY)).toBe(
-      `If anyone is waiting, your spot goes to them. ${SENTENCE} To come back, you'd book again.`,
+      `If anyone is waiting, your spot goes to them. ${SENTENCE} To come back, book again.`,
     );
     expect(confirmedCancelCopy({ ...POLICY, note: "Front desk." })).toContain("Iron Temple: “Front desk.”");
   });

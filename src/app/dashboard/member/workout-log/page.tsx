@@ -401,7 +401,7 @@ export default function WorkoutLogPage() {
             border: "1px solid oklch(0.92 0.05 25)",
             borderRadius: 10,
             padding: 14,
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
             fontSize: 13,
             marginBottom: 14,
           }}

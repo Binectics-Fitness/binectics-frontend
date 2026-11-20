@@ -79,8 +79,11 @@ describe("ContentPricingModal", () => {
   it("will not save a paid item nobody can get", async () => {
     open();
     await userEvent.click(screen.getByRole("button", { name: "Paid" }));
-    await userEvent.click(screen.getByRole("button", { name: "Save pricing" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/Add a price/);
+    // Save stays disabled, with the reason beside it, until a price or plan is set.
+    const save = screen.getByRole("button", { name: "Save pricing" });
+    expect(save).toBeDisabled();
+    expect(save).toHaveAccessibleDescription("Add a price or include it in a plan.");
+    await userEvent.click(save);
     expect(setAccess).not.toHaveBeenCalled();
   });
 

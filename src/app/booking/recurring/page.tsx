@@ -555,7 +555,7 @@ function RecurringBookingInner() {
           )}
 
           {submitError && (
-            <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid oklch(0.92 0.05 25)" }}>
+            <div className="mt-3 rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid oklch(0.92 0.05 25)" }}>
               {submitError}
             </div>
           )}

@@ -59,7 +59,7 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
   if (type === CouponDiscountType.PERCENT && !(Number.isInteger(pct) && pct >= 1 && pct <= 100)) problems.push("Percent is a whole number from 1 to 100.");
   if (type === CouponDiscountType.FIXED && (!currency || !amountMinor || amountMinor < 1)) problems.push("Choose a currency and an amount.");
   if (kinds.length === 0) problems.push("Pick what the code works on.");
-  if (capN !== null && !(Number.isInteger(capN) && capN >= 1)) problems.push("The total limit is a whole number of 1 or more.");
+  if (capN !== null && !(Number.isInteger(capN) && capN >= 1)) problems.push("Total limit must be 1 or more.");
   if (!(Number.isInteger(per) && per >= 1 && per <= 10)) problems.push("Per-person limit is 1 to 10.");
   if (expires && expires < today) problems.push("The expiry date must be in the future.");
 

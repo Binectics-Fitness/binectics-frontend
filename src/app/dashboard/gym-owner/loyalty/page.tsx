@@ -26,7 +26,7 @@ export default function GymLoyaltyPage() {
             Loyalty
           </h1>
           <p className="text-sm mt-2" style={{ color: "var(--fg-3)" }}>
-            Reward the gym&apos;s members for showing up, with rewards you choose and hand out.
+            Rewards you choose and hand out.
           </p>
         </div>
         <ProviderLoyaltyPanel />

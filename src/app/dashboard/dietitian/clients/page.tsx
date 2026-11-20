@@ -167,7 +167,7 @@ export default function DietitianClientsPage() {
       </DSCard>
 
       {isError && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           Failed to load clients, try refreshing.
         </div>
       )}

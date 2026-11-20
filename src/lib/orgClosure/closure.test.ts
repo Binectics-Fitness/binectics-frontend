@@ -60,8 +60,8 @@ describe("parseClosures", () => {
 
 describe("closureErrorMessage", () => {
   it("has plain words for each refusal", () => {
-    expect(closureErrorMessage("ORG_CLOSE_CONFIRMATION_MISMATCH", 400)).toMatch(/exact name/);
-    expect(closureErrorMessage("ORG_CLOSE_NOT_SUPPORTED", 400)).toMatch(/Trainer and dietitian/);
+    expect(closureErrorMessage("ORG_CLOSE_CONFIRMATION_MISMATCH", 400)).toMatch(/gym.s name or CLOSE/);
+    expect(closureErrorMessage("ORG_CLOSE_NOT_SUPPORTED", 400)).toBe("Only a gym workspace can be closed.");
     expect(closureErrorMessage("ORG_ALREADY_CLOSED", 409)).toMatch(/already closed/);
     expect(closureErrorMessage("ORG_REOPEN_WINDOW_EXPIRED", 409)).toMatch(/window has ended/);
     expect(closureErrorMessage("ORG_CLOSED", 409)).toBe(ORG_CLOSED_MESSAGE);

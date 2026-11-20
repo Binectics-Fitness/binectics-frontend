@@ -71,7 +71,10 @@ export function DiscountCodesClient() {
       ) : !rows ? (
         <AsyncSpinner />
       ) : rows.length === 0 ? (
-        <EmptySlate message="No codes yet. Create one to offer a discount on a membership or a session." />
+        <EmptySlate
+          message="No codes yet."
+          action={<button type="button" className="btn-primary-v2 sm" onClick={() => setCreating(true)}>New code</button>}
+        />
       ) : (
         <ul className="rounded-(--r-3) overflow-hidden" style={card}>
           {rows.map((c) => (

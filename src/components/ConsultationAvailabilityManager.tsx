@@ -742,7 +742,7 @@ export default function ConsultationAvailabilityManager({
             className={`mb-6 rounded-(--r-2) px-4 py-3 text-sm ${
               message.type === "success"
                 ? "bg-signal-soft text-signal-ink"
-                : "bg-danger-soft text-danger"
+                : "bg-danger-soft text-danger-ink"
             }`}
           >
             {message.text}
@@ -877,7 +877,7 @@ export default function ConsultationAvailabilityManager({
                                   type="button"
                                   onClick={() => removeRange(dayIndex, range.id)}
                                   aria-label="Remove time range"
-                                  className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger transition-colors"
+                                  className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger-ink transition-colors"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -949,7 +949,7 @@ export default function ConsultationAvailabilityManager({
                   className={`mx-5 mt-4 rounded-(--r-2) px-4 py-3 text-sm ${
                     sessionMessage?.type === "success"
                       ? "bg-signal-soft text-signal-ink"
-                      : "bg-danger-soft text-danger"
+                      : "bg-danger-soft text-danger-ink"
                   }`}
                 >
                   {sessionMessage?.text ??
@@ -1381,7 +1381,7 @@ export default function ConsultationAvailabilityManager({
                               <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                                   isFullDay
-                                    ? "bg-danger-soft text-danger"
+                                    ? "bg-danger-soft text-danger-ink"
                                     : "bg-(--warn-soft,oklch(0.96_0.06_75)) text-(--warn)"
                                 }`}
                               >
@@ -1399,7 +1399,7 @@ export default function ConsultationAvailabilityManager({
                             type="button"
                             onClick={() => deleteException(exc.id)}
                             aria-label="Remove blocked date"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger transition-colors"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-danger-soft hover:text-danger-ink transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

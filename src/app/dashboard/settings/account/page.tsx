@@ -159,7 +159,7 @@ export default function AccountSettingsPage() {
             type="button"
             onClick={() => setDeleteOpen(true)}
             className="rounded-(--r-2) px-5 py-2.5 text-sm font-semibold"
-            style={{ border: "1px solid oklch(0.88 0.05 25)", color: "var(--danger)", background: "var(--danger-soft)" }}
+            style={{ border: "1px solid oklch(0.88 0.05 25)", color: "var(--danger-ink)", background: "var(--danger-soft)" }}
           >
             Delete my account&hellip;
           </button>

@@ -94,7 +94,7 @@ export function confirmedCancelCopy(policy: ClassCancellationPolicy | null | und
     "If anyone is waiting, your spot goes to them.",
     fee,
     note,
-    "To come back, you'd book again.",
+    "To come back, book again.",
   ]
     .filter(Boolean)
     .join(" ");

@@ -380,7 +380,7 @@ export default function FormFillClient() {
                   ))}
 
                   {submitError && (
-                    <div className="rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
+                    <div className="rounded-(--r-2) p-3 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}>
                       {submitError}
                     </div>
                   )}

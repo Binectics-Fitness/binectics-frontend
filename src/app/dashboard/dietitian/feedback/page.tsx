@@ -33,7 +33,7 @@ const RATING_LABEL: Record<MealRating, string> = {
 function pillStyle(status: string) {
   if (status === "ok") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
   if (status === "warn") return { background: "var(--trainer-soft)", color: "var(--warn)" };
-  return { background: "var(--danger-soft)", color: "var(--danger)" };
+  return { background: "var(--danger-soft)", color: "var(--danger-ink)" };
 }
 
 /**

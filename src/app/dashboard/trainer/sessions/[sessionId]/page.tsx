@@ -122,7 +122,7 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       )}
 
       {state.kind === "error" && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }} role="alert">
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }} role="alert">
           {state.message}
           <button type="button" className="btn-ghost-v2 sm ml-3" onClick={() => void load()}>Try again</button>
         </div>

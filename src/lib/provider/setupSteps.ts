@@ -68,7 +68,7 @@ function count(n: number, noun: string): string {
 
 function listingDetail(listing: { is_published: boolean } | null, gym: boolean): string {
   if (!listing) return gym ? "Members find your gym from its listing." : "Members find you from your profile.";
-  if (!listing.is_published) return "Saved but not published, so nobody can see it yet.";
+  if (!listing.is_published) return "Saved, not published. Nobody can see it yet.";
   return gym ? "Live. Members can find your gym." : "Live. Members can find you.";
 }
 

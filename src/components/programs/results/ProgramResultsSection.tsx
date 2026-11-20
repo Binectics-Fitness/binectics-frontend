@@ -78,7 +78,7 @@ export default function ProgramResultsSection({
         <div
           role="alert"
           className="rounded-(--r-3) px-4.5 py-3.5 text-[13.5px] flex items-center justify-between gap-3"
-          style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}
+          style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}
         >
           <span>{C.error}</span>
           <button type="button" className="btn-ghost-v2 sm" style={{ background: "var(--bg)" }} onClick={() => reload(null)}>

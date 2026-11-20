@@ -54,7 +54,7 @@ const LABEL_CLASS = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
  */
 export function GatewaysSection({
   title = "Payment gateways",
-  description = "Where your money settles. Your own keys are used for checkout instead of the platform\u2019s. Secret keys are encrypted and never shown again.",
+  description = "Where your money settles. Checkout uses your own keys.",
 }: {
   title?: string;
   description?: string;
@@ -121,7 +121,7 @@ export function GatewaysSection({
       return;
     }
     if (!publicKey.trim() || !secretKey.trim()) {
-      setError("Public and secret key are both required.");
+      setError("Enter both keys.");
       return;
     }
     setError(null);
