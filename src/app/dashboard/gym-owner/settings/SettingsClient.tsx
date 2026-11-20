@@ -367,7 +367,7 @@ export function SettingsClient() {
       <PageHeader
         className="mb-0!"
         title="Settings"
-        subtitle={<span className="block max-w-[60ch]">Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</span>}
+        subtitle={<span className="block max-w-[60ch]">Business details, currencies and integrations.</span>}
       />
 
       {/* Only while the Overview setup checklist is hidden: the way back. */}

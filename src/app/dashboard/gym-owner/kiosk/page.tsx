@@ -171,9 +171,9 @@ export default function CheckInKioskPage() {
                 {checkInUrl}
               </div>
               <p className="mt-3 text-[12.5px] leading-normal" style={{ color: "var(--fg-3)" }}>
-                Run &ldquo;kiosk display&rdquo; on a front-desk tablet. The
-                code refreshes every minute, printed copies and photos stop
-                working by design.
+                Open the kiosk display on any screen at your door and leave it
+                on. The code changes every minute, so printed copies and photos
+                stop working.
               </p>
             </DSCard>
 

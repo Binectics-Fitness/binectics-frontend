@@ -745,6 +745,8 @@ describe("MessagingCenter: layout (web B6/B7/B10/B12)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back to conversations" }));
     expect(nav.replace).toHaveBeenCalledWith("/dashboard/messages", { scroll: false });
     expect(await screen.findByText("No conversation selected")).toBeInTheDocument();
+    // The heading says it; no instruction line under it (text audit, 19 Nov 2026).
+    expect(screen.queryByText("Choose a conversation to read and reply.")).not.toBeInTheDocument();
   });
 });
 

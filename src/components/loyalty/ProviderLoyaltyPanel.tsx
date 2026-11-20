@@ -230,7 +230,7 @@ export function ProviderLoyaltyPanel() {
             ) : rewards.isError ? (
               <p className="text-sm" style={{ color: "var(--danger)" }}>Couldn&apos;t load your rewards.</p>
             ) : list.length === 0 ? (
-              <EmptySlate message="No rewards yet." hint="Add one so your clients have something to spend their points on." mt="mt-0" />
+              <EmptySlate message="No rewards yet." mt="mt-0" />
             ) : (
               <ul className="flex flex-col gap-2">
                 {list.map((r) => (
