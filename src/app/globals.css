@@ -609,10 +609,10 @@ button {
   border: 1px solid var(--border);
 }
 .badge-signal { background: var(--signal-soft); color: var(--signal-ink); border-color: oklch(0.88 0.05 148); }
-.badge-gym    { background: var(--gym-soft); color: var(--gym); border-color: oklch(0.88 0.04 248); }
+.badge-gym    { background: var(--gym-soft); color: var(--gym-ink); border-color: oklch(0.88 0.04 248); }
 .badge-trainer{ background: var(--trainer-soft); color: oklch(0.45 0.12 75); border-color: oklch(0.88 0.05 75); }
-.badge-diet   { background: var(--dietitian-soft); color: var(--dietitian); border-color: oklch(0.88 0.04 300); }
-.badge-danger { background: var(--danger-soft); color: var(--danger); border-color: oklch(0.88 0.05 25); }
+.badge-diet   { background: var(--dietitian-soft); color: var(--dietitian-ink); border-color: oklch(0.88 0.04 300); }
+.badge-danger { background: var(--danger-soft); color: var(--danger-ink); border-color: oklch(0.88 0.05 25); }
 
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
 

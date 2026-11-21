@@ -565,7 +565,7 @@ const DTD_CSS = `
   background: oklch(0.94 0.06 75); color: oklch(0.35 0.12 75);
 }
 .dtd-status-silent {
-  background: var(--danger-soft); color: var(--danger);
+  background: var(--danger-soft); color: var(--danger-ink);
 }
 
 .dtd-template-row {
