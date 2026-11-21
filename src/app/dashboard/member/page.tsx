@@ -48,6 +48,7 @@ import {
 import { EnrollmentOffersCard } from "./_components/EnrollmentOffersCard";
 import { GymClassesLink } from "./_components/GymClassesLink";
 import { MembershipNoticeCard } from "./_components/MembershipNoticeCard";
+import { ProgramAboutCard } from "./_components/ProgramAboutCard";
 import { formatDate } from "@/utils/format";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
 import { SoloToday, SoloTodayLoading } from "./_components/solo/SoloToday";
@@ -249,6 +250,12 @@ function MemberHomeContent() {
                 <p className="mt-2 text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="tasks-in-app">
                   Your daily tasks are in the Binectics app on your phone.
                 </p>
+              )}
+              {/* D4: the coach's description and cautions for this program. */}
+              {snapshot.program && (
+                <div className="mt-3.5 empty:hidden">
+                  <ProgramAboutCard instanceId={snapshot.program.id} />
+                </div>
               )}
               {/* Gym visits where the check-in streak was (board web-visits H1). */}
               {visits && (

@@ -83,6 +83,20 @@ export function inlineWorkoutSessions(programName: string, agenda: unknown): Pro
   return out.sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor));
 }
 
+/** What the coach wrote about a program: shown to the client (D4). */
+export interface ProgramAboutText {
+  description: string | null;
+  cautions: string | null;
+}
+
+const textOrNull = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
+
+/** The description and cautions on GET /my-programs/:id's instance; null when absent. */
+export function programAboutFrom(detail: unknown): ProgramAboutText {
+  const instance = isRec(detail) && isRec(detail.instance) ? detail.instance : {};
+  return { description: textOrNull(instance.description), cautions: textOrNull(instance.cautions) };
+}
+
 export const myProgramsService = {
   /** One program's agenda, reduced to its inline-exercise workout sessions. */
   async inlineWorkouts(instanceId: string, programName: string): Promise<ApiResponse<ProgramWorkoutSession[]>> {
@@ -90,6 +104,13 @@ export const myProgramsService = {
     if (!res.success) return { ...res, data: undefined } as ApiResponse<ProgramWorkoutSession[]>;
     const d = res.data;
     return { ...res, data: inlineWorkoutSessions(programName, isRec(d) ? d.agenda : []) };
+  },
+
+  /** The description and cautions of one of my programs (the version it was started from). */
+  async about(instanceId: string): Promise<ApiResponse<ProgramAboutText>> {
+    const res = await apiClient.get<unknown>(`/my-programs/${encodeURIComponent(instanceId)}`);
+    if (!res.success) return { ...res, data: undefined } as ApiResponse<ProgramAboutText>;
+    return { ...res, data: programAboutFrom(res.data) };
   },
 
   /** My programs, newest first, each with its progress summary. */
@@ -100,6 +121,8 @@ export const myProgramsService = {
 
 /** The program the home hero shows, and the numbers it draws. */
 export interface ProgramDay {
+  /** The program instance, for GET /my-programs/:id. */
+  id: string;
   name: string;
   day: number;
   /** null when the program has no end date: "Day N", no bar. */
@@ -123,6 +146,7 @@ export function currentProgramDay(programs: readonly MyProgram[]): ProgramDay | 
     if (total !== null && progress.day > total) continue;
     const w = progress.last_7_days;
     return {
+      id: p._id,
       name: p.name,
       day: progress.day,
       totalDays: total,
