@@ -106,7 +106,7 @@ export default function AdminLoginPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm text-danger font-medium">{apiError}</p>
+                <p className="text-sm text-danger-ink font-medium">{apiError}</p>
               </div>
             </div>
           )}
