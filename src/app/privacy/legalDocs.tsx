@@ -161,7 +161,7 @@ const PRIVACY: Section[] = [
       <LI label="Device location, only if you allow it">In the Android app, to show providers near you. You can say no and pick a place instead.</LI>
       <LI label="Push notification tokens">If you allow notifications, a token from Firebase (web) or Expo (Android) so we can send them.</LI>
       <LI label="Sign&#8209;in safety ID">A random code made in your browser or app and sent when you sign in, used only to slow down repeated wrong passwords. It holds no device details.</LI>
-      <LI label="Usage analytics, only if you agree">Pages viewed and sign&#8209;up buttons used, through PostHog (hosted in the EU). Off until you accept analytics cookies, and only on the public website and sign&#8209;up pages. Never your health, fasting, faith or payment details.</LI>
+      <LI label="Usage analytics, only if you agree">Pages viewed and a short list of actions (such as signing up, starting a program or completing a booking), through PostHog (hosted in the EU). Off until you say yes: the &ldquo;Analytics&rdquo; cookie choice on the web, &ldquo;Share usage analytics&rdquo; in the app. Linked to your account id and role only, never your name or contact details, and never your health, fasting, faith, payment or message content. Ids are removed from page addresses.</LI>
     </UL>
     <H3>Others give us</H3>
     <UL>
@@ -328,7 +328,7 @@ const COOKIES: Section[] = [
     <P>Your cookie choice itself is saved in your browser&apos;s local storage so we don&apos;t ask again.</P>
   </>)},
   { num: "02", title: "Analytics", content: (<>
-    <P>If you accept analytics, PostHog (hosted in the EU) counts page views and sign&#8209;up button clicks on the public website so we can see what works. It never receives your health, fasting, faith or payment details. If you reject analytics, it is not loaded at all.</P>
+    <P>If you accept analytics, PostHog (hosted in the EU) counts page views and a short list of actions such as signing up so we can see what works. It never receives your health, fasting, faith or payment details. If you reject analytics, it is not loaded at all.</P>
   </>)},
   { num: "03", title: "Marketing", content: <P>We use no marketing or advertising cookies.</P> },
   { num: "04", title: "Changing your mind", content: (<>
