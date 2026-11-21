@@ -324,9 +324,11 @@ const GYM_OWNER_CSS = `
 }
 
 .gyd-kpi-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  /* minmax(0, 1fr): a long value must not widen its column past a 360px screen. */
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
 }
 .gyd-kpi {
+  min-width: 0; overflow-wrap: anywhere;
   border: 1px solid var(--border); border-radius: var(--r-2);
   background: var(--bg); padding: 14px 16px;
   display: flex; flex-direction: column; gap: 4px;
