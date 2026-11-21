@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { getPathMatch } from "next/dist/shared/lib/router/utils/path-match";
 import { prepareDestination } from "next/dist/shared/lib/router/utils/prepare-destination";
-import nextConfig from "../../../next.config";
+import config from "../../../next.config";
+
+// next.config exports a function of the build phase (it checks the legal
+// documents in the production-build phase only); any other phase returns
+// the plain config.
+const nextConfig = config("phase-development-server");
 
 const id = "6abe5a17882f018fcdb21c61";
 
@@ -37,6 +42,7 @@ describe("redirects for removed pages", () => {
     ["/dashboard/member/help", "/help"],
     ["/dashboard/member/health-metrics", "/dashboard/member/weight-log"],
     ["/unsubscribe/some-token", "/dashboard/settings/notifications"],
+    ["/legal", "/privacy"],
   ])("%s goes to %s", async (path, target) => {
     expect(await redirectFor(path)).toBe(target);
   });
