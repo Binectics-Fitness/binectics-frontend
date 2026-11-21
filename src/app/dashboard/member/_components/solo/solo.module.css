@@ -1,0 +1,143 @@
+/* Solo member building blocks. Tokens only (globals.css); no hard-coded colours. */
+
+.tick {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-radius: var(--r-full);
+  cursor: pointer;
+  color: var(--bg);
+}
+.tickStatic { cursor: default; }
+.tick:focus-visible,
+.chip:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.circle {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border-2);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition: background var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+}
+.circleOn { background: var(--ink); border-color: var(--ink); }
+.circle svg { opacity: 0; transition: opacity var(--motion-fast); }
+.circleOn svg { opacity: 1; }
+
+.rail {
+  position: relative;
+  height: 12px;
+  border-radius: var(--r-full);
+  background: var(--bg-3);
+  overflow: hidden;
+}
+.railFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--r-full);
+  background: var(--ink);
+  transition: width var(--motion-base) var(--ease-out);
+}
+.railAim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--signal);
+}
+
+.count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+.bump { animation: bump var(--motion-base) var(--ease-out); }
+@keyframes bump {
+  0% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+.chip {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.chipOn { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.chip:disabled { opacity: 0.5; cursor: default; }
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0 8px;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-2);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link:hover { color: var(--ink); }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+.row + .row { border-top: 1px solid var(--border); }
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+}
+.input:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+.skeleton {
+  background: var(--bg-3);
+  border-radius: var(--r-3);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bump, .skeleton { animation: none; }
+  .railFill, .circle { transition: none; }
+}

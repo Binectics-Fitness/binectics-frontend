@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
+  countdownAnnouncement,
   deadlineFromSeconds,
   formatCountdown,
   isAccountStateRoute,
   parseDeadline,
   readSuspensionNotice,
+  resetCanHelp,
   routeForLoginFailure,
   safeRedirectPath,
   saveSuspensionNotice,
@@ -33,6 +35,17 @@ describe("routeForLoginFailure", () => {
       reason: "Fraudulent bookings",
       suspendedAt: "2026-09-14T10:30:00.000Z",
     });
+  });
+
+  it("carries an allow-listed lock scope to /account-locked, and drops anything else", () => {
+    const at = (scope: unknown) =>
+      routeForLoginFailure(
+        { code: "AUTH_ACCOUNT_LOCKED", status: 401, details: { retry_after_seconds: 60, lock_scope: scope } },
+        NOW,
+      );
+    expect(at("device")).toBe(`/account-locked?until=${NOW + 60_000}&scope=device`);
+    expect(at("email")).toBe(`/account-locked?until=${NOW + 60_000}&scope=email`);
+    expect(at("<script>")).toBe(`/account-locked?until=${NOW + 60_000}`);
   });
 
   it("sends a lockout to /account-locked with an absolute deadline", () => {
@@ -120,5 +133,27 @@ describe("safeRedirectPath / isAccountStateRoute", () => {
     expect(isAccountStateRoute("/account-locked")).toBe(true);
     expect(isAccountStateRoute("/account-lockedx")).toBe(false);
     expect(isAccountStateRoute("/dashboard")).toBe(false);
+  });
+});
+
+describe("lock scope helpers", () => {
+  it("offers a reset unless the lock is on the device or network", () => {
+    expect(resetCanHelp("email")).toBe(true);
+    expect(resetCanHelp("account")).toBe(true);
+    expect(resetCanHelp(null)).toBe(true);
+    expect(resetCanHelp("device")).toBe(false);
+    expect(resetCanHelp("ip")).toBe(false);
+  });
+
+  it("announces the countdown in a handful of distinct phrases, not every second", () => {
+    const phrases = new Set<string>();
+    for (let s = 300; s >= 0; s--) phrases.add(countdownAnnouncement(s));
+    // 5 minutes, 4, 3, 2, 1 (<=60 is "less than a minute"), few seconds, over
+    expect(phrases.size).toBeLessThanOrEqual(8);
+    expect(countdownAnnouncement(300)).toBe("About 5 minutes left.");
+    expect(countdownAnnouncement(61)).toBe("About 2 minutes left.");
+    expect(countdownAnnouncement(45)).toBe("Less than a minute left.");
+    expect(countdownAnnouncement(5)).toBe("A few seconds left.");
+    expect(countdownAnnouncement(0)).toMatch(/over/);
   });
 });

@@ -119,6 +119,42 @@ export function parseDeadline(raw: string | null | undefined, now = Date.now()):
   return until;
 }
 
+/**
+ * Whose lock the API says it is. `email` (this email from here) and
+ * `account` (this email from anywhere) end on a password reset; `device` and
+ * `ip` (one place trying many accounts) do not.
+ */
+export type LockScope = "email" | "account" | "device" | "ip";
+
+const LOCK_SCOPES: readonly string[] = ["email", "account", "device", "ip"];
+
+/** An allow-listed scope, or null (older API, or a hand-edited URL). */
+export function parseLockScope(raw: unknown): LockScope | null {
+  return typeof raw === "string" && LOCK_SCOPES.includes(raw) ? (raw as LockScope) : null;
+}
+
+/** A password reset helps unless the lock is on the device or network. With
+ *  no scope (older API) the reset is still offered, as before. */
+export function resetCanHelp(scope: LockScope | null): boolean {
+  return scope !== "device" && scope !== "ip";
+}
+
+/**
+ * What a screen reader hears about the sign-in countdown. The text only
+ * changes when the wording does (each minute, then "under a minute", then
+ * "a few seconds", then open), so a live region built on it speaks a handful
+ * of times, never once a second.
+ */
+export function countdownAnnouncement(secondsLeft: number): string {
+  if (secondsLeft <= 0) return "The wait is over. You can try again now.";
+  if (secondsLeft > 60) {
+    const minutes = Math.ceil(secondsLeft / 60);
+    return `About ${minutes} minute${minutes === 1 ? "" : "s"} left.`;
+  }
+  if (secondsLeft > 10) return "Less than a minute left.";
+  return "A few seconds left.";
+}
+
 export interface LoginFailure {
   code?: string;
   status?: number;
@@ -136,9 +172,12 @@ export function routeForLoginFailure(res: LoginFailure, now = Date.now()): strin
   }
   if (res.code === "AUTH_ACCOUNT_LOCKED") {
     const until = deadlineFromSeconds(res.details?.retry_after_seconds, now);
-    return until
-      ? `${ACCOUNT_STATE_ROUTES.LOCKED}?until=${until}`
-      : ACCOUNT_STATE_ROUTES.LOCKED;
+    const scope = parseLockScope(res.details?.lock_scope);
+    const params = new URLSearchParams();
+    if (until) params.set("until", String(until));
+    if (scope) params.set("scope", scope);
+    const query = params.toString();
+    return query ? `${ACCOUNT_STATE_ROUTES.LOCKED}?${query}` : ACCOUNT_STATE_ROUTES.LOCKED;
   }
   if (res.status === 429) {
     const params = new URLSearchParams({ next: "/login" });

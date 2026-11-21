@@ -107,7 +107,7 @@ export default function LocationsClient() {
         subtitle={
           activeLocations.length > 0
             ? `${activeLocations.length} active location${activeLocations.length === 1 ? "" : "s"}`
-            : "Your branches and where members can train"
+            : undefined
         }
       />
 
@@ -116,7 +116,7 @@ export default function LocationsClient() {
           Select an organization to view its locations.
         </div>
       ) : error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load locations</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
@@ -126,7 +126,11 @@ export default function LocationsClient() {
         <AsyncSpinner size="page" label="Loading locations" />
       ) : activeLocations.length === 0 && !error && currentOrg ? (
         <DSCard className="px-4.5 py-6">
-          <EmptySlate message="No locations yet." hint="Add your first branch to get started." mt="mt-0" />
+          <EmptySlate
+            message="No locations yet."
+            mt="mt-0"
+            action={canManage ? <button className="btn-primary-v2 sm" onClick={() => setAddOpen(true)}>+ Add location</button> : undefined}
+          />
         </DSCard>
       ) : activeLocations.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

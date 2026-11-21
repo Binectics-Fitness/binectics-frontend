@@ -99,7 +99,7 @@ export default function AdminOverviewClient() {
       <PageHeader className="mb-0!" title="Platform overview" subtitle="Providers, subscriptions, and member feedback" />
 
       {error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load metrics</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>

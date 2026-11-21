@@ -171,9 +171,9 @@ export default function CheckInKioskPage() {
                 {checkInUrl}
               </div>
               <p className="mt-3 text-[12.5px] leading-normal" style={{ color: "var(--fg-3)" }}>
-                Run &ldquo;kiosk display&rdquo; on a front-desk tablet. The
-                code refreshes every minute, printed copies and photos stop
-                working by design.
+                Open the kiosk display on any screen at your door and leave it
+                on. The code changes every minute, so printed copies and photos
+                stop working.
               </p>
             </DSCard>
 
@@ -219,7 +219,7 @@ export default function CheckInKioskPage() {
                             className="rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em]"
                             style={
                               r.reason === "no_subscription"
-                                ? { background: "var(--danger-soft)", color: "var(--danger)" }
+                                ? { background: "var(--danger-soft)", color: "var(--danger-ink)" }
                                 : { background: "var(--bg-2)", color: "var(--fg-3)" }
                             }
                           >

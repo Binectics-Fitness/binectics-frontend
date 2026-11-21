@@ -204,11 +204,10 @@ function FlowBHome() {
           <div style={{ width: 40, height: 40, borderRadius: 999, background: "linear-gradient(135deg, oklch(0.85 0.04 120), oklch(0.72 0.06 100))" }} />
         </div>
 
-        <div style={{ background: "#1a1814", color: "#f6f4ef", borderRadius: 18, padding: "20px 22px", marginBottom: 14 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95" }}>Check-in streak</div>
-          <div style={{ fontSize: 44, fontWeight: 500, letterSpacing: "-0.026em", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>32 days</div>
-          <div style={{ fontSize: 12, color: "#c8c4bd", marginTop: 2 }}>Checked in today</div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95", marginTop: 12 }}>Longest · 40 days</div>
+        {/* Gym visits, as the member home draws them (no platform streaks). */}
+        <div style={{ background: "#fff", borderRadius: 14, padding: "14px 18px", marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: "#1a1814" }}>Checked in today</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#75716b", marginTop: 2 }}>3 visits this week</div>
         </div>
 
         <div style={{ background: "#fff", borderRadius: 14, padding: 18, marginBottom: 10 }}>
@@ -283,12 +282,9 @@ function FlowBCheckin() {
           Iron Lab Sea Point · welcome back.
         </p>
         <div style={{ marginTop: 32, padding: "24px 32px", background: "#2a2724", borderRadius: 18, textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95" }}>Streak</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.06em", color: "#a09c95" }}>This week</div>
           <div style={{ fontSize: 52, fontWeight: 500, letterSpacing: "-0.028em", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>
-            33 <span style={{ fontSize: 14, color: "#a09c95", fontWeight: 400, marginLeft: 4 }}>days</span>
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "#7bbf52", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 6 }}>
-            Longest · 40 days
+            4 <span style={{ fontSize: 14, color: "#a09c95", fontWeight: 400, marginLeft: 4 }}>visits</span>
           </div>
         </div>
       </div>
@@ -512,7 +508,7 @@ const TRAINER_STATS: Array<{ label: string; value: string; unit?: string; delta:
   { label: "Earnings · this month", value: "{{38400}}", delta: "Settled", steady: true },
 ];
 
-const SESSIONS: Array<{ time: string; initials: string; name: string; meta: string; tag?: string; tagColor?: string; streak?: number; cancelled?: boolean }> = [
+const SESSIONS: Array<{ time: string; initials: string; name: string; meta: string; tag?: string; tagColor?: string; cancelled?: boolean }> = [
   { time: "06:30", initials: "JC", name: "Jamal Chen", meta: "Intake + assessment · 60 min · Iron Lab Sea Point", tag: "First session", tagColor: "var(--signal)" },
   { time: "08:00", initials: "LM", name: "Linda Mokoena", meta: "Strength upper · 60 min · Iron Lab Sea Point" },
   { time: "09:30", initials: "WC", name: "Wei Chen", meta: "Olympic basics · 90 min · Iron Lab Sea Point" },
@@ -639,7 +635,6 @@ function DashboardPreview() {
                             <div style={{ fontSize: 14, fontWeight: 500 }}>
                               {s.name}
                               {s.tag && <span style={{ marginLeft: 6, fontSize: 11, padding: "2px 8px", borderRadius: 999, border: `1px solid ${s.tagColor}`, color: s.tagColor }}>{s.tag}</span>}
-                              {s.streak && <span style={{ marginLeft: 6, fontSize: 12, fontFamily: "var(--font-mono)", padding: "2px 8px", background: "var(--bg-2)", borderRadius: 999 }}>🔥 {s.streak}</span>}
                             </div>
                             <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 2 }}>{s.meta}</div>
                           </div>
@@ -697,6 +692,7 @@ function Row1BigCard() {
       timerIds.current.push(window.setTimeout(() => {
         setTapping(false);
         setFlowStep(ns);
+        // eslint-disable-next-line react-hooks/immutability -- pre-existing demo loop: the callbacks schedule each other
         if (ns === 0) scheduleLoop();
       }, stepAt));
     }
@@ -787,6 +783,7 @@ function Row1SmallCard() {
     timerIds.current.push(window.setTimeout(() => {
       setTapping(false);
       setSelectedIdx(TODAY_INDEX);
+      // eslint-disable-next-line react-hooks/immutability -- pre-existing demo loop: the callbacks schedule each other
       scheduleCalLoop();
     }, elapsed));
   }, [clearTimers]);
@@ -917,15 +914,16 @@ const R2_COUNTRIES = [
 
 interface KioskMember {
   name: string; initials: string; bg: string; type: string;
-  streak: number | null; nextTime: string; nextLine: string;
+  /** Visits this week, this one included. */
+  visits: number | null; nextTime: string; nextLine: string;
   nextSub: string; welcome: string;
 }
 
 const KIOSK_MEMBERS: KioskMember[] = [
-  { name: "Lerato Mokoena", initials: "LM", bg: "oklch(0.86 0.04 80)", type: "Studio · monthly", streak: 24, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
-  { name: "Marcus Chen", initials: "MC", bg: "oklch(0.84 0.05 60)", type: "Pro · annual", streak: 48, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
-  { name: "Aisha Patel", initials: "AP", bg: "oklch(0.86 0.04 120)", type: "Studio · monthly", streak: 1, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome to Iron Lab" },
-  { name: "Daniel Kovač", initials: "DK", bg: "oklch(0.84 0.03 240)", type: "Day pass", streak: null, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
+  { name: "Lerato Mokoena", initials: "LM", bg: "oklch(0.86 0.04 80)", type: "Studio · monthly", visits: 3, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
+  { name: "Marcus Chen", initials: "MC", bg: "oklch(0.84 0.05 60)", type: "Pro · annual", visits: 5, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
+  { name: "Aisha Patel", initials: "AP", bg: "oklch(0.86 0.04 120)", type: "Studio · monthly", visits: 1, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome to Iron Lab" },
+  { name: "Daniel Kovač", initials: "DK", bg: "oklch(0.84 0.03 240)", type: "Day pass", visits: null, nextTime: "", nextLine: "", nextSub: "", welcome: "Welcome back" },
 ];
 
 function KioskFrame({ playing, member, playKey }: { playing: boolean; member: KioskMember; playKey: number }) {
@@ -969,7 +967,7 @@ function KioskFrame({ playing, member, playKey }: { playing: boolean; member: Ki
                 <div className="kiosk-scanline" />
               </div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)", textAlign: "center", lineHeight: 1.45, maxWidth: "22ch" }}>
-                Your phone checks you in and counts your streak.
+                Your phone checks you in and counts the visit.
               </div>
               <div style={{ marginTop: "auto", width: "100%", borderTop: "1px solid var(--border)", paddingTop: 14, display: "flex", justifyContent: "space-between", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <span>Today · <span style={{ color: "var(--ink)" }}>216 checked in</span></span>
@@ -1002,12 +1000,12 @@ function KioskFrame({ playing, member, playKey }: { playing: boolean; member: Ki
                   <div style={{ fontSize: 11.5, color: "var(--fg-3)", marginTop: 2, fontFamily: "var(--font-mono)" }}>{member.nextSub}</div>
                 </div>
               </div>}
-              {member.streak !== null && (
-                <div className="k-streak" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: 14, display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
-                  <div style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{member.streak}</div>
+              {member.visits !== null && (
+                <div className="k-visits" style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: "var(--r-3)", padding: 14, display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
+                  <div style={{ fontSize: 36, fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{member.visits}</div>
                   <div>
-                    <div style={{ color: "var(--ink)", fontSize: 13, marginBottom: 2 }}>{member.streak === 1 ? "Your streak begins" : "Day streak"}</div>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{member.streak === 1 ? "first day" : "day streak"}</div>
+                    <div style={{ color: "var(--ink)", fontSize: 13, marginBottom: 2 }}>{member.visits === 1 ? "visit this week" : "visits this week"}</div>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>This week</div>
                   </div>
                   <div className="k-plus" style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--signal-ink)", background: "var(--signal-soft)", padding: "4px 8px", borderRadius: "var(--r-1)" }}>+1</div>
                 </div>
@@ -1044,6 +1042,7 @@ function Row2QRCard() {
       timerIds.current.push(window.setTimeout(() => {
         if (hoveringRef.current) {
           setMemberIdx(idx => (idx + 1) % KIOSK_MEMBERS.length);
+          // eslint-disable-next-line react-hooks/immutability -- pre-existing demo loop: the callbacks schedule each other
           scheduleLoop();
         }
       }, 300));
@@ -1223,8 +1222,8 @@ const R3_DOT: Record<string, React.CSSProperties> = {
 
 const R3_STATUS: Record<string, React.CSSProperties> = {
   signal: { color: "var(--signal-ink)", borderColor: "oklch(0.88 0.05 148)", background: "var(--signal-soft)" },
-  danger: { color: "var(--danger)", borderColor: "var(--danger)", background: "var(--danger-soft)" },
-  warn:   { color: "var(--warn)", borderColor: "var(--warn)", background: "oklch(0.95 0.04 75)" },
+  danger: { color: "var(--danger-ink)", borderColor: "var(--danger)", background: "var(--danger-soft)" },
+  warn:   { color: "var(--warn-ink)", borderColor: "var(--warn)", background: "oklch(0.95 0.04 75)" },
 };
 
 function R3CheckoutCard({ step }: { step: number }) {
@@ -1343,6 +1342,7 @@ function Row3DashCard() {
       if (hoveringRef.current) {
         setStep(0);
         timerIds.current.push(window.setTimeout(() => {
+          // eslint-disable-next-line react-hooks/immutability -- pre-existing demo loop: the callbacks schedule each other
           if (hoveringRef.current) scheduleLoop();
         }, 400));
       }
@@ -1409,7 +1409,7 @@ function Row3DashCard() {
                       <div style={{ fontSize: 32, fontWeight: 500, lineHeight: 1, letterSpacing: "-0.022em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                         {fillDemoMoney(kpi.value, money)}{kpi.suffix && <small style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 400, marginLeft: 4, color: "var(--fg-3)" }}>{kpi.suffix}</small>}
                       </div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: kpi.down ? "var(--danger)" : "var(--signal-ink)" }}>{kpi.delta}</div>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: kpi.down ? "var(--danger-ink)" : "var(--signal-ink)" }}>{kpi.delta}</div>
                       <div className="r3-spark" style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 28 }}>
                         {kpi.spark.map((h, i) => (
                           <span key={i} style={{ flex: 1, borderRadius: 1, height: `${h}%`, background: i === kpi.spark.length - 1 ? "var(--ink)" : "var(--bg-3)" }} />
@@ -1533,7 +1533,7 @@ function Row3DashCard() {
                           <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{c.name}</div>
                           <div style={{ fontSize: 12, color: "var(--fg-3)" }}>{c.coach}</div>
                         </div>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontVariantNumeric: "tabular-nums", color: c.capType === "full" ? "var(--danger)" : c.capType === "open" ? "var(--signal-ink)" : "var(--fg-2)" }}>{c.cap}</span>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontVariantNumeric: "tabular-nums", color: c.capType === "full" ? "var(--danger-ink)" : c.capType === "open" ? "var(--signal-ink)" : "var(--fg-2)" }}>{c.cap}</span>
                       </div>
                     ))}
                   </div>
@@ -1919,11 +1919,11 @@ export default function DashboardMosaic() {
         .kiosk-playing .k-tick { animation: k-tickfade 300ms ease-out 850ms forwards; }
         .k-photo { opacity: 0; transform: scale(0.85); }
         .kiosk-playing .k-photo { animation: k-photo-in 500ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards; }
-        .k-name, .k-type, .k-nextcard, .k-streak, .k-welcome { opacity: 0; transform: translateY(8px); }
+        .k-name, .k-type, .k-nextcard, .k-visits, .k-welcome { opacity: 0; transform: translateY(8px); }
         .kiosk-playing .k-name { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 950ms forwards; }
         .kiosk-playing .k-type { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 1040ms forwards; }
         .kiosk-playing .k-nextcard { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 1180ms forwards; }
-        .kiosk-playing .k-streak { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 1300ms forwards; }
+        .kiosk-playing .k-visits { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 1300ms forwards; }
         .kiosk-playing .k-welcome { animation: k-rise 500ms cubic-bezier(0.16, 1, 0.3, 1) 1600ms forwards; }
         .k-plus { opacity: 0; transform: translateY(-4px); }
         .kiosk-playing .k-plus { animation: k-rise 400ms cubic-bezier(0.16, 1, 0.3, 1) 1700ms forwards; }
@@ -2237,7 +2237,7 @@ export default function DashboardMosaic() {
           .radar-sweep, .kiosk-scanline, .cipher-char, .meridian-long { animation: none; }
           .kiosk-playing .k-flash, .kiosk-playing .k-ring, .kiosk-playing .k-tick,
           .kiosk-playing .k-photo, .kiosk-playing .k-name, .kiosk-playing .k-type,
-          .kiosk-playing .k-nextcard, .kiosk-playing .k-streak, .kiosk-playing .k-plus,
+          .kiosk-playing .k-nextcard, .kiosk-playing .k-visits, .kiosk-playing .k-plus,
           .kiosk-playing .k-welcome {
             animation: none; opacity: 1; transform: none;
           }

@@ -127,7 +127,7 @@ export default function ProgramInstanceView({
       {loading ? (
         <AsyncSpinner size="page" label="Loading program" />
       ) : error || !detail || !instance ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}>
           {error ?? "Program not found."}
         </div>
       ) : (
@@ -154,7 +154,7 @@ export default function ProgramInstanceView({
                 <button type="button" disabled={acting} onClick={() => askComplete(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "var(--ink)", border: "none", color: "var(--bg)" }}>Complete</button>
               )}
               {!isTerminal && (
-                <button type="button" disabled={acting} onClick={() => askCancel(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}>Cancel</button>
+                <button type="button" disabled={acting} onClick={() => askCancel(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger-ink)" }}>Cancel</button>
               )}
             </div>
           </div>

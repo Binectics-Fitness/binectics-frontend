@@ -106,7 +106,7 @@ export default function AdminLoginPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm text-danger font-medium">{apiError}</p>
+                <p className="text-sm text-danger-ink font-medium">{apiError}</p>
               </div>
             </div>
           )}
@@ -119,7 +119,7 @@ export default function AdminLoginPage() {
                 className="block text-sm font-semibold text-fg mb-2"
               >
                 Admin Email
-                <span className="text-danger ml-1">*</span>
+                <span className="text-danger-ink ml-1">*</span>
               </label>
               <input
                 type="email"
@@ -132,7 +132,7 @@ export default function AdminLoginPage() {
                 } rounded-(--r-2) px-4 text-fg placeholder:text-fg-4 focus:outline-none focus:border-signal transition-colors`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-danger">
+                <p className="mt-1 text-sm text-danger-ink">
                   {errors.email.message}
                 </p>
               )}
@@ -145,7 +145,7 @@ export default function AdminLoginPage() {
                 className="block text-sm font-semibold text-fg mb-2"
               >
                 Password
-                <span className="text-danger ml-1">*</span>
+                <span className="text-danger-ink ml-1">*</span>
               </label>
               <input
                 type="password"
@@ -159,7 +159,7 @@ export default function AdminLoginPage() {
                 } rounded-(--r-2) px-4 text-fg placeholder:text-fg-4 focus:outline-none focus:border-signal transition-colors`}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-danger">
+                <p className="mt-1 text-sm text-danger-ink">
                   {errors.password.message}
                 </p>
               )}

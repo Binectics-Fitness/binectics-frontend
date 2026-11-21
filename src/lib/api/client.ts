@@ -7,6 +7,8 @@ import type { ApiResponse } from "@/lib/types";
 import { clearAuthStorage, userStorage } from "@/lib/utils/storage";
 import { isAuthRoute } from "@/lib/constants/routes";
 import { isAdminLoginPath } from "@/lib/routing/adminPaths";
+import { getDeviceId } from "@/lib/device/deviceId";
+import { ORG_CLOSED_MESSAGE } from "@/lib/orgClosure/closure";
 import {
   ACCOUNT_STATE_ROUTES,
   isAccountStateRoute,
@@ -17,6 +19,9 @@ import {
 // first-party; a direct cross-site URL here breaks login in browsers that
 // block third-party cookies. All API consumers run in the browser, so a
 // relative path is safe. Local dev overrides this via NEXT_PUBLIC_API_URL.
+/** What a throttled request says when the API sent only a class name. */
+export const RATE_LIMIT_MESSAGE = "Too many requests. Please wait a moment and try again.";
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 /** The loosely-typed envelope every API response is parsed into before it is
@@ -42,6 +47,8 @@ interface RawResponseBody {
   suspended_at?: unknown;
   /** Seconds until sign-in reopens (AUTH_ACCOUNT_LOCKED). */
   retry_after_seconds?: unknown;
+  /** Whose lock it is: email | account | device | ip (AUTH_ACCOUNT_LOCKED). */
+  lock_scope?: unknown;
   /** Fresh auto-renew consent (CONSENT_TEXT_CHANGED, CONSENT_REQUIRED). */
   consent?: unknown;
   /** What would unlock a paid item (CONTENT_ENTITLEMENT_REQUIRED, frozen). */
@@ -51,6 +58,13 @@ interface RawResponseBody {
   /** Lowest chargeable price (CONTENT_PRICE_BELOW_MINIMUM). */
   minimum_minor?: unknown;
   currency?: unknown;
+  /** Which availability rule was refused, by position in `rules`
+   *  (AVAILABILITY_END_BEFORE_START, AVAILABILITY_OVERLAP). */
+  index?: unknown;
+  /** The input to outline on that rule: "startTime" | "endTime". */
+  field?: unknown;
+  /** For an overlap, the earlier rule it runs into. */
+  overlaps_index?: unknown;
   /** Why auto-renew isn't offered (AUTO_RENEW_NOT_AVAILABLE). */
   reason?: unknown;
 }
@@ -68,12 +82,19 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   "suspension_reason",
   "suspended_at",
   "retry_after_seconds",
+  "lock_scope",
   "consent",
   "reason",
   "offer",
   "conflicts",
   "minimum_minor",
   "currency",
+  // A refused availability rule (AVAILABILITY_END_BEFORE_START,
+  // AVAILABILITY_OVERLAP): its position in the request's `rules`, the input
+  // to outline, and the earlier rule it overlaps.
+  "index",
+  "field",
+  "overlaps_index",
 ] as const;
 
 function detailsOf(
@@ -142,8 +163,15 @@ class ApiClient {
    * Build JSON headers. Auth is handled by the httpOnly access_token cookie
    * sent automatically on every credentialed request — no Authorization header needed.
    */
-  private getHeaders(): HeadersInit {
-    return { "Content-Type": "application/json" };
+  private getHeaders(endpoint?: string): HeadersInit {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    // The random per-browser id rides on the account endpoints only (sign-in,
+    // sign-up, reset), where the API uses it as a weak lockout hint.
+    if (endpoint && endpoint.startsWith("/auth/")) {
+      const deviceId = getDeviceId();
+      if (deviceId) headers["X-Device-Id"] = deviceId;
+    }
+    return headers;
   }
 
   /** Headers for multipart/form-data requests (no Content-Type so fetch sets the boundary). */
@@ -242,7 +270,20 @@ class ApiClient {
       }
 
       const rawMsg = body.message || body.error || "An error occurred";
-      const message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+      let message = Array.isArray(rawMsg) ? rawMsg.join(". ") : String(rawMsg);
+      // A closed gym refuses new business with the same code from every flow
+      // (booking, membership, purchase, invitation): one friendly sentence.
+      // Older API builds send the throttler's class name as the message.
+      if (response.status === 429 && /^ThrottlerException/.test(message)) {
+        message = RATE_LIMIT_MESSAGE;
+      }
+      // Older API builds said "Authentication failed" for a wrong password.
+      if (body.code === "AUTH_INVALID_CREDENTIALS" && message === "Authentication failed") {
+        message = "Invalid email or password";
+      }
+      if (response.status === 409 && (body.code === "ORG_CLOSED" || body.error === "ORG_CLOSED")) {
+        message = ORG_CLOSED_MESSAGE;
+      }
 
       return {
         success: false,
@@ -307,7 +348,7 @@ class ApiClient {
       const makeFetch = () =>
         fetch(`${this.baseUrl}${endpoint}`, {
           method: "POST",
-          headers: this.getHeaders(),
+          headers: this.getHeaders(endpoint),
           body: JSON.stringify(body),
           credentials: "include",
         });

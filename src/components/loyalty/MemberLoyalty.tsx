@@ -82,7 +82,7 @@ export function MemberLoyalty() {
 
   if (programsQuery.isError) {
     return (
-      <div className="rounded-(--r-3) p-4 text-sm" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}>
+      <div className="rounded-(--r-3) p-4 text-sm" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
         Couldn&apos;t load your loyalty programs. Refresh to try again.
       </div>
     );
@@ -138,7 +138,7 @@ export function MemberLoyalty() {
           role={message.tone === "error" ? "alert" : "status"}
           style={
             message.tone === "error"
-              ? { border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }
+              ? { border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }
               : { border: "1px solid var(--signal)", background: "var(--signal-soft)", color: "var(--signal)" }
           }
         >
@@ -277,7 +277,7 @@ export function MemberLoyalty() {
                           {tx.note && <div className="text-xs" style={{ color: "var(--fg-3)" }}>{tx.note}</div>}
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="font-mono font-medium tabular-nums" style={{ color: tx.points >= 0 ? "var(--signal)" : "var(--danger)" }}>
+                          <span className="font-mono font-medium tabular-nums" style={{ color: tx.points >= 0 ? "var(--signal)" : "var(--danger-ink)" }}>
                             {tx.points >= 0 ? "+" : ""}
                             {fmtNumber(tx.points)}
                           </span>
@@ -325,7 +325,7 @@ export function MemberLoyalty() {
                           redemption.status === LoyaltyRedemptionStatus.FULFILLED
                             ? "var(--signal)"
                             : redemption.status === LoyaltyRedemptionStatus.CANCELLED
-                              ? "var(--danger)"
+                              ? "var(--danger-ink)"
                               : "var(--fg-3)",
                       }}
                     >

@@ -1,3 +1,5 @@
+import { CATEGORIES, CATEGORY_COLORS, type Category } from "./categories";
+
 /**
  * The one set of meaning-carrying colours for icons, status pills and
  * avatars. Each tone is the design system's badge/pill pattern (shared.css
@@ -19,6 +21,9 @@
  *              the row is about that kind of provider (a gym membership,
  *              check-in or class; a trainer's session or program; a
  *              dietitian's consult or meal plan). Identity, not status.
+ *  - fast / water / move / meal
+ *              what a member tool is about (colour by meaning, 19 Nov
+ *              2026). Pick these through src/lib/ui/categories.ts.
  *  - neutral   navigation and menu rows, general information, empty states.
  *
  * Never colour chevrons, body or meta text, or dividers; use one tone family
@@ -26,20 +31,31 @@
  * neutral; a provider's avatar takes its role accent. Unread counts are
  * signal everywhere.
  */
-export type Tone = "success" | "warn" | "danger" | "gym" | "trainer" | "dietitian" | "neutral";
+export type Tone = "success" | "warn" | "danger" | "gym" | "trainer" | "dietitian" | Category | "neutral";
 
-export const TONES: readonly Tone[] = ["success", "warn", "danger", "gym", "trainer", "dietitian", "neutral"];
+export const TONES: readonly Tone[] = ["success", "warn", "danger", "gym", "trainer", "dietitian", ...CATEGORIES, "neutral"];
 
 export type RoleTone = Extract<Tone, "gym" | "trainer" | "dietitian">;
 
-/** `fill` is the soft background; `ink` is the icon or text colour drawn on it. */
+/**
+ * `fill` is the soft background; `ink` is the icon or text colour drawn on it.
+ * Every ink is the tone's -ink token, never its base: pills carry 11px text,
+ * so each pair must reach WCAG AA 4.5:1 (src/tests/unit/tone-contrast.test.ts
+ * measures them from globals.css). The base colours (--danger 4.0:1,
+ * --gym 3.6:1, --dietitian 3.9:1 on their soft fills) are for dots and
+ * borders only.
+ */
 export const TONE_COLORS: Record<Tone, { fill: string; ink: string }> = {
   success: { fill: "var(--signal-soft)", ink: "var(--signal-ink)" },
   warn: { fill: "var(--warn-soft)", ink: "var(--warn-ink)" },
-  danger: { fill: "var(--danger-soft)", ink: "var(--danger)" },
-  gym: { fill: "var(--gym-soft)", ink: "var(--gym)" },
+  danger: { fill: "var(--danger-soft)", ink: "var(--danger-ink)" },
+  gym: { fill: "var(--gym-soft)", ink: "var(--gym-ink)" },
   trainer: { fill: "var(--trainer-soft)", ink: "var(--trainer-ink)" },
-  dietitian: { fill: "var(--dietitian-soft)", ink: "var(--dietitian)" },
+  dietitian: { fill: "var(--dietitian-soft)", ink: "var(--dietitian-ink)" },
+  fast: { fill: CATEGORY_COLORS.fast.soft, ink: CATEGORY_COLORS.fast.ink },
+  water: { fill: CATEGORY_COLORS.water.soft, ink: CATEGORY_COLORS.water.ink },
+  move: { fill: CATEGORY_COLORS.move.soft, ink: CATEGORY_COLORS.move.ink },
+  meal: { fill: CATEGORY_COLORS.meal.soft, ink: CATEGORY_COLORS.meal.ink },
   neutral: { fill: "var(--bg-3)", ink: "var(--fg-2)" },
 };
 
@@ -58,4 +74,9 @@ export function providerTone(kind: string | null | undefined): RoleTone | "neutr
   if (k.includes("diet")) return "dietitian";
   if (k.includes("trainer") || k === "coach") return "trainer";
   return "neutral";
+}
+
+/** The tile tone for something with an optional category: neutral without one. */
+export function categoryTone(category: Category | null | undefined): Tone {
+  return category ?? "neutral";
 }

@@ -206,7 +206,7 @@ export default function PrivacySettingsPage() {
           </div>
         ))}
         {saveFailed && (
-          <p className="mt-3 text-[12.5px]" style={{ color: "var(--danger)" }}>
+          <p className="mt-3 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
             Could not save your change. Please try again.
           </p>
         )}

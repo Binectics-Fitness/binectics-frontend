@@ -440,7 +440,7 @@ describe("ConsultationAvailabilityManager currency picker", () => {
     await user.type(priceField(), "5000");
     await saveSession(user);
     expect(
-      await screen.findByText("Choose the currency your session is priced in."),
+      await screen.findByText("Choose a currency."),
     ).toBeInTheDocument();
     expect(svc.createOwnType).not.toHaveBeenCalled();
   });

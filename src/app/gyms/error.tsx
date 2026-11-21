@@ -15,7 +15,7 @@ export default function GymsError({
       reset={reset}
       eyebrow="Gyms error"
       title="Something went wrong."
-      description="We were unable to load gyms. Try again, or head back to browse gyms."
+      description="We couldn't load gyms. Try again."
       homeHref="/gyms"
       homeLabel="Back to gyms"
     />

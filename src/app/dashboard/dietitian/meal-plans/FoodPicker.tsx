@@ -157,7 +157,7 @@ export function FoodPicker({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder={value.length ? "Add another…" : "Search your food library or type to add…"}
+          placeholder={value.length ? "Add another…" : "Search foods or add one"}
           className="flex-1 min-w-[10ch] bg-transparent text-[13px] outline-none"
           style={{ color: "var(--ink)" }}
         />

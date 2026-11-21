@@ -17,6 +17,8 @@ vi.mock("@/components/ds/GymDashboardShell", () => ({
   useGymViewer: () => ({ isOwner: true, permissions: [], role: "owner" }),
 }));
 vi.mock("@/lib/gymStaffNav", async (orig) => ({ ...(await orig<object>()), holds: () => true }));
+// The PAR-Q notice reads the signed-in user (its dismissal is per user).
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: { id: "owner1" } }) }));
 vi.mock("@/contexts/OrganizationContext", () => ({
   useOrganization: () => ({ currentOrg: { _id: "o1" }, refreshOrganizations: vi.fn() }),
 }));

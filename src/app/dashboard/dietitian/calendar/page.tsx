@@ -336,7 +336,7 @@ export default function DietitianCalendarPage() {
       </div>
 
       {bookingsError && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           {bookingsError}
         </div>
       )}
@@ -485,7 +485,7 @@ export default function DietitianCalendarPage() {
           <Eyebrow className="mb-2.5">Working hours</Eyebrow>
           <DSCard>
             {scheduleError ? (
-              <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger)" }}>{scheduleError}</div>
+              <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{scheduleError}</div>
             ) : rules.length === 0 ? (
               <div className="px-3.5 py-3">
                 <EmptySlate
@@ -542,7 +542,20 @@ export default function DietitianCalendarPage() {
             <DSCard>
               {upcomingExceptions.length === 0 ? (
                 <div className="px-3.5 py-3">
-                  <EmptySlate message="No upcoming blocked time." hint="Use “Block off” to mark days you're unavailable." mt="mt-0" />
+                  <EmptySlate
+                    message="Nothing blocked off."
+                    mt="mt-0"
+                    action={
+                      <button
+                        type="button"
+                        onClick={openBlockModal}
+                        className="px-3 py-1 rounded-(--r-2) text-[12.5px] cursor-pointer"
+                        style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--ink)" }}
+                      >
+                        Block off
+                      </button>
+                    }
+                  />
                 </div>
               ) : (
                 upcomingExceptions.map((exc) => (
@@ -563,7 +576,7 @@ export default function DietitianCalendarPage() {
                       disabled={deletingId === exc.id}
                       onClick={() => void removeException(exc.id)}
                       className="font-mono text-[10.5px] uppercase tracking-[0.04em] cursor-pointer"
-                      style={{ background: "none", border: "none", color: "var(--danger)" }}
+                      style={{ background: "none", border: "none", color: "var(--danger-ink)" }}
                     >
                       {deletingId === exc.id ? "…" : "Remove"}
                     </button>

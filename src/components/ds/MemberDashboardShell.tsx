@@ -16,6 +16,8 @@ import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
 import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { paidContentOn } from "@/lib/paidContent/helpers";
+import { useIsSoloMember } from "@/hooks/useIsSoloMember";
+import { SOLO_MENU_LINKS, soloActiveLabel, soloNavLinks } from "@/lib/solo/nav";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -38,7 +40,7 @@ const BASE_MEMBER_NAV_LINKS = [
   { label: "Messages",    href: "/dashboard/messages" },
   { label: "Meal plans",  href: "/dashboard/member/meal-plans" },
   { label: "Workouts",    href: "/dashboard/member/workouts" },
-  { label: "Activity",    href: "/dashboard/member/streaks" },
+  { label: "Activity",    href: "/dashboard/member/activity" },
   { label: "Reports",     href: "/dashboard/member/reports" },
   { label: "Requests",    href: "/dashboard/member/requests" },
   { label: "Billing",     href: "/dashboard/member/billing" },
@@ -139,8 +141,20 @@ function writeHoldsCache(userId: string, holds: boolean): void {
   }
 }
 
-/* ── Component ── */
-export function MemberDashboardShell({ activeLabel, children, actions }: MemberDashboardShellProps) {
+/* ── Component ──
+ * A small wrapper asks whether the member is solo (see lib/solo/rule.ts) and
+ * hands the answer down; solo members get the short bar. */
+export function MemberDashboardShell(props: MemberDashboardShellProps) {
+  const { solo } = useIsSoloMember();
+  return <MemberShellView {...props} solo={solo === true} />;
+}
+
+interface MemberShellViewProps extends MemberDashboardShellProps {
+  /** The member is solo (see lib/solo/rule.ts): the short bar replaces the full one. */
+  solo?: boolean;
+}
+
+function MemberShellView({ activeLabel, children, actions, solo = false }: MemberShellViewProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const unreadMessages = useMessagingUnread();
@@ -176,9 +190,16 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
     };
   }, [flagOn, flagsLoading, userId]);
   const holdsCached = userId ? readHoldsCache(userId) === true : false;
-  const navLinks = flagOn || holdsContent || holdsCached
+  const memberNavLinks = flagOn || holdsContent || holdsCached
     ? [...MEMBER_NAV_LINKS.slice(0, -1), PURCHASES_NAV_LINK, ...MEMBER_NAV_LINKS.slice(-1)]
     : MEMBER_NAV_LINKS;
+  // Solo members (no provider, nothing pending) get their own short bar.
+  // While the answer is unknown, or for anyone else, the bar is exactly what
+  // it always was.
+  const isSolo = solo;
+  const navLinks = isSolo ? soloNavLinks() : memberNavLinks;
+  const navActiveLabel = isSolo ? soloActiveLabel(activeLabel, pathname) : activeLabel;
+  const accountExtras = isSolo ? SOLO_MENU_LINKS : undefined;
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
   const memberInitials =
@@ -221,7 +242,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
             {navLinks.map((link) => {
-              const isActive = isMemberNavActive(link, activeLabel, pathname);
+              const isActive = isMemberNavActive(link, navActiveLabel, pathname);
               return (
                 <Link
                   key={link.label}
@@ -288,6 +309,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             <ShellAccountMenu
               direction="down"
               workspaceLink={workspaceLink}
+              extraItems={accountExtras}
               trigger={
                 <span
                   className="flex items-center justify-center shrink-0"
@@ -419,7 +441,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
               {navLinks.map((link) => {
-                const isActive = isMemberNavActive(link, activeLabel, pathname);
+                const isActive = isMemberNavActive(link, navActiveLabel, pathname);
                 return (
                   <Link
                     key={link.label}
@@ -456,6 +478,17 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                   {workspaceLink.label}
                 </Link>
               )}
+              {accountExtras?.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center rounded-(--r-2) text-[16px]"
+                  style={{ height: 48, padding: "0 12px", color: "var(--fg-2)" }}
+                >
+                  {item.label}
+                </Link>
+              ))}
               <Link
                 href="/dashboard/notifications"
                 onClick={() => setMobileOpen(false)}
@@ -479,7 +512,7 @@ export function MemberDashboardShell({ activeLabel, children, actions }: MemberD
                   void logout();
                 }}
                 className="flex items-center rounded-(--r-2) text-[16px]"
-                style={{ height: 48, padding: "0 12px", color: "var(--danger)", background: "none", border: "none", textAlign: "left" }}
+                style={{ height: 48, padding: "0 12px", color: "var(--danger-ink)", background: "none", border: "none", textAlign: "left" }}
               >
                 Log out
               </button>

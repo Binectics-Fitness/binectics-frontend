@@ -1,5 +1,5 @@
 /**
- * Numbers for the member log pages (workouts, weight, meals, streaks).
+ * Numbers for the member log pages (workouts, weight, meals).
  *
  * Pure functions over the records the API returned, so every figure on
  * those pages is a count or sum of real entries. `now` is the viewer's
@@ -132,19 +132,4 @@ export function mealsToday(meals: readonly MealLike[], now: Date): {
     calories: counted.reduce((sum, m) => sum + (m.calories ?? 0), 0),
     withCalories: counted.length,
   };
-}
-
-/**
- * Streak milestones, in days: the API's list (binectics-api
- * src/nudges/nudge-rules.ts STREAK_MILESTONES), which sends a
- * STREAK_MILESTONE notification when a check-in reaches one. The badges are
- * drawn here from the API's streaks; mobile celebrates the same days.
- */
-export const STREAK_MILESTONES = [7, 30, 50, 100, 365] as const;
-/** Lifetime check-in milestones. */
-export const SESSION_MILESTONES = [10, 50, 100, 250, 500] as const;
-
-/** The first milestone above `days`, or null past the last one. */
-export function nextStreakMilestone(days: number): number | null {
-  return STREAK_MILESTONES.find((m) => m > days) ?? null;
 }

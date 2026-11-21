@@ -167,7 +167,7 @@ function BookableClassRow({
         setMessage({ text: CLASS_REMOVED_MESSAGE, tone: "error" });
         void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
       } else {
-        setMessage({ text: res.message || "Couldn't book, log in and check your membership.", tone: "error" });
+        setMessage({ text: res.message || "Couldn't book. Check you're signed in and your membership is active.", tone: "error" });
       }
     },
   });

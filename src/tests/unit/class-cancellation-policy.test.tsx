@@ -89,9 +89,9 @@ describe("the policy wording", () => {
   });
 
   it("the cancel copy carries the fee sentence and note only when the gym has them", () => {
-    expect(confirmedCancelCopy(null)).toBe("If anyone is waiting, your spot goes to them. To come back, you'd book again.");
+    expect(confirmedCancelCopy(null)).toBe("If anyone is waiting, your spot goes to them. To come back, book again.");
     expect(confirmedCancelCopy(POLICY)).toBe(
-      `If anyone is waiting, your spot goes to them. ${SENTENCE} To come back, you'd book again.`,
+      `If anyone is waiting, your spot goes to them. ${SENTENCE} To come back, book again.`,
     );
     expect(confirmedCancelCopy({ ...POLICY, note: "Front desk." })).toContain("Iron Temple: “Front desk.”");
   });
@@ -175,6 +175,12 @@ describe("provider settings: the policy editor", () => {
   it("sets the window, the fee and a note, with a live preview of what members see", async () => {
     render(<Harness />);
     expect(screen.getByTestId("class-cancellation-policy-none")).toBeInTheDocument();
+    // Late-cancel fees are never charged, so the example must not talk
+    // about waiving one.
+    expect(screen.getByLabelText("Policy note (optional)")).toHaveAttribute(
+      "placeholder",
+      "For example: tell the front desk if you can't make it.",
+    );
 
     await userEvent.clear(screen.getByLabelText("Window (hours before class)"));
     await userEvent.type(screen.getByLabelText("Window (hours before class)"), "24");

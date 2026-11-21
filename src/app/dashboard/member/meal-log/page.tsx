@@ -17,6 +17,7 @@ import { mealsToday } from "../_lib/logStats";
 import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
 import { mealReplyAuthorName } from "@/lib/progress/mealReplies";
+import { useRowEnter } from "@/lib/ui/listMotion";
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
   [MealType.BREAKFAST]: "Breakfast",
@@ -78,6 +79,7 @@ function MealLog() {
   const [meals, setMeals] = useState<MealFeedback[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const rowEnter = useRowEnter((meals ?? []).slice(0, 20).map((m) => m._id), !loading && meals !== null);
 
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<MealFormInput>(EMPTY_MEAL_FORM);
@@ -340,7 +342,7 @@ function MealLog() {
           {formError && (
             <div
               style={{
-                color: "var(--danger)",
+                color: "var(--danger-ink)",
                 fontSize: 12,
                 marginTop: 10,
               }}
@@ -395,7 +397,7 @@ function MealLog() {
             border: "1px solid oklch(0.92 0.05 25)",
             borderRadius: 10,
             padding: 14,
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
             fontSize: 13,
             marginBottom: 14,
           }}
@@ -448,7 +450,7 @@ function MealLog() {
           ) : (
             <ul className="flex flex-col gap-1.5">
               {meals.slice(0, 20).map((meal) => (
-                <li key={meal._id}>
+                <li key={meal._id} {...rowEnter(meal._id)}>
                   <ListRow
                     title={meal.description || mealTypeLabel(meal.meal_type)}
                     meta={[

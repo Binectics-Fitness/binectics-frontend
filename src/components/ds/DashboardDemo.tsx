@@ -122,7 +122,7 @@ const ROLES: RoleDef[] = [
     roleBadge: "MEMBER",
     hasSidebar: false,
     kpis: [
-      { label: "Streak", value: "32", sub: "your longest", pct: 90 },
+      { label: "Visits", value: "13", sub: "last 30 days", pct: 65 },
       { label: "Check-ins", value: "4", sub: "this week", pct: 80 },
       { label: "Next session", value: "Wed", sub: "08:30 · Sarah", pct: 0 },
       { label: "Weight", value: "73.4", sub: "-1.8 kg · 4 wk", pct: 55 },
@@ -338,6 +338,7 @@ export function DashboardDemo() {
 
   useEffect(() => {
     clearTimers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing demo replay reset
     setPlaying(false);
     timerRef.current = setTimeout(() => {
       setRunKey((k) => k + 1);

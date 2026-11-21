@@ -57,6 +57,32 @@ export interface ProgramExercise {
   media_id?: string;
 }
 
+/**
+ * A rule that completes (habit, workout_plan) or fills (measurement) a task
+ * by itself. Health-app metrics come from connected apps; `fasting_hours` and
+ * `water_glasses` come from the client's own logs in Binectics (habit only,
+ * `gte` only, the task's own day only).
+ */
+export type ProgramAutoRuleMetric =
+  | "steps"
+  | "sleep_minutes"
+  | "resting_hr_bpm"
+  | "weight_kg"
+  | "exercise_minutes"
+  | "exercise_session"
+  | "fasting_hours"
+  | "water_glasses";
+
+export interface ProgramAutoRule {
+  metric: ProgramAutoRuleMetric;
+  comparator: "gte" | "lte" | "any";
+  threshold?: number;
+  window?: "scheduled_day" | "open_window";
+  activity_types?: string[];
+  sources?: string[];
+  recording_methods?: string[];
+}
+
 export interface ProgramBlock {
   _id?: string;
   type: ProgramComponentType;
@@ -74,6 +100,14 @@ export interface ProgramBlock {
   exercises?: ProgramExercise[];
   /** Form (questionnaire) the client fills in to complete a form task. */
   form_id?: string;
+  /** Completes or fills the task by itself (see ProgramAutoRule). */
+  auto_rule?: ProgramAutoRule;
+  /**
+   * Measurement only: the value the client works toward. Saving it makes or
+   * updates the program goal for this metric (api #361); removing it removes
+   * a goal it made.
+   */
+  target?: number;
 }
 
 export interface ProgramPhase {
@@ -91,6 +125,22 @@ export interface ProgramGoalDef {
   direction: GoalDirection;
   target?: number;
   target_offset_days?: number;
+  /** Made from a measurement task's target (api #361); the API keeps it in step. */
+  from_block?: boolean;
+}
+
+/**
+ * Whether clients would get something new by publishing (api #361). Comes
+ * back on list rows, GET /programs/:id and create/update/publish/assign.
+ */
+export interface ProgramPublishState {
+  /** Paid: sold on its own, included in a plan, or shown on a listing. */
+  sold_or_listed: boolean;
+  /** Version clients get today; 0 = never published. */
+  published_version_no: number;
+  has_unpublished_changes: boolean;
+  /** sold_or_listed && has_unpublished_changes: show "Publish changes" (D1). */
+  needs_publish: boolean;
 }
 
 export interface ProgramTemplate {
@@ -104,6 +154,8 @@ export interface ProgramTemplate {
   latest_published_version_no: number;
   /** Raw paid-content block (read with normalizeAccess); absent means free. */
   access?: unknown;
+  /** On list rows (api #361). */
+  publish_state?: ProgramPublishState;
   created_at: string;
   updated_at: string;
 }
@@ -130,6 +182,17 @@ export interface ProgramTemplateVersion {
 export interface ProgramTemplateDetail {
   template: ProgramTemplate;
   version: ProgramTemplateVersion;
+  publish_state?: ProgramPublishState;
+}
+
+/** POST /programs/:id/assign with publish_latest (api #361): all or nothing. */
+export interface StartClientResult {
+  instance: ProgramInstance;
+  template: ProgramTemplate;
+  version: ProgramTemplateVersion;
+  /** True when this call published the latest draft. */
+  published: boolean;
+  publish_state: ProgramPublishState;
 }
 
 // ── Instance (a client's assigned program) ───────────────────────────
@@ -151,6 +214,8 @@ export interface ProgramInstance {
   client_id:
     | string
     | { _id: string; first_name: string; last_name: string };
+  /** "First Last" on GET /programs/:id/assignments (api #360); null without a name. */
+  client_name?: string | null;
   provider_id: string;
   organization_id: string | null;
   status: ProgramInstanceStatus;
@@ -211,6 +276,12 @@ export interface AssignProgramRequest {
   client_profile_id: string;
   start_date?: string;
   timezone?: string;
+  /**
+   * Publish the latest draft and assign it in one transaction (api #361).
+   * Refused with 409 PROGRAM_UNPUBLISHED_CHANGES while
+   * publish_state.needs_publish (a sold or listed program with edits).
+   */
+  publish_latest?: boolean;
 }
 
 // ── One-off tasks (sent outside any program) ─────────────────────────
@@ -280,6 +351,39 @@ export interface ClientProgramOverview {
   today: Array<{ _id: string; title?: string; status: OccurrenceStatus; scheduled_for: string }>;
 }
 
+/**
+ * One task on the coach results page (GET /programs/clients/:id/results).
+ * For a fasting or water task this is all the coach gets (owner ruling,
+ * 19 Nov 2026): the day's state and one number.
+ */
+export interface ProgramResultItem {
+  id: string;
+  title: string | null;
+  type: ProgramComponentType;
+  /** A past pending task whose catch-up window closed reads as missed. */
+  status: OccurrenceStatus;
+  completed_late: boolean;
+  completion_source: "member" | "auto" | null;
+  auto: { metric: ProgramAutoRuleMetric; comparator: string; threshold: number | null } | null;
+  auto_evidence: { value: number; local_day: string; withdrawn: boolean } | null;
+  /** Today only: pending water's glasses so far, or a health-app total. */
+  auto_progress: { value: number; threshold: number | null } | null;
+}
+
+export interface ProgramResultProgram {
+  id: string;
+  name: string;
+  status: ProgramInstanceStatus;
+  /** The program's own day today (YYYY-MM-DD, its timezone). */
+  today: string;
+  days: Array<{ day: string; items: ProgramResultItem[] }>;
+}
+
+export interface ClientProgramResults {
+  days: number;
+  programs: ProgramResultProgram[];
+}
+
 export const programsService = {
   // ── Authoring ──────────────────────────────────────────────────
   listTemplates(includeArchived = false): Promise<ApiResponse<ProgramTemplate[]>> {
@@ -304,6 +408,11 @@ export const programsService = {
     return apiClient.patch<ProgramTemplateDetail>(`/programs/${id}`, payload);
   },
 
+  /** Copy a program (its latest version) into a new draft named "<name> (copy)". */
+  duplicateTemplate(id: string): Promise<ApiResponse<ProgramTemplateDetail>> {
+    return apiClient.post<ProgramTemplateDetail>(`/programs/${id}/duplicate`, {});
+  },
+
   publishTemplate(id: string): Promise<ApiResponse<ProgramTemplateDetail>> {
     return apiClient.post<ProgramTemplateDetail>(`/programs/${id}/publish`, {});
   },
@@ -326,6 +435,14 @@ export const programsService = {
     payload: AssignProgramRequest,
   ): Promise<ApiResponse<ProgramInstance>> {
     return apiClient.post<ProgramInstance>(`/programs/${id}/assign`, payload);
+  },
+
+  /** "Start a client": publish the latest draft if needed and assign, in one call. */
+  startClient(
+    id: string,
+    payload: Omit<AssignProgramRequest, "publish_latest">,
+  ): Promise<ApiResponse<StartClientResult>> {
+    return apiClient.post<StartClientResult>(`/programs/${id}/assign`, { ...payload, publish_latest: true });
   },
 
   listAssignments(id: string): Promise<ApiResponse<ProgramInstance[]>> {
@@ -359,6 +476,11 @@ export const programsService = {
 
   getClientOverview(clientProfileId: string): Promise<ApiResponse<ClientProgramOverview>> {
     return apiClient.get<ClientProgramOverview>(`/programs/clients/${clientProfileId}/overview`);
+  },
+
+  /** The client's program tasks from me, day by day (last `days` days to today). */
+  getClientResults(clientProfileId: string, days: number): Promise<ApiResponse<ClientProgramResults>> {
+    return apiClient.get<ClientProgramResults>(`/programs/clients/${clientProfileId}/results?days=${days}`);
   },
 
   // ── One-off tasks ──────────────────────────────────────────────

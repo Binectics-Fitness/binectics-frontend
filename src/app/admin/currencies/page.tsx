@@ -278,7 +278,7 @@ function EditCurrencyModal({
       <button
         type="button"
         className="btn-ghost-v2 sm"
-        style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+        style={{ color: "var(--danger-ink)", borderColor: "var(--danger)" }}
         onClick={() => void save(true)}
         disabled={saving}
       >
@@ -433,7 +433,7 @@ function EditCurrencyModal({
             This comes from ISO 4217 and can&apos;t be changed.
           </p>
           {error && (
-            <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+            <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
               {error}
             </p>
           )}
@@ -519,7 +519,7 @@ export default function AdminCurrenciesPage() {
       {error ? (
         <div
           className="rounded-(--r-3) p-4 mt-4 text-[13px]"
-          style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
+          style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}
         >
           {(error as Error).message}
         </div>

@@ -151,7 +151,7 @@ describe("Card renewals: what they need (F24)", () => {
     gateways.mockResolvedValue({ success: true, data: [] });
     renderPage();
     const banner = await screen.findByTestId("renewals-prerequisite");
-    expect(banner).toHaveTextContent("Card renewals charge on your own Paystack account.");
+    expect(banner).toHaveTextContent("Card renewals need your own Paystack account.");
     expect(within(banner).getByRole("link", { name: "Add Paystack keys" })).toHaveAttribute("href", GATEWAYS_HREF);
   });
 
@@ -159,8 +159,8 @@ describe("Card renewals: what they need (F24)", () => {
     gateways.mockResolvedValue({ success: true, data: [paystack({ webhook_last_received_at: null })] });
     renderPage();
     const banner = await screen.findByTestId("renewals-prerequisite");
-    expect(banner).toHaveTextContent("No webhook from Paystack yet.");
-    expect(banner).toHaveTextContent("this clears after the first payment");
+    expect(banner).toHaveTextContent("Paystack hasn't sent a payment notice yet.");
+    expect(banner).toHaveTextContent("This clears after the first payment");
     expect(within(banner).getByRole("link", { name: "Get the webhook URL" })).toHaveAttribute("href", "/dashboard/gym-owner/settings#gateways");
   });
 

@@ -65,6 +65,65 @@ describe("/account-locked", () => {
     expect(screen.getByText(/You can try signing in again/)).toBeInTheDocument();
   });
 
+  it("offers Reset password for an email or account lock", () => {
+    for (const scope of ["email", "account"]) {
+      searchParams = new URLSearchParams({ until: String(Date.now() + 120_000), scope });
+      const { unmount } = render(<LockedNotice />);
+      expect(screen.getByRole("link", { name: "Reset password" })).toHaveAttribute(
+        "href",
+        "/forgot-password",
+      );
+      expect(screen.getByText(/for this account/)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("gives a device or network lock a plain wait message, no reset, no 'this account'", () => {
+    for (const scope of ["device", "ip"]) {
+      searchParams = new URLSearchParams({ until: String(Date.now() + 120_000), scope });
+      const { container, unmount } = render(<LockedNotice />);
+      expect(screen.queryByRole("link", { name: "Reset password" })).toBeNull();
+      expect(screen.getByRole("link", { name: "Back to sign in" })).toBeInTheDocument();
+      expect(container.textContent).not.toMatch(/this account/i);
+      expect(container.textContent).toMatch(/this device or network/);
+      expect(container.textContent).toMatch(/won't end this pause/);
+      unmount();
+    }
+  });
+
+  it("claims nothing about whose lock it is when the API sent no scope", () => {
+    searchParams = new URLSearchParams({ until: String(Date.now() + 120_000) });
+    const { container } = render(<LockedNotice />);
+    expect(screen.getByRole("link", { name: "Reset password" })).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/this account/i);
+  });
+
+  it("announces the wait through a polite live region that changes only a few times", () => {
+    vi.setSystemTime(new Date("2026-10-02T12:00:00Z"));
+    searchParams = new URLSearchParams({ until: String(Date.now() + 150_000) });
+    render(<LockedNotice />);
+    const region = screen.getByRole("status");
+    expect(region).toHaveAttribute("aria-live", "polite");
+    // The visible timer is not itself a live region.
+    expect(screen.getByRole("timer")).not.toHaveAttribute("aria-live", "polite");
+
+    const heard: string[] = [region.textContent ?? ""];
+    for (let i = 0; i < 160; i++) {
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      const now = screen.getByRole("status").textContent ?? "";
+      if (now !== heard[heard.length - 1]) heard.push(now);
+    }
+    expect(heard).toEqual([
+      "About 3 minutes left.",
+      "About 2 minutes left.",
+      "Less than a minute left.",
+      "A few seconds left.",
+      "The wait is over. You can try again now.",
+    ]);
+  });
+
   it("shows no timer when opened without one", () => {
     searchParams = new URLSearchParams();
     const { container } = render(<LockedNotice />);

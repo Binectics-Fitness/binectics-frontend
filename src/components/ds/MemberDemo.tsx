@@ -6,7 +6,7 @@ import { useDemoMoney } from "@/components/marketing/CurrencyFacts";
 const VIEWS = [
   { id: "home", chipLabel: "Home", chipTag: "Your day" },
   { id: "marketplace", chipLabel: "Marketplace", chipTag: "Browse" },
-  { id: "activity", chipLabel: "Activity", chipTag: "Streaks" },
+  { id: "activity", chipLabel: "Activity", chipTag: "Visits" },
 ];
 
 const CYCLE_MS = 5000;
@@ -132,9 +132,9 @@ function ViewHome({ phaseClass }: { phaseClass: string }) {
 
       <div className="md-kpi-grid md-row-0">
         <div className="md-kpi-card">
-          <div className="md-kpi-label">Streak</div>
-          <div className="md-kpi-value">32 days</div>
-          <div className="md-kpi-delta">personal best</div>
+          <div className="md-kpi-label">Check-ins</div>
+          <div className="md-kpi-value">13</div>
+          <div className="md-kpi-delta">all time</div>
         </div>
         <div className="md-kpi-card">
           <div className="md-kpi-label">This week</div>
@@ -251,10 +251,10 @@ function ViewActivity({ phaseClass }: { phaseClass: string }) {
         <div className="md-avatar">TO</div>
       </div>
 
-      <div className="md-streak-hero md-row-0">
-        <div className="md-streak-number">32</div>
-        <div className="md-streak-label">day streak</div>
-        <div className="md-streak-sub">Personal best</div>
+      <div className="md-visits-hero md-row-0">
+        <div className="md-visits-number">4</div>
+        <div className="md-visits-label">visits this week</div>
+        <div className="md-visits-sub">Checked in today</div>
       </div>
 
       <div className="md-week-grid md-row-1">
@@ -633,17 +633,17 @@ const MEMBER_CSS = `
   font-size: 12px; font-weight: 500; color: var(--ink);
 }
 
-.md-streak-hero {
+.md-visits-hero {
   text-align: center; padding: 20px 16px 0;
 }
-.md-streak-number {
+.md-visits-number {
   font-size: 40px; font-weight: 500; color: var(--ink);
   line-height: 1;
 }
-.md-streak-label {
+.md-visits-label {
   font-size: 13px; color: var(--fg-2); margin-top: 4px;
 }
-.md-streak-sub {
+.md-visits-sub {
   font-family: var(--font-mono); font-size: 10px;
   color: var(--signal-ink); margin-top: 4px;
 }
@@ -735,7 +735,7 @@ const MEMBER_CSS = `
 .md-phase-exit .md-searchbar,
 .md-phase-exit .md-filters,
 .md-phase-exit .md-provider-list,
-.md-phase-exit .md-streak-hero,
+.md-phase-exit .md-visits-hero,
 .md-phase-exit .md-week-grid,
 .md-phase-exit .md-recent {
   animation: md-rowOut ${EXIT_MS}ms ease-out forwards;
@@ -763,7 +763,7 @@ const MEMBER_CSS = `
 .md-phase-enter .md-provider-list {
   animation: md-rowIn ${ENTER_MS}ms cubic-bezier(0.16, 1, 0.3, 1) ${ROW_STAGGER_MS * 2}ms both;
 }
-.md-phase-enter .md-streak-hero {
+.md-phase-enter .md-visits-hero {
   animation: md-rowIn ${ENTER_MS}ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both;
 }
 .md-phase-enter .md-week-grid {
@@ -784,7 +784,7 @@ const MEMBER_CSS = `
   .md-phase-enter .md-searchbar,
   .md-phase-enter .md-filters,
   .md-phase-enter .md-provider-list,
-  .md-phase-enter .md-streak-hero,
+  .md-phase-enter .md-visits-hero,
   .md-phase-enter .md-week-grid,
   .md-phase-enter .md-recent,
   .md-phase-exit .md-row-0,
@@ -797,7 +797,7 @@ const MEMBER_CSS = `
   .md-phase-exit .md-searchbar,
   .md-phase-exit .md-filters,
   .md-phase-exit .md-provider-list,
-  .md-phase-exit .md-streak-hero,
+  .md-phase-exit .md-visits-hero,
   .md-phase-exit .md-week-grid,
   .md-phase-exit .md-recent {
     animation: md-instantFade 1ms forwards !important;

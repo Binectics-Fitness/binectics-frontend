@@ -140,7 +140,7 @@ export default function AdminPaymentsPage() {
           style={{
             background: "var(--danger-soft)",
             border: "1px solid oklch(0.92 0.05 25)",
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
           }}
         >
           <div className="font-medium">Couldn&apos;t load transactions</div>
@@ -217,7 +217,7 @@ export default function AdminPaymentsPage() {
                           style={{
                             color:
                               tx.direction === "debit"
-                                ? "var(--danger)"
+                                ? "var(--danger-ink)"
                                 : "var(--ink)",
                           }}
                         >

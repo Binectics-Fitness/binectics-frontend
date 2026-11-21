@@ -91,7 +91,7 @@ export default function GymPayoutsPage() {
             {payoutAccount.isLoading ? (
               <div className="mt-2"><AsyncSpinner label="Loading your payout account" /></div>
             ) : payoutAccount.isError ? (
-              <p role="alert" className="text-[13px] mt-1.5" style={{ color: "var(--danger)" }}>
+              <p role="alert" className="text-[13px] mt-1.5" style={{ color: "var(--danger-ink)" }}>
                 {payoutAccount.error instanceof Error ? payoutAccount.error.message : "Couldn't load your payout account."}
               </p>
             ) : account ? (
@@ -113,7 +113,7 @@ export default function GymPayoutsPage() {
           {account ? (
             <div className="flex gap-2 shrink-0">
               <button className="btn-ghost-v2 sm" onClick={() => setAddBankOpen(true)}>Replace</button>
-              <button className="btn-ghost-v2 sm" style={{ color: "var(--danger)" }} onClick={() => setConfirmRemove(true)}>Remove</button>
+              <button className="btn-ghost-v2 sm" style={{ color: "var(--danger-ink)" }} onClick={() => setConfirmRemove(true)}>Remove</button>
             </div>
           ) : payoutAccount.isSuccess ? (
             <button className="btn-ghost-v2 sm shrink-0" onClick={() => setAddBankOpen(true)}>Add bank account</button>

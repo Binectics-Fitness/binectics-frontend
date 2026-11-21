@@ -30,6 +30,8 @@ const acceptInvite = vi.fn();
 const setCurrentOrg = vi.fn();
 const refreshOrganizations = vi.fn(async () => undefined);
 
+// These tests are about the non-solo shell; the solo answer is a separate read.
+vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("@/hooks/useFeatureFlags", () => ({
   useFeatureFlags: () => ({ isEnabled: () => false, data: undefined, isLoading: false }),
 }));

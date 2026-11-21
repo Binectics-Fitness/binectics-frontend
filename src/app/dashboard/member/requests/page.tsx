@@ -169,7 +169,7 @@ function MemberRequestsContent() {
           style={{
             background: "var(--danger-soft)",
             border: "1px solid var(--danger)",
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
           }}
           role="alert"
         >
@@ -180,7 +180,7 @@ function MemberRequestsContent() {
               onClick={() => void refetchAll()}
               className="font-mono text-[11px] uppercase tracking-[0.04em]"
               style={{
-                color: "var(--danger)",
+                color: "var(--danger-ink)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -201,11 +201,7 @@ function MemberRequestsContent() {
 
       {isEmpty && (
         <DSCard style={cardStyle}>
-          <EmptySlate
-            message="Nothing waiting on you."
-            hint="When a trainer or dietitian asks to add you as a client, it shows up here."
-            mt="mt-0"
-          />
+          <EmptySlate message="Nothing waiting on you." mt="mt-0" />
         </DSCard>
       )}
 

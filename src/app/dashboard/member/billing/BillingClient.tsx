@@ -419,7 +419,7 @@ export function BillingClient() {
                   </div>
                 )}
                 {s.status === MembershipSubscriptionStatus.PAST_DUE && s.grace_expires_at && (
-                  <div className="text-[11.5px] mt-1" style={{ color: "var(--danger)" }}>
+                  <div className="text-[11.5px] mt-1" style={{ color: "var(--danger-ink)" }}>
                     Access continues until {formatDate(s.grace_expires_at)}, settle the renewal to keep it.
                   </div>
                 )}

@@ -229,7 +229,7 @@ export function inviteDestination(
     return {
       href: "/dashboard/trainer",
       label: "Go to your trainer dashboard",
-      body: "You've joined the team as a trainer. Your trainer dashboard shows the members assigned to you, and the Binectics app opens as your coach app.",
+      body: "You've joined the team as a trainer. Your dashboard shows the members assigned to you, and the app opens as your coach app.",
     };
   }
   const joined = joinedOrganizationId

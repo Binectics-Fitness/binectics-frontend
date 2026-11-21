@@ -106,7 +106,7 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
           style={{
             background: "var(--danger-soft)",
             border: "1px solid oklch(0.92 0.05 25)",
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
           }}
         >
           <div className="font-medium">Couldn&apos;t load this transaction</div>
@@ -133,7 +133,7 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
               <StatusPill tone={paymentStatusTone(tx.status)} label={tx.status} />
             </Kpi>
             <Kpi label="Amount">
-              <span style={{ color: tx.direction === "debit" ? "var(--danger)" : "var(--ink)" }}>
+              <span style={{ color: tx.direction === "debit" ? "var(--danger-ink)" : "var(--ink)" }}>
                 {signedAmount(tx)}
               </span>
             </Kpi>

@@ -235,7 +235,7 @@ function RowActions({
   const handleResendInvite = () =>
     run(async () => {
       const res = await marketplaceService.resendMemberInvite(orgId, sub._id);
-      if (res.success) toast.success("Invite email sent, the link lasts 7 days");
+      if (res.success) toast.success("Invite sent. The link lasts 7 days.");
       else if (res.code === "MEMBER_ALREADY_CLAIMED") {
         // The members API carries no claimed flag, so the API's refusal is the
         // signal: say so, hide the action for this row and reload the roster.
@@ -292,14 +292,14 @@ function RowActions({
     requestConfirmation({
       title: `Archive ${getMemberName(sub)}?`,
       description:
-        "This frees their seat. They keep their account, login and history. Archiving is billing-only, not a ban, and you can restore them later while you have a seat free.",
+        "This frees their seat. It's not a ban: they keep their account and history, and you can restore them while you have a free seat.",
       confirmLabel: "Archive member",
       confirmVariant: "danger",
       onConfirm: () =>
         run(async () => {
           const res = await marketplaceService.archiveMember(orgId, memberUserId);
           if (res.success) {
-            toast.success("Member archived, their seat is freed");
+            toast.success("Member archived. Seat freed.");
             onRosterChange();
           } else toast.error(res.message ?? "Couldn't archive the member");
         }),
@@ -312,7 +312,7 @@ function RowActions({
       if (!memberUserId) return toast.error("This member can't be restored yet.");
       const res = await marketplaceService.restoreMember(orgId, memberUserId);
       if (res.success) {
-        toast.success("Member restored, a seat is taken back");
+        toast.success("Member restored. They use a seat again.");
         onRosterChange();
       } else toast.error(res.message ?? "Couldn't restore the member");
     });
@@ -580,7 +580,7 @@ export function RecordRenewalModal({
       // payment now could take the money twice.
       setError("A card payment for this term is still processing. Try again once it settles.");
     } else {
-      setError(res.message ?? "We couldn't record the renewal. Please try again.");
+      setError(res.message ?? "Couldn't record the renewal. Try again.");
     }
   };
 

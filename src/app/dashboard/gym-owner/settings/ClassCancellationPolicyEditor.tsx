@@ -112,7 +112,7 @@ export function ClassCancellationPolicyEditor({
             maxLength={CANCELLATION_NOTE_MAX}
             value={note}
             disabled={locked}
-            placeholder="For example: tell the front desk if you can't make it, and we'll waive the fee for emergencies."
+            placeholder="For example: tell the front desk if you can't make it."
             onChange={(e) => onChange({ cancellation_policy_note: e.target.value.slice(0, CANCELLATION_NOTE_MAX) })}
             className={`${INPUT_CLASS} resize-y`}
             style={INPUT_STYLE}

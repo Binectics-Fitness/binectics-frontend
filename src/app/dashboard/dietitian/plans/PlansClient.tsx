@@ -86,6 +86,7 @@ function PlanModal({
   const [featureInput, setFeatureInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [currencyError, setCurrencyError] = useState<string | null>(null);
   // Only currencies prices can be set in right now, including those only the
   // org's own Paystack account can take. Editing keeps the plan's saved one
   // visible (the API accepts it unchanged), labelled as such.
@@ -118,9 +119,10 @@ function PlanModal({
     e.preventDefault();
     if (!form.name.trim()) return;
     if (!form.currency) {
-      setFormError("Choose the currency this plan is priced in.");
+      setCurrencyError("Choose a currency.");
       return;
     }
+    setCurrencyError(null);
     setFormError(null);
     setSaving(true);
     const error = await onSave({ ...form, ...comparisonPayload(comparison) });
@@ -165,7 +167,7 @@ function PlanModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label">
-              Plan name <span style={{ color: "var(--danger)" }}>*</span>
+              Plan name <span style={{ color: "var(--danger-ink)" }}>*</span>
             </Eyebrow>
             <input
               required
@@ -182,7 +184,7 @@ function PlanModal({
             <textarea
               value={form.description ?? ""}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Brief description shown on your profile"
+              placeholder="Shown on your profile"
               rows={3}
               className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"
               style={{ background: "var(--bg-2)", border: "1px solid var(--border-2)", color: "var(--ink)" }}
@@ -218,7 +220,7 @@ function PlanModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Eyebrow as="label">
-                Price <span style={{ color: "var(--danger)" }}>*</span>
+                Price <span style={{ color: "var(--danger-ink)" }}>*</span>
               </Eyebrow>
               {/* MoneyInput reports MINOR units directly, so nothing here
                   re-parses a formatted string, and it renders the currency
@@ -240,10 +242,16 @@ function PlanModal({
               <Eyebrow as="label">Currency</Eyebrow>
               <SearchableSelect
                 value={form.currency ?? ""}
-                onChange={(v) => set("currency", v)}
+                onChange={(v) => {
+                  set("currency", v);
+                  setCurrencyError(null);
+                }}
                 options={options}
                 placeholder={currencies ? (options.length ? "Choose currency" : "No currency available") : "Loading..."}
               />
+              {currencyError && (
+                <span role="alert" className="text-[11.5px] leading-snug" style={{ color: "var(--danger-ink)" }}>{currencyError}</span>
+              )}
               {routeNote && (
                 <span className="text-[11.5px] leading-snug" style={{ color: "var(--fg-3)" }}>{routeNote}</span>
               )}
@@ -313,7 +321,7 @@ function PlanModal({
           </div>
 
           {formError && (
-            <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+            <p role="alert" className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
               {formError}
             </p>
           )}
@@ -432,7 +440,7 @@ function PlanCard({
             disabled={memberCount > 0}
             title={memberCount > 0 ? "People are on this plan. Deactivate it instead so their memberships keep working." : undefined}
             className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
+            style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}
           >
             Delete
           </button>
@@ -537,7 +545,7 @@ export default function DietitianPlansClient() {
     if (res.success && res.data) {
       setPlans((p) => p.map((pl) => (pl._id === res.data!._id ? res.data! : pl)));
     } else {
-      toast.error(res.message ?? "Failed to update plan status.");
+      toast.error(res.message ?? "Couldn't update the plan status.");
     }
   };
 

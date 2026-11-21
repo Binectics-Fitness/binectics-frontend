@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { AsyncSpinner, DSCard, DSStatCard, EmptySlate, Eyebrow, StatusPill } from "@/components/ds";
@@ -114,11 +115,19 @@ function TemplatePickerModal({
         <div className="p-6 flex flex-col gap-2">
           <Eyebrow as="label">Template</Eyebrow>
           {error ? (
-            <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+            <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
               {error}
             </div>
           ) : !loading && templates.length === 0 ? (
-            <EmptySlate message="No templates yet." hint="Create one under Meal plans first." mt="mt-0" />
+            <EmptySlate
+              message="No templates yet."
+              mt="mt-0"
+              action={
+                <Link href="/dashboard/dietitian/meal-plans" className="text-[13px] underline" style={{ color: "var(--ink)" }}>
+                  New meal plan
+                </Link>
+              }
+            />
           ) : (
             <SearchableSelect
               value={selected}
@@ -186,7 +195,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
       } else {
         setError(
           (summaryRes.status === "fulfilled" && summaryRes.value.message) ||
-            "We couldn't load this client. Try again shortly.",
+            "Couldn't load this client. Try again.",
         );
       }
       setLoading(false);
@@ -247,7 +256,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
       {loading && !client ? (
         <AsyncSpinner size="page" label="Loading client" />
       ) : error || !client ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load client</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error ?? "Client not found."}</div>
         </div>
@@ -334,9 +343,9 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             {plansLoading ? (
               <div className="px-5.5 py-5"><AsyncSpinner label="Loading diet plans" /></div>
             ) : plansError ? (
-              <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>{plansError}</div>
+              <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger-ink)" }}>{plansError}</div>
             ) : plans.length === 0 ? (
-              <div className="px-5.5 py-4"><EmptySlate message="No diet plans yet." hint="Create one from a template above." mt="mt-0" /></div>
+              <div className="px-5.5 py-4"><EmptySlate message="No diet plans yet." mt="mt-0" /></div>
             ) : (
               plans.map((p, i, arr) => (
                 <div key={p._id} className="flex items-center gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>

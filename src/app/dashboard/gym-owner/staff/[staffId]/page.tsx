@@ -176,6 +176,8 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
   const withinYours = !ownersRow && covers(viewer, theirRole?.permissions);
   const canEdit = !isSelf && withinYours && holds(viewer, TeamPermission.UPDATE_MEMBER_ROLE);
   const canRemove = !isSelf && withinYours && holds(viewer, TeamPermission.REMOVE_MEMBER);
+  // Members is gated on manage_listing (gymStaffNav NAV.Members).
+  const canOpenMembers = holds(viewer, TeamPermission.MARKETPLACE_MANAGE_LISTING);
 
   // Only roles you could give (assertCanGrant).
   const roleOptions = useMemo(
@@ -189,7 +191,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
     const res = await teamsService.updateMember(orgId, member._id, { team_role_id: nextRoleId });
     setSavingRole(false);
     if (!res.success) {
-      toast.error(res.message || "Could not update member role.");
+      toast.error(res.message || "Couldn't change their role. Try again.");
       return;
     }
     const nextRole = roles.find((r) => r._id === nextRoleId);
@@ -238,7 +240,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
   if (error) {
     return (
       <GymDashboardShell activeItem="Staff" crumb="Staff">
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load this staff member</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
@@ -348,9 +350,13 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
           {assigned.kind === "loading" ? (
             <AsyncSpinner label="Loading assigned members" />
           ) : assigned.kind === "error" ? (
-            <div className="text-[13px]" style={{ color: "var(--danger)" }}>{assigned.message}</div>
+            <div className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{assigned.message}</div>
           ) : assigned.subs.length === 0 ? (
-            <EmptySlate message="No members assigned yet." hint="Open a member from Members and choose this trainer." mt="mt-0" />
+            <EmptySlate
+              message="No members assigned yet."
+              mt="mt-0"
+              action={canOpenMembers ? <Link href="/dashboard/gym-owner/members" className="btn-ghost-v2 sm">Go to Members</Link> : undefined}
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {assigned.subs.map((sub) => {
@@ -391,7 +397,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
             type="button"
             onClick={confirmRemove}
             className="rounded-(--r-2) border px-3.5 py-2 text-[13px] min-h-11 cursor-pointer"
-            style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+            style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent" }}
           >
             Remove from team
           </button>

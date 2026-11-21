@@ -17,7 +17,11 @@ import {
   useUpdateOrgListing,
   usePublishOrgListing,
   useCreateOrgListing,
+  useMySessionPrice,
 } from "@/lib/queries/marketplace";
+import { ListingPriceFields, type ListingPriceValue } from "@/components/provider/ListingPriceFields";
+import { LISTING_PRICE_COPY } from "@/lib/marketplace/listingPriceLocationCopy";
+import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { useCountries } from "@/lib/queries/utility";
 import SearchableSelect from "@/components/SearchableSelect";
 import type {
@@ -26,7 +30,7 @@ import type {
 } from "@/lib/api/marketplace";
 import type { MarketplaceListing, MarketplaceAccountType } from "@/lib/types";
 import { AccountType, UserRole } from "@/lib/types";
-import { ChipEditor } from "@/components/ds";
+import { ChipEditor, StatusPill } from "@/components/ds";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -50,6 +54,12 @@ interface ListingForm {
   specialties: string[];
   certifications: string[];
   accepting_clients: boolean;
+  /** Solo listings: where the "from" price comes from, and the typed one. */
+  price_display: "auto" | "custom";
+  price_from_minor: number | null;
+  price_cadence: "session" | "recurring" | "one_off";
+  /** Recurring: how often (required); one-off: how long (optional). */
+  price_period_days: number | null;
 }
 
 interface AccountForm {
@@ -79,6 +89,10 @@ function seedListing(l: MarketplaceListing): ListingForm {
     specialties: l.specialties ?? [],
     certifications: l.certifications ?? [],
     accepting_clients: l.accepting_clients ?? true,
+    price_display: l.price_display ?? "auto",
+    price_from_minor: l.price_from_minor ?? null,
+    price_cadence: l.price_cadence ?? "session",
+    price_period_days: l.price_period_days ?? null,
   };
 }
 
@@ -90,6 +104,15 @@ function diffListing(base: ListingForm, next: ListingForm): UpdateListingRequest
       : base[k] !== next[k];
     if (changed) (out as Record<string, unknown>)[k] = next[k];
   });
+  // On "auto" the API prices the listing from the sessions; the typed price
+  // is not sent. An empty typed price is never sent as a number.
+  if (next.price_display === "auto" || next.price_from_minor === null) {
+    delete out.price_from_minor;
+    if (next.price_display === "auto") delete out.price_cadence;
+  }
+  if (next.price_display === "auto") delete out.price_period_days;
+  // A cadence change carries its period, so the API checks them together.
+  else if (out.price_cadence !== undefined) out.price_period_days = next.price_period_days;
   return out;
 }
 
@@ -150,6 +173,9 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priceText, setPriceText] = useState("");
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const sessionPrice = useMySessionPrice(!isGym && !!listing);
 
   // Seed on first arrival of the listing (render-time adjustment pattern).
   if (listing && listing._id !== seededId) {
@@ -157,6 +183,13 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
     setSeededId(listing._id);
     setBaseline(seeded);
     setForm(seeded);
+    // The field shows the saved price verbatim (re-parsing a formatted
+    // string would round it); the minor value is what is sent.
+    setPriceText(
+      seeded.price_from_minor !== null && listing.currency
+        ? formatMinorForInput(seeded.price_from_minor, { currency: listing.currency })
+        : "",
+    );
   }
   if (user && account === null) {
     const seeded: AccountForm = {
@@ -182,6 +215,12 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
 
   const onSave = async () => {
     if (!dirty || saving) return;
+    // A typed price the card should show (board P4).
+    if (!isGym && form?.price_display === "custom" && form.price_from_minor === null) {
+      setPriceError(LISTING_PRICE_COPY.customPriceError);
+      return;
+    }
+    setPriceError(null);
     setSaving(true);
     setError(null);
     let ok = true;
@@ -189,7 +228,19 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
       const res = isGym
         ? await updateOrg.mutateAsync(listingPayload)
         : await updateSolo.mutateAsync(listingPayload);
-      if (res.success) setBaseline(form);
+      if (res.success) {
+        // The API may re-price the listing ("auto" follows the sessions):
+        // take the saved price back from the response.
+        const saved = res.data
+          ? (({ price_display, price_from_minor, price_cadence, price_period_days }) => ({ price_display, price_from_minor, price_cadence, price_period_days }))(seedListing(res.data))
+          : {};
+        const next = { ...form, ...saved };
+        setBaseline(next);
+        setForm(next);
+        if (res.data && next.price_from_minor !== null && res.data.currency) {
+          setPriceText(formatMinorForInput(next.price_from_minor, { currency: res.data.currency }));
+        }
+      }
       else {
         ok = false;
         setError(res.message || "Couldn't save your profile.");
@@ -260,13 +311,16 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
             <button className="btn-primary-v2 sm" disabled={saving} onClick={() => void onSave()}>Save changes</button>
           )}
           {hasListing && (
+            <StatusPill label={listing?.is_published ? "Live" : "Draft"} tone={listing?.is_published ? "success" : "neutral"} />
+          )}
+          {hasListing && (
             <button className="btn-ghost-v2 sm" disabled={publishBusy} onClick={() => void onTogglePublish()}>
               {publishBusy ? "…" : listing?.is_published ? "Unpublish" : "Publish"}
             </button>
           )}
         </div>
       </div>
-      {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{error}</p>}
 
       {/* Account — always editable, listing or not */}
       <Card title="Account" desc="Your name and contact number, used across Binectics, not just the marketplace.">
@@ -339,6 +393,31 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
           <span className="text-[11px] self-end" style={{ color: "var(--fg-4)" }}>{form?.bio.length ?? 0} / 3000</span>
         </div>
       </Card>
+
+      {/* Price on the listing card: solo only, a gym's plans price its listing */}
+      {!isGym && form && (
+        <Card title={LISTING_PRICE_COPY.cardTitle} desc={LISTING_PRICE_COPY.cardDesc}>
+          <ListingPriceFields
+            value={{
+              display: form.price_display,
+              priceText,
+              priceMinor: form.price_from_minor,
+              cadence: form.price_cadence,
+              periodDays: form.price_period_days,
+            } satisfies ListingPriceValue}
+            onChange={(v) => {
+              setPriceText(v.priceText);
+              setPriceError(null);
+              setForm((f) =>
+                f ? { ...f, price_display: v.display, price_from_minor: v.priceMinor, price_cadence: v.cadence, price_period_days: v.periodDays } : f,
+              );
+            }}
+            sessionPrice={sessionPrice.data ?? null}
+            currency={listing?.currency ?? sessionPrice.data?.currency ?? ""}
+            error={priceError}
+          />
+        </Card>
+      )}
 
       {/* Specializations */}
       <Card title="Specializations & credentials" desc="Shown as tags on your listing. Credentials appear next to your name.">
@@ -427,8 +506,8 @@ function CreateListingCard({
       title={isGym ? "Create your gym listing" : "Create your marketplace listing"}
       desc={
         isGym
-          ? "Publish your gym to the marketplace so members can find and subscribe. You can refine every detail after it's created."
-          : "Set up your public profile so clients can find and book you. You can refine every detail after it's created."
+          ? "Publish your gym so members can find and join it."
+          : "Set up your public profile so clients can find and book you."
       }
     >
       <Field label="Headline (required)" value={headline} maxLength={200} onChange={setHeadline} />
@@ -456,7 +535,7 @@ function CreateListingCard({
           />
         </div>
       </div>
-      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{localError}</p>}
+      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{localError}</p>}
       <div>
         <button className="btn-primary-v2 sm" disabled={!canSubmit} onClick={() => void submit()}>
           {creating ? "Creating…" : isGym ? "Create gym listing" : "Create listing"}

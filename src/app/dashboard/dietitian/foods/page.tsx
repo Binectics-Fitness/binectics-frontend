@@ -115,7 +115,7 @@ function Field({
   return (
     <div className="flex flex-col gap-1.5">
       <label className={labelCls} style={{ color: "var(--fg-3)" }}>
-        {label} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+        {label} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
       </label>
       {children}
     </div>
@@ -248,7 +248,7 @@ function NewFoodModal({
           </Field>
 
           {error && (
-            <div className="rounded-(--r-2) px-3 py-2 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+            <div className="rounded-(--r-2) px-3 py-2 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
               {error}
             </div>
           )}
@@ -313,7 +313,7 @@ export default function DietitianFoodsPage() {
       } else {
         setItems([]);
         setTotal(0);
-        setError(res.message ?? "Failed to load your food library.");
+        setError(res.message ?? "Couldn't load your food library.");
       }
       setLoading(false);
     };
@@ -384,7 +384,7 @@ export default function DietitianFoodsPage() {
     requestConfirmation({
       title: `Archive "${food.name}"?`,
       description:
-        "It's hidden from your library, so you can't add it to new meal plans. Meal plans that already use it don't change. You can't bring it back from here.",
+        "It's hidden from your library and can't be added to new meal plans. Plans that use it don't change. This can't be undone.",
       confirmLabel: "Archive food",
       confirmVariant: "danger",
       onConfirm: async () => {
@@ -438,7 +438,7 @@ export default function DietitianFoodsPage() {
       />
 
       {error && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           {error}{" "}
           <button type="button" onClick={refetch} className="underline cursor-pointer" style={{ color: "inherit" }}>Retry</button>
         </div>
@@ -515,7 +515,7 @@ export default function DietitianFoodsPage() {
                         disabled={busyId === f._id}
                         onClick={() => handleArchive(f)}
                         className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
-                        style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}
                       >
                         Archive
                       </button>
@@ -531,7 +531,23 @@ export default function DietitianFoodsPage() {
               {!loading && filtered.length === 0 && !emptyLibrary && (
                 <tr>
                   <td colSpan={8} className="px-4.5 py-4">
-                    <EmptySlate message="No foods match the current search or filter." mt="mt-0" />
+                    <EmptySlate
+                      message="No foods match."
+                      mt="mt-0"
+                      action={
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuery("");
+                            setCategoryFilter("All");
+                          }}
+                          className="text-[13px] underline cursor-pointer"
+                          style={{ background: "none", border: "none", padding: 0, color: "var(--ink)" }}
+                        >
+                          Clear filters
+                        </button>
+                      }
+                    />
                   </td>
                 </tr>
               )}

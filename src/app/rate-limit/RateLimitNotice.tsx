@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import AccountStatePanel, { Accent, Countdown } from "@/components/AccountStatePanel";
+import AccountStatePanel, { Accent, Countdown, CountdownAnnouncement } from "@/components/AccountStatePanel";
 import {
+  countdownAnnouncement,
   formatCountdown,
   parseDeadline,
   safeRedirectPath,
@@ -57,6 +58,7 @@ export default function RateLimitNotice() {
         )
       }
     >
+      {until !== null && <CountdownAnnouncement text={countdownAnnouncement(left)} />}
       {waiting && <Countdown label="Time until you can try again" value={formatCountdown(left)} />}
     </AccountStatePanel>
   );

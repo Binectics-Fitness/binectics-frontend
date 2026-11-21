@@ -20,7 +20,6 @@ const SCHEDULE = [
     badge: "First session",
     badgeType: "first" as const,
     borderColor: "var(--signal)",
-    streak: null,
     cancelled: false,
   },
   {
@@ -31,7 +30,6 @@ const SCHEDULE = [
     badge: null,
     badgeType: null,
     borderColor: "var(--ink)",
-    streak: 32,
     cancelled: false,
   },
   {
@@ -42,7 +40,6 @@ const SCHEDULE = [
     badge: "Online",
     badgeType: "online" as const,
     borderColor: "var(--gym)",
-    streak: null,
     cancelled: false,
   },
   {
@@ -53,7 +50,6 @@ const SCHEDULE = [
     badge: "Cancelled · 06:42",
     badgeType: "cancelled" as const,
     borderColor: "var(--fg-4)",
-    streak: null,
     cancelled: true,
   },
   {
@@ -64,16 +60,15 @@ const SCHEDULE = [
     badge: null,
     badgeType: null,
     borderColor: "var(--ink)",
-    streak: 18,
     cancelled: false,
   },
 ];
 
 const CLIENTS = [
-  { initials: "LM", name: "Linda Mokoena", plan: "Studio · 24-session", progress: 58, fraction: "14/24", streak: 32 },
-  { initials: "WC", name: "Wei Chen", plan: "Olympic 12-pack", progress: 67, fraction: "8/12", streak: 11 },
-  { initials: "AA", name: "Aisha Adams", plan: "Online monthly", progress: 85, fraction: "Monthly", streak: 45 },
-  { initials: "MK", name: "Mike Khumalo", plan: "Conditioning 24-pack", progress: 92, fraction: "22/24", streak: 62 },
+  { initials: "LM", name: "Linda Mokoena", plan: "Studio · 24-session", progress: 58, fraction: "14/24" },
+  { initials: "WC", name: "Wei Chen", plan: "Olympic 12-pack", progress: 67, fraction: "8/12" },
+  { initials: "AA", name: "Aisha Adams", plan: "Online monthly", progress: 85, fraction: "Monthly" },
+  { initials: "MK", name: "Mike Khumalo", plan: "Conditioning 24-pack", progress: 92, fraction: "22/24" },
 ];
 
 const EARNINGS = [
@@ -81,10 +76,8 @@ const EARNINGS = [
   { title: "Olympic 12-pack", sub: "Wei C. · Apr 28", amount: "+ {{14400}}", color: "var(--signal-ink)" },
   { title: "Online monthly · May", sub: "Aisha A. · Dubai", amount: "{{320}} pending", color: "var(--fg-3)" },
   { title: "Postnatal 12-pack", sub: "Thandi N. · Apr 22", amount: "+ {{11400}}", color: "var(--signal-ink)" },
-  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− {{1200}}", color: "var(--danger)" },
+  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− {{1200}}", color: "var(--danger-ink)" },
 ];
-
-const FLAME_SVG = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 1C8 1 3 6 3 10a5 5 0 0 0 10 0C13 6 8 1 8 1Zm0 12.5A3 3 0 0 1 5 10.5c0-1.5 1.5-4 3-5.5 1.5 1.5 3 4 3 5.5A3 3 0 0 1 8 13.5Z" fill="currentColor"/></svg>`;
 
 const CYCLE_MS = 5000;
 const EXIT_MS = 150;
@@ -226,15 +219,6 @@ function ScheduleView() {
                         {s.badge}
                       </span>
                     )}
-                    {s.streak && (
-                      <span className="trd-streak-pill">
-                        <span
-                          className="trd-flame"
-                          dangerouslySetInnerHTML={{ __html: FLAME_SVG }}
-                        />
-                        <span className="trd-streak-num">{s.streak}</span>
-                      </span>
-                    )}
                   </div>
                   <div className="trd-session-meta">{s.meta}</div>
                 </div>
@@ -275,13 +259,6 @@ function ClientsView() {
             </div>
             <div className="trd-progress-label">{c.progress}%</div>
           </div>
-          <span className="trd-streak-pill">
-            <span
-              className="trd-flame"
-              dangerouslySetInnerHTML={{ __html: FLAME_SVG }}
-            />
-            <span className="trd-streak-num">{c.streak}</span>
-          </span>
         </div>
       ))}
     </div>
@@ -398,24 +375,6 @@ const TRAINER_CSS = `
   line-height: 1;
 }
 
-.trd-streak-pill {
-  display: inline-flex; align-items: center; gap: 3px;
-  background: var(--bg-2);
-  border-radius: 999px;
-  padding: 2px 7px 2px 5px;
-  flex-shrink: 0;
-}
-.trd-flame {
-  display: inline-flex; align-items: center;
-  color: var(--signal-ink);
-  line-height: 0;
-}
-.trd-streak-num {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
 
 .trd-schedule { display: flex; flex-direction: column; }
 .trd-session {
@@ -470,12 +429,12 @@ const TRAINER_CSS = `
 .trd-badge-online {
   background: transparent;
   border: 1px solid var(--gym);
-  color: var(--gym);
+  color: var(--gym-ink);
 }
 .trd-badge-cancelled {
   background: transparent;
   border: 1px solid var(--danger);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .trd-gap-line {

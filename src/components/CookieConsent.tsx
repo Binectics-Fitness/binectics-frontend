@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isAccountStateRoute } from "@/lib/routing/accountState";
 
 const STORAGE_KEY = "binectics-cookies";
 const VERSION = "2.2";
@@ -180,7 +181,12 @@ const AUTH_FLOW_PREFIXES = ["/login", "/reset-password", "/forgot-password", "/r
 export default function CookieConsent() {
   const pathname = usePathname();
   const hideFab = FAB_HIDDEN_PREFIXES.some((p) => pathname?.startsWith(p));
-  const isAuthFlowPage = AUTH_FLOW_PREFIXES.some((p) => pathname?.startsWith(p));
+  // Sign-in, reset and the account-state pages (locked, suspended, rate
+  // limited...) carry the one action the person came for: the banner must
+  // not sit over it, so these pages get the small cookie button instead.
+  const isAuthFlowPage =
+    AUTH_FLOW_PREFIXES.some((p) => pathname?.startsWith(p)) ||
+    (pathname ? isAccountStateRoute(pathname) : false);
 
   const [isGDPR] = useState(() => detectGDPR());
   const [showBanner, setShowBanner] = useState(false);

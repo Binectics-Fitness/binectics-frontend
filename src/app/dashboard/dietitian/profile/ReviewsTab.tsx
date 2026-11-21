@@ -86,7 +86,7 @@ export function ReviewsTab() {
 
   if (listingError) {
     return (
-      <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+      <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
         We couldn&rsquo;t load your listing, reviews are attached to it. Try refreshing.
       </div>
     );
@@ -119,7 +119,7 @@ export function ReviewsTab() {
       {isLoading && <AsyncSpinner label="Loading reviews" />}
 
       {isError && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           We couldn&rsquo;t load your reviews. Try refreshing.
         </div>
       )}
@@ -211,7 +211,7 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
             className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-y"
             style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 70 }}
           />
-          {error && <span className="text-[12px]" style={{ color: "var(--danger)" }}>{error}</span>}
+          {error && <span className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{error}</span>}
           <div className="flex gap-2">
             <button className="btn-primary-v2 sm" disabled={respond.isPending || !draft.trim()} onClick={() => respond.mutate(draft.trim())}>
               {respond.isPending ? "Posting…" : "Post response"}

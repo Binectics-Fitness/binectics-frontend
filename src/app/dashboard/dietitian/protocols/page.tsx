@@ -110,7 +110,7 @@ export default function DietitianProtocolsPage() {
       </DSCard>
 
       {error && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           {error}{" "}
           <button type="button" onClick={refetch} className="underline cursor-pointer" style={{ color: "inherit" }}>Retry</button>
         </div>
@@ -175,7 +175,19 @@ export default function DietitianProtocolsPage() {
               {!loading && !error && protocols.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4.5 py-6">
-                    <EmptySlate message="Nothing left to move over." hint="Build new plans of care under Programs." mt="mt-0" />
+                    <EmptySlate
+                      message="Nothing left to move over."
+                      hint={
+                        <>
+                          New plans of care are built in{" "}
+                          <Link href="/dashboard/dietitian/programs" className="underline" style={{ color: "var(--ink)" }}>
+                            Programs
+                          </Link>
+                          .
+                        </>
+                      }
+                      mt="mt-0"
+                    />
                   </td>
                 </tr>
               )}

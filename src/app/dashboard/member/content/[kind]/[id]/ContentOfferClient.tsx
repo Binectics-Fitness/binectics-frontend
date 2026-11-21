@@ -10,6 +10,7 @@ import { formatMinor } from "@/lib/currencies/helpers";
 import { paidContentService, pathToKind, type ContentOfferRead } from "@/lib/api/paidContent";
 import { kindLabel, pricesText } from "@/lib/paidContent/helpers";
 import { FROZEN_BODY, FROZEN_TITLE } from "@/lib/frozenContent";
+import { ProgramAbout } from "@/components/content/ProgramAbout";
 
 /**
  * One paid item's offer, opened from a provider's "shared something with you"
@@ -105,9 +106,10 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
 
     if (offer.access.state === "open") {
       return (
-        <DSCard>
+        <DSCard className="p-5">
           <div className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>{title}</div>
           <p className="text-[13.5px] mt-1.5 mb-3" style={{ color: "var(--fg-2)" }}>You already have this.</p>
+          <ProgramAbout description={offer.description} cautions={offer.cautions} className="mb-4" />
           {offer.itemKind === "program" ? (
             <StartProgramControl programId={offer.itemId} title={offer.title} />
           ) : (
@@ -121,9 +123,10 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
 
     if (offer.access.state === "frozen") {
       return (
-        <DSCard>
+        <DSCard className="p-5">
           <div className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>{FROZEN_TITLE}</div>
           <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-2)" }}>{FROZEN_BODY}</p>
+          <ProgramAbout description={offer.description} cautions={offer.cautions} className="mt-3" />
           <Offered offer={offer} />
           {offer.forSale && offer.prices.length > 0 && (
             <div className="mt-4">
@@ -136,17 +139,18 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
 
     if (!offer.forSale) {
       return (
-        <DSCard>
+        <DSCard className="p-5">
           <div className="text-[16px] font-medium" style={{ color: "var(--ink)" }}>{title}</div>
           <p className="text-[13.5px] mt-1.5" style={{ color: "var(--fg-2)" }}>
             This isn&apos;t for sale right now. Ask your provider how to get it.
           </p>
+          <ProgramAbout description={offer.description} cautions={offer.cautions} className="mt-3" />
         </DSCard>
       );
     }
 
     return (
-      <DSCard>
+      <DSCard className="p-5">
         <div className="font-mono text-[11px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>
           {kindLabel(offer.itemKind)}
         </div>
@@ -158,6 +162,7 @@ export default function ContentOfferClient({ kindSegment, itemId }: { kindSegmen
             {pricesText(offer.prices)}
           </div>
         )}
+        <ProgramAbout description={offer.description} cautions={offer.cautions} className="mt-3" />
         <Offered offer={offer} />
         {offer.prices.length > 0 && (
           <div className="mt-4">

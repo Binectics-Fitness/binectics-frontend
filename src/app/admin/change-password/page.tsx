@@ -73,7 +73,7 @@ export default function AdminChangePasswordPage() {
               className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.current && (
-              <p className="mt-1 text-xs text-danger">
+              <p className="mt-1 text-xs text-danger-ink">
                 {errors.current.message}
               </p>
             )}
@@ -92,7 +92,7 @@ export default function AdminChangePasswordPage() {
               className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.new && (
-              <p className="mt-1 text-xs text-danger">{errors.new.message}</p>
+              <p className="mt-1 text-xs text-danger-ink">{errors.new.message}</p>
             )}
             <p className="mt-1 text-xs text-fg-3">
               At least 8 characters with a mix of upper, lower, number and
@@ -113,7 +113,7 @@ export default function AdminChangePasswordPage() {
               className="w-full px-3 py-2 border border-border rounded-(--r-2) focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
             />
             {errors.confirm && (
-              <p className="mt-1 text-xs text-danger">
+              <p className="mt-1 text-xs text-danger-ink">
                 {errors.confirm.message}
               </p>
             )}

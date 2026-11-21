@@ -118,7 +118,7 @@ export function ProviderLoyaltyPanel() {
   }
   if (settings.isError) {
     return (
-      <div className="rounded-(--r-3) p-4 text-sm" role="alert" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}>
+      <div className="rounded-(--r-3) p-4 text-sm" role="alert" style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
         Couldn&apos;t load your loyalty settings. Refresh to try again.
       </div>
     );
@@ -138,9 +138,9 @@ export function ProviderLoyaltyPanel() {
     const cost = Number(draft.points_cost);
     const cap = draft.max_redemptions.trim() ? Number(draft.max_redemptions) : undefined;
     if (!draft.name.trim()) return setFormError("Give the reward a name.");
-    if (!Number.isInteger(cost) || cost < 1) return setFormError("Points cost must be a whole number of at least 1.");
+    if (!Number.isInteger(cost) || cost < 1) return setFormError("Points cost must be 1 or more.");
     if (cap !== undefined && (!Number.isInteger(cap) || cap < 1))
-      return setFormError("Leave the limit empty, or use a whole number of at least 1.");
+      return setFormError("Leave empty for no limit, or enter 1 or more.");
     const data: LoyaltyRewardInput = {
       name: draft.name.trim(),
       points_cost: cost,
@@ -228,9 +228,9 @@ export function ProviderLoyaltyPanel() {
             {rewards.isLoading ? (
               <AsyncSpinner label="Loading rewards" />
             ) : rewards.isError ? (
-              <p className="text-sm" style={{ color: "var(--danger)" }}>Couldn&apos;t load your rewards.</p>
+              <p className="text-sm" style={{ color: "var(--danger-ink)" }}>Couldn&apos;t load your rewards.</p>
             ) : list.length === 0 ? (
-              <EmptySlate message="No rewards yet." hint="Add one so your clients have something to spend their points on." mt="mt-0" />
+              <EmptySlate message="No rewards yet." mt="mt-0" />
             ) : (
               <ul className="flex flex-col gap-2">
                 {list.map((r) => (
@@ -264,7 +264,7 @@ export function ProviderLoyaltyPanel() {
                         onClick={() => void removeReward(r)}
                         disabled={remove.isPending}
                         className="rounded-(--r-2) px-3 py-1.5 min-h-11 text-sm cursor-pointer"
-                        style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "var(--bg)" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "var(--bg)" }}
                       >
                         Remove
                       </button>
@@ -281,7 +281,7 @@ export function ProviderLoyaltyPanel() {
         open={confirmOff}
         onClose={() => setConfirmOff(false)}
         title="Turn off your loyalty program?"
-        description="Your clients will stop earning points with you, and your rewards and their balances will be hidden. Nothing is deleted: turning it back on shows everything again."
+        description="Clients stop earning points, and rewards and balances are hidden. Nothing is deleted: turn it back on to show everything again."
         footer={
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setConfirmOff(false)} className="rounded-(--r-2) px-3 py-2 min-h-11 text-sm cursor-pointer" style={{ border: "1px solid var(--border)", color: "var(--ink)" }}>
@@ -350,7 +350,7 @@ export function ProviderLoyaltyPanel() {
               Show this reward to clients
             </label>
             {formError && (
-              <p className="text-[13px]" role="alert" style={{ color: "var(--danger)" }}>{formError}</p>
+              <p className="text-[13px]" role="alert" style={{ color: "var(--danger-ink)" }}>{formError}</p>
             )}
           </div>
         )}

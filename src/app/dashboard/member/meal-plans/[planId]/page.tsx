@@ -198,7 +198,7 @@ export default function MemberMealPlanDetailPage({
       {loading ? (
         <AsyncSpinner size="page" label="Loading meal plan" />
       ) : error || !plan ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid var(--danger)", color: "var(--danger-ink)" }}>
           {error ?? "Meal plan not found."}
         </div>
       ) : (

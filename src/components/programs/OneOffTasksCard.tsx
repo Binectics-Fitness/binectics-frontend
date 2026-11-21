@@ -161,7 +161,7 @@ export default function OneOffTasksCard({
       {loading ? (
         <div className="px-5.5 py-5"><AsyncSpinner label="Loading forms and tasks" /></div>
       ) : error ? (
-        <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>
+        <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>
       ) : tasks!.length === 0 ? (
         <div className="px-5.5 py-4">
           <EmptySlate
@@ -192,7 +192,7 @@ export default function OneOffTasksCard({
                   disabled={withdrawingId === t.id}
                   aria-label={confirming ? `Confirm withdrawing ${t.title}` : `Withdraw ${t.title}`}
                   className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2 py-1 rounded-(--r-1) disabled:opacity-50"
-                  style={{ border: "1px solid var(--border)", color: confirming ? "var(--danger)" : "var(--fg-3)", background: "transparent" }}
+                  style={{ border: "1px solid var(--border)", color: confirming ? "var(--danger-ink)" : "var(--fg-3)", background: "transparent" }}
                 >
                   {withdrawingId === t.id ? "Withdrawing…" : confirming ? "Confirm withdraw" : "Withdraw"}
                 </button>
@@ -293,7 +293,7 @@ function SendTaskModal({
 
   const label = (text: string, forId: string, required = false) => (
     <label htmlFor={forId} className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-      {text} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+      {text} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
     </label>
   );
 
@@ -342,7 +342,7 @@ function SendTaskModal({
             <div className="flex flex-col gap-1.5">
               {label("Form", id("form"), true)}
               {formsError ? (
-                <div className="text-[12.5px]" style={{ color: "var(--danger)" }}>{formsError}</div>
+                <div className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{formsError}</div>
               ) : !formsLoading && forms.length === 0 ? (
                 <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
                   No published forms yet. Publish one under Forms, then send it here.
@@ -378,12 +378,12 @@ function SendTaskModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            {label("Note", id("note"))}
+            {label("Note (optional)", id("note"))}
             <textarea
               id={id("note")}
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
-              placeholder="Optional, e.g. Before our call on Friday."
+              placeholder="e.g. Before our call on Friday."
               rows={2}
               maxLength={2000}
               className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"

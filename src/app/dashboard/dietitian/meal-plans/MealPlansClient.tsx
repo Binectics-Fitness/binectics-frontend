@@ -196,7 +196,7 @@ function PlanFormModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
           <div className="flex flex-col gap-1.5">
             <FieldLabel>
-              Plan title <span style={{ color: "var(--danger)" }}>*</span>
+              Plan title <span style={{ color: "var(--danger-ink)" }}>*</span>
             </FieldLabel>
             <input
               ref={titleRef}
@@ -321,7 +321,8 @@ function PlanFormModal({
                     <input
                       value={meal.title}
                       onChange={(e) => setMeal(i, { title: e.target.value })}
-                      placeholder="Meal title, e.g. Greek yogurt bowl"
+                      aria-label="Meal title"
+                      placeholder="e.g. Greek yogurt bowl"
                       className="h-9 flex-1 rounded-(--r-2) px-3 text-[13.5px]"
                       style={{ ...fieldStyle, background: "var(--bg)" }}
                     />
@@ -463,7 +464,7 @@ export function AssignPlanModal({
       <div className="flex flex-col gap-2">
         <FieldLabel>Client</FieldLabel>
         {clientsError ? (
-          <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+          <div className="rounded-(--r-2) px-3 py-2.5 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
             {clientsError}
           </div>
         ) : !loadingClients && clients.length === 0 ? (
@@ -612,7 +613,7 @@ function MealPlanCard({
             type="button"
             onClick={onArchive}
             className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
-            style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
+            style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}
           >
             Archive
           </button>
@@ -674,7 +675,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         setPlans(res.data);
         setError(null);
       } else {
-        setError(res.message || "We couldn't load your meal plans. Try again shortly.");
+        setError(res.message || "Couldn't load your meal plans. Try again.");
       }
       setLoading(false);
     };
@@ -757,7 +758,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         ),
       );
     } else {
-      toast.error(res.message ?? "Failed to update plan status.");
+      toast.error(res.message ?? "Couldn't update the plan status.");
     }
   };
 
@@ -776,7 +777,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
           setPlans((p) => p.filter((pl) => pl._id !== plan._id));
           toast.success("Meal plan archived.");
         } else {
-          toast.error(res.message ?? "Failed to archive meal plan.");
+          toast.error(res.message ?? "Couldn't archive the meal plan.");
         }
       },
     });
@@ -808,7 +809,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
       />
 
       {error && (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load meal plans</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>

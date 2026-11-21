@@ -14,7 +14,7 @@ export default function TrainerProfileEditPage() {
       <PageHeader
         className="mb-1!"
         title={{ before: "My ", emphasis: "profile" }}
-        subtitle={<span className="block max-w-[60ch]">How you appear to clients in the marketplace. Save, then publish to go live.</span>}
+        subtitle={<span className="block max-w-[60ch]">How clients see you in the marketplace.</span>}
       />
       <ProviderListingProfile />
     </TrainerDashboardShell>

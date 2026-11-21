@@ -232,7 +232,7 @@ export function MenuItem({
       tabIndex={-1}
       onClick={onSelect}
       className={`flex min-h-12 w-full items-center rounded-(--r-2) px-3 py-2 text-left text-[15px] font-medium outline-none focus-visible:bg-bg-2 md:min-h-10 md:text-[14px] ${
-        danger ? "text-danger hover:bg-danger-soft focus-visible:bg-danger-soft" : "text-ink hover:bg-bg-2"
+        danger ? "text-danger-ink hover:bg-danger-soft focus-visible:bg-danger-soft" : "text-ink hover:bg-bg-2"
       }`}
     >
       {children}

@@ -68,11 +68,14 @@ export function DiscountCodesClient() {
       ) : !orgId ? (
         <EmptySlate message="Set up your workspace to create codes." />
       ) : error ? (
-        <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>
+        <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>
       ) : !rows ? (
         <AsyncSpinner />
       ) : rows.length === 0 ? (
-        <EmptySlate message="No codes yet. Create one to offer a discount on a membership or a session." />
+        <EmptySlate
+          message="No codes yet."
+          action={<button type="button" className="btn-primary-v2 sm" onClick={() => setCreating(true)}>New code</button>}
+        />
       ) : (
         <ul className="rounded-(--r-3) overflow-hidden" style={card}>
           {rows.map((c) => (
@@ -141,7 +144,7 @@ function CodeRow({ orgId, c, onToggle }: { orgId: string; c: Coupon; onToggle: (
       {open && (
         <div className="mt-3 text-[13px]" style={{ color: "var(--fg-2)" }}>
           {err ? (
-            <span role="alert" style={{ color: "var(--danger)" }}>{err}</span>
+            <span role="alert" style={{ color: "var(--danger-ink)" }}>{err}</span>
           ) : !uses ? (
             <AsyncSpinner />
           ) : uses.length === 0 ? (

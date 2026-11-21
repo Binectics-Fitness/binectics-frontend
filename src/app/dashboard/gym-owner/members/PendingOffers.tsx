@@ -84,8 +84,8 @@ export function PendingOffers({ orgId, refreshKey }: { orgId: string | undefined
         title="Waiting to accept"
         subtitle={
           imported.length > 0
-            ? "They join once they accept. Imported members keep their end date when they do."
-            : "They join once they accept the offer we emailed them."
+            ? "Imported members keep their end date when they accept."
+            : undefined
         }
       />
       {oneOff.length > 0 && (

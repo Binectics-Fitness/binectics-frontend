@@ -180,7 +180,7 @@ export function CoachToday({
         <div
           role="alert"
           className="rounded-(--r-3) p-4 text-[13px]"
-          style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}
+          style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}
         >
           <div className="font-medium">Couldn&apos;t load dashboard</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
@@ -223,7 +223,7 @@ export function CoachToday({
                   <div className="px-4.5 py-4">
                     <EmptySlate
                       message="Nothing on today."
-                      hint={next ? `Your next ${noun}: ${when(next.startsAt)}.` : "New bookings will show up here."}
+                      hint={next ? `Your next ${noun}: ${when(next.startsAt)}.` : undefined}
                       mt="mt-0"
                     />
                   </div>

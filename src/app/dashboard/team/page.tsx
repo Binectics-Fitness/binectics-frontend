@@ -180,7 +180,7 @@ export default function TeamWorkspacePage() {
       setGlobalMessage("Invitation sent. They join the team when they accept it.");
     } else {
       setGlobalMessage(
-        describeTeamError(res, "Unable to send invitation. Please try again."),
+        describeTeamError(res, "Couldn't send the invitation. Try again."),
       );
     }
     setSubmittingInvite(false);
@@ -194,7 +194,7 @@ export default function TeamWorkspacePage() {
     setGlobalMessage(null);
     const updated = await updateMember(memberId, { team_role_id: newRoleId });
     if (!updated) {
-      setGlobalMessage("Could not update member role.");
+      setGlobalMessage("Couldn't change their role.");
     }
   }
 
@@ -209,7 +209,7 @@ export default function TeamWorkspacePage() {
     setGlobalMessage(null);
     const updated = await updateMember(memberId, { status: newStatus });
     if (!updated) {
-      setGlobalMessage("Could not update member status.");
+      setGlobalMessage("Couldn't change their status.");
     }
   }
 
@@ -242,7 +242,7 @@ export default function TeamWorkspacePage() {
       <div className="flex flex-col gap-5">
         <OrganizationContextBanner
           label="Team organization"
-          helperText="Switch organizations to manage the right staff roster and invitations."
+          helperText="Choose the team workspace."
           organizations={organizations}
           currentOrg={currentOrg}
           onChange={setCurrentOrg}
@@ -286,7 +286,7 @@ export default function TeamWorkspacePage() {
             {error && (
               <div
                 className="rounded-(--r-3) p-3 text-sm"
-                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger)" }}
+                style={{ border: "1px solid var(--danger)", background: "var(--danger-soft)", color: "var(--danger-ink)" }}
               >
                 {error}
               </div>
@@ -322,7 +322,8 @@ export default function TeamWorkspacePage() {
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search members by name, role, or email"
+                  aria-label="Search members"
+                  placeholder="Search name, role or email"
                   className="w-full sm:max-w-[320px] rounded-(--r-2) border px-3 py-2 text-sm"
                   style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
                 />
@@ -331,7 +332,21 @@ export default function TeamWorkspacePage() {
               {isLoading ? (
                 <AsyncSpinner label="Loading team workspace" />
               ) : filteredMembers.length === 0 ? (
-                <EmptySlate message="No members found for this filter." />
+                <EmptySlate
+                  message={search.trim() ? "No one matches." : "No members yet."}
+                  action={
+                    search.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch("")}
+                        className="text-sm underline cursor-pointer"
+                        style={{ background: "none", border: "none", padding: 0, color: "var(--ink)" }}
+                      >
+                        Clear filter
+                      </button>
+                    )
+                  }
+                />
               ) : (
                 <div className="overflow-x-auto mt-4">
                   <table className="w-full min-w-[840px] border-collapse text-sm">
@@ -405,7 +420,7 @@ export default function TeamWorkspacePage() {
                                 void handleRemove(member._id);
                               }}
                               className="rounded-(--r-2) border px-3 py-1.5 text-sm"
-                              style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+                              style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent" }}
                             >
                               Remove
                             </button>

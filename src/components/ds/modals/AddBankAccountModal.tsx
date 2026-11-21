@@ -195,7 +195,7 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
       {banks.isLoading ? (
         <AsyncSpinner label="Loading banks" />
       ) : banks.isError || !banks.data ? (
-        <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+        <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
           {banks.error instanceof Error ? banks.error.message : "Couldn't load the list of banks."}
         </p>
       ) : (
@@ -265,11 +265,11 @@ export function AddBankAccountModal({ open, onClose, organizationId, replacing =
               </p>
             </div>
           ) : current?.error ? (
-            <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{current.error}</p>
+            <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{current.error}</p>
           ) : null}
 
           {saveError ? (
-            <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{saveError}</p>
+            <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{saveError}</p>
           ) : null}
         </div>
       )}

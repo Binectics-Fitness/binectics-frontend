@@ -16,12 +16,15 @@ export function ShellAccountMenu({
   trigger,
   direction = "up",
   workspaceLink,
+  extraItems,
 }: {
   trigger: ReactNode;
   /** Popover opens above (sidebar footers) or below (topbar chips). */
   direction?: "up" | "down";
   /** Another place the person works (a gym's staff: the gym, or home). */
   workspaceLink?: WorkspaceLink | null;
+  /** More links after Settings (the solo member's Privacy and sharing, Help). */
+  extraItems?: { href: string; label: string }[];
 }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -47,6 +50,7 @@ export function ShellAccountMenu({
     ...(workspaceLink ? [workspaceLink] : []),
     { href: "/dashboard/settings/profile", label: "Profile" },
     { href: "/dashboard/settings", label: "Settings" },
+    ...(extraItems ?? []),
     ...(user?.is_admin && user.role !== UserRole.ADMIN
       ? [{ href: "/admin/dashboard", label: "Admin panel" }]
       : []),
@@ -101,7 +105,7 @@ export function ShellAccountMenu({
               void logout();
             }}
             className="block w-full px-3.5 py-2 text-left text-[13.5px] hover:bg-bg-2"
-            style={{ color: "var(--danger)", background: "none", border: "none", cursor: "pointer" }}
+            style={{ color: "var(--danger-ink)", background: "none", border: "none", cursor: "pointer" }}
           >
             Log out
           </button>

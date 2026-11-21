@@ -242,7 +242,7 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
               style={
                 notice.warn
                   ? { background: "var(--warn-soft)", color: "var(--warn-ink)", border: "1px solid var(--warn)" }
-                  : { background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }
+                  : { background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }
               }
             >
               {notice.text}
@@ -533,7 +533,7 @@ function ColumnsStep({
       </div>
 
       {preview.mapping_problems.length > 0 && (
-        <ul role="alert" className="mt-4 list-disc pl-5 text-[13px]" style={{ color: "var(--danger)" }}>
+        <ul role="alert" className="mt-4 list-disc pl-5 text-[13px]" style={{ color: "var(--danger-ink)" }}>
           {preview.mapping_problems.map((m) => (
             <li key={m}>{m}</li>
           ))}
@@ -557,7 +557,7 @@ function ColumnsStep({
                 <div key={p.value} className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_260px]">
                   <label htmlFor={id} className="text-[13px]" style={{ color: "var(--ink)" }}>
                     “{p.value}” <span style={{ color: "var(--fg-3)" }}>· {p.rows} row{p.rows === 1 ? "" : "s"}</span>
-                    {!p.plan_id && <span style={{ color: "var(--danger)" }}> · not matched</span>}
+                    {!p.plan_id && <span style={{ color: "var(--danger-ink)" }}> · not matched</span>}
                   </label>
                   <SearchableSelect
                     id={id}
@@ -575,7 +575,7 @@ function ColumnsStep({
             })}
           </div>
           {preview.gym_plans.length === 0 && (
-            <p className="mt-2 text-[13px]" style={{ color: "var(--danger)" }}>
+            <p className="mt-2 text-[13px]" style={{ color: "var(--danger-ink)" }}>
               You have no active plans yet. <Link href="/dashboard/gym-owner/plans" className="underline">Create your plans</Link> first.
             </p>
           )}
@@ -725,7 +725,7 @@ function PreviewStep({ headingRef, preview }: { headingRef: HeadingRef; preview:
 
   const counts: Array<{ label: string; value: number; tone?: string }> = [
     { label: "Ready to import", value: s.ready },
-    { label: "Need fixing", value: s.errors, tone: s.errors ? "var(--danger)" : undefined },
+    { label: "Need fixing", value: s.errors, tone: s.errors ? "var(--danger-ink)" : undefined },
     { label: "Already here", value: s.skipped },
     { label: "Over seat limit", value: s.over_cap, tone: s.over_cap ? "var(--warn-ink)" : undefined },
   ];
@@ -858,7 +858,7 @@ function PreviewStep({ headingRef, preview }: { headingRef: HeadingRef; preview:
               {r.problems.length > 0 && (
                 <ul className="mt-1 text-[12.5px] leading-snug">
                   {r.problems.map((p, i) => (
-                    <li key={i} style={{ color: p.severity === "error" ? "var(--danger)" : "var(--fg-2)" }}>
+                    <li key={i} style={{ color: p.severity === "error" ? "var(--danger-ink)" : "var(--fg-2)" }}>
                       {p.message}
                     </li>
                   ))}
@@ -920,7 +920,7 @@ function PreviewStep({ headingRef, preview }: { headingRef: HeadingRef; preview:
                     {r.problems.length > 0 && (
                       <ul className="mt-1 text-[12px] leading-snug">
                         {r.problems.map((p, i) => (
-                          <li key={i} style={{ color: p.severity === "error" ? "var(--danger)" : "var(--fg-2)" }}>
+                          <li key={i} style={{ color: p.severity === "error" ? "var(--danger-ink)" : "var(--fg-2)" }}>
                             {p.message}
                           </li>
                         ))}
@@ -960,7 +960,7 @@ function InvitesStep({
     {
       value: "later",
       title: "Add them now, invite them later",
-      body: "No one is emailed. Members who sign in or sign up with their email still find their membership waiting. Send the invites from the Members page when you're ready.",
+      body: "No one is emailed. Members still find their membership when they sign in with that email. Send invites from Members when you're ready.",
     },
     {
       value: "now",
@@ -1059,7 +1059,7 @@ function ResultStep({
   const lines: Array<[string, number | undefined]> = [
     ["Imported", r.imported],
     ["Already imported before", r.already_imported],
-    ["Already your members (or already offered)", r.already_member],
+    ["Already members or offered", r.already_member],
     ["Not imported: need fixing", r.errors],
     ["Not imported: no seat left", r.over_cap],
   ];

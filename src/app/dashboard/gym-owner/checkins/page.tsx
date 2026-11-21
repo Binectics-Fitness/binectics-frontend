@@ -225,7 +225,7 @@ export default function GymCheckinsPage() {
       <PageHeader
         className="mb-0!"
         title={headline}
-        subtitle={stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : "Live feed and occupancy metrics refresh every 30 seconds."}
+        subtitle={stats ? `${stats.today_check_ins} today · ${stats.week_check_ins} this week · ${stats.month_check_ins} this month` : undefined}
       />
 
       {!currentOrg && !orgLoading ? (
@@ -233,14 +233,14 @@ export default function GymCheckinsPage() {
           Select an organization to view its check-ins.
         </div>
       ) : !isOnline ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">You&apos;re offline</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>
             Auto-refresh is paused. Showing the last data loaded{lastUpdatedLabel ? ` at ${lastUpdatedLabel}` : ""}. It will refresh automatically when your connection returns.
           </div>
         </div>
       ) : error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px] flex items-start justify-between gap-3" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px] flex items-start justify-between gap-3" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div>
             <div className="font-medium">Couldn&apos;t refresh check-ins</div>
             <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
@@ -249,7 +249,7 @@ export default function GymCheckinsPage() {
             onClick={refresh}
             disabled={isRefreshing}
             className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger)" }}
+            style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger-ink)" }}
           >
             {isRefreshing ? "Retrying…" : "Try again"}
           </button>
@@ -325,7 +325,7 @@ export default function GymCheckinsPage() {
           {(loading && isOnline && stream.length === 0) ? (
             <div className="px-4.5 py-4"><AsyncSpinner label="Loading live check-ins" /></div>
           ) : stream.length === 0 ? (
-            <div className="px-4.5 py-4"><EmptySlate message="No check-ins found for this period." mt="mt-0" /></div>
+            <div className="px-4.5 py-4"><EmptySlate message="No check-ins in this period." mt="mt-0" /></div>
           ) : (
             stream.map((checkIn) => {
               const member = personName(checkIn);

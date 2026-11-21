@@ -71,7 +71,7 @@ export function ContentSalesSection() {
 
   return (
     <DSCard>
-      <DSCardHead title="Program and meal plan sales" subtitle="What people bought from you on its own price." />
+      <DSCardHead title="Program and meal plan sales" subtitle="Sales of your programs and meal plans." />
       <div className="px-4.5 pb-4.5">
         {error && rows === null ? (
           <EmptySlate
@@ -88,7 +88,6 @@ export function ContentSalesSection() {
         ) : rows.length === 0 ? (
           <EmptySlate
             message="No sales yet."
-            hint="When someone buys a program or meal plan from you, it shows up here."
           />
         ) : (
           <>

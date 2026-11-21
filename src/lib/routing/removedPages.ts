@@ -38,6 +38,9 @@ export const REMOVED_PAGE_REDIRECTS: RemovedPageRedirect[] = [
     destination: "/dashboard/bookings?booking=:id",
     permanent: false,
   },
+  // The member's Streaks page became Activity (owner 19 Nov 2026: no
+  // platform streaks). Old streak-milestone notifications still link here.
+  { source: "/dashboard/member/streaks", destination: "/dashboard/member/activity", permanent: false },
   // The fake member help desk; the help centre is the real one.
   { source: "/dashboard/member/help", destination: "/help", permanent: false },
   // An unlinked duplicate of the weight log (its heart-rate chart had no

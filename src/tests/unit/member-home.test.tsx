@@ -3,7 +3,8 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import MemberHomePage from "@/app/dashboard/member/page";
 import { activeGyms, lastCheckInLabel, nextUp, weightSummary } from "@/app/dashboard/member/memberHome";
 import { currentProgramDay, myProgramsService, type MyProgram } from "@/lib/api/myPrograms";
-import { isPersonalBest, longestStreakLine } from "@/lib/checkins/streak";
+import { memberGoalsService } from "@/lib/api/memberGoals";
+import { CHECKED_IN_TODAY, lastVisit, visitsThisWeek } from "@/lib/checkins/visitsCopy";
 import { checkinsService } from "@/lib/api/checkins";
 import { classBookingsService, type ClassBooking } from "@/lib/api/classBookings";
 import { consultationsService, ConsultationBookingStatus, type ConsultationBooking } from "@/lib/api/consultations";
@@ -12,7 +13,10 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { progressService, type WeightLog } from "@/lib/api/progress";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 import { resetClientNowForTests } from "@/lib/ui/useClientNow";
+import { PROGRAM_ABOUT_COPY } from "@/lib/programs/aboutCopy";
 
+// These tests are about the non-solo shell; the solo answer is a separate read.
+vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("next/link", () => ({
   default: ({ children, href, ...rest }: { children: React.ReactNode; href: string } & Record<string, unknown>) => (
     <a href={href} {...rest}>{children}</a>
@@ -77,6 +81,7 @@ const weightLog = (kg: number, recorded_at: string): WeightLog => ({
 describe("currentProgramDay", () => {
   it("headlines the newest active program that is under way", () => {
     expect(currentProgramDay([program()])).toEqual({
+      id: "p1",
       name: "Strength foundations",
       day: 7,
       totalDays: 28,
@@ -104,26 +109,6 @@ describe("currentProgramDay", () => {
       },
     });
     expect(currentProgramDay([open])).toMatchObject({ day: 3, totalDays: null, week: null });
-  });
-});
-
-describe("streak lines", () => {
-  it("only claims a best or a longest streak when the API sends one", () => {
-    expect(longestStreakLine({ current_streak_days: 4 })).toBeNull();
-    expect(isPersonalBest({ current_streak_days: 4 })).toBe(false);
-    expect(longestStreakLine({ current_streak_days: 4, longest_streak_days: 9 })).toBe("Longest · 9 days");
-    expect(longestStreakLine({ current_streak_days: 9, longest_streak_days: 9 })).toBe("Personal best");
-    // A 1-day streak is a start, not a record.
-    expect(isPersonalBest({ current_streak_days: 1, longest_streak_days: 1 })).toBe(false);
-    expect(longestStreakLine({ current_streak_days: 0, longest_streak_days: 1 })).toBe("Longest · 1 day");
-  });
-
-  it("doesn't repeat the streak back when it equals the longest but isn't a best", () => {
-    // A first check-in: 1 day, longest 1. "Longest · 1 day" would just echo the number.
-    expect(longestStreakLine({ current_streak_days: 1, longest_streak_days: 1 })).toBeNull();
-    // Current above a stale longest (the API's longest lags a read): still no echo.
-    expect(longestStreakLine({ current_streak_days: 1, longest_streak_days: 0 })).toBeNull();
-    expect(longestStreakLine({ current_streak_days: 3, longest_streak_days: 2 })).toBe("Personal best");
   });
 });
 
@@ -201,14 +186,16 @@ describe("member home page", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
     resetClientNowForTests();
-    vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(ok({ has_checked_in_today: false, current_streak_days: 0, total_check_ins: 0 }));
+    vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(ok({ has_checked_in_today: false, total_check_ins: 0 }));
     vi.spyOn(checkinsService, "getMyHistory").mockReturnValue(ok([]));
+    vi.spyOn(memberGoalsService, "getSettings").mockReturnValue(ok({ week_start: "monday" }));
     vi.spyOn(consultationsService, "getMyBookings").mockReturnValue(ok([]));
     vi.spyOn(classBookingsService, "getMyClassBookings").mockReturnValue(ok([]));
     vi.spyOn(loyaltyService, "getPrograms").mockReturnValue(ok([]));
     vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([]));
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([]));
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
+    vi.spyOn(myProgramsService, "about").mockReturnValue(ok({ description: null, cautions: null }));
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -233,24 +220,51 @@ describe("member home page", () => {
     expect(screen.getByText("of 28")).toBeInTheDocument();
     expect(screen.getByText("9 of 12 tasks done · last 7 days")).toBeInTheDocument();
     // Not a gym member and never checked in: no check-in widgets at all.
-    expect(screen.queryByText("Check-in streak")).toBeNull();
+    expect(screen.queryByTestId("visits-row")).toBeNull();
     expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
   });
 
-  it("shows a gym member their streak, the at-risk hint and this week's check-ins", async () => {
+  it("shows the program's description and cautions under the hero (D4, board web-cautions W3)", async () => {
+    vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([program()]));
+    const about = vi
+      .spyOn(myProgramsService, "about")
+      .mockReturnValue(ok({ description: "Four weeks to build the habit.", cautions: "Not during pregnancy." }));
+    render(<MemberHomePage />);
+    const card = await screen.findByTestId("program-about-card");
+    expect(about).toHaveBeenCalledWith("p1");
+    expect(within(card).getByRole("heading", { name: PROGRAM_ABOUT_COPY.heading })).toBeInTheDocument();
+    expect(within(card).getByText("Four weeks to build the habit.")).toBeInTheDocument();
+    expect(within(card).getByText(PROGRAM_ABOUT_COPY.cautionsTitle)).toBeInTheDocument();
+    expect(within(card).getByText("Not during pregnancy.")).toBeInTheDocument();
+  });
+
+  it("adds no About card when the program has neither field", async () => {
+    vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([program()]));
+    const about = vi.spyOn(myProgramsService, "about").mockReturnValue(ok({ description: null, cautions: null }));
+    render(<MemberHomePage />);
+    await screen.findByText("Day 7");
+    await waitFor(() => expect(about).toHaveBeenCalled());
+    expect(screen.queryByTestId("program-about-card")).toBeNull();
+    expect(screen.queryByText(PROGRAM_ABOUT_COPY.heading)).toBeNull();
+  });
+
+  it("shows a gym member their visits this week, never a streak (board web-visits H3)", async () => {
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(
       ok([{ status: MembershipSubscriptionStatus.ACTIVE, organization_id: { _id: "g1", name: "Dapo Fitness Hub" } } as MembershipSubscription]),
     );
     vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(
-      ok({ has_checked_in_today: false, current_streak_days: 2, total_check_ins: 14, last_check_in_at: at(1), streak_at_risk: true, longest_streak_days: 9 }),
+      ok({ has_checked_in_today: false, current_streak_days: 2, total_check_ins: 14, last_check_in_at: at(1), streak_at_risk: true, longest_streak_days: 9 } as never),
     );
     vi.spyOn(checkinsService, "getMyHistory").mockReturnValue(
       ok([at(1), at(2)].map((t, i) => ({ _id: `c${i}`, organization_id: "g1", member_user_id: "u", checked_in_at: t, created_at: t, updated_at: t }))),
     );
     render(<MemberHomePage />);
-    expect(await screen.findByText("Check-in streak")).toBeInTheDocument();
-    expect(screen.getByText("Check in today to keep it going")).toBeInTheDocument();
-    expect(screen.getByText("Longest · 9 days")).toBeInTheDocument();
+    // The API still sends its streak fields; the page reads none of them.
+    const row = await screen.findByTestId("visits-row");
+    expect(within(row).getByText(lastVisit("Tue 6 Oct"))).toBeInTheDocument();
+    expect(within(row).getByText(visitsThisWeek(2))).toBeInTheDocument();
+    expect(within(row).getByRole("link")).toHaveAttribute("href", "/dashboard/member/activity");
+    expect(screen.queryByText(/streak|keep it going|Longest|Personal best/i)).toBeNull();
     const strip = screen.getByRole("list", { name: "Check-ins this week" });
     // Wed 7 Oct: Mon 5 and Tue 6 are done, today is still open.
     expect(within(strip).getByText("Mon 5 Oct, checked in")).toBeInTheDocument();
@@ -260,10 +274,30 @@ describe("member home page", () => {
     expect(screen.getByText("Dapo Fitness Hub")).toBeInTheDocument();
   });
 
-  it("shows no hero, and no personal-best line, for a member with neither", async () => {
+  it("says checked in today, counting today, in the member's week (Sunday start)", async () => {
+    vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(
+      ok([{ status: MembershipSubscriptionStatus.ACTIVE, organization_id: { _id: "g1", name: "Dapo Fitness Hub" } } as MembershipSubscription]),
+    );
+    vi.spyOn(memberGoalsService, "getSettings").mockReturnValue(ok({ week_start: "sunday" }));
+    vi.spyOn(checkinsService, "getMyDashboardStats").mockReturnValue(
+      ok({ has_checked_in_today: true, total_check_ins: 14, last_check_in_at: at(0) }),
+    );
+    // Sun 4, Mon 5 and today count in a Sunday week; Sat 3 does not.
+    vi.spyOn(checkinsService, "getMyHistory").mockReturnValue(
+      ok([at(0), at(2), at(3), at(4)].map((t, i) => ({ _id: `c${i}`, organization_id: "g1", member_user_id: "u", checked_in_at: t, created_at: t, updated_at: t }))),
+    );
+    render(<MemberHomePage />);
+    const row = await screen.findByTestId("visits-row");
+    expect(within(row).getByText(CHECKED_IN_TODAY)).toBeInTheDocument();
+    expect(within(row).getByText(visitsThisWeek(3))).toBeInTheDocument();
+    const strip = screen.getByRole("list", { name: "Check-ins this week" });
+    expect(within(strip).getByText("Sun 4 Oct, checked in")).toBeInTheDocument();
+  });
+
+  it("shows no hero and no visits row for a member with neither", async () => {
     render(<MemberHomePage />);
     await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
-    expect(screen.queryByText("Check-in streak")).toBeNull();
+    expect(screen.queryByTestId("visits-row")).toBeNull();
     expect(screen.queryByText("Your program")).toBeNull();
     expect(screen.queryByText(/Personal best|Longest/)).toBeNull();
     expect(screen.getByRole("link", { name: "Log your weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");

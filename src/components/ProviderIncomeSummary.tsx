@@ -93,7 +93,7 @@ export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }
           <EmptySlate message="No workspace yet." hint="Payments are summarised once you take them through a workspace." mt="mt-0" />
         </DSCard>
       ) : isError || !data ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)" }}>
           We couldn&rsquo;t load your summary. Try again shortly.
         </div>
       ) : (
@@ -109,7 +109,7 @@ export function ProviderIncomeSummary({ settingsHref }: { settingsHref: string }
 
           {!hasRows ? (
             <DSCard className="p-5.5">
-              <EmptySlate message={`Nothing recorded in ${data.year}.`} hint="Payments, refunds and adjustments appear here as they settle." mt="mt-0" />
+              <EmptySlate message={`Nothing recorded in ${data.year}.`} mt="mt-0" />
             </DSCard>
           ) : (
             data.currencies.map((c) => (

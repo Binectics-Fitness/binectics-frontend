@@ -34,7 +34,7 @@ export default function LoyaltyPage() {
           <p className="text-sm mt-2" style={{ color: "var(--fg-3)" }}>
             {isMember
               ? "Points you earn with a provider spend on that provider's own rewards."
-              : "Reward your clients for showing up, with rewards you choose and hand out."}
+              : "Rewards you choose and hand out."}
           </p>
         </div>
         {isMember ? <MemberLoyalty /> : <ProviderLoyaltyPanel />}

@@ -128,6 +128,6 @@ export function refundErrorMessage(code: string | undefined, fallback?: string):
     case "REFUND_IDEMPOTENCY_CONFLICT":
       return "This form was already used for a different refund. Close it and start again.";
     default:
-      return fallback || "Something went wrong. Try again.";
+      return fallback || "Couldn't finish the refund. Try again.";
   }
 }

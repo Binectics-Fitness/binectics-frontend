@@ -11,6 +11,7 @@ import { useClientNow } from "@/lib/ui/useClientNow";
 import { recentWeights, signedKg, weightChange30d } from "../_lib/logStats";
 import { LOG_LIMIT, logDate } from "../_lib/logFormat";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
+import { useRowEnter } from "@/lib/ui/listMotion";
 
 export default function WeightLogPage() {
   const { user } = useAuth();
@@ -21,6 +22,8 @@ export default function WeightLogPage() {
   const logs = useMemo(() => loadedLogs ?? [], [loadedLogs]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // A weight logged on this page rises into the list; the first load stays still.
+  const rowEnter = useRowEnter(logs.map((l) => l._id), !loading && loadedLogs !== null);
   const [logOpen, setLogOpen] = useState(false);
   const [logWeight, setLogWeight] = useState("");
   const [logSaving, setLogSaving] = useState(false);
@@ -151,7 +154,7 @@ export default function WeightLogPage() {
               style={{ width: 110, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-2)", fontSize: 13, background: "var(--bg)", color: "var(--ink)" }}
             />
             {logError && (
-              <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
+              <div style={{ color: "var(--danger-ink)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
             )}
           </div>
           <button
@@ -206,7 +209,7 @@ export default function WeightLogPage() {
             border: "1px solid oklch(0.92 0.05 25)",
             borderRadius: 10,
             padding: 14,
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
             fontSize: 13,
             marginBottom: 14,
           }}
@@ -297,8 +300,9 @@ export default function WeightLogPage() {
             <ul className="flex flex-col gap-1.5">
               {logs.map((log) => {
                 const by = loggedByName(log);
+                const enter = rowEnter(log._id);
                 return (
-                  <li key={log._id}>
+                  <li key={log._id} className={enter.className} style={enter.style}>
                     <ListRow
                       title={`${log.weight_kg.toFixed(1)} kg`}
                       meta={[

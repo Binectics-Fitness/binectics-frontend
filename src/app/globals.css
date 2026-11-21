@@ -27,31 +27,72 @@
   --signal-ink: oklch(0.22 0.05 148);
   --signal-soft: oklch(0.94 0.04 148);
 
-  /* Role accents — matched chroma + lightness so dashboards harmonize */
+  /* Role accents — matched chroma + lightness so dashboards harmonize.
+     Each role has three steps, as in shared.css: base (dots, fills, borders),
+     -soft (badge background), -ink (text or icon on -soft). */
   --consumer: oklch(0.58 0.14 320);
   --consumer-soft: oklch(0.94 0.03 320);
+  --consumer-ink: oklch(0.42 0.05 320);
   --gym: oklch(0.58 0.14 248);
   --gym-soft: oklch(0.94 0.03 248);
+  --gym-ink: oklch(0.42 0.05 248);
   --trainer: oklch(0.72 0.13 75);
   --trainer-soft: oklch(0.95 0.04 75);
+  --trainer-ink: oklch(0.43 0.04 75);
   --dietitian: oklch(0.58 0.14 300);
   --dietitian-soft: oklch(0.95 0.03 300);
+  --dietitian-ink: oklch(0.43 0.05 300);
   --admin: oklch(0.45 0.02 80);
   --admin-soft: oklch(0.93 0.005 85);
 
-  /* Semantic — never decorative */
+  /* Category: what a member tool is about (colour by meaning, owner approval
+     19 Nov 2026). Same lines as binectics-design-system shared.css, so
+     tokens:check keeps them in step. base = the SELECTED chip fill, always
+     with an ink label and a check; -soft = icon tile; -ink = icon on -soft.
+     Tiles and the selected category chip only; weight, notes, the daily list
+     and goals stay neutral. Meta on a tint uses --fg-2 (--fg-3 fails AA).
+     Pick them through src/lib/ui/categories.ts, never by hand in a page. */
+  --fast: var(--trainer);
+  --fast-soft: var(--trainer-soft);
+  --fast-ink: oklch(0.45 0.12 75);
+  --water: oklch(0.74 0.11 232);
+  --water-soft: oklch(0.95 0.03 232);
+  --water-ink: oklch(0.45 0.10 235);
+  --move: oklch(0.76 0.10 180);
+  --move-soft: oklch(0.95 0.035 180);
+  --move-ink: oklch(0.44 0.08 185);
+  --meal: oklch(0.72 0.11 300);
+  --meal-soft: var(--dietitian-soft);
+  --meal-ink: oklch(0.42 0.13 300);
+
+  /* Task types (owner, 20 Nov 2026; binectics-design-system shared.css).
+     Workout uses --move and a meal plan --meal; a habit that ticks itself
+     takes its source's colour (water, fast, move). Tiles only; never a
+     button. Pick them through src/components/programs/builder/taskTypes.ts. */
+  --habit: oklch(0.78 0.12 130);
+  --habit-soft: oklch(0.95 0.045 130);
+  --habit-ink: oklch(0.44 0.10 130);
+  --checkin: oklch(0.72 0.10 272);
+  --checkin-soft: oklch(0.95 0.03 272);
+  --checkin-ink: oklch(0.44 0.12 272);
+  --measure: oklch(0.74 0.11 340);
+  --measure-soft: oklch(0.95 0.03 340);
+  --measure-ink: oklch(0.45 0.12 340);
+  --note: oklch(0.80 0.06 85);
+  --note-soft: oklch(0.94 0.03 85);
+  --note-ink: oklch(0.44 0.06 85);
+
+  /* Semantic — never decorative. Hue ramp danger 25 -> warn 45 -> trainer 75
+     (shared.css), so a warning never reads as the trainer accent. -ink is
+     text or an icon on -soft, and also small text on --bg (~7:1). --danger-ink
+     keeps real chroma (0.16) so error and destructive text reads as red:
+     6.8:1 on --bg, 6.0:1 on --danger-soft. */
   --danger: oklch(0.58 0.18 25);
   --danger-soft: oklch(0.95 0.03 25);
-  --warn: oklch(0.72 0.14 75);
-  /* Ink pairs for soft fills. Not shared.css variables, but the literals the
-     design system already draws these badges with, named so the tone set
-     (src/lib/ui/tones.ts) can use them:
-       --warn-soft / --warn-ink  binectics/notifications.html `.pill.warn`
-       --trainer-ink             shared.css `.badge-trainer` text (--trainer
-                                 is too light to read on --trainer-soft). */
-  --warn-soft: oklch(0.96 0.06 75);
-  --warn-ink: oklch(0.45 0.16 75);
-  --trainer-ink: oklch(0.45 0.12 75);
+  --danger-ink: oklch(0.48 0.16 25);
+  --warn: oklch(0.70 0.17 45);
+  --warn-soft: oklch(0.95 0.04 45);
+  --warn-ink: oklch(0.43 0.06 45);
   /* Dark surface (on --ink). App-only, not in shared.css yet: the literals
      binectics/member-streaks.html draws its streak hero with, named so the
      dark hero card, progress track and check-in takeover share one set.
@@ -62,9 +103,6 @@
   --ink-2: oklch(0.30 0.008 80);
   --on-ink-2: oklch(0.85 0.005 85);
   --on-ink-3: oklch(0.75 0.005 85);
-  /* Danger as small TEXT (deltas). --danger is 4.49:1 on --bg, just under
-     AA; this is the same hue one step darker (5.09:1 on --bg, 4.80 on --bg-2). */
-  --danger-ink: oklch(0.55 0.18 25);
 
   /* Stacking: the check-in takeover sits above every fixed app layer
      (cookie banner 7000–9000, toasts/drawers 9998–9999). */
@@ -73,7 +111,7 @@
   /* Typography */
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
-  --font-serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
 
   /* Radii — disciplined, barely rounded */
   --r-1: 3px;
@@ -142,6 +180,31 @@
   --color-dietitian: oklch(0.58 0.14 300);
   --color-dietitian-soft: oklch(0.95 0.03 300);
 
+  --color-fast: oklch(0.72 0.13 75);
+  --color-fast-soft: oklch(0.95 0.04 75);
+  --color-fast-ink: oklch(0.45 0.12 75);
+  --color-water: oklch(0.74 0.11 232);
+  --color-water-soft: oklch(0.95 0.03 232);
+  --color-water-ink: oklch(0.45 0.10 235);
+  --color-move: oklch(0.76 0.10 180);
+  --color-move-soft: oklch(0.95 0.035 180);
+  --color-move-ink: oklch(0.44 0.08 185);
+  --color-meal: oklch(0.72 0.11 300);
+  --color-meal-soft: oklch(0.95 0.03 300);
+  --color-meal-ink: oklch(0.42 0.13 300);
+  --color-habit: oklch(0.78 0.12 130);
+  --color-habit-soft: oklch(0.95 0.045 130);
+  --color-habit-ink: oklch(0.44 0.10 130);
+  --color-checkin: oklch(0.72 0.10 272);
+  --color-checkin-soft: oklch(0.95 0.03 272);
+  --color-checkin-ink: oklch(0.44 0.12 272);
+  --color-measure: oklch(0.74 0.11 340);
+  --color-measure-soft: oklch(0.95 0.03 340);
+  --color-measure-ink: oklch(0.45 0.12 340);
+  --color-note: oklch(0.80 0.06 85);
+  --color-note-soft: oklch(0.94 0.03 85);
+  --color-note-ink: oklch(0.44 0.06 85);
+
   --color-danger: oklch(0.58 0.18 25);
   --color-danger-soft: oklch(0.95 0.03 25);
   --color-warn: oklch(0.72 0.14 75);
@@ -151,7 +214,8 @@
   --color-ink-2: oklch(0.30 0.008 80);
   --color-on-ink-2: oklch(0.85 0.005 85);
   --color-on-ink-3: oklch(0.75 0.005 85);
-  --color-danger-ink: oklch(0.55 0.18 25);
+  /* Same value as --danger-ink, so text-danger-ink and var(--danger-ink) match. */
+  --color-danger-ink: oklch(0.48 0.16 25);
 
   --radius-1: 3px;
   --radius-2: 6px;
@@ -545,10 +609,10 @@ button {
   border: 1px solid var(--border);
 }
 .badge-signal { background: var(--signal-soft); color: var(--signal-ink); border-color: oklch(0.88 0.05 148); }
-.badge-gym    { background: var(--gym-soft); color: var(--gym); border-color: oklch(0.88 0.04 248); }
+.badge-gym    { background: var(--gym-soft); color: var(--gym-ink); border-color: oklch(0.88 0.04 248); }
 .badge-trainer{ background: var(--trainer-soft); color: oklch(0.45 0.12 75); border-color: oklch(0.88 0.05 75); }
-.badge-diet   { background: var(--dietitian-soft); color: var(--dietitian); border-color: oklch(0.88 0.04 300); }
-.badge-danger { background: var(--danger-soft); color: var(--danger); border-color: oklch(0.88 0.05 25); }
+.badge-diet   { background: var(--dietitian-soft); color: var(--dietitian-ink); border-color: oklch(0.88 0.04 300); }
+.badge-danger { background: var(--danger-soft); color: var(--danger-ink); border-color: oklch(0.88 0.05 25); }
 
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
 
@@ -657,7 +721,7 @@ table.data tr:hover td { background: var(--bg-2); }
   color: var(--signal-ink);
   margin-top: 4px;
 }
-.stat .delta.down { color: var(--danger); }
+.stat .delta.down { color: var(--danger-ink); }
 .stat .delta.flat { color: var(--fg-3); }
 
 /* ─── Page title block ──────────────────────────────────────── */
@@ -899,4 +963,153 @@ html[data-scroll-locked] body {
 
   .receipt, .invoice, .tax-form { padding: 20mm !important; }
   .page-break { page-break-before: always; }
+}
+
+/* ─── Chips, chip group, toggle, save check, row motion ─────────
+   Web foundations (Nov 2026): the shared forms of 10-System's components,
+   drawn in binectics-plans/design/web-foundations/01-Web-foundations.html
+   and mirroring binectics-mobile Chip / ChipGroup / Toggle / SaveCheck /
+   listMotion. Components: src/components/ds/Chip.tsx, Toggle.tsx,
+   SaveCheck.tsx, src/lib/ui/listMotion.ts. Plain classes, not utilities,
+   so they beat the unlayered `button { color/font-size: inherit }` reset. */
+.bx-chips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bx-chip {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
+    color var(--motion-base) var(--ease-out);
+}
+.bx-chip[data-on="true"] {
+  background: var(--chip-fill);
+  border-color: var(--chip-fill);
+  color: var(--chip-label);
+}
+.bx-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bx-chip:disabled { opacity: 0.5; cursor: default; }
+.bx-chip-icon { display: inline-flex; flex: none; color: var(--chip-icon, var(--fg-2)); }
+.bx-chip[data-on="true"] .bx-chip-icon { color: inherit; }
+.bx-chip-check { animation: bx-chip-check var(--motion-fast) var(--ease-out) both; }
+@keyframes bx-chip-check {
+  from { transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+/* A measured group: the chips go see-through over their paper plates, and
+   ONE pill under them carries the selection, sliding to the new chip. */
+.bx-chip-plate,
+.bx-chip-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: var(--r-full);
+  pointer-events: none;
+  display: none;
+}
+.bx-chips[data-slide="on"] > .bx-chip-plate,
+.bx-chips[data-slide="on"] > .bx-chip-pill { display: block; }
+.bx-chip-plate { background: var(--bg); border: 1px solid var(--border-2); }
+.bx-chip-pill {
+  transition:
+    transform var(--motion-base) var(--ease-out),
+    width var(--motion-base) var(--ease-out),
+    height var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    opacity var(--motion-base) var(--ease-out);
+}
+.bx-chip-pill[data-instant="true"] { transition: none; }
+.bx-chips[data-slide="on"] > .bx-chip,
+.bx-chips[data-slide="on"] > .bx-chip[data-on="true"] {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Toggle: 52x44 hit area, 52x32 track, 26px paper knob. */
+.bx-toggle {
+  width: 52px;
+  height: 44px;
+  position: relative;
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.bx-toggle::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 52px;
+  height: 32px;
+  border-radius: var(--r-full);
+  background: var(--border-2);
+  transition: background-color 200ms var(--ease-out);
+}
+.bx-toggle::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-full);
+  background: var(--bg);
+  transition: transform 200ms var(--ease-out);
+}
+.bx-toggle[aria-checked="true"]::before { background: var(--ink); }
+.bx-toggle[aria-checked="true"]::after { transform: translateX(20px); }
+.bx-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bx-toggle:disabled { opacity: 0.5; cursor: default; }
+
+/* Save check: strokes on once a save lands, then holds. */
+.bx-save-check path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 0;
+  animation: bx-save-draw 300ms var(--ease-out) both;
+}
+@keyframes bx-save-draw {
+  from { stroke-dashoffset: 22; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* A row that arrives after its list is on screen: fade in, rise 8px. */
+.bx-row-enter { animation: bx-row-rise 180ms var(--ease-out) both; }
+@keyframes bx-row-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bx-row-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx-chip,
+  .bx-chip-pill,
+  .bx-toggle::before,
+  .bx-toggle::after { transition: none; }
+  .bx-chip-check,
+  .bx-save-check path { animation: none; }
+  /* Still shows the change: a 200ms fade, no rise. Class selectors with
+     !important, because the global `*` rule above cuts every animation to
+     0.01ms. */
+  .bx-row-enter { animation: bx-row-fade 200ms ease-out both !important; animation-delay: 0ms !important; }
 }

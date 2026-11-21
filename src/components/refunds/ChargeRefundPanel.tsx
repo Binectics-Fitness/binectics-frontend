@@ -139,7 +139,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
 
   if (loadError) {
     return (
-      <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+      <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
         {loadError}
       </div>
     );
@@ -152,7 +152,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
     quote.payment_rail === "provider"
       ? mode === "admin"
         ? "Collected on the provider's own Paystack account. Only the provider can refund it."
-        : "Collected on your own Paystack account. You refund it, from your account."
+        : "Collected on your Paystack account. You refund it."
       : mode === "admin"
         ? "Collected by Binectics on the platform account. Binectics refunds it."
         : "Collected by Binectics for you. Binectics sends the refund; you can ask for one.";
@@ -327,7 +327,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
           </label>
           </fieldset>
           {formError ? (
-            <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{formError}</div>
+            <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{formError}</div>
           ) : null}
           {done ? (
             <div role="status" className="text-[13px]" style={{ color: "var(--signal-ink)" }}>{done}</div>

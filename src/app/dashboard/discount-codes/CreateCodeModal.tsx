@@ -65,7 +65,7 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
   if (type === CouponDiscountType.PERCENT && !(Number.isInteger(pct) && pct >= 1 && pct <= 100)) problems.push("Percent is a whole number from 1 to 100.");
   if (type === CouponDiscountType.FIXED && (!currency || !amountMinor || amountMinor < 1)) problems.push("Choose a currency and an amount.");
   if (kinds.length === 0) problems.push("Pick what the code works on.");
-  if (capN !== null && !(Number.isInteger(capN) && capN >= 1)) problems.push("The total limit is a whole number of 1 or more.");
+  if (capN !== null && !(Number.isInteger(capN) && capN >= 1)) problems.push("Total limit must be 1 or more.");
   if (!(Number.isInteger(per) && per >= 1 && per <= 10)) problems.push("Per-person limit is 1 to 10.");
   if (forMemberships && !(Number.isInteger(renewalsN) && renewalsN >= 0 && renewalsN <= 24)) problems.push("Renewals is a whole number from 0 to 24.");
   if (forMemberships && renewalsN > 0 && type === CouponDiscountType.PERCENT && pct === 100) problems.push("A 100% code can't carry into renewals. A renewal is never free.");
@@ -210,9 +210,9 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
         </label>
 
         {problems.length > 0 && (code || cap || expires || type === CouponDiscountType.FIXED) && (
-          <ul className="text-[12.5px]" style={{ color: "var(--danger)" }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+          <ul className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>
         )}
-        {error && <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>}
+        {error && <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>}
       </div>
     </ActionModal>
   );

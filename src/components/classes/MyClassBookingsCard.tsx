@@ -18,7 +18,7 @@ type Notice = { text: string; tone: "ok" | "info" | "error" };
 const NOTICE_COLOR: Record<Notice["tone"], string> = {
   ok: "var(--signal-ink)",
   info: "var(--fg-2)",
-  error: "var(--danger)",
+  error: "var(--danger-ink)",
 };
 
 type CardBookings = { live: ClassBooking[]; cancelled: ClassBooking[] };

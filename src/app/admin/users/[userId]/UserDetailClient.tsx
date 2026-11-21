@@ -126,7 +126,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
               <button
                 type="button"
                 className="btn-ghost-v2"
-                style={{ color: "var(--danger)" }}
+                style={{ color: "var(--danger-ink)" }}
                 onClick={() => {
                   setReason("");
                   setSuspendOpen(true);
@@ -170,7 +170,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
             style={{
               background: "var(--danger-soft)",
               border: "1px solid oklch(0.92 0.05 25)",
-              color: "var(--danger)",
+              color: "var(--danger-ink)",
             }}
           >
             <div className="font-medium">Couldn&apos;t load this user</div>

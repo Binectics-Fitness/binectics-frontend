@@ -91,7 +91,7 @@ export default function TrainerSessionsListPage() {
       setTypesById(typesRes.value.data);
     }
     // A failed request must never render as "no sessions".
-    setError(bookingsOk ? null : "We couldn't load your sessions. Try again shortly.");
+    setError(bookingsOk ? null : "Couldn't load your sessions. Try again.");
   }, [timeRange]);
 
   useEffect(() => {
@@ -181,7 +181,7 @@ export default function TrainerSessionsListPage() {
 
       {/* Error state — never render an API failure as an empty list */}
       {error && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }}>
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }}>
           {error}
         </div>
       )}
@@ -191,7 +191,7 @@ export default function TrainerSessionsListPage() {
         {/* Filter bar */}
         <div className="flex flex-col sm:flex-row gap-2 p-5 pb-3.5">
           <input
-            placeholder="Search by client name or note…"
+            placeholder="Search client or note"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1 h-9 px-3.5 rounded-(--r-2) text-[13.5px]"
@@ -276,7 +276,7 @@ export default function TrainerSessionsListPage() {
                 <tr>
                   <td colSpan={6} className="py-6 px-3.5 text-center text-[13px]" style={{ color: "var(--fg-3)" }}>
                     {bookings.length === 0
-                      ? "No sessions in this time range yet."
+                      ? "No sessions in this range."
                       : "No sessions match these filters."}
                   </td>
                 </tr>

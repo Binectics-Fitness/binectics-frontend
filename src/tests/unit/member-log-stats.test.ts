@@ -3,7 +3,6 @@ import { activityTypeLabel, logDate } from "@/app/dashboard/member/_lib/logForma
 import {
   mayBeTruncated,
   mealsToday,
-  nextStreakMilestone,
   recentWeights,
   signedKg,
   weightChange30d,
@@ -81,16 +80,6 @@ describe("mealsToday", () => {
       { meal_date: at(2026, 10, 6, 19), calories: 900 },
     ];
     expect(mealsToday(meals, NOW)).toEqual({ count: 3, calories: 420, withCalories: 1 });
-  });
-});
-
-describe("nextStreakMilestone", () => {
-  it("is the first milestone above the streak", () => {
-    expect(nextStreakMilestone(0)).toBe(7);
-    expect(nextStreakMilestone(1)).toBe(7);
-    expect(nextStreakMilestone(7)).toBe(30);
-    expect(nextStreakMilestone(32)).toBe(50);
-    expect(nextStreakMilestone(365)).toBeNull();
   });
 });
 

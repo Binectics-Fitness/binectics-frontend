@@ -29,7 +29,7 @@ export function seatReviewFor(role: UserRole | string | undefined): {
         href: "/dashboard/gym-owner/members",
         label: "Review members",
         advice:
-          "Archiving a member frees their seat. Paused and suspended members still occupy one, so review those first, or upgrade for more room.",
+          "Archiving a member frees their seat. Paused and suspended members still take one.",
       };
   }
 }

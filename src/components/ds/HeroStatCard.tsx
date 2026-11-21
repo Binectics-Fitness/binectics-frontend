@@ -1,5 +1,5 @@
 /**
- * HeroStatCard — the dark headline number (streak, "Day N of M").
+ * HeroStatCard — the dark headline number ("Day N of M", a visit count).
  *
  * Flat --ink card (no gradient), --r-3 corners like every product card.
  * `surface="raised"` draws it on --ink-2 for use inside a dark takeover.

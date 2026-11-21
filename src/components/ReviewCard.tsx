@@ -228,7 +228,7 @@ export function ReviewCard({
             border: `1px solid ${messageType === "success" ? "var(--signal)" : "var(--danger)"}`,
             background:
               messageType === "success" ? "var(--signal-soft)" : "var(--danger-soft)",
-            color: messageType === "success" ? "var(--signal)" : "var(--danger)",
+            color: messageType === "success" ? "var(--signal)" : "var(--danger-ink)",
           }}
         >
           {message}
@@ -259,7 +259,7 @@ export function ReviewCard({
             type="button"
             onClick={() => setView("report")}
             className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-            style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+            style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
           >
             Report
           </button>

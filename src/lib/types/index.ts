@@ -309,6 +309,9 @@ export interface PlanComparison {
   discount_percent: number;
 }
 
+export type ListingPriceCadence = "session" | "recurring" | "one_off";
+export type ListingPriceDisplay = "auto" | "custom";
+
 export interface MarketplaceListing {
   _id: string;
   organization_id?: string | { _id: string; name: string; logo?: string };
@@ -345,6 +348,15 @@ export interface MarketplaceListing {
   /** Display "from" price in the currency's MINOR unit (kobo/cents). */
   price_from_minor?: number;
   price_label?: string;
+  /** What price_from_minor buys: one session, a recurring membership, or once. */
+  price_cadence?: ListingPriceCadence;
+  /**
+   * Solo listings: "auto" shows the provider's cheapest priced session and
+   * follows it; "custom" shows the typed price. Organization listings ignore it.
+   */
+  price_display?: ListingPriceDisplay;
+  /** Days the "from" price recurs every (recurring) or covers (one-off). */
+  price_period_days?: number;
   accepting_clients: boolean;
   max_clients?: number;
   is_published: boolean;
@@ -546,16 +558,13 @@ export interface MyCheckInStatus {
   last_listing_id?: string;
 }
 
+/**
+ * GET /checkins/dashboard-stats. The API still sends its streak fields
+ * (current_streak_days and the rest) for older clients; the web reads none of
+ * them (owner 19 Nov 2026: no platform streaks).
+ */
 export interface MyCheckInDashboardStats extends MyCheckInStatus {
-  current_streak_days: number;
   total_check_ins: number;
-  // Added by API #191. Optional so an API build without them still works:
-  // the UI then leaves out the longest-streak line and the at-risk hint.
-  /** The streak is alive from yesterday but today has no check-in yet. */
-  streak_at_risk?: boolean;
-  longest_streak_days?: number;
-  /** IANA zone the API counted days in. */
-  streak_timezone?: string;
 }
 
 export interface OrgCheckInDashboardStats {

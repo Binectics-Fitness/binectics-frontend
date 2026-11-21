@@ -70,10 +70,10 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       } else if (res.status === 404 || res.status === 403 || res.status === 400) {
         setState({ kind: "missing" });
       } else {
-        setState({ kind: "error", message: res.message ?? "We couldn't load this session. Try again shortly." });
+        setState({ kind: "error", message: res.message ?? "Couldn't load this session. Try again." });
       }
     } catch {
-      setState({ kind: "error", message: "We couldn't load this session. Try again shortly." });
+      setState({ kind: "error", message: "Couldn't load this session. Try again." });
     }
   }, [sessionId]);
 
@@ -122,7 +122,7 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
       )}
 
       {state.kind === "error" && (
-        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }} role="alert">
+        <div className="rounded-(--r-2) px-4 py-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }} role="alert">
           {state.message}
           <button type="button" className="btn-ghost-v2 sm ml-3" onClick={() => void load()}>Try again</button>
         </div>
@@ -213,7 +213,7 @@ function PaymentSummary({
   const amount = bookingAmountLabel(booking);
 
   if (money === "free") {
-    return <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }} data-testid="payment-state">Free session. Nothing to pay.</p>;
+    return <p className="text-[13.5px]" style={{ color: "var(--fg-2)" }} data-testid="payment-state">Free session.</p>;
   }
 
   return (

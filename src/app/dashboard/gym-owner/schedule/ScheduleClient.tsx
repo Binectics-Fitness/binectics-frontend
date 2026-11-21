@@ -91,11 +91,11 @@ export function ScheduleClient() {
       {!isLoading && classes.length === 0 && !adding && !gate && (
         <DSCard className="flex flex-col items-center text-center px-6 py-14">
           <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>No classes yet</h2>
-          <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
-            {canManage
-              ? "Build your weekly timetable, recurring classes members will see on your listing."
-              : "The gym's weekly classes appear here once they're added."}
-          </p>
+          {canManage && (
+            <p className="text-[13.5px] mt-2 max-w-[420px]" style={{ color: "var(--fg-3)" }}>
+              Classes you add show on your listing.
+            </p>
+          )}
           {canManage && <button className="btn-primary-v2 sm mt-5" disabled={!orgId} onClick={() => setAdding(true)}>+ New class</button>}
         </DSCard>
       )}

@@ -349,7 +349,7 @@ export default function AdminPlansPage() {
       />
 
       {error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load plans</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
@@ -470,7 +470,7 @@ export default function AdminPlansPage() {
                         <span className="font-mono text-[10px] uppercase" style={{ color: pr.gateway_prices?.length ? "var(--signal-ink)" : "var(--fg-4)" }}>
                           {pr.gateway_prices?.length ? "recurring" : "one-shot"}
                         </span>
-                        {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger)" }}>inactive</span>}
+                        {!pr.is_active && <span className="font-mono text-[10px] uppercase" style={{ color: "var(--danger-ink)" }}>inactive</span>}
                         {audienceOf(pr) !== "ALL" && (
                           <span className="font-mono text-[10px] uppercase" style={{ color: "var(--fg-3)" }}>{audienceOf(pr)}</span>
                         )}
@@ -483,7 +483,7 @@ export default function AdminPlansPage() {
                       </div>
                     ))}
                   {plan.code !== "free" && prices.filter((pr) => pr.plan_code === plan.code).length === 0 && (
-                    <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+                    <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
                       No prices, providers cannot check out on this tier until one exists.
                     </p>
                   )}
@@ -813,7 +813,7 @@ function PaystackAmountWarning({
   const savedCode = saved?.gateway_prices?.[0]?.external_price_id ?? "";
   if (saved && savedCode && !code) {
     return (
-      <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+      <p className="basis-full text-[12px]" style={{ color: "var(--danger-ink)" }}>
         Saving without the Paystack plan code ({savedCode}) makes this price one-shot: it will no longer renew
         automatically. Enter the code again to keep auto-renewal.
       </p>
@@ -826,7 +826,7 @@ function PaystackAmountWarning({
   const currency = draft.currency || saved.currency;
   if (currency.toUpperCase() === saved.currency && majorToMinor(typed, currency) === saved.amount_minor) return null;
   return (
-    <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+    <p className="basis-full text-[12px]" style={{ color: "var(--danger-ink)" }}>
       This price renews through Paystack plan {code}, and Paystack charges the amount set on that plan. Changing the amount here
       does not change renewals: update the plan on Paystack, or create a new plan there and enter its code here.
     </p>
@@ -867,7 +867,7 @@ function AnnualDiscountHint({
         ? `Providers will see "Save ${pct}%". 12 × ${money(monthly.amount_minor)} less ${pct}% is ${money(expected)} a year.`
         : `No annual discount: providers see no saving. 12 × ${money(monthly.amount_minor)} is ${money(expected)} a year.`}
       {typedMinor !== null && typedMinor !== expected && (
-        <span className="block" style={{ color: "var(--danger)" }}>
+        <span className="block" style={{ color: "var(--danger-ink)" }}>
           {pct > 0
             ? `The yearly amount you entered is not ${money(expected)}. Providers are still shown "Save ${pct}%", so check the two match.`
             : typedMinor < expected
@@ -904,7 +904,7 @@ function MonthlyDiscountWarning({
   if (expected === yearly.amount_minor) return null;
   const money = (minor: number) => formatCurrency(minorToMajor(minor, currency), currency);
   return (
-    <p className="basis-full text-[12px]" style={{ color: "var(--danger)" }}>
+    <p className="basis-full text-[12px]" style={{ color: "var(--danger-ink)" }}>
       The yearly price ({money(yearly.amount_minor)}) carries a {pct}% saving. With this monthly price, 12 × monthly less {pct}% is{" "}
       {money(expected)}. Update the yearly price too, or providers see a saving that no longer matches.
     </p>

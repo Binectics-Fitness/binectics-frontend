@@ -1,4 +1,24 @@
 export const queryKeys = {
+  solo: {
+    all: ["solo"] as const,
+    state: (userId: string) => [...queryKeys.solo.all, "state", userId] as const,
+    waterToday: () => [...queryKeys.solo.all, "water", "today"] as const,
+    waterSettings: () => [...queryKeys.solo.all, "water", "settings"] as const,
+    checklistToday: () => [...queryKeys.solo.all, "checklist", "today"] as const,
+    checklistItems: () => [...queryKeys.solo.all, "checklist", "items"] as const,
+    latestWeight: () => [...queryKeys.solo.all, "weight", "latest"] as const,
+    fastingSettings: () => [...queryKeys.solo.all, "fasting", "settings"] as const,
+    fastingCurrent: () => [...queryKeys.solo.all, "fasting", "current"] as const,
+    fastingHistory: () => [...queryKeys.solo.all, "fasting", "history"] as const,
+    fastingSummary: (from: string, to: string, tz: string) =>
+      [...queryKeys.solo.all, "fasting", "summary", from, to, tz] as const,
+    series: (metric: string, from: string, to: string, tz: string, bucket: string) =>
+      [...queryKeys.solo.all, "series", metric, from, to, tz, bucket] as const,
+    weightCompare: (period: string, tz: string) => [...queryKeys.solo.all, "weight", "compare", period, tz] as const,
+    targets: () => [...queryKeys.solo.all, "targets"] as const,
+    settings: () => [...queryKeys.solo.all, "settings"] as const,
+  },
+
   starter: {
     all: ["starter"] as const,
     options: (q: string) => [...queryKeys.starter.all, "options", q] as const,
@@ -72,6 +92,10 @@ export const queryKeys = {
     search: (params?: Record<string, unknown>) =>
       [...queryKeys.marketplace.all, "search", params] as const,
     myListing: () => [...queryKeys.marketplace.all, "myListing"] as const,
+    mySessionPrice: () =>
+      [...queryKeys.marketplace.all, "mySessionPrice"] as const,
+    orgLocations: (orgId: string) =>
+      [...queryKeys.marketplace.all, "orgLocations", orgId] as const,
     saved: () => [...queryKeys.marketplace.all, "saved"] as const,
     savedIds: () => [...queryKeys.marketplace.all, "savedIds"] as const,
     myListings: () => [...queryKeys.marketplace.all, "myListings"] as const,

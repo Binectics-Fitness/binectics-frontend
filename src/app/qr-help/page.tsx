@@ -32,8 +32,8 @@ const STEPS = [
   },
   {
     step: "04",
-    title: "You're checked in, your streak updates automatically",
-    desc: "A confirmation screen appears straight away, and your streak and visit history update with it.",
+    title: "You're checked in, your visits update automatically",
+    desc: "A confirmation screen appears straight away with your visits this week, and your visit history updates with it.",
   },
 ];
 
@@ -44,7 +44,7 @@ const FAQS = [
   },
   {
     q: "Can I check in from home, or from a photo of the QR?",
-    a: "No, and that's deliberate. The QR refreshes every minute, so photos, screenshots, bookmarked links and shared codes stop working within minutes. Only a live scan at the gym counts, which keeps streaks and attendance honest.",
+    a: "No, and that's deliberate. The QR refreshes every minute, so photos, screenshots, bookmarked links and shared codes stop working within minutes. Only a live scan at the gym counts, which keeps visit counts and attendance honest.",
   },
   {
     q: "Do I need the app open to scan?",

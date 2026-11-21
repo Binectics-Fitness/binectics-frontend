@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { HEALTH_FORM_COPY } from "@/lib/constants/healthFormCopy";
+import { ParqSwitchNotice } from "./ParqSwitchNotice";
 import Link from "next/link";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
@@ -10,6 +12,7 @@ import SearchableSelect from "@/components/SearchableSelect";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { ShowSetupChecklist } from "@/components/provider/SetupChecklist";
 import { CANCELLATION_POLICY_HREF } from "@/components/provider/CancellationPolicyCard";
+import { CloseGymSection } from "@/components/orgClosure/CloseGymSection";
 import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection } from "./TeamAccessSections";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
@@ -39,6 +42,7 @@ import {
   type TimeFormat,
   type NumberFormat,
 } from "@/lib/constants/settingsLocale";
+import { AccountType } from "@/lib/types";
 import type {
   Organization,
   UpdateOrganizationRequest,
@@ -57,6 +61,7 @@ const SECTIONS = [
   { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "membership", label: "Membership rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
+  { group: "Danger zone", items: [{ id: "danger", label: "Close gym" }] },
 ];
 
 /**
@@ -64,10 +69,10 @@ const SECTIONS = [
  * cancellation fee has its own editor below them (ClassCancellationPolicyEditor).
  */
 const BOOKING_TOGGLE_DEFS = [
-  { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Confirmed instantly when the member taps Book. No manual approval needed." },
-  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: "Standard health history form. Sent automatically before first session." },
+  { key: "auto_confirm" as const, t: "Auto‑confirm bookings", s: "Members are booked without your approval." },
+  { key: "require_parq" as const, t: "Require PAR‑Q from new members", s: HEALTH_FORM_COPY.switchHelp },
   { key: "allow_video_recording" as const, t: "Allow video recording of sessions", s: "Members can ask coaches to film working sets for technique review." },
-  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Members see ratings and reviews on your listing page." },
+  { key: "public_reviews" as const, t: "Public reviews on listing", s: "Ratings and reviews show on your listing." },
 ];
 
 const INPUT_STYLE = {
@@ -203,7 +208,7 @@ export function SettingsClient() {
   const canManage = holds(viewer, TeamPermission.MANAGE_ORGANIZATION);
   const sections = useMemo(
     () =>
-      SECTIONS.filter((g) => isOwner || g.group !== "Money").map((g) =>
+      SECTIONS.filter((g) => isOwner || (g.group !== "Money" && g.group !== "Danger zone")).map((g) =>
         showActivity && g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
       ),
     [showActivity, isOwner],
@@ -364,7 +369,7 @@ export function SettingsClient() {
       <PageHeader
         className="mb-0!"
         title="Settings"
-        subtitle={<span className="block max-w-[60ch]">Business identity, currencies, integrations, booking rules, and the org-level settings that apply across every location.</span>}
+        subtitle={<span className="block max-w-[60ch]">Business details, currencies and integrations.</span>}
       />
 
       {/* Only while the Overview setup checklist is hidden: the way back. */}
@@ -396,7 +401,7 @@ export function SettingsClient() {
           {/* Cards holding a SearchableSelect stay overflow-visible: its list
               opens in flow and DSCard would otherwise clip it. */}
           <section id="org">
-            <SectionHeading title="Organization" desc="Legal entity, trading name, primary contact. Used on receipts and tax documents." />
+            <SectionHeading title="Organization" desc="Shown on receipts and tax documents." />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <TextField label="Legal name" value={form?.legal_name ?? ""} onChange={(v) => set("legal_name", v)} disabled={!form} />
@@ -415,7 +420,7 @@ export function SettingsClient() {
 
           {/* Currency & locale */}
           <section id="currency">
-            <SectionHeading title="Currency & locale" desc="How money and dates render across your dashboard and to your members." />
+            <SectionHeading title="Currency & locale" />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Default currency" value={form?.currency ?? ""} onChange={(v) => set("currency", v)} disabled={!form} hint={providerRouteNote(form?.currency, currencies, providerHint) ?? "Used for new membership plans, listings, and revenue display."}
@@ -436,7 +441,7 @@ export function SettingsClient() {
 
           {/* Tax & VAT */}
           <section id="tax">
-            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Nothing is computed platform-side yet, this is what your documents display." />
+            <SectionHeading title="Tax & VAT" desc="Shown on receipts and invoices. Binectics doesn't calculate tax for you." />
             <DSCard className="flex flex-col gap-4 p-5.5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <TextField label="Tax label" value={form?.tax_label ?? ""} onChange={(v) => set("tax_label", v)} disabled={!form} />
@@ -445,7 +450,7 @@ export function SettingsClient() {
                       which would clear the saved rate; as text the typo stays and taxRateError refuses it. */}
                   <TextField label="Tax rate %" inputMode="decimal" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
                   {form && taxRateError(form.tax_rate) && (
-                    <span role="alert" className="text-[11px]" style={{ color: "var(--danger)" }}>{taxRateError(form.tax_rate)}</span>
+                    <span role="alert" className="text-[11px]" style={{ color: "var(--danger-ink)" }}>{taxRateError(form.tax_rate)}</span>
                   )}
                 </div>
                 <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
@@ -462,7 +467,7 @@ export function SettingsClient() {
                     ))}
                   </div>
                   {form?.tax_inclusive === null && (
-                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger)" : "var(--fg-3)" }}>
+                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger-ink)" : "var(--fg-3)" }}>
                       Choose one to save a tax rate.
                     </span>
                   )}
@@ -475,8 +480,14 @@ export function SettingsClient() {
           <WiredToggleSection
             id="booking"
             title="Booking rules"
-            desc="Defaults that apply to all locations · individual locations can override."
-            items={BOOKING_TOGGLE_DEFS.map((d) => ({ ...d, on: bookingOn(d.key), onToggle: () => toggleBooking(d.key) }))}
+            desc="Apply to all your locations."
+            items={BOOKING_TOGGLE_DEFS.map((d) => ({
+              ...d,
+              on: bookingOn(d.key),
+              onToggle: () => toggleBooking(d.key),
+              // Every gym starts off (design lead, 20 Nov 2026): say it is new (board parq W5).
+              before: d.key === "require_parq" ? <ParqSwitchNotice switchOn={bookingOn(d.key)} /> : undefined,
+            }))}
             disabled={!form}
           >
             <ClassCancellationPolicyEditor
@@ -499,10 +510,7 @@ export function SettingsClient() {
               (owner ruling, Oct 20 2026). Saved with the rest of the page,
               so gated like it (team:manage_organization). */}
           <section id="membership">
-            <SectionHeading
-              title="Membership rules"
-              desc="How members can use their memberships."
-            />
+            <SectionHeading title="Membership rules" />
             <DSCard className="flex flex-col gap-3 p-5.5">
               <div className="flex flex-col gap-1.5 max-w-[220px]">
                 <Eyebrow as="label" htmlFor="member-pause-limit">Member pauses per year</Eyebrow>
@@ -542,7 +550,7 @@ export function SettingsClient() {
           {/* Kiosk & QR. The kiosk has no settings of its own yet; this
               explains how check-in works and links to the kiosk page. */}
           <section id="kiosk">
-            <SectionHeading title="Kiosk & QR" desc="Check-in runs in a web browser, so there is nothing to install or pair." />
+            <SectionHeading title="Kiosk & QR" />
             <DSCard className="flex flex-col gap-3 p-5.5">
               <p className="text-[14px] leading-relaxed max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
                 Open the check-in kiosk on any tablet, phone or computer at your door and leave it on. It shows a QR code that changes every minute. Members scan it with the Binectics app or their phone camera, and only members with an active plan are let in.
@@ -564,7 +572,7 @@ export function SettingsClient() {
           {/* Payout schedule */}
           {isOwner && (
           <section id="payouts">
-            <SectionHeading title="Payout schedule" desc="How often earnings settle to your bank. Execution follows your gateway's capabilities." />
+            <SectionHeading title="Payout schedule" desc="How often earnings are paid to your bank, where your payment provider supports it." />
             <DSCard className="flex flex-col gap-4 p-5.5 overflow-visible!">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <SelectField label="Frequency" value={form?.payout_schedule.frequency ?? "weekly"} onChange={(v) => onPayoutFrequency(v as PayoutFrequency)} disabled={!form}
@@ -593,6 +601,11 @@ export function SettingsClient() {
           {/* Activity log — who changed what, on its own page */}
           {showActivity && <ActivityLogSection href="/dashboard/gym-owner/settings/activity" />}
 
+          {/* Close gym — owner only; only a gym workspace can be closed */}
+          {isOwner && orgId && currentOrg?.account_type === AccountType.GYM_OWNER && (
+            <CloseGymSection orgId={orgId} orgName={currentOrg.name} />
+          )}
+
           {isLoading && (
             <p className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Loading your organization…</p>
           )}
@@ -612,11 +625,11 @@ function StatusPill({ tone, dot, label }: { tone: "signal" | "muted"; dot: strin
   );
 }
 
-function SectionHeading({ title, desc }: { title: string; desc: string }) {
+function SectionHeading({ title, desc }: { title: string; desc?: string }) {
   return (
     <>
-      <h2 className="text-[16px] font-medium" style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
-      <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{desc}</p>
+      <h2 className={`text-[16px] font-medium${desc ? "" : " mb-4"}`} style={{ letterSpacing: "-0.01em", color: "var(--ink)" }}>{title}</h2>
+      {desc && <p className="text-[12.5px] mt-1 mb-4 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{desc}</p>}
     </>
   );
 }
@@ -721,18 +734,21 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle?: () => void
   );
 }
 
-function WiredToggleSection({ id, title, desc, items, disabled, children }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void }[]; disabled?: boolean; children?: ReactNode }) {
+function WiredToggleSection({ id, title, desc, items, disabled, children }: { id: string; title: string; desc: string; items: { key: string; t: string; s: ReactNode; on: boolean; onToggle: () => void; before?: ReactNode }[]; disabled?: boolean; children?: ReactNode }) {
   return (
     <section id={id}>
       <SectionHeading title={title} desc={desc} />
       <DSCard>
         {items.map((t, i) => (
-          <div key={t.key} className="flex items-start gap-3.5 px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
+          <div key={t.key} className="px-5.5 py-3" style={{ borderBottom: i < items.length - 1 ? "1px solid var(--border)" : "none" }}>
+            {t.before}
+            <div className="flex items-start gap-3.5">
             <div className="flex-1">
               <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{t.t}</div>
               <div className="text-[12.5px] mt-0.75 max-w-[56ch] leading-relaxed" style={{ color: "var(--fg-3)" }}>{t.s}</div>
             </div>
             <Toggle on={t.on} onToggle={t.onToggle} disabled={disabled} />
+            </div>
           </div>
         ))}
       </DSCard>

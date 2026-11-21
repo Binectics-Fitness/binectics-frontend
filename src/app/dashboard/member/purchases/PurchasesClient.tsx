@@ -102,10 +102,7 @@ export default function PurchasesClient() {
       ) : purchases === null ? (
         <AsyncSpinner />
       ) : records.length === 0 && owned.length === 0 ? (
-        <EmptySlate
-          message="Nothing here yet."
-          hint="Programs and meal plans you buy, are given, or get through a plan show up here."
-        />
+        <EmptySlate message="No programs or meal plans yet." />
       ) : (
         <div className="flex flex-col gap-3">
           {records.map((p) => {

@@ -8,6 +8,11 @@ let mockGym: { _id: string; name: string } | null = null;
 let mockRefundCount = 0;
 const refundCountCalls: boolean[] = [];
 
+vi.mock("@/lib/queries/orgClosure", () => ({
+  useClosedOrganizations: () => ({ data: [], isLoading: false }),
+  useCloseOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useReopenOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/dashboard/trainer",

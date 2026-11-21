@@ -121,19 +121,12 @@ export function GymStep5({ data, setField }: StepProps) {
   );
 }
 
+// Titles only: how to set the kiosk up is said on the kiosk page itself,
+// where the owner opens it (text audit, 19 Nov 2026).
 const CHECKIN_STEPS = [
-  {
-    title: "Put a screen at your door",
-    desc: "Any tablet, phone or computer with a web browser. A spare phone on a stand is enough.",
-  },
-  {
-    title: "Open the check-in kiosk",
-    desc: "After setup, open Check-in kiosk from your dashboard on that screen and leave it on. It shows a QR code that changes every minute.",
-  },
-  {
-    title: "Members scan it with their phone",
-    desc: "With the Binectics app or their phone camera. Members with an active plan are checked in, and each arrival shows on the kiosk page.",
-  },
+  "Put a screen at your door",
+  "Open the check-in kiosk",
+  "Members scan it with their phone",
 ];
 
 /**
@@ -146,16 +139,13 @@ export function GymStep6() {
     <>
       <StageHead crumb="Step 06 of 08, gym track" title="How check-in works." desc="There is no app or hardware to buy. Check-in runs in a web browser on a screen you already have." />
       <ol style={{ display: "flex", flexDirection: "column", gap: 8, listStyle: "none", margin: 0, padding: 0 }}>
-        {CHECKIN_STEPS.map((s, i) => (
+        {CHECKIN_STEPS.map((title, i) => (
           <li
-            key={s.title}
-            style={{ display: "flex", gap: 14, padding: "14px 16px", border: "1px solid var(--border)", borderRadius: "var(--r-3)", background: "var(--bg)" }}
+            key={title}
+            style={{ display: "flex", alignItems: "baseline", gap: 14, padding: "14px 16px", border: "1px solid var(--border)", borderRadius: "var(--r-3)", background: "var(--bg)" }}
           >
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-3)", paddingTop: 2 }}>{String(i + 1).padStart(2, "0")}</span>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 3, lineHeight: 1.5 }}>{s.desc}</div>
-            </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-3)" }}>{String(i + 1).padStart(2, "0")}</span>
+            <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{title}</div>
           </li>
         ))}
       </ol>

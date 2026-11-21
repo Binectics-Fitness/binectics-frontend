@@ -5,6 +5,7 @@
 
 import type { User } from "@/lib/types";
 import { clearMessagingStorage } from "@/components/messaging/messagingStorage";
+import { clearSoloStorage } from "@/lib/solo/storage";
 
 const STORAGE_KEYS = {
   USER: "user",
@@ -156,6 +157,8 @@ export function clearAuthStorage(): void {
   userStorage.remove();
   // Unsent messages and drafts belong to the session that wrote them.
   clearMessagingStorage();
+  // Any solo-member browser keys belong to the session too.
+  clearSoloStorage();
 }
 
 /**

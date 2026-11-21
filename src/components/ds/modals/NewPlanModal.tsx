@@ -69,7 +69,6 @@ export function NewPlanModal({ open, onClose }: NewPlanModalProps) {
       open={open}
       onClose={onClose}
       title="New plan"
-      description="Choose the type of plan you want to create."
       footer={
         <>
           <button type="button" onClick={onClose} className="btn-ghost-v2">

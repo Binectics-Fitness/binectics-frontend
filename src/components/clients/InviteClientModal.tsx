@@ -93,7 +93,7 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
       className="font-mono text-[10.5px] uppercase tracking-[0.06em]"
       style={{ color: "var(--fg-3)" }}
     >
-      {text} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+      {text} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
     </label>
   );
 
@@ -149,14 +149,14 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
           </span>
         </div>
         <div className="flex flex-col gap-1.5">
-          {label("Message", id("message"))}
+          {label("Message (optional)", id("message"))}
           <textarea
             id={id("message")}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             maxLength={500}
-            placeholder="Optional, e.g. Great meeting you at the gym today."
+            placeholder="e.g. Great meeting you at the gym today."
             aria-describedby={id("message-help")}
             className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-none"
             style={fieldStyle}
@@ -166,7 +166,7 @@ export function InviteClientModal({ open, onClose, onInvited }: InviteClientModa
           </span>
         </div>
         {error && (
-          <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
             {error}
           </p>
         )}

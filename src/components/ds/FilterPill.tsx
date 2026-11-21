@@ -19,8 +19,12 @@ export function FilterPill({ label, count, active, onClick }: FilterPillProps) {
       onClick={onClick}
       // A toggle: say whether it is on, when the caller tracks it.
       aria-pressed={active === undefined ? undefined : active}
-      className="h-7 px-2.5 rounded-[var(--r-2)] text-[12.5px] font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5"
+      className="h-7 px-2.5 rounded-[var(--r-2)] font-medium whitespace-nowrap shrink-0 flex items-center gap-1.5"
       style={{
+        // Inline, not text-[12.5px]: the unlayered `button { font-size: inherit }`
+        // reset in globals.css beats any layered text-* utility on a <button>,
+        // so the class never applied and every pill rendered at 15px.
+        fontSize: "12.5px",
         background: active ? "var(--ink)" : "transparent",
         color: active ? "var(--bg)" : "var(--fg-2)",
         border: active ? "1px solid var(--ink)" : "1px solid var(--border)",

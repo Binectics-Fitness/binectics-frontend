@@ -119,10 +119,10 @@ export function RescheduleBookingModal({
       title="Reschedule booking"
       description={
         audience === "provider"
-          ? "Pick one of your open times for this session. We'll let your client know."
+          ? "We'll let your client know."
           : audience === "staff"
-            ? "Pick one of the provider's open times. We'll let the client and the provider know."
-            : "Pick one of your provider's open times. We'll let them know."
+            ? "We'll let the client and the provider know."
+            : "We'll let your provider know."
       }
       footer={
         <>
@@ -171,7 +171,7 @@ export function RescheduleBookingModal({
               <AsyncSpinner label="Loading open times" />
             </div>
           ) : slotsError ? (
-            <p className="text-[13px] text-danger">{slotsError}</p>
+            <p className="text-[13px] text-danger-ink">{slotsError}</p>
           ) : slots.length === 0 ? (
             <p className="text-[13px] text-fg-3" data-testid="reschedule-no-slots">
               No open times on this day. Try another day.
@@ -220,7 +220,7 @@ export function RescheduleBookingModal({
           />
         </div>
         {error && (
-          <p role="alert" className="rounded-(--r-2) bg-danger-soft p-3 text-[13px] text-danger">
+          <p role="alert" className="rounded-(--r-2) bg-danger-soft p-3 text-[13px] text-danger-ink">
             {error}
           </p>
         )}

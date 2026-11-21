@@ -108,7 +108,7 @@ describe("RescheduleBookingButton", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Move session" }));
     expect(
-      screen.getByText("Pick one of the provider's open times. We'll let the client and the provider know."),
+      screen.getByText("We'll let the client and the provider know."),
     ).toBeInTheDocument();
     await userEvent.click(await screen.findByRole("option"));
     await userEvent.click(screen.getByRole("button", { name: "Confirm reschedule" }));

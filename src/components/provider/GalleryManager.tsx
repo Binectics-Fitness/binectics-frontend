@@ -62,13 +62,13 @@ export function GalleryManager({
     try {
       const res = await fn();
       if (!res.success) {
-        setError(res.message ?? "Something went wrong. Please try again.");
+        setError(res.message ?? "Couldn't update the gallery. Try again.");
         return false;
       }
       await invalidate();
       return true;
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Couldn't update the gallery. Try again.");
       return false;
     } finally {
       setPending(false);
@@ -171,7 +171,7 @@ export function GalleryManager({
                   disabled={pending}
                   aria-label={`Remove photo ${i + 1}`}
                   className="rounded-(--r-1) px-2 py-0.5 text-[11.5px] font-medium disabled:opacity-40"
-                  style={{ background: "var(--bg)", color: "var(--danger)", border: "1px solid var(--border)" }}
+                  style={{ background: "var(--bg)", color: "var(--danger-ink)", border: "1px solid var(--border)" }}
                 >
                   Remove
                 </button>
@@ -190,7 +190,7 @@ export function GalleryManager({
           onFiles={(files) => void handleUpload(files)}
         >
           <p className="text-[13.5px] font-medium text-fg-2">
-            {pending ? "Uploading…" : "Drop photos here or click to upload"}
+            {pending ? "Uploading…" : "Drop photos or click to upload"}
           </p>
           <p className="mt-1 text-[12px] text-fg-4">
             JPG or PNG, up to 10 MB each · {gallery.length}/{GALLERY_LIMIT} added
@@ -199,7 +199,7 @@ export function GalleryManager({
       )}
 
       {error && (
-        <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+        <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}
@@ -207,7 +207,7 @@ export function GalleryManager({
         <p className="text-[11.5px]" style={{ color: "var(--fg-4)" }}>
           {coverUrl
             ? "Reorder with the arrows."
-            : "The first photo is your listing cover. Reorder with the arrows."}
+            : "The first photo is your cover."}
         </p>
       )}
     </div>

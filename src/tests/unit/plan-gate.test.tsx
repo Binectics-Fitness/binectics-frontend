@@ -246,9 +246,12 @@ describe("Invite client on a full plan", () => {
   });
 });
 
+/** D1: only a sold or listed program keeps a Publish button on its card. */
+const sold = { sold_or_listed: true, published_version_no: 0, has_unpublished_changes: true, needs_publish: true };
+
 describe("Programs when the plan refuses a publish", () => {
   const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false };
 
   it("says what the plan leaves out, instead of a raw toast", async () => {
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({
@@ -257,6 +260,7 @@ describe("Programs when the plan refuses a publish", () => {
         {
           _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
           latest_version_no: 1, latest_published_version_no: 0, created_at: "", updated_at: "",
+          publish_state: sold,
         } as never,
       ],
     });
@@ -270,10 +274,10 @@ describe("Programs when the plan refuses a publish", () => {
     expect(screen.getByRole("link", { name: "See plans" })).toBeInTheDocument();
   });
 
-  it("never carries a publish refusal into the builder", async () => {
+  it("never carries a publish refusal into the New program dialog", async () => {
     const draft = {
       _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
-      latest_version_no: 1, latest_published_version_no: 0, created_at: "", updated_at: "",
+      latest_version_no: 1, latest_published_version_no: 0, created_at: "", updated_at: "", publish_state: sold,
     };
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [draft as never] });
     vi.spyOn(programsService, "publishTemplate").mockResolvedValue(featureRefusal("health_auto_tasks_enabled"));
@@ -282,19 +286,19 @@ describe("Programs when the plan refuses a publish", () => {
     await confirmInDialog(userEvent, "Publish \"Couch to 5k\"?", "Publish program");
     expect(await screen.findByTestId("plan-gate")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /New program/ }));
-    expect(await screen.findByRole("button", { name: "Create draft" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Create" })).toBeInTheDocument();
     expect(screen.queryByTestId("plan-gate")).toBeNull();
   });
 });
 
 describe("Programs: refused, then successful", () => {
   const Shell = ({ children }: { children: ReactNode }) => <main>{children}</main>;
-  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)" };
+  const config = { Shell, navItem: "Programs", basePath: "/dashboard/trainer/programs", accentSoft: "var(--trainer-soft)", mealPlans: false };
 
   it("shows no stale gate after the next publish works", async () => {
     const draft = {
       _id: "t1", created_by: "owner1", organization_id: "o1", name: "Couch to 5k", status: "draft",
-      latest_version_no: 2, latest_published_version_no: 1, created_at: "", updated_at: "",
+      latest_version_no: 2, latest_published_version_no: 1, created_at: "", updated_at: "", publish_state: sold,
     };
     vi.spyOn(programsService, "listTemplates").mockResolvedValue({ success: true, data: [draft as never] });
     vi.spyOn(programsService, "publishTemplate")

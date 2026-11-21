@@ -33,7 +33,7 @@ const RATING_LABEL: Record<MealRating, string> = {
 function pillStyle(status: string) {
   if (status === "ok") return { background: "var(--signal-soft)", color: "var(--signal-ink)" };
   if (status === "warn") return { background: "var(--trainer-soft)", color: "var(--warn)" };
-  return { background: "var(--danger-soft)", color: "var(--danger)" };
+  return { background: "var(--danger-soft)", color: "var(--danger-ink)" };
 }
 
 /**
@@ -235,7 +235,7 @@ export default function DietitianFeedbackPage() {
         )}
         {!loading && rows.length === 0 && (
           <DSCard className="px-4.5 py-6">
-            <EmptySlate message="No meal feedback entries yet." mt="mt-0" />
+            <EmptySlate message="No meal feedback yet." mt="mt-0" />
           </DSCard>
         )}
       </div>

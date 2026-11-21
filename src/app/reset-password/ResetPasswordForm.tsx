@@ -120,7 +120,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                 </h1>
                 <p className="text-[14.5px] mt-2" style={{ color: "var(--fg-3)" }}>
                   {invite
-                    ? "Choose a password to finish setting up your account, then sign in to check in, book classes, and track your progress."
+                    ? "Choose a password to finish setting up your account."
                     : "Your new password must be different from previously used passwords."}
                 </p>
               </div>
@@ -131,13 +131,13 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}>
                       <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                     </svg>
-                    <p className="text-[13px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>
+                    <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{errors.password.message}</p>
                   </div>
                 )}
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    New password <span style={{ color: "var(--danger)" }}>*</span>
+                    New password <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -167,7 +167,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    Confirm password <span style={{ color: "var(--danger)" }}>*</span>
+                    Confirm password <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -193,7 +193,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                       {showConfirmPassword ? "Hide" : "Show"}
                     </button>
                   </div>
-                  {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
+                  {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.confirmPassword.message}</p>}
                 </div>
 
                 <button

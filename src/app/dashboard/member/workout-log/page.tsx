@@ -27,6 +27,7 @@ import { LOG_LIMIT, activityRowText, activityTypeLabel, logDate } from "../_lib/
 import { trackerImport } from "@/lib/progress/importSource";
 import { ImportSourceBadges } from "@/components/activity/ImportSourceBadges";
 import { LogDetailDrawer } from "../_components/LogDetailDrawer";
+import { useRowEnter } from "@/lib/ui/listMotion";
 
 const EMPTY_WORKOUT_FORM: WorkoutFormInput = {
   activityType: ActivityType.STRENGTH,
@@ -63,6 +64,7 @@ export default function WorkoutLogPage() {
   const [activities, setActivities] = useState<ActivityReport[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const rowEnter = useRowEnter((activities ?? []).slice(0, 20).map((a) => a._id), !loading && activities !== null);
 
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<WorkoutFormInput>(EMPTY_WORKOUT_FORM);
@@ -347,7 +349,7 @@ export default function WorkoutLogPage() {
 
           {formError && (
             <div
-              style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}
+              style={{ color: "var(--danger-ink)", fontSize: 12, marginTop: 10 }}
               role="alert"
             >
               {formError}
@@ -399,7 +401,7 @@ export default function WorkoutLogPage() {
             border: "1px solid oklch(0.92 0.05 25)",
             borderRadius: 10,
             padding: 14,
-            color: "var(--danger)",
+            color: "var(--danger-ink)",
             fontSize: 13,
             marginBottom: 14,
           }}
@@ -473,7 +475,7 @@ export default function WorkoutLogPage() {
                 const { title, meta } = activityRowText(activity, now);
                 const imported = trackerImport(activity);
                 return (
-                  <li key={activity._id}>
+                  <li key={activity._id} {...rowEnter(activity._id)}>
                     <ListRow
                       title={title}
                       meta={meta}

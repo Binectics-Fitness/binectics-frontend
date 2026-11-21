@@ -7,6 +7,7 @@ import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 import { useGymViewer } from "@/hooks/useGymViewer";
+import { GymClosureGate } from "@/components/orgClosure/GymClosureGate";
 import { useOrgPendingRequestCount } from "@/lib/queries/orgRequests";
 import {
   GYM_NAV_ACCESS,
@@ -121,7 +122,7 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
           {gymPageDeniedNote(gymName)}
         </p>
       ) : (
-        children
+        <GymClosureGate isOwner={viewer.isOwner}>{children}</GymClosureGate>
       )}
     </ProviderShell>
   );

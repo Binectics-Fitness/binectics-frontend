@@ -19,7 +19,7 @@ const fieldStyle: React.CSSProperties = {
 };
 
 /** Neutral tag for provider-side art. Wording is an owner/lawyer decision. */
-export function DemoTag() {
+function DemoTag() {
   return (
     <span
       className="font-mono text-[10px] uppercase tracking-[0.04em] px-1.5 py-0.5 rounded-(--r-1) shrink-0"
@@ -33,7 +33,7 @@ export function DemoTag() {
 }
 
 /** A small still (end pose) thumbnail; an empty tile when there is no art. */
-export function ExerciseThumb({ mediaId, size = 48 }: { mediaId?: string; size?: number }) {
+function ExerciseThumb({ mediaId, size = 48 }: { mediaId?: string; size?: number }) {
   const has = hasExerciseIllustration(mediaId);
   return (
     <div

@@ -57,7 +57,7 @@ export default function LocationDetailClient() {
             setCountry(found.country ?? "");
             setError(null);
           } else {
-            setError("Location not found in this organization.");
+            setError("Location not found.");
           }
         } else {
           setError(res.message || "We couldn't load this location.");
@@ -177,7 +177,7 @@ export default function LocationDetailClient() {
       {loading ? (
         <AsyncSpinner size="page" label="Loading location" />
       ) : error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load this location</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
@@ -236,7 +236,7 @@ export default function LocationDetailClient() {
                   onClick={handleDeactivate}
                   disabled={saving}
                   className="rounded-(--r-2) border px-3 py-1.5 text-[12.5px] disabled:opacity-40"
-                  style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+                  style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
                 >
                   Deactivate location
                 </button>

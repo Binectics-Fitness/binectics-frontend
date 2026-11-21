@@ -105,7 +105,7 @@ export function PromoCodeField({ validate, onChange, quote, disabled }: PromoCod
         </button>
       </div>
       {error && (
-        <div role="alert" className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+        <div role="alert" className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
           {error}
         </div>
       )}

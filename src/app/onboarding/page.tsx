@@ -840,7 +840,7 @@ function OnboardingContent() {
       <main style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div className="ob-stage-area">
           {workspaceError ? (
-            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--danger)", background: "var(--bg-2)", color: "var(--danger)" }} role="alert">
+            <div className="rounded-(--r-3) p-3.5" style={{ border: "1px solid var(--danger)", background: "var(--bg-2)", color: "var(--danger-ink)" }} role="alert">
               {workspaceError.message}
               {workspaceError.signOut ? (
                 <div className="mt-2.5">

@@ -58,6 +58,7 @@ export default function FormsPage() {
   const [qType, setQType] = useState<QuestionType>(QuestionType.TEXT);
   const [qRequired, setQRequired] = useState(false);
   const [qHelpText, setQHelpText] = useState("");
+  const [optionsError, setOptionsError] = useState<string | null>(null);
   const [qOptions, setQOptions] = useState("");
   const [addingQuestion, setAddingQuestion] = useState(false);
 
@@ -118,7 +119,8 @@ export default function FormsPage() {
       setNewTitle("");
       setNewDescription("");
       setShowCreateForm(false);
-      showMessage("Form created. Add questions to get started.");
+      showMessage("Form created.");
+      void openBuilder(res.data as Form);
     } else if (!billing) {
       showMessage(res.message || "Failed to create form.", "error");
     }
@@ -139,7 +141,7 @@ export default function FormsPage() {
         form.is_published ? "Form unpublished." : "Form published.",
       );
     } else {
-      showMessage("Failed to update form status.", "error");
+      showMessage("Couldn't update the form status.", "error");
     }
   }
 
@@ -198,9 +200,10 @@ export default function FormsPage() {
       : undefined;
 
     if (hasOptions && (!parsedOptions || parsedOptions.length < 2)) {
-      showMessage("Add at least 2 options (one per line).", "error");
+      setOptionsError("Add at least 2 options.");
       return;
     }
+    setOptionsError(null);
 
     setAddingQuestion(true);
     const payload: CreateQuestionRequest = {
@@ -245,7 +248,7 @@ export default function FormsPage() {
       if (activeForm?._id === form._id) setActiveForm(res.data as Form);
       showMessage("Setting saved.");
     } else {
-      showMessage("Failed to update the setting.", "error");
+      showMessage("Couldn't update the setting.", "error");
     }
   }
 
@@ -304,7 +307,7 @@ export default function FormsPage() {
         type="button"
         onClick={() => handleDeleteForm(form)}
         className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-        style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+        style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
       >
         Delete
       </button>
@@ -350,7 +353,7 @@ export default function FormsPage() {
                     className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
                     style={{
                       borderColor: activeForm.is_published ? "var(--danger)" : "var(--signal)",
-                      color: activeForm.is_published ? "var(--danger)" : "var(--signal)",
+                      color: activeForm.is_published ? "var(--danger-ink)" : "var(--signal)",
                       background: "transparent",
                       cursor: "pointer",
                     }}
@@ -386,7 +389,7 @@ export default function FormsPage() {
             style={{
               border: `1px solid ${messageType === "success" ? "var(--signal)" : "var(--danger)"}`,
               background: messageType === "success" ? "var(--signal-soft)" : "var(--danger-soft)",
-              color: messageType === "success" ? "var(--signal)" : "var(--danger)",
+              color: messageType === "success" ? "var(--signal)" : "var(--danger-ink)",
             }}
           >
             {message}
@@ -400,7 +403,7 @@ export default function FormsPage() {
             <TemplateGallery
               onCreated={(form) => {
                 setForms((prev) => [...prev, form]);
-                showMessage("Form created from template. Review and publish when ready.");
+                showMessage("Form created. Publish it when ready.");
                 void openBuilder(form);
               }}
               onError={(text) => showMessage(text, "error")}
@@ -471,7 +474,19 @@ export default function FormsPage() {
               {isLoading ? (
                 <AsyncSpinner label="Loading forms" />
               ) : forms.length === 0 ? (
-                <EmptySlate message="No forms yet. Create one to start collecting responses." />
+                <EmptySlate
+                  message="No forms yet."
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(true)}
+                      className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                      style={{ background: "var(--ink)", color: "var(--bg)", cursor: "pointer" }}
+                    >
+                      New form
+                    </button>
+                  }
+                />
               ) : (
                 <>
                 <ul className="mt-4 flex flex-col sm:hidden">
@@ -603,11 +618,23 @@ export default function FormsPage() {
               <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
                 Sharing &amp; settings
               </h2>
-              <p className="text-sm mt-1" style={{ color: "var(--fg-3)" }}>
-                {activeForm.is_published
-                  ? "Anyone with the link can open this form."
-                  : "Publish the form to get a shareable link."}
-              </p>
+              {activeForm.is_published ? (
+                <p className="text-sm mt-1" style={{ color: "var(--fg-3)" }}>
+                  Anyone with the link can open this form.
+                </p>
+              ) : (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-(--r-2) border px-3 py-1.5 text-xs shrink-0"
+                    style={{ borderColor: "var(--border)", color: "var(--fg-4)", background: "transparent", cursor: "not-allowed" }}
+                  >
+                    Copy link
+                  </button>
+                  <span className="text-sm" style={{ color: "var(--fg-3)" }}>Publish to get a share link.</span>
+                </div>
+              )}
               <div className="mt-3 flex flex-col gap-2.5">
                 {activeForm.is_published && (
                   <div className="flex items-center gap-2">
@@ -682,7 +709,7 @@ export default function FormsPage() {
                               {q.label}
                             </span>
                             {q.is_required && (
-                              <span className="text-xs" style={{ color: "var(--danger)" }}>
+                              <span className="text-xs" style={{ color: "var(--danger-ink)" }}>
                                 required
                               </span>
                             )}
@@ -710,7 +737,7 @@ export default function FormsPage() {
                           type="button"
                           onClick={() => handleDeleteQuestion(q._id)}
                           className="rounded-(--r-2) border px-2 py-1 text-xs"
-                          style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+                          style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
                         >
                           Remove
                         </button>
@@ -769,15 +796,24 @@ export default function FormsPage() {
 
                 {hasOptions && (
                   <div>
-                    <Eyebrow as="label">Options (one per line, min 2)</Eyebrow>
+                    <Eyebrow as="label">Options, one per line</Eyebrow>
                     <textarea
                       value={qOptions}
-                      onChange={(e) => setQOptions(e.target.value)}
+                      onChange={(e) => {
+                        setQOptions(e.target.value);
+                        setOptionsError(null);
+                      }}
                       placeholder={"Option A\nOption B\nOption C"}
                       rows={4}
+                      aria-invalid={optionsError ? true : undefined}
                       className="w-full mt-1.5 rounded-(--r-2) border px-3 py-2 text-sm"
-                      style={{ borderColor: "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
+                      style={{ borderColor: optionsError ? "var(--danger)" : "var(--border)", background: "var(--bg-2)", color: "var(--ink)" }}
                     />
+                    {optionsError && (
+                      <p role="alert" className="mt-1 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
+                        {optionsError}
+                      </p>
+                    )}
                   </div>
                 )}
 
