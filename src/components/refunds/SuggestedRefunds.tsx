@@ -96,7 +96,7 @@ export function SuggestedRefunds({
         </div>
       ) : null}
       {error && !refunding && !dismissing ? (
-        <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+        <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
           {error}
         </div>
       ) : null}
@@ -185,7 +185,7 @@ export function SuggestedRefunds({
               that was cancelled when Binectics suspended their account.
             </p>
             {error ? (
-              <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+              <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
                 {error}
               </div>
             ) : null}
@@ -227,7 +227,7 @@ export function SuggestedRefunds({
           />
         </label>
         {error && dismissing ? (
-          <div role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger)" }}>
+          <div role="alert" className="text-[13px] mt-2" style={{ color: "var(--danger-ink)" }}>
             {error}
           </div>
         ) : null}

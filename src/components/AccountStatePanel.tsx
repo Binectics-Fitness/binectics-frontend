@@ -3,15 +3,16 @@ import { BinecticsMark } from "@/components/BinecticsLogo";
 
 type Tone = "danger" | "warn" | "neutral";
 
-// Dot colour per tone. The eyebrow text uses it too, except for warn: the
-// amber token is too light for 11px text on white, so that text stays fg-2.
+// Dot colour per tone. The eyebrow text has its own: danger text is
+// --danger-ink (the base red is under 4.5:1 as small text), and warn text
+// stays fg-2 because the amber token is too light for 11px text on white.
 const TONE_DOT: Record<Tone, string> = {
   danger: "var(--danger)",
   warn: "var(--warn)",
   neutral: "var(--fg-3)",
 };
 const TONE_TEXT: Record<Tone, string> = {
-  danger: "var(--danger)",
+  danger: "var(--danger-ink)",
   warn: "var(--fg-2)",
   neutral: "var(--fg-3)",
 };

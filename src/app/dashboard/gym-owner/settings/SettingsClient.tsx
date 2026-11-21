@@ -450,7 +450,7 @@ export function SettingsClient() {
                       which would clear the saved rate; as text the typo stays and taxRateError refuses it. */}
                   <TextField label="Tax rate %" inputMode="decimal" value={form?.tax_rate ?? ""} onChange={(v) => set("tax_rate", v)} disabled={!form} />
                   {form && taxRateError(form.tax_rate) && (
-                    <span role="alert" className="text-[11px]" style={{ color: "var(--danger)" }}>{taxRateError(form.tax_rate)}</span>
+                    <span role="alert" className="text-[11px]" style={{ color: "var(--danger-ink)" }}>{taxRateError(form.tax_rate)}</span>
                   )}
                 </div>
                 <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
@@ -467,7 +467,7 @@ export function SettingsClient() {
                     ))}
                   </div>
                   {form?.tax_inclusive === null && (
-                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger)" : "var(--fg-3)" }}>
+                    <span className="text-[12px]" style={{ color: taxNeedsChoice ? "var(--danger-ink)" : "var(--fg-3)" }}>
                       Choose one to save a tax rate.
                     </span>
                   )}

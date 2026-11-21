@@ -262,7 +262,7 @@ export function ShowSetupChecklist({ where, className = "" }: { where: "Today" |
     >
       <div className="min-w-0">
         <h2 className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>Setup checklist</h2>
-        <p role="status" className="text-[12.5px] mt-0.5" style={{ color: state === "failed" ? "var(--danger)" : "var(--fg-3)" }}>
+        <p role="status" className="text-[12.5px] mt-0.5" style={{ color: state === "failed" ? "var(--danger-ink)" : "var(--fg-3)" }}>
           {state === "shown"
             ? `Back on your ${where}.`
             : state === "failed"

@@ -51,7 +51,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           >
             {label}
             {required && (
-              <span className="text-danger ml-0.5" aria-hidden="true">*</span>
+              <span className="text-danger-ink ml-0.5" aria-hidden="true">*</span>
             )}
           </label>
         )}
@@ -88,7 +88,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && (
-          <p id={`${inputId}-error`} className="text-[12px] text-danger flex items-center gap-1" role="alert">
+          <p id={`${inputId}-error`} className="text-[12px] text-danger-ink flex items-center gap-1" role="alert">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
             </svg>
@@ -134,7 +134,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           >
             {label}
             {required && (
-              <span className="text-danger ml-0.5" aria-hidden="true">*</span>
+              <span className="text-danger-ink ml-0.5" aria-hidden="true">*</span>
             )}
           </label>
         )}
@@ -156,7 +156,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p className="text-[12px] text-danger flex items-center gap-1" role="alert">
+          <p className="text-[12px] text-danger-ink flex items-center gap-1" role="alert">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
             </svg>

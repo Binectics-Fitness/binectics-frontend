@@ -232,7 +232,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
   const textField = (key: keyof FoodForm, label: string, required?: boolean, placeholder?: string) => (
     <div className="flex flex-col gap-1.5">
       <label className={labelCls} style={{ color: "var(--fg-3)" }}>
-        {label} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+        {label} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
       </label>
       <input
         value={form[key]}
@@ -247,7 +247,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
   const macroField = (key: keyof FoodForm, label: string, required?: boolean) => (
     <div className="flex flex-col gap-1.5">
       <label className={labelCls} style={{ color: "var(--fg-3)" }}>
-        {label} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+        {label} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
       </label>
       <input
         type="number"
@@ -280,7 +280,7 @@ export default function DietitianSingleFoodPage({ params }: { params: Promise<{ 
               onClick={handleArchive}
               disabled={archiving}
               className="min-h-11 px-3.5 py-2 rounded-(--r-2) text-[13px] cursor-pointer disabled:opacity-50"
-              style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}
+              style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger-ink)" }}
             >
               {archiving ? "Archiving..." : "Archive"}
             </button>

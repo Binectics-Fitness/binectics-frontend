@@ -122,7 +122,7 @@ export function ContactForm({ categories }: ContactFormProps) {
           htmlFor="message"
           className="mb-2 block text-sm font-medium text-fg"
         >
-          Message <span className="text-danger">*</span>
+          Message <span className="text-danger-ink">*</span>
         </label>
         <textarea
           id="message"
@@ -136,7 +136,7 @@ export function ContactForm({ categories }: ContactFormProps) {
           } bg-bg px-4 py-3 text-fg transition-colors focus:outline-none focus:ring-2`}
         />
         {errors.message && (
-          <p className="mt-1 text-sm text-danger">{errors.message.message}</p>
+          <p className="mt-1 text-sm text-danger-ink">{errors.message.message}</p>
         )}
       </div>
 

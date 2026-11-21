@@ -263,7 +263,7 @@ function BookingPageInner() {
   if (metaError || !listing) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center gap-3" style={{ background: "var(--bg)" }}>
-        <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Couldn&apos;t start booking</p>
+        <p className="text-[15px] font-medium" style={{ color: "var(--danger-ink)" }}>Couldn&apos;t start booking</p>
         <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>{metaError ?? "Listing not found"}</p>
         <Link href="/marketplace" className="btn-ghost-v2 sm">Browse marketplace</Link>
       </div>
@@ -364,7 +364,7 @@ function BookingPageInner() {
                 {slotsLoading ? (
                   <div className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>Loading slots...</div>
                 ) : slotsError ? (
-                  <div className="text-[13.5px]" style={{ color: "var(--danger)" }}>
+                  <div className="text-[13.5px]" style={{ color: "var(--danger-ink)" }}>
                     {slotsError}
                     <button type="button" onClick={() => void fetchSlots()} className="btn-ghost-v2 sm ml-2">Try again</button>
                   </div>

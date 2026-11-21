@@ -237,7 +237,7 @@ export function ProviderCurrenciesPanel({
       )}
 
       {refreshError && (
-        <span role="alert" className="text-[12px]" style={{ color: "var(--danger)" }}>{refreshError}</span>
+        <span role="alert" className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{refreshError}</span>
       )}
       {refreshed && (
         <div role="status" className="text-[12px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
@@ -289,7 +289,7 @@ export function ProviderCurrenciesPanel({
             />
           )}
           {addError && (
-            <span role="alert" className="text-[12px]" style={{ color: "var(--danger)" }}>{addError}</span>
+            <span role="alert" className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{addError}</span>
           )}
           <div className="flex gap-2">
             <button type="button" className="btn-primary-v2 sm" disabled={verify.isPending} onClick={() => void onAdd()}>

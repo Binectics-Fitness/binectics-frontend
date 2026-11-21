@@ -105,7 +105,7 @@ export function ShellAccountMenu({
               void logout();
             }}
             className="block w-full px-3.5 py-2 text-left text-[13.5px] hover:bg-bg-2"
-            style={{ color: "var(--danger)", background: "none", border: "none", cursor: "pointer" }}
+            style={{ color: "var(--danger-ink)", background: "none", border: "none", cursor: "pointer" }}
           >
             Log out
           </button>

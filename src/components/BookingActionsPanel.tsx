@@ -159,7 +159,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
           <button
             className="btn-ghost-v2 sm self-start"
             disabled={acting !== null}
-            style={{ color: "var(--danger)" }}
+            style={{ color: "var(--danger-ink)" }}
             onClick={() => void runAction("cancel")}
           >
             {acting === "cancel" ? "Cancelling…" : "Cancel session"}

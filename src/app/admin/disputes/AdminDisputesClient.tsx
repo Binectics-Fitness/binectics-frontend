@@ -66,7 +66,7 @@ export function AdminDisputesClient() {
           </button>
         ))}
       </div>
-      {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div> : null}
+      {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div> : null}
       {!items ? (
         <AsyncSpinner />
       ) : items.length === 0 ? (

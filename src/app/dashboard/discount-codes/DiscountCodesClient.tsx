@@ -67,7 +67,7 @@ export function DiscountCodesClient() {
       ) : !orgId ? (
         <EmptySlate message="Set up your workspace to create codes." />
       ) : error ? (
-        <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>
+        <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>
       ) : !rows ? (
         <AsyncSpinner />
       ) : rows.length === 0 ? (
@@ -141,7 +141,7 @@ function CodeRow({ orgId, c, onToggle }: { orgId: string; c: Coupon; onToggle: (
       {open && (
         <div className="mt-3 text-[13px]" style={{ color: "var(--fg-2)" }}>
           {err ? (
-            <span role="alert" style={{ color: "var(--danger)" }}>{err}</span>
+            <span role="alert" style={{ color: "var(--danger-ink)" }}>{err}</span>
           ) : !uses ? (
             <AsyncSpinner />
           ) : uses.length === 0 ? (

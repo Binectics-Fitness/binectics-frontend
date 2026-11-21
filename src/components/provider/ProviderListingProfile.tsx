@@ -320,7 +320,7 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
           )}
         </div>
       </div>
-      {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{error}</p>}
 
       {/* Account — always editable, listing or not */}
       <Card title="Account" desc="Your name and contact number, used across Binectics, not just the marketplace.">
@@ -535,7 +535,7 @@ function CreateListingCard({
           />
         </div>
       </div>
-      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{localError}</p>}
+      {localError && <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{localError}</p>}
       <div>
         <button className="btn-primary-v2 sm" disabled={!canSubmit} onClick={() => void submit()}>
           {creating ? "Creating…" : isGym ? "Create gym listing" : "Create listing"}

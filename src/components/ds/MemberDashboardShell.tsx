@@ -512,7 +512,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
                   void logout();
                 }}
                 className="flex items-center rounded-(--r-2) text-[16px]"
-                style={{ height: 48, padding: "0 12px", color: "var(--danger)", background: "none", border: "none", textAlign: "left" }}
+                style={{ height: 48, padding: "0 12px", color: "var(--danger-ink)", background: "none", border: "none", textAlign: "left" }}
               >
                 Log out
               </button>

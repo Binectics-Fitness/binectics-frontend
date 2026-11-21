@@ -20,7 +20,7 @@ export function DiffView({ before, after, label }: DiffViewProps) {
           className="border-r border-border p-3"
           style={{ background: "oklch(0.95 0.03 25 / 0.3)" }}
         >
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-wide text-danger">
+          <div className="mb-1 font-mono text-[10px] uppercase tracking-wide text-danger-ink">
             Before
           </div>
           <pre className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-fg-2">

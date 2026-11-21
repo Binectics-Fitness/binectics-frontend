@@ -76,7 +76,7 @@ const EARNINGS = [
   { title: "Olympic 12-pack", sub: "Wei C. · Apr 28", amount: "+ {{14400}}", color: "var(--signal-ink)" },
   { title: "Online monthly · May", sub: "Aisha A. · Dubai", amount: "{{320}} pending", color: "var(--fg-3)" },
   { title: "Postnatal 12-pack", sub: "Thandi N. · Apr 22", amount: "+ {{11400}}", color: "var(--signal-ink)" },
-  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− {{1200}}", color: "var(--danger)" },
+  { title: "Refund · Pier B.", sub: "Cancelled session · 13:00", amount: "− {{1200}}", color: "var(--danger-ink)" },
 ];
 
 const CYCLE_MS = 5000;

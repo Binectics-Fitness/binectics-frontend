@@ -117,7 +117,7 @@ export function PlanComparisonFields({
           />
         </label>
       </div>
-      <p className="text-[12px]" style={{ color: stale ? "var(--danger)" : "var(--fg-3)" }}>
+      <p className="text-[12px]" style={{ color: stale ? "var(--danger-ink)" : "var(--fg-3)" }}>
         {stale
           ? "The plan this was compared with is no longer active or is in another currency, so members see no saving. Choose another plan or No comparison."
           : preview}

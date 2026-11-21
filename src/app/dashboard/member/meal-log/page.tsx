@@ -342,7 +342,7 @@ function MealLog() {
           {formError && (
             <div
               style={{
-                color: "var(--danger)",
+                color: "var(--danger-ink)",
                 fontSize: 12,
                 marginTop: 10,
               }}

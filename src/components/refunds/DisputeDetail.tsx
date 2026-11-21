@@ -49,7 +49,7 @@ export function DisputeDetail(props: DisputeDetailProps) {
     };
   }, [orgId, disputeId]);
 
-  if (error && !d) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>;
+  if (error && !d) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>;
   if (!d) return <AsyncSpinner />;
   const t = disputeTone(d);
 
@@ -164,7 +164,7 @@ export function DisputeDetail(props: DisputeDetailProps) {
               />
             </label>
           ) : null}
-          {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div> : null}
+          {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div> : null}
           {msg ? <div role="status" className="text-[13px]" style={{ color: "var(--signal-ink)" }}>{msg}</div> : null}
           <div className="flex flex-wrap gap-2">
             {mode === "provider" ? (

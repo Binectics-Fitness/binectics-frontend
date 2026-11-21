@@ -347,7 +347,7 @@ const GYM_OWNER_CSS = `
   font-family: var(--font-mono); font-size: 10.5px;
 }
 .gyd-delta-up { color: var(--signal-ink); }
-.gyd-delta-danger { color: var(--danger); }
+.gyd-delta-danger { color: var(--danger-ink); }
 
 .gyd-spark {
   display: flex; align-items: flex-end; gap: 1.5px; height: 28px;
@@ -446,7 +446,7 @@ const GYM_OWNER_CSS = `
   font-family: var(--font-mono); font-size: 12px;
   font-variant-numeric: tabular-nums; flex-shrink: 0;
 }
-.gyd-sched-cap.full { color: var(--danger); }
+.gyd-sched-cap.full { color: var(--danger-ink); }
 .gyd-sched-cap.open { color: var(--signal-ink); }
 
 .gyd-rev { display: flex; flex-direction: column; }

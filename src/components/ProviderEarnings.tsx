@@ -344,7 +344,7 @@ export function ProviderEarnings({ settingsHref, sessionNoun }: ProviderEarnings
                               <span className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{tx.method.replace(/_/g, " ").toLowerCase()}</span>
                             </td>
                             <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                              <span className="font-mono text-[12px]" style={{ color: debit ? "var(--danger)" : "var(--signal-ink)", fontVariantNumeric: "tabular-nums" }}>
+                              <span className="font-mono text-[12px]" style={{ color: debit ? "var(--danger-ink)" : "var(--signal-ink)", fontVariantNumeric: "tabular-nums" }}>
                                 {debit ? "−" : "+"}{fmtMoney(minorToMajor(tx.amount_minor, tx.currency), tx.currency)}
                               </span>
                             </td>

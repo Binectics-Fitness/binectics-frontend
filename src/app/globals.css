@@ -721,7 +721,7 @@ table.data tr:hover td { background: var(--bg-2); }
   color: var(--signal-ink);
   margin-top: 4px;
 }
-.stat .delta.down { color: var(--danger); }
+.stat .delta.down { color: var(--danger-ink); }
 .stat .delta.flat { color: var(--fg-3); }
 
 /* ─── Page title block ──────────────────────────────────────── */

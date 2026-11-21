@@ -333,7 +333,7 @@ export function StartFlow() {
       </section>
 
       {startError && (
-        <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger)" }}>{startError}</p>
+        <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger-ink)" }}>{startError}</p>
       )}
       <button
         type="button"

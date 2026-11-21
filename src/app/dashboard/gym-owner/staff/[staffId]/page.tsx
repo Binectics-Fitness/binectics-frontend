@@ -350,7 +350,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
           {assigned.kind === "loading" ? (
             <AsyncSpinner label="Loading assigned members" />
           ) : assigned.kind === "error" ? (
-            <div className="text-[13px]" style={{ color: "var(--danger)" }}>{assigned.message}</div>
+            <div className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{assigned.message}</div>
           ) : assigned.subs.length === 0 ? (
             <EmptySlate
               message="No members assigned yet."
@@ -397,7 +397,7 @@ export default function GymSingleStaffPage({ params }: { params: Promise<{ staff
             type="button"
             onClick={confirmRemove}
             className="rounded-(--r-2) border px-3.5 py-2 text-[13px] min-h-11 cursor-pointer"
-            style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+            style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent" }}
           >
             Remove from team
           </button>

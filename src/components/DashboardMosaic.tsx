@@ -1409,7 +1409,7 @@ function Row3DashCard() {
                       <div style={{ fontSize: 32, fontWeight: 500, lineHeight: 1, letterSpacing: "-0.022em", color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
                         {fillDemoMoney(kpi.value, money)}{kpi.suffix && <small style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 400, marginLeft: 4, color: "var(--fg-3)" }}>{kpi.suffix}</small>}
                       </div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: kpi.down ? "var(--danger)" : "var(--signal-ink)" }}>{kpi.delta}</div>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: kpi.down ? "var(--danger-ink)" : "var(--signal-ink)" }}>{kpi.delta}</div>
                       <div className="r3-spark" style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 28 }}>
                         {kpi.spark.map((h, i) => (
                           <span key={i} style={{ flex: 1, borderRadius: 1, height: `${h}%`, background: i === kpi.spark.length - 1 ? "var(--ink)" : "var(--bg-3)" }} />
@@ -1533,7 +1533,7 @@ function Row3DashCard() {
                           <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{c.name}</div>
                           <div style={{ fontSize: 12, color: "var(--fg-3)" }}>{c.coach}</div>
                         </div>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontVariantNumeric: "tabular-nums", color: c.capType === "full" ? "var(--danger)" : c.capType === "open" ? "var(--signal-ink)" : "var(--fg-2)" }}>{c.cap}</span>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontVariantNumeric: "tabular-nums", color: c.capType === "full" ? "var(--danger-ink)" : c.capType === "open" ? "var(--signal-ink)" : "var(--fg-2)" }}>{c.cap}</span>
                       </div>
                     ))}
                   </div>

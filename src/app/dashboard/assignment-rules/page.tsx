@@ -455,7 +455,7 @@ export default function AssignmentRulesPage() {
                           className="rounded-(--r-2) border px-3 py-1.5 text-xs"
                           style={{
                             borderColor: "var(--danger)",
-                            color: "var(--danger)",
+                            color: "var(--danger-ink)",
                             background: "transparent",
                             cursor: "pointer",
                           }}

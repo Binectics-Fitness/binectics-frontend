@@ -80,7 +80,7 @@ export function TeamSessionsCard({ orgId }: { orgId: string | undefined }) {
         </div>
         {state.kind === "loading" && <AsyncSpinner label="Loading sessions" />}
         {state.kind === "error" && (
-          <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
             {state.message}
           </p>
         )}

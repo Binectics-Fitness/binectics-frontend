@@ -211,7 +211,7 @@ function ProgramCard({
             Clients
           </button>
           {template.status !== "archived" && (
-            <button type="button" onClick={onArchive} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}>
+            <button type="button" onClick={onArchive} className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)" style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}>
               Archive
             </button>
           )}

@@ -343,7 +343,7 @@ export default function DietitianSingleClientPage({ params }: { params: Promise<
             {plansLoading ? (
               <div className="px-5.5 py-5"><AsyncSpinner label="Loading diet plans" /></div>
             ) : plansError ? (
-              <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>{plansError}</div>
+              <div className="px-5.5 py-4 text-[13px]" style={{ color: "var(--danger-ink)" }}>{plansError}</div>
             ) : plans.length === 0 ? (
               <div className="px-5.5 py-4"><EmptySlate message="No diet plans yet." mt="mt-0" /></div>
             ) : (

@@ -102,7 +102,7 @@ function TaxSettingsForm({ orgId, initial }: { orgId: string; initial: TaxValues
           <div className="flex flex-col gap-1.5">
             <Eyebrow as="label" htmlFor="tax-rate">Tax rate %</Eyebrow>
             <input id="tax-rate" type="number" inputMode="decimal" min={0} max={100} step="any" value={rate} onChange={(e) => setRate(e.target.value)} className={INPUT_CLASS} style={INPUT_STYLE} aria-invalid={rateInvalid} />
-            {rateInvalid && <span className="text-[12px]" style={{ color: "var(--danger)" }}>Enter a rate from 0 to 100.</span>}
+            {rateInvalid && <span className="text-[12px]" style={{ color: "var(--danger-ink)" }}>Enter a rate from 0 to 100.</span>}
           </div>
           <fieldset className="flex flex-col gap-1.5 min-w-0" style={{ border: "none", padding: 0, margin: 0 }}>
             <legend className="mb-1.5"><Eyebrow>Do your prices already include tax?</Eyebrow></legend>

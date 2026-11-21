@@ -211,7 +211,7 @@ function ReviewCard({ review, listingId }: { review: Review; listingId: string }
             className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-y"
             style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 70 }}
           />
-          {error && <span className="text-[12px]" style={{ color: "var(--danger)" }}>{error}</span>}
+          {error && <span className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{error}</span>}
           <div className="flex gap-2">
             <button className="btn-primary-v2 sm" disabled={respond.isPending || !draft.trim()} onClick={() => respond.mutate(draft.trim())}>
               {respond.isPending ? "Posting…" : "Post response"}

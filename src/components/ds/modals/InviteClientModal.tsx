@@ -250,7 +250,7 @@ export function InviteClientModal({ open, onClose, onEnrolled, prefill }: Invite
           {/* Email */}
           <div>
             <label className={labelClass}>
-              Email address <span style={{ color: "var(--danger)" }}>*</span>
+              Email address <span style={{ color: "var(--danger-ink)" }}>*</span>
             </label>
             <input
               type="email"
@@ -288,7 +288,7 @@ export function InviteClientModal({ open, onClose, onEnrolled, prefill }: Invite
           {/* Plan */}
           <div>
             <label className={labelClass}>
-              Membership plan <span style={{ color: "var(--danger)" }}>*</span>
+              Membership plan <span style={{ color: "var(--danger-ink)" }}>*</span>
             </label>
             {loadingPlans ? (
               <div
@@ -300,7 +300,7 @@ export function InviteClientModal({ open, onClose, onEnrolled, prefill }: Invite
                 className="flex items-center justify-between rounded-(--r-2) border border-border px-3 py-2"
                 style={{ background: "var(--bg-2)" }}
               >
-                <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+                <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
                   Failed to load plans.
                 </p>
                 <button
@@ -447,7 +447,7 @@ export function InviteClientModal({ open, onClose, onEnrolled, prefill }: Invite
 
           {/* Error */}
           {error && (
-            <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+            <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
               {error}
             </p>
           )}
@@ -573,7 +573,7 @@ function TransferDetails({
       {countdown && (
         <p
           className="text-[12.5px]"
-          style={{ color: expired ? "var(--danger)" : "var(--fg-3)" }}
+          style={{ color: expired ? "var(--danger-ink)" : "var(--fg-3)" }}
         >
           {expired ? (
             "This account has expired. Close and start a new transfer enrolment."

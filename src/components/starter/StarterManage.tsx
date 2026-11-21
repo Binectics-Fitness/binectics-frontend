@@ -206,7 +206,7 @@ export function StarterManage({ program }: { program: StarterProgram }) {
           ))}
         </div>
         {exportError && (
-          <p role="alert" className="mt-3 text-[14px]" style={{ color: "var(--danger)" }}>{exportError}</p>
+          <p role="alert" className="mt-3 text-[14px]" style={{ color: "var(--danger-ink)" }}>{exportError}</p>
         )}
       </DSCard>
 
@@ -238,7 +238,7 @@ export function StarterManage({ program }: { program: StarterProgram }) {
               className="mt-2"
             />
             {leaveError && (
-              <p role="alert" className="mt-3 text-[14px]" style={{ color: "var(--danger)" }}>{leaveError}</p>
+              <p role="alert" className="mt-3 text-[14px]" style={{ color: "var(--danger-ink)" }}>{leaveError}</p>
             )}
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" className="btn-primary-v2 md min-h-11" disabled={leaving} onClick={() => void leave()}>

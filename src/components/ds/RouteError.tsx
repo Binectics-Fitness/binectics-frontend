@@ -68,7 +68,7 @@ export function RouteError({
         </div>
 
         {/* Eyebrow */}
-        <div className="eyebrow" style={{ color: "var(--danger)", marginBottom: 16 }}>
+        <div className="eyebrow" style={{ color: "var(--danger-ink)", marginBottom: 16 }}>
           {eyebrow}
         </div>
 

@@ -277,7 +277,7 @@ export function MemberLoyalty() {
                           {tx.note && <div className="text-xs" style={{ color: "var(--fg-3)" }}>{tx.note}</div>}
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="font-mono font-medium tabular-nums" style={{ color: tx.points >= 0 ? "var(--signal)" : "var(--danger)" }}>
+                          <span className="font-mono font-medium tabular-nums" style={{ color: tx.points >= 0 ? "var(--signal)" : "var(--danger-ink)" }}>
                             {tx.points >= 0 ? "+" : ""}
                             {fmtNumber(tx.points)}
                           </span>
@@ -325,7 +325,7 @@ export function MemberLoyalty() {
                           redemption.status === LoyaltyRedemptionStatus.FULFILLED
                             ? "var(--signal)"
                             : redemption.status === LoyaltyRedemptionStatus.CANCELLED
-                              ? "var(--danger)"
+                              ? "var(--danger-ink)"
                               : "var(--fg-3)",
                       }}
                     >

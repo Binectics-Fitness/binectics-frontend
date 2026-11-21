@@ -349,7 +349,7 @@ export default function WorkoutLogPage() {
 
           {formError && (
             <div
-              style={{ color: "var(--danger)", fontSize: 12, marginTop: 10 }}
+              style={{ color: "var(--danger-ink)", fontSize: 12, marginTop: 10 }}
               role="alert"
             >
               {formError}

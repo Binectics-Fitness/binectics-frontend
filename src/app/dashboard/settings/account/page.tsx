@@ -144,7 +144,7 @@ export default function AccountSettingsPage() {
 
       {/* Danger zone — real deletion via POST /auth/account/delete */}
       <DSCard className="p-4 sm:p-6" style={{ border: "1px solid oklch(0.88 0.05 25)" }}>
-        <h3 className="mb-1 text-[16px] font-medium" style={{ color: "var(--danger)" }}>
+        <h3 className="mb-1 text-[16px] font-medium" style={{ color: "var(--danger-ink)" }}>
           Delete account
         </h3>
         <p className="mb-4 max-w-[64ch] text-sm text-fg-2">
@@ -177,7 +177,7 @@ export default function AccountSettingsPage() {
               style={{ ["--tw-ring-color" as string]: "var(--danger)" }}
             />
             {deleteError && (
-              <p className="text-sm" style={{ color: "var(--danger)" }}>{deleteError}</p>
+              <p className="text-sm" style={{ color: "var(--danger-ink)" }}>{deleteError}</p>
             )}
             <div className="flex gap-2">
               <button

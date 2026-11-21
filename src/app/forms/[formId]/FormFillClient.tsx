@@ -366,7 +366,7 @@ export default function FormFillClient() {
                       <label className="block text-[14.5px] font-medium mb-1" style={{ color: "var(--ink)" }}>
                         <span className="font-mono text-[12px] mr-1.5" style={{ color: "var(--fg-4)" }}>{index + 1}.</span>
                         {q.label}
-                        {q.is_required && <span style={{ color: "var(--danger)" }}> *</span>}
+                        {q.is_required && <span style={{ color: "var(--danger-ink)" }}> *</span>}
                       </label>
                       {q.help_text && (
                         <p className="text-[12.5px] mb-2" style={{ color: "var(--fg-3)" }}>{q.help_text}</p>

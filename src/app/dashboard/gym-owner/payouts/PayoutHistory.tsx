@@ -64,7 +64,7 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
         {overview.isLoading ? (
           <div className="px-5.5 py-2"><AsyncSpinner label="Loading" /></div>
         ) : overview.isError ? (
-          <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger)" }}>
+          <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger-ink)" }}>
             {overview.error instanceof LoadError && overview.error.status === 403
               ? "Only the workspace owner can see payment records."
               : "We couldn\u2019t load this. Try again shortly."}
@@ -95,7 +95,7 @@ export function PayoutHistory({ orgId }: { orgId: string }) {
         {payouts.isLoading ? (
           <div className="px-5.5 py-2"><AsyncSpinner label="Loading payouts" /></div>
         ) : payouts.isError ? (
-          <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger)" }}>We couldn&rsquo;t load your payouts. Try again shortly.</div>
+          <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger-ink)" }}>We couldn&rsquo;t load your payouts. Try again shortly.</div>
         ) : !payouts.data || payouts.data.items.length === 0 ? (
           <div className="px-5.5 py-5"><EmptySlate message="No payouts recorded yet." mt="mt-0" /></div>
         ) : (

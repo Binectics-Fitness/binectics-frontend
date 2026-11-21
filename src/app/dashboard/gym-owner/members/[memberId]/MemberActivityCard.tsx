@@ -42,7 +42,7 @@ export function MemberActivityCard({ orgId, memberUserId }: { orgId: string; mem
       ) : isLoading ? (
         <div className="px-5.5 py-2"><AsyncSpinner label="Loading activity" /></div>
       ) : isError || !data ? (
-        <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger)" }}>
+        <div className="px-5.5 py-5 text-[13px]" style={{ color: "var(--danger-ink)" }}>
           We couldn&rsquo;t load this member&rsquo;s activity. Try again shortly.
         </div>
       ) : empty ? (

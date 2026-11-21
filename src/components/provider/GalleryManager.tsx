@@ -171,7 +171,7 @@ export function GalleryManager({
                   disabled={pending}
                   aria-label={`Remove photo ${i + 1}`}
                   className="rounded-(--r-1) px-2 py-0.5 text-[11.5px] font-medium disabled:opacity-40"
-                  style={{ background: "var(--bg)", color: "var(--danger)", border: "1px solid var(--border)" }}
+                  style={{ background: "var(--bg)", color: "var(--danger-ink)", border: "1px solid var(--border)" }}
                 >
                   Remove
                 </button>
@@ -199,7 +199,7 @@ export function GalleryManager({
       )}
 
       {error && (
-        <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+        <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
           {error}
         </p>
       )}

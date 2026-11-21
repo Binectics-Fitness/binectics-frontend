@@ -137,7 +137,7 @@ export function ListingPriceFields({
           )}
         </div>
       )}
-      {error && <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>{error}</p>}
+      {error && <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{error}</p>}
     </>
   );
 }
