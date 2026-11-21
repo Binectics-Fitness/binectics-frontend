@@ -28,6 +28,7 @@ import { toast } from "@/components/Toast";
 import {
   apiRangeIssues,
   blockIssues,
+  mergeExceptions,
   scrollToFirstIssue,
   sessionIssues,
   weekIssues,
@@ -529,7 +530,8 @@ export default function ConsultationAvailabilityManager({
       scrollToFirstIssue(HOURS_ISSUE_ATTR);
       return;
     }
-    const payloadRangeIds: string[] = [];
+    // The range sent at each payload index, to map a refusal back to it.
+    const sentRanges: DayRange[] = [];
     const payload: Array<{
       dayOfWeek: number;
       startTime: string;
@@ -541,7 +543,7 @@ export default function ConsultationAvailabilityManager({
       const d = schedule[day];
       if (!d.enabled) continue;
       for (const r of d.ranges) {
-        payloadRangeIds.push(r.id);
+        sentRanges.push(r);
         payload.push({
           dayOfWeek: day,
           startTime: r.startTime,
@@ -580,9 +582,10 @@ export default function ConsultationAvailabilityManager({
         type: "success",
       });
     } else {
-      // A refusal that names a range ("rules.3.startTime ...") goes under
-      // that range; anything else (network, server) stays in the banner.
-      const refused = apiRangeIssues(response.message, payloadRangeIds);
+      // A refusal that names a range (an overlap or an end before the
+      // start, by index, or "rules.3.startTime ..." by path) goes under that
+      // range; anything else (network, server) stays in the banner.
+      const refused = apiRangeIssues(response, sentRanges);
       if (refused.size > 0) {
         setApiHourIssues(refused);
         toast.error(availabilityFixToast(refused.size, "time"));
@@ -683,14 +686,14 @@ export default function ConsultationAvailabilityManager({
           type: "error",
         });
         if (created.length > 0) {
-          setExceptions((prev) => [...prev, ...created]);
+          setExceptions((prev) => mergeExceptions(prev, created));
         }
         setIsCreatingException(false);
         return;
       }
     }
 
-    setExceptions((prev) => [...prev, ...created]);
+    setExceptions((prev) => mergeExceptions(prev, created));
     setTriedBlock(false);
     setNewException({
       date: "",

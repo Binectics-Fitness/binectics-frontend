@@ -51,27 +51,86 @@ export function weekIssues(week: Record<number, DayDraft>): Map<string, RangeIss
   return out;
 }
 
+/** A save the API refused, as the client hands it back. */
+export type RangeRefusal = {
+  message?: unknown;
+  code?: string;
+  details?: Record<string, unknown>;
+};
+
 /**
- * The API names a malformed field by its place in the payload
- * ("rules.3.startTime must match ..."). Map those back to range ids, given
- * the range id sent at each payload index. Messages without a path (the
- * API's "startTime must be earlier than endTime" carries no index) map to
- * nothing and stay in the banner.
+ * Map an API refusal back to the ranges sent, given the range at each
+ * payload index (`sent[i]` is the range sent as `rules[i]`).
+ *
+ * - AVAILABILITY_END_BEFORE_START / AVAILABILITY_OVERLAP name the rule by
+ *   `index` (the later one, for an overlap), the input to outline by
+ *   `field`, and for an overlap the earlier rule by `overlaps_index`. Both
+ *   ranges of an overlap are marked, each naming the other: the later one
+ *   on the API's `field`, the earlier one on the edge it runs into.
+ * - A malformed time is named by path ("rules.3.startTime must match ...").
+ *
+ * Anything else (no index, an index outside the payload, a network error)
+ * maps to nothing and stays in the banner.
  */
 export function apiRangeIssues(
-  message: unknown,
-  payloadRangeIds: string[],
+  refusal: RangeRefusal,
+  sent: RangeDraft[],
 ): Map<string, RangeIssue> {
   const out = new Map<string, RangeIssue>();
+  const d = refusal.details ?? {};
+  const at = (i: unknown) => (typeof i === "number" ? sent[i] : undefined);
+  const rule = at(d.index);
+  const field = d.field === "startTime" || d.field === "endTime" ? d.field : "endTime";
+
+  if (refusal.code === "AVAILABILITY_END_BEFORE_START" && rule) {
+    out.set(rule.id, { message: COPY.endBeforeStart, start: false, end: true });
+    return out;
+  }
+  const other = at(d.overlaps_index);
+  if (refusal.code === "AVAILABILITY_OVERLAP" && rule && other) {
+    const startInside = field === "startTime";
+    out.set(rule.id, {
+      message: COPY.overlap(other.startTime, other.endTime),
+      start: startInside,
+      end: !startInside,
+    });
+    // The later range's start sits inside the earlier one: the earlier
+    // one's end runs over it. Otherwise the later range starts first and
+    // its end runs into the earlier one's start.
+    out.set(other.id, {
+      message: COPY.overlap(rule.startTime, rule.endTime),
+      start: !startInside,
+      end: startInside,
+    });
+    return out;
+  }
+
+  const message = refusal.message;
   const lines = Array.isArray(message) ? message : typeof message === "string" ? [message] : [];
   for (const line of lines) {
     const m = typeof line === "string" ? /rules\.(\d+)\.(startTime|endTime)/.exec(line) : null;
-    const id = m ? payloadRangeIds[Number(m[1])] : undefined;
+    const id = m ? sent[Number(m[1])]?.id : undefined;
     if (!m || !id) continue;
     const prev = out.get(id);
     const start = m[2] === "startTime" || !!prev?.start;
     const end = m[2] === "endTime" || !!prev?.end;
     out.set(id, { message: COPY.badTime, start, end });
+  }
+  return out;
+}
+
+/**
+ * Add newly blocked dates to the list, once each. Blocking a date that is
+ * already blocked returns the existing row (same id), so a range that
+ * covers it must not show it twice.
+ */
+export function mergeExceptions<T extends { id: string }>(prev: T[], added: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const e of [...prev, ...added]) {
+    if (seen.has(e.id)) continue;
+    seen.add(e.id);
+    out.push(e);
   }
   return out;
 }

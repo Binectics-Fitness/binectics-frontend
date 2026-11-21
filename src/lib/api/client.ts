@@ -58,6 +58,13 @@ interface RawResponseBody {
   /** Lowest chargeable price (CONTENT_PRICE_BELOW_MINIMUM). */
   minimum_minor?: unknown;
   currency?: unknown;
+  /** Which availability rule was refused, by position in `rules`
+   *  (AVAILABILITY_END_BEFORE_START, AVAILABILITY_OVERLAP). */
+  index?: unknown;
+  /** The input to outline on that rule: "startTime" | "endTime". */
+  field?: unknown;
+  /** For an overlap, the earlier rule it runs into. */
+  overlaps_index?: unknown;
   /** Why auto-renew isn't offered (AUTO_RENEW_NOT_AVAILABLE). */
   reason?: unknown;
 }
@@ -82,6 +89,12 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   "conflicts",
   "minimum_minor",
   "currency",
+  // A refused availability rule (AVAILABILITY_END_BEFORE_START,
+  // AVAILABILITY_OVERLAP): its position in the request's `rules`, the input
+  // to outline, and the earlier rule it overlaps.
+  "index",
+  "field",
+  "overlaps_index",
 ] as const;
 
 function detailsOf(

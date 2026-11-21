@@ -215,6 +215,48 @@ describe("weekly hours: errors by the range", () => {
     expect(banner()).toBeNull();
   });
 
+  it("puts an overlap the API names by index under both ranges, not the banner (api #362)", async () => {
+    svc.getMyAvailability.mockResolvedValue({
+      success: true,
+      data: [rule("a", 1, "09:00", "12:00"), rule("b", 1, "12:00", "14:00")],
+    } as never);
+    svc.setMyAvailability.mockResolvedValue({
+      success: false,
+      code: "AVAILABILITY_OVERLAP",
+      message: "Monday: 12:00–14:00 overlaps 09:00–12:00. Change or remove one.",
+      details: { index: 1, field: "startTime", overlaps_index: 0 },
+    } as never);
+    await renderPanel();
+    saveHours();
+
+    expect(await screen.findByText(COPY.overlap("09:00", "12:00"))).toBeInTheDocument();
+    expect(screen.getByText(COPY.overlap("12:00", "14:00"))).toBeInTheDocument();
+    const [firstStart, laterStart] = screen.getAllByLabelText("Monday start");
+    const [firstEnd, laterEnd] = screen.getAllByLabelText("Monday end");
+    expect(laterStart).toHaveAttribute("aria-invalid", "true");
+    expect(laterEnd).not.toHaveAttribute("aria-invalid");
+    expect(firstEnd).toHaveAttribute("aria-invalid", "true");
+    expect(firstStart).not.toHaveAttribute("aria-invalid");
+    expect(toastError).toHaveBeenCalledWith(availabilityFixToast(2, "time"));
+    expect(banner()).toBeNull();
+  });
+
+  it("puts an end before the start the API names by index under that range", async () => {
+    svc.setMyAvailability.mockResolvedValue({
+      success: false,
+      code: "AVAILABILITY_END_BEFORE_START",
+      message: "Wednesday: the end time (17:00) must be later than the start time (09:00).",
+      details: { index: 1, field: "endTime" },
+    } as never);
+    await renderPanel();
+    saveHours();
+    expect(await screen.findByText(COPY.endBeforeStart)).toBeInTheDocument();
+    // Payload index 1 is Wednesday's range (Monday is index 0).
+    expect(screen.getByLabelText("Wednesday end")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Monday end")).not.toHaveAttribute("aria-invalid");
+    expect(banner()).toBeNull();
+  });
+
   it("keeps an error that isn't about one range in the banner", async () => {
     svc.setMyAvailability.mockResolvedValue({ success: false, message: "Network error" } as never);
     await renderPanel();
@@ -295,6 +337,29 @@ describe("blocked dates: errors by the field", () => {
     expect(await screen.findByText(COPY.endBeforeStart)).toBeInTheDocument();
     expect(times[1]).toHaveAttribute("aria-invalid", "true");
     expect(svc.createException).not.toHaveBeenCalled();
+  });
+
+  it("lists a date once when a range covers one already blocked (the API returns the same row)", async () => {
+    svc.getMyExceptions.mockResolvedValue({
+      success: true,
+      data: [{ id: "e1", date: "2026-12-10", type: "UNAVAILABLE" }],
+    } as never);
+    svc.createException.mockImplementation((async (p: { date: string }) => ({
+      success: true,
+      data: { id: p.date === "2026-12-10" ? "e1" : `new-${p.date}`, date: p.date, type: "UNAVAILABLE" },
+    })) as never);
+    await renderPanel();
+    openBlocked();
+    await screen.findAllByRole("button", { name: "Remove blocked date" });
+    fireEvent.click(screen.getByRole("button", { name: "Date range" }));
+    fireEvent.change(dates()[0], { target: { value: "2026-12-10" } });
+    fireEvent.change(dates()[1], { target: { value: "2026-12-11" } });
+    fireEvent.click(screen.getByRole("button", { name: /Block range/ }));
+
+    await waitFor(() => expect(svc.createException).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Remove blocked date" })).toHaveLength(2),
+    );
   });
 
   it("keeps a failed add (not about one field) in the banner", async () => {

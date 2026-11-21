@@ -183,6 +183,21 @@ describe("apiClient sign-in refusal details", () => {
     expect(res.details).toEqual({ retry_after_seconds: 120, lock_scope: "device" });
   });
 
+  it("keeps a refused availability rule's index, field and overlaps_index in details (api #362)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse(400, {
+        code: "AVAILABILITY_OVERLAP",
+        message: "Monday: 12:00–15:00 overlaps 09:00–13:00. Change or remove one.",
+        index: 1,
+        field: "startTime",
+        overlaps_index: 0,
+      }),
+    );
+    const res = await apiClient.put("/consultations/availability/me", { rules: [] });
+    expect(res.code).toBe("AVAILABILITY_OVERLAP");
+    expect(res.details).toEqual({ index: 1, field: "startTime", overlaps_index: 0 });
+  });
+
   it("sends a stable random X-Device-Id on account endpoints only", async () => {
     window.localStorage.clear();
     resetDeviceIdCache();
