@@ -4,9 +4,23 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isAccountStateRoute } from "@/lib/routing/accountState";
+import {
+  CONSENT_EVENT,
+  CONSENT_STORAGE_KEY,
+  CONSENT_VERSION,
+  analyticsConfigured,
+} from "@/lib/analytics/consent";
 
-const STORAGE_KEY = "binectics-cookies";
-const VERSION = "2.2";
+/*
+ * Consent for the one optional category the site has: analytics. Everything
+ * else it sets is essential (sign-in, routing, region). Nigeria's data
+ * protection law needs a clear opt-in, so analytics is OFF until accepted,
+ * for every visitor, and rejecting takes the same one click as accepting.
+ * With no analytics tool configured there is nothing to ask, and nothing
+ * renders.
+ */
+const STORAGE_KEY = CONSENT_STORAGE_KEY;
+const VERSION = CONSENT_VERSION;
 const RECONSENT_DAYS = 395;
 const EU_LANGS =
   /^(en-(GB|IE)|fr|de|es|it|nl|sv|fi|da|el|pt|pl|cs|hu|ro|sk|sl|bg|hr|et|lt|lv|mt|ga)$/i;
@@ -57,7 +71,7 @@ function saveConsent(
 ) {
   const data: CookieData = { ...prefs, version: VERSION, ts: Date.now(), gdpr: isGDPR };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  document.dispatchEvent(new CustomEvent("cookies:change", { detail: data }));
+  document.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: data }));
 }
 
 function isStale(data: CookieData): boolean {
@@ -65,33 +79,21 @@ function isStale(data: CookieData): boolean {
   return Date.now() - data.ts > RECONSENT_DAYS * 86400000;
 }
 
-function getCategories(gdpr: boolean): Category[] {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getCategories(_gdpr: boolean): Category[] {
   return [
     {
       id: "required",
-      name: "Required",
-      meta: "Always on · 4 cookies · session + 13 mo",
-      desc: "Authentication, session integrity, fraud prevention, and the legal consent record itself. Without these, sign-in and check-out cannot work.",
+      name: "Essential",
+      meta: "Always on",
+      desc: "Keep you signed in, send you to the right page and remember your country for prices. Without these, sign-in can't work.",
       locked: true,
-    },
-    {
-      id: "functional",
-      name: "Functional",
-      meta: "3 cookies · 13 mo",
-      desc: "Remembers preferences like dark mode, last-used location, and saved providers. Off = the product still works but forgets your settings.",
     },
     {
       id: "analytics",
       name: "Analytics",
-      meta: "2 cookies · 13 mo · PostHog",
-      desc: "Anonymised page views and feature usage. We use this to spot what is broken or unused. Never sold, never tied to your name.",
-      defaultOn: !gdpr,
-    },
-    {
-      id: "marketing",
-      name: "Marketing",
-      meta: "4 cookies · 13 mo · Meta + Google",
-      desc: "Allows us to measure ad effectiveness and show you Binectics on other sites. Off = ads you see elsewhere are random instead of relevant.",
+      meta: "Off until you agree",
+      desc: "Counts page views and sign-up button clicks so we can see what works. Never your health, fasting, faith or payment details.",
       defaultOn: false,
     },
   ];
@@ -322,6 +324,8 @@ export default function CookieConsent() {
     return () => document.removeEventListener("keydown", onKey);
   }, [showModal]);
 
+  if (!analyticsConfigured()) return null;
+
   return (
     <>
       <style>{`
@@ -370,10 +374,8 @@ export default function CookieConsent() {
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <CookieIcon size={28} />
             <div style={{ fontSize: "13.5px", lineHeight: 1.55 }}>
-              <strong style={{ fontWeight: 500 }}>We use cookies.</strong>{" "}
-              {isGDPR
-                ? "Required only by default, opt in to others to help us improve."
-                : "Essential cookies keep you logged in. Optional ones help us improve and remember preferences."}{" "}
+              <strong style={{ fontWeight: 500 }}>Can we count your visit?</strong>{" "}
+              Essential cookies keep you signed in. With your OK we also use analytics cookies to see which pages help. They stay off unless you accept.{" "}
               <Link
                 href="/cookies"
                 style={{
@@ -410,12 +412,13 @@ export default function CookieConsent() {
                 padding: "9px 15px",
                 borderRadius: 8,
                 border: 0,
-                background: "rgba(255,255,255,0.1)",
-                color: "var(--bg)",
+                background: "var(--bg)",
+                color: "var(--ink)",
+                fontWeight: 500,
                 cursor: "pointer",
               }}
             >
-              {isGDPR ? "Reject all" : "Required only"}
+              Reject all
             </button>
             <button
               onClick={() => doAcceptAll(isGDPR)}
@@ -503,9 +506,7 @@ export default function CookieConsent() {
                     lineHeight: 1.55,
                   }}
                 >
-                  {isGDPR
-                    ? "GDPR mode, explicit opt-in required for non-essential."
-                    : "Customize what runs in your browser. Saved for 13 months."}
+                  Choose what runs in your browser. You can change this at any time.
                 </p>
               </div>
               <button
@@ -605,8 +606,9 @@ export default function CookieConsent() {
                   padding: "9px 16px",
                   borderRadius: 8,
                   border: 0,
-                  background: "var(--bg-2)",
-                  color: "var(--ink)",
+                  background: "var(--ink)",
+                  color: "var(--bg)",
+                  fontWeight: 500,
                   cursor: "pointer",
                 }}
               >
