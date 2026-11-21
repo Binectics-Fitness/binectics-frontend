@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,7 @@ import { getDashboardRoute } from "@/lib/constants/routes";
 import { loginSchema, registerSchema, type LoginFormData, type RegisterFormData } from "@/lib/schemas/auth";
 import { AccountType } from "@/lib/types";
 import { parseEmailParam } from "@/lib/login-email-param";
+import { track } from "@/lib/analytics/track";
 
 /**
  * Maps the ?role= entry-point hint (provider CTAs like /for-dietitians,
@@ -48,6 +49,13 @@ function AuthContent() {
   const initialMode = searchParams.get("mode");
   const prefillEmail = parseEmailParam(searchParams.get("email"));
   const [panel, setPanel] = useState<Panel>(initialMode === "signup" ? "signup" : "login");
+  // Analytics (consent-gated in track): the sign-up form was shown. Only the
+  // role hint from the URL travels with it, never anything typed.
+  const roleHint = searchParams.get("role");
+  const signupRoleLabel = roleHint && roleHint in ROLE_PARAM_TO_ACCOUNT_TYPE ? roleHint : "member";
+  useEffect(() => {
+    if (panel === "signup") track("sign_up_start", { role: signupRoleLabel });
+  }, [panel, signupRoleLabel]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -106,7 +114,11 @@ function AuthContent() {
       });
       if (!result.success) {
         setApiError(result.error || "Registration failed. Please try again.");
-      } else if (result.claimLinkSent) {
+      } else if (!result.claimLinkSent) {
+        // A claim link means the address already had an account: not a new sign-up.
+        track("sign_up_complete", { role: signupRoleLabel });
+      }
+      if (result.success && result.claimLinkSent) {
         setClaimEmail(data.email);
         setPanel("claim-sent");
       }
