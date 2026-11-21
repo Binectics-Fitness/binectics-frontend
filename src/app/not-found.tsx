@@ -53,14 +53,23 @@ export default function NotFound() {
           been moved.
         </p>
 
-        {/* Actions */}
-        <Link
-          href="/"
-          className="btn-primary-v2"
-          style={{ height: 38, padding: "0 20px" }}
-        >
-          Back to home
-        </Link>
+        {/* Actions: home, and the site's main call to action (the home hero's). */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center">
+          <Link
+            href="/"
+            className="btn-primary-v2"
+            style={{ height: 44, padding: "0 20px" }}
+          >
+            Back to home
+          </Link>
+          <Link
+            href="/login?mode=signup"
+            className="inline-flex items-center justify-center rounded-(--r-2) text-[14px] font-medium border border-border hover:bg-bg-2"
+            style={{ height: 44, padding: "0 20px", color: "var(--ink)" }}
+          >
+            Start free →
+          </Link>
+        </div>
       </section>
 
       <MarketingFooter />
