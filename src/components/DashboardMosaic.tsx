@@ -1222,8 +1222,8 @@ const R3_DOT: Record<string, React.CSSProperties> = {
 
 const R3_STATUS: Record<string, React.CSSProperties> = {
   signal: { color: "var(--signal-ink)", borderColor: "oklch(0.88 0.05 148)", background: "var(--signal-soft)" },
-  danger: { color: "var(--danger)", borderColor: "var(--danger)", background: "var(--danger-soft)" },
-  warn:   { color: "var(--warn)", borderColor: "var(--warn)", background: "oklch(0.95 0.04 75)" },
+  danger: { color: "var(--danger-ink)", borderColor: "var(--danger)", background: "var(--danger-soft)" },
+  warn:   { color: "var(--warn-ink)", borderColor: "var(--warn)", background: "oklch(0.95 0.04 75)" },
 };
 
 function R3CheckoutCard({ step }: { step: number }) {

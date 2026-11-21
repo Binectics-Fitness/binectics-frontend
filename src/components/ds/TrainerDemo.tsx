@@ -429,12 +429,12 @@ const TRAINER_CSS = `
 .trd-badge-online {
   background: transparent;
   border: 1px solid var(--gym);
-  color: var(--gym);
+  color: var(--gym-ink);
 }
 .trd-badge-cancelled {
   background: transparent;
   border: 1px solid var(--danger);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .trd-gap-line {

@@ -37,14 +37,21 @@ export const TONES: readonly Tone[] = ["success", "warn", "danger", "gym", "trai
 
 export type RoleTone = Extract<Tone, "gym" | "trainer" | "dietitian">;
 
-/** `fill` is the soft background; `ink` is the icon or text colour drawn on it. */
+/**
+ * `fill` is the soft background; `ink` is the icon or text colour drawn on it.
+ * Every ink is the tone's -ink token, never its base: pills carry 11px text,
+ * so each pair must reach WCAG AA 4.5:1 (src/tests/unit/tone-contrast.test.ts
+ * measures them from globals.css). The base colours (--danger 4.0:1,
+ * --gym 3.6:1, --dietitian 3.9:1 on their soft fills) are for dots and
+ * borders only.
+ */
 export const TONE_COLORS: Record<Tone, { fill: string; ink: string }> = {
   success: { fill: "var(--signal-soft)", ink: "var(--signal-ink)" },
   warn: { fill: "var(--warn-soft)", ink: "var(--warn-ink)" },
-  danger: { fill: "var(--danger-soft)", ink: "var(--danger)" },
-  gym: { fill: "var(--gym-soft)", ink: "var(--gym)" },
+  danger: { fill: "var(--danger-soft)", ink: "var(--danger-ink)" },
+  gym: { fill: "var(--gym-soft)", ink: "var(--gym-ink)" },
   trainer: { fill: "var(--trainer-soft)", ink: "var(--trainer-ink)" },
-  dietitian: { fill: "var(--dietitian-soft)", ink: "var(--dietitian)" },
+  dietitian: { fill: "var(--dietitian-soft)", ink: "var(--dietitian-ink)" },
   fast: { fill: CATEGORY_COLORS.fast.soft, ink: CATEGORY_COLORS.fast.ink },
   water: { fill: CATEGORY_COLORS.water.soft, ink: CATEGORY_COLORS.water.ink },
   move: { fill: CATEGORY_COLORS.move.soft, ink: CATEGORY_COLORS.move.ink },
