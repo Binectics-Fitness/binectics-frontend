@@ -11,6 +11,7 @@ import { ToastContainer } from "@/components/Toast";
 import { CommandBar } from "@/components/ds/CommandBar";
 import { NavigationProgress } from "@/components/ds/NavigationProgress";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { PostHogAnalytics } from "@/components/PostHogAnalytics";
 import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
@@ -77,6 +78,8 @@ export default function RootLayout({
         <GoogleAnalytics />
         <QueryProvider>
           <AuthProvider>
+            {/* Loads nothing until the visitor accepts analytics cookies. */}
+            <PostHogAnalytics />
             <OrganizationProvider>
               <RegionProvider>
                 <ConditionalLayout>{children}</ConditionalLayout>

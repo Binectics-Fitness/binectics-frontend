@@ -71,6 +71,8 @@ export interface PrivacyPreferences {
   shareProgressWithProviders: boolean;
   showRealNameOnReviews: boolean;
   allowUsageAnalytics: boolean;
+  /** The member has answered the analytics question; read-only (API sets it). */
+  usageAnalyticsDecided?: boolean;
 }
 
 /** Register answer for an unclaimed placeholder: a set-password link was emailed, no OTP. */

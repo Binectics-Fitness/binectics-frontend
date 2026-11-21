@@ -54,6 +54,7 @@
     "jsqr": "1.4.0",
     "lucide-react": "0.575.0",
     "next": "16.1.5",
+    "posthog-js": "1.447.3",
     "qrcode": "1.5.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

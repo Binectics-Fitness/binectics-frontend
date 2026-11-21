@@ -53,10 +53,21 @@ const TOGGLE_ROWS: Array<{
   },
   {
     key: "allowUsageAnalytics",
-    label: "Let Binectics use my activity to improve the product",
-    sub: "Usage analytics only. Never sold or shared with third parties.",
+    label: "Share usage analytics in the app",
+    sub: "Which features you use in the Binectics app. Never your health data, messages or payments. On this website, your cookie choice decides.",
   },
 ];
+
+/**
+ * Usage analytics reads as on only when the member answered yes
+ * (usageAnalyticsDecided): the API used to store `true` by default.
+ */
+function valueOf(prefs: PrivacyPreferences, key: (typeof TOGGLE_ROWS)[number]["key"]): boolean {
+  if (key === "allowUsageAnalytics") {
+    return prefs.usageAnalyticsDecided === true && prefs.allowUsageAnalytics === true;
+  }
+  return prefs[key];
+}
 
 function Toggle({
   on,
@@ -198,9 +209,9 @@ export default function PrivacySettingsPage() {
               </div>
             </div>
             <Toggle
-              on={prefs[row.key]}
+              on={valueOf(prefs, row.key)}
               disabled={updatePrefs.isPending}
-              onClick={() => void save({ [row.key]: !prefs[row.key] })}
+              onClick={() => void save({ [row.key]: !valueOf(prefs, row.key) })}
               ariaLabel={row.label}
             />
           </div>
