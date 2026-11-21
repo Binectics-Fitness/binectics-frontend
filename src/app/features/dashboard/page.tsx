@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Four role-based dashboards in one login. Gym owners, trainers, dietitians, and members each get purpose-built views, KPIs, and actions.",
   keywords:
     "gym dashboard, trainer dashboard, dietitian dashboard, fitness management software, role-based dashboard",
+  alternates: { canonical: "/features/dashboard" },
 };
 
 const PAIN_POINTS = [

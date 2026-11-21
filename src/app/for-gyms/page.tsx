@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Manage memberships, check-ins, payouts, staff, and multi-location operations from a single dashboard. Replace spreadsheets and WhatsApp groups with one platform.",
   keywords:
     "gym management software, gym dashboard, member CRM, QR check-in, gym payouts, multi-location gym, class scheduling, gym owner tools",
+  alternates: { canonical: "/for-gyms" },
 };
 
 const PAIN_POINTS = [

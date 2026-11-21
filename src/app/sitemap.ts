@@ -23,6 +23,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Discovery
     { path: "/marketplace", changeFrequency: "daily", priority: 0.9 },
 
+    // Who it is for, and what it does
+    { path: "/for-gyms", changeFrequency: "monthly", priority: 0.8 },
+    { path: "/for-trainers", changeFrequency: "monthly", priority: 0.8 },
+    { path: "/for-dietitians", changeFrequency: "monthly", priority: 0.8 },
+    { path: "/for-members", changeFrequency: "monthly", priority: 0.7 },
+    { path: "/features/dashboard", changeFrequency: "monthly", priority: 0.6 },
+    { path: "/features/qr-checkin", changeFrequency: "monthly", priority: 0.6 },
+    { path: "/features/client-journals", changeFrequency: "monthly", priority: 0.6 },
+    { path: "/features/multi-currency", changeFrequency: "monthly", priority: 0.6 },
+
     // Info
     { path: "/contact", changeFrequency: "yearly", priority: 0.6 },
     { path: "/help", changeFrequency: "monthly", priority: 0.5 },

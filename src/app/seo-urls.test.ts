@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import robots from "./robots";
 import sitemap from "./sitemap";
 import { SITE_URL } from "@/lib/site-url";
+import { isPrivatePath } from "@/lib/routing/indexing";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -41,5 +42,23 @@ describe("robots.txt and sitemap", () => {
     );
     const urls = (await sitemap()).map((e) => e.url);
     expect(urls).toContain(`${SITE_URL}/marketplace/strength-coach`);
+  });
+
+  it("lists public pages only: no app, dashboard, admin, auth or API route", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 503 })));
+    for (const entry of await sitemap()) {
+      const path = new URL(entry.url).pathname;
+      expect(isPrivatePath(path), path).toBe(false);
+      expect(path.startsWith("/api")).toBe(false);
+    }
+    const urls = (await sitemap()).map((e) => e.url);
+    expect(urls).toContain(`${SITE_URL}/for-gyms`);
+    expect(urls).toContain(`${SITE_URL}/pricing`);
+  });
+
+  it("keeps crawlers out of the app, admin and API areas", () => {
+    const rules = [robots().rules].flat();
+    const disallow = rules.flatMap((r) => [r.disallow ?? []].flat());
+    for (const p of ["/dashboard/", "/admin/", "/api/"]) expect(disallow).toContain(p);
   });
 });

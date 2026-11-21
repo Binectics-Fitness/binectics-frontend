@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "QR check-in for gyms: a screen at your door shows a QR code that changes every minute, members scan it with their phone, and each visit lands on your dashboard.",
   keywords:
     "gym check-in, QR attendance, touchless check-in, gym kiosk, attendance tracking, member visits, gym access control",
+  alternates: { canonical: "/features/qr-checkin" },
 };
 
 const HOW_IT_WORKS = [

@@ -6,6 +6,9 @@ import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 export default function NotFound() {
   return (
     <div style={{ background: "var(--bg)" }}>
+      {/* React hoists these into <head>; without them a 404 carried the home page's title. */}
+      <title>Page not found, Binectics</title>
+      <meta name="robots" content="noindex" />
       <MarketingTopbar />
 
       <section

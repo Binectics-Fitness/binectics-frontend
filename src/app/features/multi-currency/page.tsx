@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     "Get paid in your local currency. Clients pay at your price, in your currency, with payments going straight to your own Paystack account once you've connected one.",
   keywords:
     "multi-currency payments, fitness payments, gym payment processing, local currency payments",
+  alternates: { canonical: "/features/multi-currency" },
 };
 
 const WORKFLOW = [
