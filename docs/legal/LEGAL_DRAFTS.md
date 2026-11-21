@@ -29,7 +29,7 @@ To finish: replace each placeholder with the real value, have counsel review the
 | Account deletion | API `src/account-deletion` purges at once and retries failures daily, within 30 days |
 | Cookies | Web `src/lib/utils/storage.ts` (user_role, onboarding_complete, must_change_password), `src/lib/constants/regions.ts` (region cookies), API `auth.controller.ts` (access_token, refresh_token) |
 | Payments | Paystack only (inline checkout and transfers); no cut of member payments (pricing page FAQ) |
-| Processors | Azure, Netlify, Vercel, Cloudinary, Sentry, Firebase, Expo (existing policy); email and analytics providers are placeholders |
+| Processors | Azure, Netlify, Vercel, Cloudinary, Sentry, Firebase, Expo (existing policy); PostHog (EU) for consented analytics (owner decision, Nov 2026); the email provider is a placeholder |
 
 Claims rules followed: no iOS / App Store, no health claims about fasting, prayer and sunset times described as estimates (never "accurate", "reviewed" or "guaranteed"), no prices or trial lengths.
 

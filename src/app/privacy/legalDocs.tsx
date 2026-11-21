@@ -161,7 +161,7 @@ const PRIVACY: Section[] = [
       <LI label="Device location, only if you allow it">In the Android app, to show providers near you. You can say no and pick a place instead.</LI>
       <LI label="Push notification tokens">If you allow notifications, a token from Firebase (web) or Expo (Android) so we can send them.</LI>
       <LI label="Sign&#8209;in safety ID">A random code made in your browser or app and sent when you sign in, used only to slow down repeated wrong passwords. It holds no device details.</LI>
-      <LI label="Usage analytics, only if you agree">Pages viewed and buttons used, through <Ph>[OWNER TO SUPPLY: analytics tool]</Ph>. Off until you accept analytics cookies. Never your health, fasting, faith or payment details.</LI>
+      <LI label="Usage analytics, only if you agree">Pages viewed and sign&#8209;up buttons used, through PostHog (hosted in the EU). Off until you accept analytics cookies, and only on the public website and sign&#8209;up pages. Never your health, fasting, faith or payment details.</LI>
     </UL>
     <H3>Others give us</H3>
     <UL>
@@ -196,7 +196,7 @@ const PRIVACY: Section[] = [
     <UL>
       <LI label="Providers you work with">The gym, trainer or dietitian you book or subscribe with, and their authorised staff, see what they need to serve you, and the progress you choose to share.</LI>
       <LI label="Paystack">Processes payments and payouts.</LI>
-      <LI label="Service providers who run Binectics for us">Microsoft Azure (hosting and databases), Netlify and Vercel (website hosting), Cloudinary (photos you upload), Sentry (error monitoring), Google Firebase and Expo (push notifications), <Ph>[OWNER TO SUPPLY: email delivery provider]</Ph> (email), and <Ph>[OWNER TO SUPPLY: analytics tool]</Ph> if you accept analytics. They act on our instructions under contract.</LI>
+      <LI label="Service providers who run Binectics for us">Microsoft Azure (hosting and databases), Netlify and Vercel (website hosting), Cloudinary (photos you upload), Sentry (error monitoring), Google Firebase and Expo (push notifications), <Ph>[OWNER TO SUPPLY: email delivery provider]</Ph> (email), and PostHog (product analytics, EU hosting), only if you accept analytics. They act on our instructions under contract.</LI>
       <LI label="Authorities">When the law requires it, and only what it requires.</LI>
       <LI label="A buyer of the business">If Binectics is sold or merged, under this policy.</LI>
     </UL>
@@ -328,7 +328,7 @@ const COOKIES: Section[] = [
     <P>Your cookie choice itself is saved in your browser&apos;s local storage so we don&apos;t ask again.</P>
   </>)},
   { num: "02", title: "Analytics", content: (<>
-    <P>If you accept analytics, <Ph>[OWNER TO SUPPLY: analytics tool]</Ph> counts page views and button clicks so we can see what works. It never receives your health, fasting, faith or payment details. If you reject analytics, it is not loaded at all.</P>
+    <P>If you accept analytics, PostHog (hosted in the EU) counts page views and sign&#8209;up button clicks on the public website so we can see what works. It never receives your health, fasting, faith or payment details. If you reject analytics, it is not loaded at all.</P>
   </>)},
   { num: "03", title: "Marketing", content: <P>We use no marketing or advertising cookies.</P> },
   { num: "04", title: "Changing your mind", content: (<>
