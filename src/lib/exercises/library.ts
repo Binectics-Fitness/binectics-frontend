@@ -68,12 +68,6 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
   return { available: exercises.length > 0, exercises };
 }
 
-/** "Chair squat" for "chair-squat" variants such as "seat-high" -> "Seat high". */
-export function variantLabel(variant: string): string {
-  const t = variant.replace(/-/g, " ");
-  return t.charAt(0).toUpperCase() + t.slice(1);
-}
-
 /** Keep a snapshot name within the field's cap (adds an ellipsis when cut). */
 export function truncateName(name: string, max: number): string {
   const t = name.trim();
@@ -97,17 +91,6 @@ export function libraryRef(id: string, variant?: string): Required<Pick<LibraryR
   };
   if (variant) ref.library_variant = variant;
   return ref;
-}
-
-/**
- * The art to show for a media key. Only the 24 default views are bundled on
- * web, so a variant falls back to its base exercise's art.
- */
-export function artKey(mediaId: string | undefined, has: (id: string) => boolean): string | undefined {
-  if (!mediaId) return undefined;
-  if (has(mediaId)) return mediaId;
-  const base = mediaId.split("--")[0];
-  return has(base) ? base : undefined;
 }
 
 export interface LibraryFilter {

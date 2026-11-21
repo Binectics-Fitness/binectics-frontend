@@ -5,7 +5,6 @@ import {
   libraryRef,
   mediaKey,
   normalizeLibrary,
-  artKey,
   truncateName,
   distinctValues,
   PROGRAM_EXERCISE_NAME_MAX,
@@ -65,13 +64,6 @@ describe("library fields", () => {
     const t = truncateName(long, PROGRAM_EXERCISE_NAME_MAX);
     expect(t.length).toBe(PROGRAM_EXERCISE_NAME_MAX);
     expect(truncateName("  Squat ", 80)).toBe("Squat");
-  });
-  it("falls back to the base art for a variant with none bundled", () => {
-    const has = (id: string) => id === "goblet-squat";
-    expect(artKey("goblet-squat--front", has)).toBe("goblet-squat");
-    expect(artKey("goblet-squat", has)).toBe("goblet-squat");
-    expect(artKey("plank", has)).toBeUndefined();
-    expect(artKey(undefined, has)).toBeUndefined();
   });
 });
 

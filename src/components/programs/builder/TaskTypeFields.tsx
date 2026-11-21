@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import ExercisePicker from "../ExercisePicker";
-import { loadLibrary, type LibraryState } from "../WorkoutExercisesEditor";
+import { loadLibrary, type LibraryState } from "../exerciseLibraryCache";
 import {
   DEMO_ART_NOTE,
   MAX_INLINE_EXERCISES,
