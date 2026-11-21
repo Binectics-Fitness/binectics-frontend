@@ -242,7 +242,7 @@ export function ImportMembersDrawer({ open, orgId, onClose, onImported }: Props)
               style={
                 notice.warn
                   ? { background: "var(--warn-soft)", color: "var(--warn-ink)", border: "1px solid var(--warn)" }
-                  : { background: "var(--danger-soft)", color: "var(--danger)", border: "1px solid var(--danger)" }
+                  : { background: "var(--danger-soft)", color: "var(--danger-ink)", border: "1px solid var(--danger)" }
               }
             >
               {notice.text}

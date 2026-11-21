@@ -131,7 +131,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}>
                       <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                     </svg>
-                    <p className="text-[13px]" style={{ color: "var(--danger)" }}>{errors.password.message}</p>
+                    <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{errors.password.message}</p>
                   </div>
                 )}
 

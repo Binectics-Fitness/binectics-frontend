@@ -233,14 +233,14 @@ export default function GymCheckinsPage() {
           Select an organization to view its check-ins.
         </div>
       ) : !isOnline ? (
-        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">You&apos;re offline</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>
             Auto-refresh is paused. Showing the last data loaded{lastUpdatedLabel ? ` at ${lastUpdatedLabel}` : ""}. It will refresh automatically when your connection returns.
           </div>
         </div>
       ) : error ? (
-        <div className="rounded-(--r-3) p-4 text-[13px] flex items-start justify-between gap-3" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger)" }}>
+        <div className="rounded-(--r-3) p-4 text-[13px] flex items-start justify-between gap-3" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div>
             <div className="font-medium">Couldn&apos;t refresh check-ins</div>
             <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
