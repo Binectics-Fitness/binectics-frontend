@@ -133,7 +133,7 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
               <StatusPill tone={paymentStatusTone(tx.status)} label={tx.status} />
             </Kpi>
             <Kpi label="Amount">
-              <span style={{ color: tx.direction === "debit" ? "var(--danger)" : "var(--ink)" }}>
+              <span style={{ color: tx.direction === "debit" ? "var(--danger-ink)" : "var(--ink)" }}>
                 {signedAmount(tx)}
               </span>
             </Kpi>

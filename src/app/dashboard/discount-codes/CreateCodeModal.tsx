@@ -173,9 +173,9 @@ export function CreateCodeModal({ orgId, open, onClose, onCreated }: Props) {
         </div>
 
         {problems.length > 0 && (code || cap || expires || type === CouponDiscountType.FIXED) && (
-          <ul className="text-[12.5px]" style={{ color: "var(--danger)" }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+          <ul className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{problems.map((p) => <li key={p}>{p}</li>)}</ul>
         )}
-        {error && <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>}
+        {error && <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>}
       </div>
     </ActionModal>
   );

@@ -485,7 +485,7 @@ export default function DietitianCalendarPage() {
           <Eyebrow className="mb-2.5">Working hours</Eyebrow>
           <DSCard>
             {scheduleError ? (
-              <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger)" }}>{scheduleError}</div>
+              <div className="px-3.5 py-3 text-[12.5px]" style={{ color: "var(--danger-ink)" }}>{scheduleError}</div>
             ) : rules.length === 0 ? (
               <div className="px-3.5 py-3">
                 <EmptySlate
@@ -576,7 +576,7 @@ export default function DietitianCalendarPage() {
                       disabled={deletingId === exc.id}
                       onClick={() => void removeException(exc.id)}
                       className="font-mono text-[10.5px] uppercase tracking-[0.04em] cursor-pointer"
-                      style={{ background: "none", border: "none", color: "var(--danger)" }}
+                      style={{ background: "none", border: "none", color: "var(--danger-ink)" }}
                     >
                       {deletingId === exc.id ? "…" : "Remove"}
                     </button>

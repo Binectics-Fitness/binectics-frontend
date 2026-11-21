@@ -217,7 +217,7 @@ export default function AdminPaymentsPage() {
                           style={{
                             color:
                               tx.direction === "debit"
-                                ? "var(--danger)"
+                                ? "var(--danger-ink)"
                                 : "var(--ink)",
                           }}
                         >

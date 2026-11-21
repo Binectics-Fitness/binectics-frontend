@@ -130,7 +130,7 @@ function PaymentsTab({ orgId }: { orgId: string }) {
     };
   }, [orgId]);
 
-  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>;
+  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>;
   if (!rows) return <AsyncSpinner />;
   if (rows.length === 0) return <EmptySlate message="No paid sessions or memberships yet." />;
   return (
@@ -187,7 +187,7 @@ function RefundsTab({ orgId }: { orgId: string }) {
     };
   }, [orgId]);
 
-  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>;
+  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>;
   if (!page) return <AsyncSpinner />;
   if (page.items.length === 0) return <EmptySlate message="No refunds yet." />;
   return (
@@ -267,7 +267,7 @@ function DisputesTab({ orgId, openId }: { orgId: string; openId: string | null }
     };
   }, [orgId]);
 
-  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div>;
+  if (error) return <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div>;
   if (!items) return <AsyncSpinner />;
   if (items.length === 0) return <EmptySlate message="No disputed payments." />;
   return (
@@ -379,10 +379,10 @@ function PolicyTab({ orgId }: { orgId: string }) {
         </label>
       </div>
       {!valid ? (
-        <div className="text-[13px]" style={{ color: "var(--danger)" }}>Hours must be 0 to 720 and percent 0 to 100, whole numbers.</div>
+        <div className="text-[13px]" style={{ color: "var(--danger-ink)" }}>Hours must be 0 to 720 and percent 0 to 100, whole numbers.</div>
       ) : null}
       {msg ? (
-        <div role={msg.ok ? "status" : "alert"} className="text-[13px]" style={{ color: msg.ok ? "var(--signal-ink)" : "var(--danger)" }}>{msg.text}</div>
+        <div role={msg.ok ? "status" : "alert"} className="text-[13px]" style={{ color: msg.ok ? "var(--signal-ink)" : "var(--danger-ink)" }}>{msg.text}</div>
       ) : null}
       <div>
         <button type="submit" className="btn-primary-v2" disabled={!valid || busy}>Save policy</button>

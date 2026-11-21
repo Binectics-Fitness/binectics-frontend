@@ -239,7 +239,7 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
 
       <div aria-live="polite" className="mt-5">
         {actionError && (
-          <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="mb-3 text-[14px]" style={{ color: "var(--danger-ink)" }}>
             {actionError}
             {frozen && (
               <>

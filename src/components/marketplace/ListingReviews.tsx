@@ -216,7 +216,7 @@ export function ListingReviews({
             />
           </div>
           {error && (
-            <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+            <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
               {error}
             </p>
           )}

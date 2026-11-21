@@ -250,7 +250,7 @@ export default function NotificationPreferencesPanel() {
         )}
 
         {updatePrefs.isError && (
-          <p className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+          <p className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
             Could not save your latest change. Please try again.
           </p>
         )}

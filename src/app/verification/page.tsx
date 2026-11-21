@@ -118,7 +118,7 @@ function VerificationForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor="otp" className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                Verification code <span style={{ color: "var(--danger)" }}>*</span>
+                Verification code <span style={{ color: "var(--danger-ink)" }}>*</span>
               </label>
               <input
                 id="otp"
@@ -134,7 +134,7 @@ function VerificationForm() {
                   fontFamily: "inherit",
                 }}
               />
-              {errors.otp && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.otp.message}</p>}
+              {errors.otp && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.otp.message}</p>}
             </div>
 
             {error && (
@@ -142,7 +142,7 @@ function VerificationForm() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}>
                   <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                 </svg>
-                <p className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</p>
+                <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</p>
               </div>
             )}
 

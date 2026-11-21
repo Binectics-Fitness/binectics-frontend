@@ -573,7 +573,7 @@ export default function ProfileSettingsPage() {
           {isSaving ? "Saving..." : "Save Profile"}
         </button>
         {Object.keys(errors).length > 0 && (
-          <p className="text-sm" style={{ color: "var(--danger)" }}>
+          <p className="text-sm" style={{ color: "var(--danger-ink)" }}>
             Fix the highlighted fields above, then save again.
           </p>
         )}

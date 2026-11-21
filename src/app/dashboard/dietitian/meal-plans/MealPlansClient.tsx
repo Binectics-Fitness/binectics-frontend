@@ -196,7 +196,7 @@ function PlanFormModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6">
           <div className="flex flex-col gap-1.5">
             <FieldLabel>
-              Plan title <span style={{ color: "var(--danger)" }}>*</span>
+              Plan title <span style={{ color: "var(--danger-ink)" }}>*</span>
             </FieldLabel>
             <input
               ref={titleRef}
@@ -613,7 +613,7 @@ function MealPlanCard({
             type="button"
             onClick={onArchive}
             className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
-            style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
+            style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}
           >
             Archive
           </button>

@@ -154,7 +154,7 @@ export default function ProgramInstanceView({
                 <button type="button" disabled={acting} onClick={() => askComplete(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "var(--ink)", border: "none", color: "var(--bg)" }}>Complete</button>
               )}
               {!isTerminal && (
-                <button type="button" disabled={acting} onClick={() => askCancel(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger)" }}>Cancel</button>
+                <button type="button" disabled={acting} onClick={() => askCancel(instance)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium disabled:opacity-50" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--danger-ink)" }}>Cancel</button>
               )}
             </div>
           </div>

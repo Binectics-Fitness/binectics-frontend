@@ -420,7 +420,7 @@ export default function TeamWorkspacePage() {
                                 void handleRemove(member._id);
                               }}
                               className="rounded-(--r-2) border px-3 py-1.5 text-sm"
-                              style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent" }}
+                              style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent" }}
                             >
                               Remove
                             </button>

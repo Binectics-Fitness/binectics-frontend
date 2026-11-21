@@ -390,7 +390,7 @@ function RecurringBookingInner() {
   if (metaError || !listing) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center gap-3" style={{ background: "var(--bg)" }}>
-        <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Could not start recurring booking</p>
+        <p className="text-[15px] font-medium" style={{ color: "var(--danger-ink)" }}>Could not start recurring booking</p>
         <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>{metaError ?? "Listing not found"}</p>
         <Link href="/marketplace" className="btn-ghost-v2 sm">Browse marketplace</Link>
       </div>
@@ -474,7 +474,7 @@ function RecurringBookingInner() {
               {slotsLoading ? (
                 <div className="py-2.75 text-[13px]" style={{ color: "var(--fg-3)" }}>Loading open times...</div>
               ) : slotsError ? (
-                <div className="py-2.75 text-[13px]" style={{ color: "var(--danger)" }}>{slotsError}</div>
+                <div className="py-2.75 text-[13px]" style={{ color: "var(--danger-ink)" }}>{slotsError}</div>
               ) : timeOptions.length === 0 ? (
                 <div className="py-2.75 text-[13px]" style={{ color: "var(--fg-3)" }} data-testid="recurring-no-times">
                   No open times on the first session&apos;s day. Pick another start date or day.
@@ -574,7 +574,7 @@ function RecurringBookingInner() {
               {failures.map((f, index) => (
                 <li key={`${f.label}-${index}`} className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-3 font-mono text-[12.5px]">
                   <span style={{ color: "var(--ink)" }}>{f.label}</span>
-                  <span style={{ color: "var(--danger)" }}>{f.message}</span>
+                  <span style={{ color: "var(--danger-ink)" }}>{f.message}</span>
                 </li>
               ))}
             </ul>

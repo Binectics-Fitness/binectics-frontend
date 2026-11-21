@@ -137,7 +137,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    New password <span style={{ color: "var(--danger)" }}>*</span>
+                    New password <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -167,7 +167,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    Confirm password <span style={{ color: "var(--danger)" }}>*</span>
+                    Confirm password <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -193,7 +193,7 @@ export default function ResetPasswordForm({ token, flow }: { token?: string; flo
                       {showConfirmPassword ? "Hide" : "Show"}
                     </button>
                   </div>
-                  {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.confirmPassword.message}</p>}
+                  {errors.confirmPassword && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.confirmPassword.message}</p>}
                 </div>
 
                 <button

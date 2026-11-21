@@ -118,7 +118,7 @@ export function AdminRefundsClient() {
           </button>
         ))}
       </div>
-      {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{error}</div> : null}
+      {error ? <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{error}</div> : null}
       {!items ? (
         <AsyncSpinner />
       ) : items.length === 0 ? (
@@ -143,7 +143,7 @@ export function AdminRefundsClient() {
                       {platform ? "Platform money" : "Provider's own account"}
                     </div>
                     {r.reason ? <div className="text-[12.5px] mt-0.5" style={{ color: "var(--fg-2)" }}>{r.reason}</div> : null}
-                    {r.last_error ? <div className="text-[12px] mt-0.5" style={{ color: "var(--danger)" }}>{r.last_error}</div> : null}
+                    {r.last_error ? <div className="text-[12px] mt-0.5" style={{ color: "var(--danger-ink)" }}>{r.last_error}</div> : null}
                     <Link href={`/admin/payments/${r.charge_transaction_id}`} className="text-[12px] underline" style={{ color: "var(--fg-2)" }}>
                       Open payment
                     </Link>

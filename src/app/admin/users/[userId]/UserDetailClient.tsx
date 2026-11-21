@@ -126,7 +126,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
               <button
                 type="button"
                 className="btn-ghost-v2"
-                style={{ color: "var(--danger)" }}
+                style={{ color: "var(--danger-ink)" }}
                 onClick={() => {
                   setReason("");
                   setSuspendOpen(true);

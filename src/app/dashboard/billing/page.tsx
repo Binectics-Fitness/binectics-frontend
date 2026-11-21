@@ -396,7 +396,7 @@ export default function ProviderBillingPage() {
                     className="text-xs mt-1"
                     style={{
                       color: billingStatus.seats.over_limit
-                        ? "var(--danger)"
+                        ? "var(--danger-ink)"
                         : billingStatus.seats.near_limit
                           ? "var(--warn)"
                           : "var(--fg-3)",

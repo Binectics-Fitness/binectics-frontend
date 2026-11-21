@@ -230,7 +230,7 @@ export function PendingRequestCard({
               )}
 
               {error && (
-                <p role="alert" className="text-[12.5px] mt-3" style={{ color: "var(--danger)" }}>
+                <p role="alert" className="text-[12.5px] mt-3" style={{ color: "var(--danger-ink)" }}>
                   {error}
                 </p>
               )}

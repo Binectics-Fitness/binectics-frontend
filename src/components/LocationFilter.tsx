@@ -23,7 +23,9 @@ export default function LocationFilter({
   const geo = useGeolocation();
   const hasLocation = lat !== null && lng !== null;
   const onLocationChangeRef = useRef(onLocationChange);
-  onLocationChangeRef.current = onLocationChange;
+  useEffect(() => {
+    onLocationChangeRef.current = onLocationChange;
+  }, [onLocationChange]);
 
   const handleUseMyLocation = () => {
     if (geo.lat !== null && geo.lng !== null) {
@@ -164,7 +166,7 @@ export default function LocationFilter({
         </>
       )}
 
-      {geo.error && <p className="mt-2 text-xs text-danger">{geo.error}</p>}
+      {geo.error && <p className="mt-2 text-xs text-danger-ink">{geo.error}</p>}
     </div>
   );
 }

@@ -175,7 +175,7 @@ function FlagCard({ flag, onToggle }: { flag: AdminFeatureFlag; onToggle: () => 
           <button
             type="button"
             className="btn-ghost-v2 sm"
-            style={flag.enabled ? { color: "var(--danger)", borderColor: "var(--danger)" } : undefined}
+            style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
             onClick={onToggle}
             aria-label={`Turn ${flag.key} ${flag.enabled ? "off" : "on"} everywhere`}
           >

@@ -180,7 +180,7 @@ function MemberRequestsContent() {
               onClick={() => void refetchAll()}
               className="font-mono text-[11px] uppercase tracking-[0.04em]"
               style={{
-                color: "var(--danger)",
+                color: "var(--danger-ink)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",

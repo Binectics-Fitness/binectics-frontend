@@ -249,7 +249,7 @@ export default function GymCheckinsPage() {
             onClick={refresh}
             disabled={isRefreshing}
             className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger)" }}
+            style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger-ink)" }}
           >
             {isRefreshing ? "Retrying…" : "Try again"}
           </button>

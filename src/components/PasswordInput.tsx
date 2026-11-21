@@ -56,7 +56,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           </button>
         </div>
         {error && (
-          <span className="text-[12px]" style={{ color: "var(--danger)" }}>{error}</span>
+          <span className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{error}</span>
         )}
         {helperText && !error && (
           <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>{helperText}</span>

@@ -67,7 +67,7 @@ export function ConfirmFlagChange({
           <button
             type="button"
             className={danger ? "btn-ghost-v2 sm" : "btn-primary-v2 sm"}
-            style={danger ? { color: "var(--danger)", borderColor: "var(--danger)" } : undefined}
+            style={danger ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
             onClick={() => void submit()}
             disabled={!ready || saving}
           >
@@ -115,7 +115,7 @@ export function ConfirmFlagChange({
           </label>
         )}
         {error && (
-          <p role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+          <p role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
             {error}
           </p>
         )}

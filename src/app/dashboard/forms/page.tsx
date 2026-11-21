@@ -307,7 +307,7 @@ export default function FormsPage() {
         type="button"
         onClick={() => handleDeleteForm(form)}
         className="rounded-(--r-2) border px-3 py-1.5 text-xs"
-        style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+        style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
       >
         Delete
       </button>
@@ -353,7 +353,7 @@ export default function FormsPage() {
                     className="rounded-(--r-2) border px-4 py-2 text-sm font-medium"
                     style={{
                       borderColor: activeForm.is_published ? "var(--danger)" : "var(--signal)",
-                      color: activeForm.is_published ? "var(--danger)" : "var(--signal)",
+                      color: activeForm.is_published ? "var(--danger-ink)" : "var(--signal)",
                       background: "transparent",
                       cursor: "pointer",
                     }}
@@ -709,7 +709,7 @@ export default function FormsPage() {
                               {q.label}
                             </span>
                             {q.is_required && (
-                              <span className="text-xs" style={{ color: "var(--danger)" }}>
+                              <span className="text-xs" style={{ color: "var(--danger-ink)" }}>
                                 required
                               </span>
                             )}
@@ -737,7 +737,7 @@ export default function FormsPage() {
                           type="button"
                           onClick={() => handleDeleteQuestion(q._id)}
                           className="rounded-(--r-2) border px-2 py-1 text-xs"
-                          style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+                          style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
                         >
                           Remove
                         </button>

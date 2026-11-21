@@ -203,7 +203,7 @@ export function SessionPriceChoice({
       />
       {/* Only the error is announced; the running price line would be read
           out on every keystroke. */}
-      <span id={hintId} role={error ? "alert" : undefined} style={{ fontSize: 12, color: error ? "var(--danger)" : "var(--fg-3)" }}>
+      <span id={hintId} role={error ? "alert" : undefined} style={{ fontSize: 12, color: error ? "var(--danger-ink)" : "var(--fg-3)" }}>
         {hint}
       </span>
     </>
@@ -429,7 +429,7 @@ export function UploadZone({
         </div>
         <div style={{ fontSize: "12.5px", color: "var(--fg-3)" }}>{hint}</div>
       </button>
-      {error && <div style={{ fontSize: 12, color: "var(--danger)" }}>{error}</div>}
+      {error && <div style={{ fontSize: 12, color: "var(--danger-ink)" }}>{error}</div>}
     </div>
   );
 }

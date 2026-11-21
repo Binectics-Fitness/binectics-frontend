@@ -102,7 +102,7 @@ describe("MyClassBookingsCard: Take the spot", () => {
 
     const note = await screen.findByRole("status");
     expect(note).toHaveTextContent("This class has already started");
-    expect(note.getAttribute("style")).toContain("var(--danger)");
+    expect(note.getAttribute("style")).toContain("var(--danger-ink)");
   });
 
   it.each([

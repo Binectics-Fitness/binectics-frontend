@@ -69,13 +69,13 @@ export default function ForgotPasswordPage() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" style={{ color: "var(--danger)" }}>
                       <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                     </svg>
-                    <p className="text-[13px]" style={{ color: "var(--danger)" }}>{apiError}</p>
+                    <p className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{apiError}</p>
                   </div>
                 )}
 
                 <div className="flex flex-col gap-1.5">
                   <label className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-                    Email address <span style={{ color: "var(--danger)" }}>*</span>
+                    Email address <span style={{ color: "var(--danger-ink)" }}>*</span>
                   </label>
                   <input
                     type="email"
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
                     }}
                     {...registerField("email")}
                   />
-                  {errors.email && <p className="text-[12px]" style={{ color: "var(--danger)" }}>{errors.email.message}</p>}
+                  {errors.email && <p className="text-[12px]" style={{ color: "var(--danger-ink)" }}>{errors.email.message}</p>}
                 </div>
 
                 <button

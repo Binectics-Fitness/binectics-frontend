@@ -420,7 +420,7 @@ export default function MarketplacePage() {
             <AsyncSpinner size="page" label="Loading listings" />
           ) : error ? (
             <div className="text-center py-20 rounded-(--r-3)" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)" }}>
-              <p className="text-[15px] font-medium" style={{ color: "var(--danger)" }}>Couldn&apos;t load listings</p>
+              <p className="text-[15px] font-medium" style={{ color: "var(--danger-ink)" }}>Couldn&apos;t load listings</p>
               <p className="text-[13.5px] mt-1" style={{ color: "var(--ink)" }}>{error}</p>
               <button type="button" onClick={() => void fetchListings()} className="btn-ghost-v2 sm mt-3">Try again</button>
             </div>

@@ -139,7 +139,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
 
   if (loadError) {
     return (
-      <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>
+      <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>
         {loadError}
       </div>
     );
@@ -319,7 +319,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
           </label>
           </fieldset>
           {formError ? (
-            <div role="alert" className="text-[13px]" style={{ color: "var(--danger)" }}>{formError}</div>
+            <div role="alert" className="text-[13px]" style={{ color: "var(--danger-ink)" }}>{formError}</div>
           ) : null}
           {done ? (
             <div role="status" className="text-[13px]" style={{ color: "var(--signal-ink)" }}>{done}</div>

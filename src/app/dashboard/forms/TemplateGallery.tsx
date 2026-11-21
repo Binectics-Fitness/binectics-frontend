@@ -151,7 +151,7 @@ export function TemplateGallery({ onCreated, onError }: TemplateGalleryProps) {
                 <span style={{ color: "var(--fg-2)" }}>
                   {q.label}
                   {q.is_required && (
-                    <span className="text-xs ml-1.5" style={{ color: "var(--danger)" }}>
+                    <span className="text-xs ml-1.5" style={{ color: "var(--danger-ink)" }}>
                       required
                     </span>
                   )}

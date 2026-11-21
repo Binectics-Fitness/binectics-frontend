@@ -100,7 +100,7 @@ export function OnboardingCurrencyField({
       />
       <span
         role={missing ? "alert" : undefined}
-        style={{ fontSize: 12, color: missing ? "var(--danger)" : "var(--fg-3)" }}
+        style={{ fontSize: 12, color: missing ? "var(--danger-ink)" : "var(--fg-3)" }}
       >
         {missing ? "Choose the currency you charge in to continue." : hint}
       </span>

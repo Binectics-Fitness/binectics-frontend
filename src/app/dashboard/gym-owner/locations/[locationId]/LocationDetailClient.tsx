@@ -236,7 +236,7 @@ export default function LocationDetailClient() {
                   onClick={handleDeactivate}
                   disabled={saving}
                   className="rounded-(--r-2) border px-3 py-1.5 text-[12.5px] disabled:opacity-40"
-                  style={{ borderColor: "var(--danger)", color: "var(--danger)", background: "transparent", cursor: "pointer" }}
+                  style={{ borderColor: "var(--danger)", color: "var(--danger-ink)", background: "transparent", cursor: "pointer" }}
                 >
                   Deactivate location
                 </button>

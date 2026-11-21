@@ -228,7 +228,7 @@ export function ProviderLoyaltyPanel() {
             {rewards.isLoading ? (
               <AsyncSpinner label="Loading rewards" />
             ) : rewards.isError ? (
-              <p className="text-sm" style={{ color: "var(--danger)" }}>Couldn&apos;t load your rewards.</p>
+              <p className="text-sm" style={{ color: "var(--danger-ink)" }}>Couldn&apos;t load your rewards.</p>
             ) : list.length === 0 ? (
               <EmptySlate message="No rewards yet." mt="mt-0" />
             ) : (
@@ -264,7 +264,7 @@ export function ProviderLoyaltyPanel() {
                         onClick={() => void removeReward(r)}
                         disabled={remove.isPending}
                         className="rounded-(--r-2) px-3 py-1.5 min-h-11 text-sm cursor-pointer"
-                        style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "var(--bg)" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "var(--bg)" }}
                       >
                         Remove
                       </button>
@@ -350,7 +350,7 @@ export function ProviderLoyaltyPanel() {
               Show this reward to clients
             </label>
             {formError && (
-              <p className="text-[13px]" role="alert" style={{ color: "var(--danger)" }}>{formError}</p>
+              <p className="text-[13px]" role="alert" style={{ color: "var(--danger-ink)" }}>{formError}</p>
             )}
           </div>
         )}

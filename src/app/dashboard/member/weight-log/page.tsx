@@ -154,7 +154,7 @@ export default function WeightLogPage() {
               style={{ width: 110, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-2)", fontSize: 13, background: "var(--bg)", color: "var(--ink)" }}
             />
             {logError && (
-              <div style={{ color: "var(--danger)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
+              <div style={{ color: "var(--danger-ink)", fontSize: 12, marginTop: 4, maxWidth: 220 }}>{logError}</div>
             )}
           </div>
           <button

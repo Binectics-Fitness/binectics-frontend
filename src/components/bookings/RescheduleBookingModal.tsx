@@ -171,7 +171,7 @@ export function RescheduleBookingModal({
               <AsyncSpinner label="Loading open times" />
             </div>
           ) : slotsError ? (
-            <p className="text-[13px] text-danger">{slotsError}</p>
+            <p className="text-[13px] text-danger-ink">{slotsError}</p>
           ) : slots.length === 0 ? (
             <p className="text-[13px] text-fg-3" data-testid="reschedule-no-slots">
               No open times on this day. Try another day.

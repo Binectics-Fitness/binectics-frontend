@@ -138,7 +138,7 @@ export default function FeatureFlagDetailClient() {
                 <button
                   type="button"
                   className="btn-ghost-v2 sm self-start sm:self-auto"
-                  style={flag.enabled ? { color: "var(--danger)", borderColor: "var(--danger)" } : undefined}
+                  style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
                   onClick={() => setPending({ kind: "global" })}
                 >
                   {flag.enabled ? "Turn off everywhere" : "Turn on everywhere"}
@@ -236,7 +236,7 @@ export default function FeatureFlagDetailClient() {
             <DSCard className="mt-4 relative">
               <DSCardHead title="History" subtitle="Every change to this flag, newest first." />
               {history.error ? (
-                <p role="alert" className="px-5 py-4 text-[13px]" style={{ color: "var(--danger)" }}>
+                <p role="alert" className="px-5 py-4 text-[13px]" style={{ color: "var(--danger-ink)" }}>
                   {(history.error as Error).message}
                 </p>
               ) : history.isLoading ? (
@@ -428,7 +428,7 @@ function AddOverride({
                   Searching…
                 </p>
               ) : results.error ? (
-                <p role="alert" className="px-3 py-2 text-[13px]" style={{ color: "var(--danger)" }}>
+                <p role="alert" className="px-3 py-2 text-[13px]" style={{ color: "var(--danger-ink)" }}>
                   {(results.error as Error).message}
                 </p>
               ) : (results.data ?? []).length === 0 ? (

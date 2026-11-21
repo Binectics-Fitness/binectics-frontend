@@ -115,7 +115,7 @@ function Field({
   return (
     <div className="flex flex-col gap-1.5">
       <label className={labelCls} style={{ color: "var(--fg-3)" }}>
-        {label} {required && <span style={{ color: "var(--danger)" }}>*</span>}
+        {label} {required && <span style={{ color: "var(--danger-ink)" }}>*</span>}
       </label>
       {children}
     </div>
@@ -515,7 +515,7 @@ export default function DietitianFoodsPage() {
                         disabled={busyId === f._id}
                         onClick={() => handleArchive(f)}
                         className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
-                        style={{ border: "1px solid var(--border)", color: "var(--danger)", background: "transparent" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--danger-ink)", background: "transparent" }}
                       >
                         Archive
                       </button>
