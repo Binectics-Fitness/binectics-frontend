@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { REMOVED_PAGE_REDIRECTS } from "./src/lib/routing/removedPages";
 import { resolveSiteUrl } from "./src/lib/site-url";
 import { API_UPSTREAM_URL } from "./src/lib/api/upstream";
+import { securityHeaders } from "./src/lib/security/headers";
 
 // Throws on an unusable NEXT_PUBLIC_APP_URL, so a bad address fails the build
 // instead of reaching the sitemap and canonical tags.
@@ -47,31 +48,11 @@ const nextConfig: NextConfig = {
   },
 
 
-  // Headers for security
+  // Security headers: HSTS, nosniff, referrer, permissions and the CSP.
+  // See src/lib/security/headers.ts for what each one allows and why the
+  // full CSP is report-only for now.
   async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          {
-            key: "X-DNS-Prefetch-Control",
-            value: "on",
-          },
-          {
-            key: "X-Frame-Options",
-            value: "SAMEORIGIN",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-        ],
-      },
-    ];
+    return [{ source: "/:path*", headers: securityHeaders() }];
   },
 
   // Same-origin API proxy — host-agnostic version of the netlify.toml
