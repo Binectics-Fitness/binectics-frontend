@@ -40,10 +40,34 @@ export function cleanParams(event: AnalyticsEvent, params: Params = {}): Record<
 
 type Gtag = (command: "event", name: string, params: Record<string, string>) => void;
 
+/** Receives every event track() lets through (consented, allowlisted, cleaned). */
+export type AnalyticsSink = (event: AnalyticsEvent, params: Record<string, string>) => void;
+
+const sinks = new Set<AnalyticsSink>();
+
+/**
+ * Plug an analytics client (e.g. PostHog) into track(). It only ever
+ * receives events that passed the consent check and the allowlist. Returns
+ * an unregister function.
+ */
+export function registerAnalyticsSink(sink: AnalyticsSink): () => void {
+  sinks.add(sink);
+  return () => {
+    sinks.delete(sink);
+  };
+}
+
 export function track(event: AnalyticsEvent, params?: Params): void {
   if (typeof window === "undefined") return;
   if (!analyticsConfigured() || !hasAnalyticsConsent()) return;
+  const clean = cleanParams(event, params);
   const gtag = (window as unknown as { gtag?: Gtag }).gtag;
-  if (typeof gtag !== "function") return;
-  gtag("event", event, cleanParams(event, params));
+  if (typeof gtag === "function") gtag("event", event, clean);
+  for (const sink of sinks) {
+    try {
+      sink(event, clean);
+    } catch {
+      // An analytics client must never break the page.
+    }
+  }
 }

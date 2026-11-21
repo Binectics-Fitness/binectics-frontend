@@ -51,3 +51,36 @@ describe("analytics", () => {
     expect(cleanParams("cta_click", { cta: "start free! call 0803 123 4567", page: "/" })).toEqual({ page: "/" });
   });
 });
+
+describe("analytics sinks and consent hooks", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
+    localStorage.clear();
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("passes only consented, cleaned events to a registered sink", async () => {
+    const { registerAnalyticsSink } = await import("./track");
+    const sink = vi.fn();
+    const off = registerAnalyticsSink(sink);
+    track("sign_up_start", { role: "trainer", weight_kg: "80" });
+    expect(sink).not.toHaveBeenCalled();
+    consent(true);
+    track("sign_up_start", { role: "trainer", weight_kg: "80" });
+    expect(sink).toHaveBeenCalledWith("sign_up_start", { role: "trainer" });
+    off();
+  });
+
+  it("onAnalyticsConsentChange reports now and on every change", async () => {
+    const { onAnalyticsConsentChange, CONSENT_EVENT } = await import("./consent");
+    const seen: boolean[] = [];
+    const off = onAnalyticsConsentChange((g) => seen.push(g));
+    consent(true);
+    document.dispatchEvent(new CustomEvent(CONSENT_EVENT));
+    consent(false);
+    document.dispatchEvent(new CustomEvent(CONSENT_EVENT));
+    off();
+    expect(seen).toEqual([false, true, false]);
+  });
+});
