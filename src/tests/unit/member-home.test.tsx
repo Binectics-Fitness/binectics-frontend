@@ -13,6 +13,7 @@ import { marketplaceService } from "@/lib/api/marketplace";
 import { progressService, type WeightLog } from "@/lib/api/progress";
 import { MembershipSubscriptionStatus, type MembershipSubscription } from "@/lib/types";
 import { resetClientNowForTests } from "@/lib/ui/useClientNow";
+import { PROGRAM_ABOUT_COPY } from "@/lib/programs/aboutCopy";
 
 // These tests are about the non-solo shell; the solo answer is a separate read.
 vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
@@ -80,6 +81,7 @@ const weightLog = (kg: number, recorded_at: string): WeightLog => ({
 describe("currentProgramDay", () => {
   it("headlines the newest active program that is under way", () => {
     expect(currentProgramDay([program()])).toEqual({
+      id: "p1",
       name: "Strength foundations",
       day: 7,
       totalDays: 28,
@@ -193,6 +195,7 @@ describe("member home page", () => {
     vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([]));
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([]));
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
+    vi.spyOn(myProgramsService, "about").mockReturnValue(ok({ description: null, cautions: null }));
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -219,6 +222,30 @@ describe("member home page", () => {
     // Not a gym member and never checked in: no check-in widgets at all.
     expect(screen.queryByTestId("visits-row")).toBeNull();
     expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
+  });
+
+  it("shows the program's description and cautions under the hero (D4, board web-cautions W3)", async () => {
+    vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([program()]));
+    const about = vi
+      .spyOn(myProgramsService, "about")
+      .mockReturnValue(ok({ description: "Four weeks to build the habit.", cautions: "Not during pregnancy." }));
+    render(<MemberHomePage />);
+    const card = await screen.findByTestId("program-about-card");
+    expect(about).toHaveBeenCalledWith("p1");
+    expect(within(card).getByRole("heading", { name: PROGRAM_ABOUT_COPY.heading })).toBeInTheDocument();
+    expect(within(card).getByText("Four weeks to build the habit.")).toBeInTheDocument();
+    expect(within(card).getByText(PROGRAM_ABOUT_COPY.cautionsTitle)).toBeInTheDocument();
+    expect(within(card).getByText("Not during pregnancy.")).toBeInTheDocument();
+  });
+
+  it("adds no About card when the program has neither field", async () => {
+    vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([program()]));
+    const about = vi.spyOn(myProgramsService, "about").mockReturnValue(ok({ description: null, cautions: null }));
+    render(<MemberHomePage />);
+    await screen.findByText("Day 7");
+    await waitFor(() => expect(about).toHaveBeenCalled());
+    expect(screen.queryByTestId("program-about-card")).toBeNull();
+    expect(screen.queryByText(PROGRAM_ABOUT_COPY.heading)).toBeNull();
   });
 
   it("shows a gym member their visits this week, never a streak (board web-visits H3)", async () => {

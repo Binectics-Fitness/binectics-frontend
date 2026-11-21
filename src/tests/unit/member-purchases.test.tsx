@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PurchasesClient from "@/app/dashboard/member/purchases/PurchasesClient";
 import ContentOfferClient from "@/app/dashboard/member/content/[kind]/[id]/ContentOfferClient";
+import { PROGRAM_ABOUT_COPY } from "@/lib/programs/aboutCopy";
 import { paidContentService, type ContentOfferRead } from "@/lib/api/paidContent";
 
 vi.mock("@/components/ds/MemberDashboardShell", () => ({
@@ -115,6 +116,8 @@ describe("Offer page", () => {
     itemKind: "program",
     itemId: "p1",
     title: "Strength Base",
+    description: null,
+    cautions: null,
     prices: [{ currency: "NGN", amountMinor: 1500000 }],
     plans: [],
     isPaid: true,
@@ -151,6 +154,29 @@ describe("Offer page", () => {
     );
     expect(await screen.findByText("Renew to keep your plan going")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See plan" })).toHaveAttribute("href", "/marketplace/L1");
+  });
+
+  it("shows the description and cautions before buying and once owned (D4, board web-cautions W2)", async () => {
+    render1(offer({ description: "Four weeks to build the habit.\nThree sessions a week.", cautions: "Not during pregnancy." }));
+    expect(await screen.findByTestId("buy-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("program-about-description").textContent).toBe("Four weeks to build the habit.\nThree sessions a week.");
+    expect(screen.getByText(PROGRAM_ABOUT_COPY.cautionsTitle)).toBeInTheDocument();
+    expect(screen.getByText("Not during pregnancy.")).toBeInTheDocument();
+    // Full text on the offer page: no clamp.
+    expect(screen.getByTestId("program-about-description").className).not.toContain("line-clamp");
+  });
+
+  it("shows the cautions to a member who already has it, before they start", async () => {
+    render1(offer({ access: { state: "open", via: "purchase" }, cautions: "Not during pregnancy." }));
+    expect(await screen.findByTestId("start-control")).toBeInTheDocument();
+    expect(screen.getByText("Not during pregnancy.")).toBeInTheDocument();
+    expect(screen.queryByTestId("program-about-description")).toBeNull();
+  });
+
+  it("adds nothing when the coach wrote neither", async () => {
+    render1(offer({}));
+    expect(await screen.findByTestId("buy-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("program-about")).toBeNull();
   });
 
   it("does not offer a purchase for an item that is not for sale", async () => {

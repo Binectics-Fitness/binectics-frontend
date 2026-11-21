@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ContentOffer } from "@/lib/api/paidContent";
 import { FROZEN_RENEW_LABEL } from "@/lib/frozenContent";
 import { kindLabel, offerPath, priceText } from "@/lib/paidContent/helpers";
+import { ProgramAbout } from "@/components/content/ProgramAbout";
 
 /**
  * An item that needs payment (or whose access ended), with its way in. Every
@@ -51,6 +52,8 @@ export function ContentLockCard({
           {subtitle}
         </div>
       )}
+      {/* D4: what the program is and who should not follow it, before buying. */}
+      <ProgramAbout description={offer.description} cautions={offer.cautions} clampDescription />
       {frozen ? (
         <p className="text-[13px]" style={{ color: "var(--fg-2)", lineHeight: 1.5 }}>
           You can still read everything you have done. Renew to pick up where you left off.

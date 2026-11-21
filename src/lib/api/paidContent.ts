@@ -56,6 +56,13 @@ export interface ContentOffer {
   itemKind: ContentItemKind;
   itemId: string;
   title: string;
+  /**
+   * Programs: the published version's description and cautions, shown before
+   * a client buys or starts it (D4). null when the coach left them empty, and
+   * always null on meal plans.
+   */
+  description: string | null;
+  cautions: string | null;
   prices: ContentPrice[];
   plans: OfferPlan[];
 }
@@ -162,6 +169,7 @@ export interface SetAccessInput {
 const idOf = (v: unknown): string => (v == null ? "" : String(v));
 const num = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) ? v : 0);
 const strOrNull = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
+const trimmedOrNull = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 const asRecord = (v: unknown): Record<string, unknown> =>
   v && typeof v === "object" ? (v as Record<string, unknown>) : {};
 
@@ -211,6 +219,8 @@ export function normalizeOffer(raw: unknown): ContentOffer | null {
     itemKind: r.item_kind === "meal_plan" ? "meal_plan" : "program",
     itemId: idOf(r.item_id),
     title: typeof r.title === "string" ? r.title : "",
+    description: trimmedOrNull(r.description),
+    cautions: trimmedOrNull(r.cautions),
     prices: normalizePrices(r.prices),
     plans: plans.map((p) => ({
       id: idOf(p.id),
