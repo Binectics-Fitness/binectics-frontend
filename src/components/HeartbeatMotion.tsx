@@ -406,7 +406,7 @@ export default function HeartbeatMotion() {
         viewBox="0 0 480 480"
         xmlns="http://www.w3.org/2000/svg"
         role="img"
-        aria-label="Animated network graph showing live sessions between London, Lagos, Dubai, Cape Town, and Nairobi"
+        aria-label="Illustration: a network linking London, Lagos, Dubai, Cape Town and Nairobi"
       >
         <defs>
           {ARTERY_PATHS.slice(0, 8).map((a, i) => (
