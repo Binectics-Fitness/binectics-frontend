@@ -16,7 +16,8 @@ export type AutoRenewUnavailableReason =
   | "one_time_plan"
   | "gym_managed"
   | "currency_not_card_chargeable"
-  | "plan_unavailable";
+  | "plan_unavailable"
+  | "coupon";
 
 /** The variables the server rendered into the consent text. Display only. */
 export interface AutoRenewConsentRendered {
@@ -29,6 +30,8 @@ export interface AutoRenewConsentRendered {
   first_charge_at: string;
   reminder_hours: number;
   price_notice_days: number;
+  /** Set when the text also names a discount code on the first renewals. */
+  coupon?: { code: string; renewals: number; discount_type: string; percent_off?: number; fixed_minor?: number };
 }
 
 export type AutoRenewConsentOffer =
@@ -160,9 +163,13 @@ export const memberBillingService = {
   getPlanAutoRenewConsent(
     listingId: string,
     planId: string,
+    /** A discount code being applied: the text then names its discounted renewals. */
+    couponCode?: string,
   ): Promise<ApiResponse<AutoRenewConsentOffer>> {
     return apiClient.get<AutoRenewConsentOffer>(
-      `/marketplace/listings/${enc(listingId)}/plans/${enc(planId)}/auto-renew-consent`,
+      `/marketplace/listings/${enc(listingId)}/plans/${enc(planId)}/auto-renew-consent${
+        couponCode ? `?coupon_code=${enc(couponCode)}` : ""
+      }`,
     );
   },
 

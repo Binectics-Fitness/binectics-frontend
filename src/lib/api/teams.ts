@@ -38,6 +38,9 @@ export enum TeamPermission {
 
   // Messaging: read and reply in member conversations as the gym.
   MESSAGING_ANSWER_MEMBERS = "messaging:answer_members",
+
+  // Discount codes: create, switch and read uses (Admin and Manager by default).
+  COUPONS_MANAGE = "coupons:manage",
 }
 
 export enum MemberStatus {

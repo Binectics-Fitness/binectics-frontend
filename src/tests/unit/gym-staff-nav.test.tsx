@@ -27,6 +27,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     P.DEACTIVATE_MEMBER, P.CANCEL_INVITATION, P.PROGRESS_VIEW, P.PROGRESS_CREATE, P.PROGRESS_EDIT,
     P.PROGRESS_MANAGE_CLIENTS, P.PROGRESS_INVITE_CLIENT, P.MARKETPLACE_MANAGE_LISTING,
     P.MARKETPLACE_VIEW_REQUESTS, P.MARKETPLACE_RESPOND_REQUESTS, P.BOOKINGS_MANAGE, P.MESSAGING_ANSWER_MEMBERS,
+    P.COUPONS_MANAGE,
   ],
   assistant: [P.VIEW_MEMBERS, P.PROGRESS_VIEW, P.MARKETPLACE_VIEW_REQUESTS],
   front_desk: [P.VIEW_MEMBERS, P.MESSAGING_ANSWER_MEMBERS],
@@ -36,11 +37,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 const EXPECTED: Record<string, string[]> = {
   owner: SIDEBAR.flatMap((s) => s.items.map((i) => i.name)),
   admin: [
-    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
+    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Discount codes", "Plans & pricing",
     "My listing", "Loyalty", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
   ],
   manager: [
-    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Plans & pricing",
+    "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Discount codes", "Plans & pricing",
     "My listing", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
   ],
   assistant: ["Schedule", "Requests", "Team & roles", "Locations", "Staff"],

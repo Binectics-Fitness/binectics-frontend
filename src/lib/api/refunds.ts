@@ -105,6 +105,12 @@ export interface ChargeRefundQuote {
     reference_type: string;
     reference_id: string;
     member_user_id: string;
+    /**
+     * Set when the payment used a discount code. `gives_back_on_full_refund`
+     * is the code's own setting (default off): a FULL refund then lets the
+     * member use the code again; a partial refund never does.
+     */
+    discount_code?: { code: string; gives_back_on_full_refund: boolean } | null;
   };
   payment_rail: PaymentRail;
   /** refund: send it now · request: ask Binectics · none: nothing to do */

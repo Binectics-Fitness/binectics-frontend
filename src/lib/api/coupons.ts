@@ -37,6 +37,10 @@ export interface Coupon {
   expires_at: string | null;
   max_redemptions: number | null;
   max_per_user: number;
+  /** Automatic renewals after the first purchase the discount also covers. 0 = none. */
+  apply_to_renewals: number;
+  /** A full refund of the discounted payment gives the use back. Default off. */
+  return_on_refund: boolean;
   /** Paid uses. */
   used_count: number;
   /** Paid uses plus checkouts in flight: what the cap is tested on. */
@@ -58,6 +62,10 @@ export interface CreateCouponInput {
   expires_at?: string;
   max_redemptions?: number;
   max_per_user?: number;
+  /** 0-24, default 0: the discount does not carry into auto-renew. */
+  apply_to_renewals?: number;
+  /** Default false. */
+  return_on_refund?: boolean;
 }
 
 export interface CouponRedemption {
@@ -86,6 +94,11 @@ export interface CouponQuote {
   floored: boolean;
   discount_type: CouponDiscountType;
   percent_off?: number;
+  /** Automatic renewals this code also discounts (0 = none). */
+  apply_to_renewals: number;
+  /** The first discounted renewal at today's price; null when none. */
+  renewal_amount_minor: number | null;
+  renewal_discount_minor: number | null;
 }
 
 const base = (orgId: string) => `/coupons/organizations/${encodeURIComponent(orgId)}`;
