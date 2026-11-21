@@ -6,6 +6,7 @@ import {
   useId,
   useMemo,
   useState,
+  type ReactNode,
 } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import { getClientTimezone } from "@/utils/format";
@@ -23,8 +24,27 @@ import { MoneyInput } from "@/components/ds/MoneyInput";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { majorToMinor, minorToMajor } from "@/lib/money/minorMoney";
 import { Plus, Trash2, CalendarOff } from "lucide-react";
+import { toast } from "@/components/Toast";
+import {
+  apiRangeIssues,
+  blockIssues,
+  scrollToFirstIssue,
+  sessionIssues,
+  weekIssues,
+  type RangeIssue,
+} from "@/lib/availability/issues";
+import { availabilityFixToast } from "@/lib/constants/availabilityCopy";
 
 type DayRange = { id: string; startTime: string; endTime: string };
+
+/** Marks a field with a problem, so Save can bring the first into view. */
+const HOURS_ISSUE_ATTR = "data-hours-issue";
+const SESSION_ISSUE_ATTR = "data-session-issue";
+const BLOCK_ISSUE_ATTR = "data-block-issue";
+
+/** A field's outline: red when it has a problem. */
+const fieldBorder = (bad: boolean) =>
+  bad ? "border border-danger ring-1 ring-danger" : "border border-border";
 type DaySchedule = { enabled: boolean; ranges: DayRange[] };
 type WeekSchedule = Record<number, DaySchedule>;
 
@@ -120,6 +140,12 @@ export default function ConsultationAvailabilityManager({
   const [scheduleTimezone, setScheduleTimezone] =
     useState<string>(userTimezone);
   const [isSaving, setIsSaving] = useState(false);
+  // Problems show once Save has been pressed, then follow the edits live.
+  const [triedHours, setTriedHours] = useState(false);
+  // Times the API refused by payload position, until the schedule changes.
+  const [apiHourIssues, setApiHourIssues] = useState<Map<string, RangeIssue>>(
+    () => new Map(),
+  );
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
@@ -169,6 +195,7 @@ export default function ConsultationAvailabilityManager({
   // mobile. An empty field is no answer, and Save asks for one.
   const [priceFree, setPriceFree] = useState(false);
   const [isSavingSession, setIsSavingSession] = useState(false);
+  const [triedSession, setTriedSession] = useState(false);
 
   // Exceptions state
   const [exceptions, setExceptions] = useState<AvailabilityException[]>([]);
@@ -177,6 +204,7 @@ export default function ConsultationAvailabilityManager({
   const [exceptionMode, setExceptionMode] = useState<"single" | "range">(
     "single",
   );
+  const [triedBlock, setTriedBlock] = useState(false);
   const [newException, setNewException] = useState({
     date: "",
     endDate: "",
@@ -195,6 +223,12 @@ export default function ConsultationAvailabilityManager({
       ).length,
     [schedule],
   );
+
+  const hourIssues = useMemo(() => {
+    const issues = triedHours ? weekIssues(schedule) : new Map<string, RangeIssue>();
+    for (const [id, issue] of apiHourIssues) if (!issues.has(id)) issues.set(id, issue);
+    return issues;
+  }, [triedHours, schedule, apiHourIssues]);
 
   useEffect(() => {
     consultationsService.getMyAvailability().then((res) => {
@@ -230,6 +264,17 @@ export default function ConsultationAvailabilityManager({
       ? orgCurrency
       : "";
   const activeCurrency = priceCurrency || defaultCurrency;
+
+  const sessionDraft = {
+    duration: sessionDuration,
+    buffer: bufferMinutes,
+    advanceHours: minAdvanceNoticeHours,
+    priceFree,
+    priceText: priceDisplay,
+    priceMinor,
+    currency: activeCurrency,
+  };
+  const sessionFieldIssues = triedSession ? sessionIssues(sessionDraft) : {};
   // The box beside the price is narrow: "NGN ₦" reads there, the full
   // "NGN · ₦, Nigerian Naira" wrapped over three lines.
   const priceCurrencyOptions = currencyOptions(currencies, "price", savedCurrency).map((o) => {
@@ -312,34 +357,13 @@ export default function ConsultationAvailabilityManager({
       );
       return;
     }
-    if (sessionDuration < 5 || sessionDuration > 240) {
-      fail("Session length must be between 5 and 240 minutes.");
-      return;
-    }
-    if (bufferMinutes < 0 || bufferMinutes > 60) {
-      fail("Buffer must be between 0 and 60 minutes.");
-      return;
-    }
-    if (minAdvanceNoticeHours < 0 || minAdvanceNoticeHours > 168) {
-      fail("Advance notice must be between 0 and 168 hours.");
-      return;
-    }
-
-    // A session is paid or free, never unpriced: the API stores a missing
-    // price as free, so an empty field would publish a free session nobody
-    // chose. Free is its own switch; a typed amount must be above zero.
-    const hasPrice = priceDisplay.trim() !== "";
-    if (!priceFree && hasPrice && (priceMinor === null || priceMinor <= 0)) {
-      fail("Enter a price above zero, or choose Free.");
-      return;
-    }
-    if (!priceFree && !hasPrice) {
-      fail("Enter a price, or choose Free.");
-      return;
-    }
-    // The API needs a currency with any price, a free one (0) included.
-    if (!activeCurrency) {
-      fail("Choose a currency.");
+    // Each problem is said under its field; the toast only says how many.
+    const issueCount = Object.keys(sessionIssues(sessionDraft)).length;
+    if (issueCount > 0) {
+      setTriedSession(true);
+      setSessionMessage(null);
+      toast.error(availabilityFixToast(issueCount, "setting"));
+      scrollToFirstIssue(SESSION_ISSUE_ATTR);
       return;
     }
 
@@ -391,6 +415,7 @@ export default function ConsultationAvailabilityManager({
   };
 
   const toggleDay = (day: number) => {
+    setApiHourIssues(new Map());
     setSchedule((prev) => {
       const cur = prev[day];
       if (cur.enabled) {
@@ -416,6 +441,7 @@ export default function ConsultationAvailabilityManager({
   };
 
   const removeRange = (day: number, rangeId: string) => {
+    setApiHourIssues(new Map());
     setSchedule((prev) => {
       const cur = prev[day];
       const ranges = cur.ranges.filter((r) => r.id !== rangeId);
@@ -434,6 +460,7 @@ export default function ConsultationAvailabilityManager({
     field: "startTime" | "endTime",
     value: string,
   ) => {
+    setApiHourIssues(new Map());
     setSchedule((prev) => {
       const cur = prev[day];
       return {
@@ -493,7 +520,16 @@ export default function ConsultationAvailabilityManager({
   };
 
   const saveAvailability = async () => {
-    // Validate
+    // Each problem is said under its time range; the toast only says how many.
+    const issues = weekIssues(schedule);
+    if (issues.size > 0) {
+      setTriedHours(true);
+      setMessage(null);
+      toast.error(availabilityFixToast(issues.size, "time"));
+      scrollToFirstIssue(HOURS_ISSUE_ATTR);
+      return;
+    }
+    const payloadRangeIds: string[] = [];
     const payload: Array<{
       dayOfWeek: number;
       startTime: string;
@@ -505,13 +541,7 @@ export default function ConsultationAvailabilityManager({
       const d = schedule[day];
       if (!d.enabled) continue;
       for (const r of d.ranges) {
-        if (r.startTime >= r.endTime) {
-          setMessage({
-            text: `${weekDays[day]}: start time must be before end time.`,
-            type: "error",
-          });
-          return;
-        }
+        payloadRangeIds.push(r.id);
         payload.push({
           dayOfWeek: day,
           startTime: r.startTime,
@@ -544,15 +574,25 @@ export default function ConsultationAvailabilityManager({
         day.ranges.sort((a, b) => a.startTime.localeCompare(b.startTime));
       }
       setSchedule(week);
+      setTriedHours(false);
       setMessage({
         text: "Availability saved.",
         type: "success",
       });
     } else {
-      setMessage({
-        text: response.message ?? "Failed to update availability.",
-        type: "error",
-      });
+      // A refusal that names a range ("rules.3.startTime ...") goes under
+      // that range; anything else (network, server) stays in the banner.
+      const refused = apiRangeIssues(response.message, payloadRangeIds);
+      if (refused.size > 0) {
+        setApiHourIssues(refused);
+        toast.error(availabilityFixToast(refused.size, "time"));
+        scrollToFirstIssue(HOURS_ISSUE_ATTR);
+      } else {
+        setMessage({
+          text: response.message ?? "Failed to update availability.",
+          type: "error",
+        });
+      }
     }
 
     setIsSaving(false);
@@ -568,44 +608,32 @@ export default function ConsultationAvailabilityManager({
     setLoadingExceptions(false);
   }, []);
 
+  const blockDraft = {
+    mode: exceptionMode,
+    date: newException.date,
+    endDate: newException.endDate,
+    custom: newException.type === AvailabilityExceptionType.CUSTOM_HOURS,
+    startTime: newException.startTime,
+    endTime: newException.endTime,
+  };
+  const blockFieldIssues = triedBlock ? blockIssues(blockDraft) : {};
+
   const createException = async () => {
-    if (!newException.date) {
-      setMessage({
-        text: "Choose a date.",
-        type: "error",
-      });
+    // Each problem is said under its field; the toast only says how many.
+    const issueCount = Object.keys(blockIssues(blockDraft)).length;
+    if (issueCount > 0) {
+      setTriedBlock(true);
+      setMessage(null);
+      toast.error(availabilityFixToast(issueCount, "field", "blocking"));
+      scrollToFirstIssue(BLOCK_ISSUE_ATTR);
       return;
     }
 
     // Build the list of dates we need to block.
     const dates: string[] = [];
     if (exceptionMode === "range") {
-      if (!newException.endDate) {
-        setMessage({
-          text: "Choose an end date.",
-          type: "error",
-        });
-        return;
-      }
-      if (newException.endDate < newException.date) {
-        setMessage({
-          text: "End date must be on or after the start date.",
-          type: "error",
-        });
-        return;
-      }
       const cursor = new Date(`${newException.date}T00:00:00`);
       const end = new Date(`${newException.endDate}T00:00:00`);
-      const diffDays =
-        Math.round((end.getTime() - cursor.getTime()) / (1000 * 60 * 60 * 24)) +
-        1;
-      if (diffDays > 31) {
-        setMessage({
-          text: "A range can be up to 31 days.",
-          type: "error",
-        });
-        return;
-      }
       while (cursor <= end) {
         dates.push(cursor.toISOString().slice(0, 10));
         cursor.setDate(cursor.getDate() + 1);
@@ -663,6 +691,7 @@ export default function ConsultationAvailabilityManager({
     }
 
     setExceptions((prev) => [...prev, ...created]);
+    setTriedBlock(false);
     setNewException({
       date: "",
       endDate: "",
@@ -841,13 +870,20 @@ export default function ConsultationAvailabilityManager({
                           </span>
                         ) : (
                           <div className="space-y-2">
-                            {day.ranges.map((range) => (
+                            {day.ranges.map((range) => {
+                              const issue = hourIssues.get(range.id);
+                              const errorId = `hours-issue-${range.id}`;
+                              return (
                               <div
                                 key={range.id}
-                                className="flex items-center gap-2"
+                                {...(issue ? { [HOURS_ISSUE_ATTR]: "" } : {})}
                               >
+                              <div className="flex items-center gap-2">
                                 <input
                                   type="time"
+                                  aria-label={`${dayName} start`}
+                                  aria-invalid={issue?.start || undefined}
+                                  aria-describedby={issue ? errorId : undefined}
                                   value={range.startTime}
                                   onChange={(e) =>
                                     updateRange(
@@ -857,11 +893,14 @@ export default function ConsultationAvailabilityManager({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-28 rounded-(--r-2) border border-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                                  className={`w-28 rounded-(--r-2) ${fieldBorder(!!issue?.start)} bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                                 />
                                 <span className="text-fg-3 text-sm">–</span>
                                 <input
                                   type="time"
+                                  aria-label={`${dayName} end`}
+                                  aria-invalid={issue?.end || undefined}
+                                  aria-describedby={issue ? errorId : undefined}
                                   value={range.endTime}
                                   onChange={(e) =>
                                     updateRange(
@@ -871,7 +910,7 @@ export default function ConsultationAvailabilityManager({
                                       e.target.value,
                                     )
                                   }
-                                  className="w-28 rounded-(--r-2) border border-border bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                                  className={`w-28 rounded-(--r-2) ${fieldBorder(!!issue?.end)} bg-bg px-2 py-1.5 text-sm text-fg focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                                 />
                                 <button
                                   type="button"
@@ -882,7 +921,14 @@ export default function ConsultationAvailabilityManager({
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               </div>
-                            ))}
+                              {issue && (
+                                <p id={errorId} role="alert" className="mt-1 text-xs text-danger-ink">
+                                  {issue.message}
+                                </p>
+                              )}
+                              </div>
+                              );
+                            })}
                             <button
                               type="button"
                               onClick={() => addRange(dayIndex)}
@@ -967,9 +1013,13 @@ export default function ConsultationAvailabilityManager({
                       Most providers use 30 or 60 minutes.
                     </p>
                   </div>
+                  <SessionFieldError field="duration" issue={sessionFieldIssues.duration}>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
+                      aria-label="Session length"
+                      aria-invalid={!!sessionFieldIssues.duration || undefined}
+                      aria-describedby={sessionFieldIssues.duration ? "session-issue-duration" : undefined}
                       min={5}
                       max={240}
                       step={5}
@@ -977,12 +1027,13 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setSessionDuration(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-24 rounded-(--r-2) ${fieldBorder(!!sessionFieldIssues.duration)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
                     <span className="text-sm text-fg-2">
                       minutes
                     </span>
                   </div>
+                  </SessionFieldError>
                 </div>
 
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -994,9 +1045,13 @@ export default function ConsultationAvailabilityManager({
                       Time held back after each booking before the next slot starts.
                     </p>
                   </div>
+                  <SessionFieldError field="buffer" issue={sessionFieldIssues.buffer}>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
+                      aria-label="Buffer between sessions"
+                      aria-invalid={!!sessionFieldIssues.buffer || undefined}
+                      aria-describedby={sessionFieldIssues.buffer ? "session-issue-buffer" : undefined}
                       min={0}
                       max={60}
                       step={5}
@@ -1004,12 +1059,13 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setBufferMinutes(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-24 rounded-(--r-2) ${fieldBorder(!!sessionFieldIssues.buffer)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
                     <span className="text-sm text-fg-2">
                       minutes
                     </span>
                   </div>
+                  </SessionFieldError>
                 </div>
 
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -1021,9 +1077,13 @@ export default function ConsultationAvailabilityManager({
                       Clients can&apos;t book sessions starting sooner than this.
                     </p>
                   </div>
+                  <SessionFieldError field="advance" issue={sessionFieldIssues.advance}>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
+                      aria-label="Minimum advance notice"
+                      aria-invalid={!!sessionFieldIssues.advance || undefined}
+                      aria-describedby={sessionFieldIssues.advance ? "session-issue-advance" : undefined}
                       min={0}
                       max={168}
                       step={1}
@@ -1031,12 +1091,13 @@ export default function ConsultationAvailabilityManager({
                       onChange={(e) =>
                         setMinAdvanceNoticeHours(Number(e.target.value || 0))
                       }
-                      className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-24 rounded-(--r-2) ${fieldBorder(!!sessionFieldIssues.advance)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
                     <span className="text-sm text-fg-2">
                       hours
                     </span>
                   </div>
+                  </SessionFieldError>
                 </div>
 
                 <div className="flex flex-col gap-1 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -1054,11 +1115,19 @@ export default function ConsultationAvailabilityManager({
                       Paystack account.
                     </p>
                   </div>
+                  <SessionFieldError
+                    field="price"
+                    issue={sessionFieldIssues.price}
+                    also={{ field: "currency", issue: sessionFieldIssues.currency }}
+                  >
                   <div className="flex items-center gap-2">
                     <label htmlFor={currencyFieldId} className="sr-only">
                       Price currency
                     </label>
-                    <div className="w-28 shrink-0">
+                    <div
+                      className={`w-28 shrink-0 rounded-(--r-2) ${sessionFieldIssues.currency ? "ring-2 ring-danger" : ""}`}
+                      {...(sessionFieldIssues.currency ? { [SESSION_ISSUE_ATTR]: "" } : {})}
+                    >
                       <SearchableSelect
                         id={currencyFieldId}
                         value={activeCurrency}
@@ -1096,8 +1165,10 @@ export default function ConsultationAvailabilityManager({
                       placeholder={priceFree ? "Free" : "Not set"}
                       disabled={priceFree}
                       aria-label="Session price"
+                      aria-invalid={!!sessionFieldIssues.price || undefined}
+                      aria-describedby={sessionFieldIssues.price ? "session-issue-price" : undefined}
                       // py-3 matches the height of the currency picker beside it.
-                      className="w-32 rounded-(--r-2) border border-border bg-bg px-3 py-3 text-sm disabled:opacity-50 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-32 rounded-(--r-2) ${fieldBorder(!!sessionFieldIssues.price)} bg-bg px-3 py-3 text-sm disabled:opacity-50 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
                     <button
                       type="button"
@@ -1113,6 +1184,7 @@ export default function ConsultationAvailabilityManager({
                       Free
                     </button>
                   </div>
+                  </SessionFieldError>
                 </div>
               </div>
             </section>
@@ -1181,6 +1253,8 @@ export default function ConsultationAvailabilityManager({
                     </label>
                     <input
                       type="date"
+                      aria-invalid={!!blockFieldIssues.date || undefined}
+                      aria-describedby={blockFieldIssues.date ? "block-issue-date" : undefined}
                       value={newException.date}
                       onChange={(e) =>
                         setNewException((prev) => ({
@@ -1189,8 +1263,9 @@ export default function ConsultationAvailabilityManager({
                         }))
                       }
                       min={new Date().toISOString().slice(0, 10)}
-                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-full rounded-(--r-2) ${fieldBorder(!!blockFieldIssues.date)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
+                    <BlockFieldError field="date" issue={blockFieldIssues.date} />
                   </div>
                   {exceptionMode === "range" && (
                     <div>
@@ -1199,7 +1274,9 @@ export default function ConsultationAvailabilityManager({
                       </label>
                       <input
                         type="date"
-                        value={newException.endDate}
+                        aria-invalid={!!blockFieldIssues.endDate || undefined}
+                      aria-describedby={blockFieldIssues.endDate ? "block-issue-endDate" : undefined}
+                      value={newException.endDate}
                         onChange={(e) =>
                           setNewException((prev) => ({
                             ...prev,
@@ -1210,8 +1287,9 @@ export default function ConsultationAvailabilityManager({
                           newException.date ||
                           new Date().toISOString().slice(0, 10)
                         }
-                        className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                        className={`w-full rounded-(--r-2) ${fieldBorder(!!blockFieldIssues.endDate)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                       />
+                    <BlockFieldError field="endDate" issue={blockFieldIssues.endDate} />
                     </div>
                   )}
                 </div>
@@ -1281,6 +1359,8 @@ export default function ConsultationAvailabilityManager({
                     </label>
                     <input
                       type="time"
+                      aria-invalid={!!blockFieldIssues.startTime || undefined}
+                      aria-describedby={blockFieldIssues.startTime ? "block-issue-startTime" : undefined}
                       value={newException.startTime}
                       onChange={(e) =>
                         setNewException((prev) => ({
@@ -1288,8 +1368,9 @@ export default function ConsultationAvailabilityManager({
                           startTime: e.target.value,
                         }))
                       }
-                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-full rounded-(--r-2) ${fieldBorder(!!blockFieldIssues.startTime)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
+                    <BlockFieldError field="startTime" issue={blockFieldIssues.startTime} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-fg-2 mb-1">
@@ -1297,6 +1378,8 @@ export default function ConsultationAvailabilityManager({
                     </label>
                     <input
                       type="time"
+                      aria-invalid={!!blockFieldIssues.endTime || undefined}
+                      aria-describedby={blockFieldIssues.endTime ? "block-issue-endTime" : undefined}
                       value={newException.endTime}
                       onChange={(e) =>
                         setNewException((prev) => ({
@@ -1304,8 +1387,9 @@ export default function ConsultationAvailabilityManager({
                           endTime: e.target.value,
                         }))
                       }
-                      className="w-full rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+                      className={`w-full rounded-(--r-2) ${fieldBorder(!!blockFieldIssues.endTime)} bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                     />
+                    <BlockFieldError field="endTime" issue={blockFieldIssues.endTime} />
                   </div>
                 </div>
               )}
@@ -1412,5 +1496,50 @@ export default function ConsultationAvailabilityManager({
           </section>
         )}
     </div>
+  );
+}
+
+/**
+ * A session setting's input with its problem said underneath, right-aligned
+ * under the input on wide screens. `also` is a second field sharing the row
+ * (the currency beside the price).
+ */
+function SessionFieldError({
+  field,
+  issue,
+  also,
+  children,
+}: {
+  field: string;
+  issue?: string;
+  also?: { field: string; issue?: string };
+  children: ReactNode;
+}) {
+  const lines = [
+    { field, issue },
+    ...(also ? [also] : []),
+  ].filter((l): l is { field: string; issue: string } => !!l.issue);
+  return (
+    <div
+      className="flex flex-col gap-1 sm:items-end"
+      {...(issue ? { [SESSION_ISSUE_ATTR]: "" } : {})}
+    >
+      {children}
+      {lines.map((l) => (
+        <p key={l.field} id={`session-issue-${l.field}`} role="alert" className="text-xs text-danger-ink">
+          {l.issue}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+/** A blocked-date field's problem, said under it. */
+function BlockFieldError({ field, issue }: { field: string; issue?: string }) {
+  if (!issue) return null;
+  return (
+    <p id={`block-issue-${field}`} role="alert" className="mt-1 text-xs text-danger-ink" {...{ [BLOCK_ISSUE_ATTR]: "" }}>
+      {issue}
+    </p>
   );
 }
