@@ -51,6 +51,17 @@ const GOOGLE_ANALYTICS = {
   img: ["https://www.google-analytics.com", "https://www.googletagmanager.com"],
 };
 
+/**
+ * PostHog (EU cloud). Loaded only after analytics consent (see
+ * PostHogAnalytics.tsx). Events go to the ingest host; the SDK fetches its
+ * small extension scripts from the assets host. A custom
+ * NEXT_PUBLIC_POSTHOG_HOST needs adding here too.
+ */
+const POSTHOG = {
+  script: ["https://eu-assets.i.posthog.com"],
+  connect: ["https://eu.i.posthog.com", "https://eu-assets.i.posthog.com"],
+};
+
 /** Google Fonts, while the root layout still links its stylesheet. */
 const GOOGLE_FONTS = {
   style: ["https://fonts.googleapis.com"],
@@ -86,6 +97,7 @@ export function reportOnlyCsp(): string {
       ...PAYSTACK.script,
       ...FIREBASE.script,
       ...GOOGLE_ANALYTICS.script,
+      ...POSTHOG.script,
     ]),
     directive("style-src", ["'self'", "'unsafe-inline'", ...GOOGLE_FONTS.style]),
     directive("font-src", ["'self'", "data:", ...GOOGLE_FONTS.font]),
@@ -97,6 +109,7 @@ export function reportOnlyCsp(): string {
       ...PAYSTACK.connect,
       ...FIREBASE.connect,
       ...GOOGLE_ANALYTICS.connect,
+      ...POSTHOG.connect,
     ]),
     directive("frame-src", ["'self'", ...PAYSTACK.frame]),
     directive("worker-src", ["'self'", "blob:"]),

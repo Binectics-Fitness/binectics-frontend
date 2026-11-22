@@ -33,6 +33,12 @@ describe("security headers", () => {
     expect(csp).toMatch(/connect-src [^;]*https:\/\/api\.paystack\.co/);
   });
 
+  it("lets PostHog send events and load its scripts under the allowlist", () => {
+    const csp = reportOnlyCsp();
+    expect(csp).toMatch(/connect-src [^;]*https:\/\/eu\.i\.posthog\.com/);
+    expect(csp).toMatch(/script-src [^;]*https:\/\/eu-assets\.i\.posthog\.com/);
+  });
+
   it("keeps the API same-origin: no Azure host in connect-src", () => {
     expect(reportOnlyCsp()).toMatch(/connect-src 'self'/);
     expect(reportOnlyCsp()).not.toContain("azurewebsites.net");
