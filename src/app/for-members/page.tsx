@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Find your gym, trainer, or dietitian. One profile, one inbox, one checkout. Binectics is free for members, you pay your provider directly.",
   keywords:
     "fitness marketplace, find gym, find trainer, find dietitian, gym check-in, fitness app, verified trainers, meal tracking, progress journal",
+  alternates: { canonical: "/for-members" },
 };
 
 const PAIN_POINTS = [

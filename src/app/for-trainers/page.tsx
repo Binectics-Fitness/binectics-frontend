@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Grow your personal training business on Binectics. Get discovered by local clients, manage bookings, build programs, and get paid, all from one platform.",
   keywords:
     "personal trainer software, fitness client management, trainer booking system, online coaching platform, personal training marketplace",
+  alternates: { canonical: "/for-trainers" },
 };
 
 const PAIN_POINTS = [

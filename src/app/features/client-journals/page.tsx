@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Trainers write journal notes on a client's profile, and clients read them in their app, next to their own weight, meal and workout logs and their program adherence.",
   keywords:
     "client journal, trainer notes, fitness progress tracking, program adherence, weight log, client notes",
+  alternates: { canonical: "/features/client-journals" },
 };
 
 const WORKFLOW = [

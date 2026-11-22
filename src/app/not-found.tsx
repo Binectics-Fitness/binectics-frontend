@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
+
+// Without this a 404 carried the home page's title.
+export const metadata: Metadata = {
+  title: "Page not found",
+  robots: { index: false, follow: true },
+};
 
 export default function NotFound() {
   return (

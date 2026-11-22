@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Credential-verified dietitian profiles, weekly meal plans, consultations, and client meal feedback, all on one platform.",
   keywords:
     "dietitian platform, meal plan software, nutrition practice management, client adherence tracking, dietitian verification, clinical nutrition software",
+  alternates: { canonical: "/for-dietitians" },
 };
 
 const PAIN_POINTS = [
