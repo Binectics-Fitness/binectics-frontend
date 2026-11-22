@@ -18,8 +18,14 @@ async function mountAt(path: string) {
 }
 
 describe("cookie banner placement", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", "G-TEST123");
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+  });
 
   it("shows the banner on an ordinary public page", async () => {
     await mountAt("/pricing");
@@ -35,4 +41,29 @@ describe("cookie banner placement", () => {
       expect(screen.getByRole("button", { name: "Manage cookies" })).toBeInTheDocument();
     },
   );
+
+  it("renders nothing when no analytics tool is configured (no optional cookies to ask about)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_ANALYTICS_ID", "");
+    await mountAt("/pricing");
+    expect(screen.queryByRole("region", { name: "Cookie consent" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Manage cookies" })).toBeNull();
+  });
+
+  it("makes rejecting one click, like accepting, and leaves analytics off", async () => {
+    await mountAt("/pricing");
+    const reject = screen.getByRole("button", { name: "Reject all" });
+    expect(screen.getByRole("button", { name: "Accept all" })).toBeInTheDocument();
+    act(() => reject.click());
+    const saved = JSON.parse(window.localStorage.getItem("binectics-cookies") ?? "{}");
+    expect(saved.analytics).toBe(false);
+  });
+
+  it("starts with analytics switched off in the preferences dialog", async () => {
+    await mountAt("/pricing");
+    act(() => screen.getByRole("button", { name: "Customize" }).click());
+    const switches = screen.getAllByRole("switch");
+    // Essential (locked, on) then Analytics (off).
+    expect(switches).toHaveLength(2);
+    expect(switches[1]).toHaveAttribute("aria-checked", "false");
+  });
 });
