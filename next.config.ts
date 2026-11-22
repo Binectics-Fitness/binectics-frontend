@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { assertLegalReady } from "./src/lib/legal/legalReady";
 import { resolve } from "path";
 import { REMOVED_PAGE_REDIRECTS } from "./src/lib/routing/removedPages";
 import { resolveSiteUrl } from "./src/lib/site-url";
@@ -84,4 +86,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// A production build refuses unfinished legal documents (placeholders or
+// no recorded legal review). See src/lib/legal/legalReady.ts.
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_PRODUCTION_BUILD) assertLegalReady();
+  return nextConfig;
+}

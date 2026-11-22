@@ -62,6 +62,9 @@ export const REMOVED_PAGE_REDIRECTS: RemovedPageRedirect[] = [
   { source: "/partners", destination: "/about", permanent: false },
   { source: "/blog", destination: "/", permanent: false },
   { source: "/blog/:slug", destination: "/", permanent: false },
+  // An older copy of the legal documents with invented details (a device
+  // fingerprint, a 24-hour data export). The live documents are at /privacy.
+  { source: "/legal", destination: "/privacy", permanent: false },
   // A status page that hardcoded "Operational" for every service.
   { source: "/status", destination: "/help", permanent: false },
   // A gym-owner "Marketing tools" page of invented KPIs and discount codes.
