@@ -1,16 +1,19 @@
 import { z } from "zod";
 import { emailSchema } from "./shared";
 
+/**
+ * The public contact form (/contact). Limits match the inputs' own
+ * minLength/maxLength so the browser and this schema agree.
+ */
 export const contactSchema = z.object({
-  name: z.string().min(1, "Name is required").trim(),
-  email: emailSchema,
-  subject: z.string().min(1, "Subject is required").trim(),
-  category: z.string(),
+  name: z.string().trim().min(2, "Please enter your name").max(100, "Keep your name under 100 characters"),
+  email: emailSchema.max(254, "That email address is too long"),
+  subject: z.string().trim().min(3, "Please add a subject").max(200, "Keep the subject under 200 characters"),
   message: z
     .string()
-    .min(1, "Message is required")
-    .min(20, "Message must be at least 20 characters")
-    .trim(),
+    .trim()
+    .min(10, "Please write at least 10 characters")
+    .max(2000, "Keep the message under 2,000 characters"),
 });
 
 export type ContactFormData = z.infer<typeof contactSchema>;

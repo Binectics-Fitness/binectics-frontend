@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingTopbar } from "@/components/ds/MarketingTopbar";
 import { MarketingFooter } from "@/components/ds/MarketingFooter";
+import { ContactMessageForm } from "./ContactMessageForm";
 
 /**
  * Contact — contact methods + form + office locations.
@@ -81,55 +82,7 @@ export default function ContactPage() {
             <h2 className="text-[28px] sm:text-[32px] font-medium mb-4.5" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
               Send a <em className="font-serif font-normal italic">message</em>.
             </h2>
-            <form className="flex flex-col gap-4" action="#">
-              <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Name</label>
-                <input
-                  type="text"
-                  required
-                  minLength={2}
-                  maxLength={100}
-                  placeholder="Your full name"
-                  className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
-                  style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Email</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="you@example.com"
-                  className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
-                  style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Subject</label>
-                <input
-                  type="text"
-                  required
-                  minLength={3}
-                  maxLength={200}
-                  placeholder="e.g. Partnership enquiry"
-                  className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none"
-                  style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
-                />
-              </div>
-              <div>
-                <label className="block font-mono text-[11px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Message</label>
-                <textarea
-                  rows={5}
-                  required
-                  minLength={10}
-                  maxLength={2000}
-                  placeholder="Tell us what you need..."
-                  className="w-full rounded-(--r-2) px-4 py-3 text-[15px] outline-none resize-y"
-                  style={{ background: "var(--bg-2)", border: "1px solid var(--border)", color: "var(--ink)" }}
-                />
-              </div>
-              <button type="submit" className="btn-primary-v2 self-start mt-1">Send message &rarr;</button>
-            </form>
+            <ContactMessageForm />
           </div>
         </div>
       </section>

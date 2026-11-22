@@ -16,7 +16,6 @@ export { Accordion } from "./Accordion";
 export type { AccordionProps, AccordionItemProps } from "./Accordion";
 
 // Form Components (named exports)
-export { ContactForm } from "./ContactForm";
 
 // Layout Components (default exports)
 export { default as Navbar } from "./Navbar";
