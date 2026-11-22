@@ -1,0 +1,10 @@
+/*
+ * Point the design-token font stacks at the self-hosted fonts (fonts.ts).
+ * html:root outranks globals.css's :root, whatever order the CSS loads in.
+ * The quoted names stay as a fallback for a font the visitor has installed.
+ */
+html:root {
+  --font-sans: var(--font-geist), "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-instrument-serif), "Instrument Serif", Georgia, "Times New Roman", serif;
+}

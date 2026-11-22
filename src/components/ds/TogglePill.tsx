@@ -21,7 +21,8 @@ export function TogglePill<T extends string>({ options, value, onChange, label }
             className="px-4.5 py-2.5 min-h-11 rounded-full text-[13px] font-medium cursor-pointer"
             style={{
               background: value === o.value ? "var(--bg)" : "transparent",
-              color: value === o.value ? "var(--ink)" : "var(--fg-3)",
+              // --fg-3 on --bg-2 is 4.4:1, under WCAG AA for 13px text.
+              color: value === o.value ? "var(--ink)" : "var(--fg-2)",
               boxShadow: value === o.value ? "0 1px 2px oklch(0 0 0 / 0.06)" : "none",
               transition: "background var(--motion-fast), color var(--motion-fast)",
             }}
