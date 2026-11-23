@@ -1636,6 +1636,21 @@ export const marketplaceService = {
     );
   },
 
+  /**
+   * Takes the saved photo off a facility item (and its stored file), leaving
+   * everything else as it is. The API refuses `remove_image` sent with a new
+   * photo, so this goes on its own, never inside a save.
+   */
+  async removeFacilityItemImage(
+    listingId: string,
+    itemId: string,
+  ): Promise<ApiResponse<FacilityItem>> {
+    return await apiClient.patch<FacilityItem>(
+      `/marketplace/my-listings/${encodeURIComponent(listingId)}/facility-items/${encodeURIComponent(itemId)}`,
+      { remove_image: true },
+    );
+  },
+
   async deleteMyListingFacilityItem(
     listingId: string,
     itemId: string,

@@ -23,6 +23,15 @@ export function contentNotificationTarget(item: {
 }
 
 /**
+ * A team invitation opens the invitations page, where any role can accept
+ * or decline it. The API's action URL (/dashboard/team) is the gym's team
+ * page, which bounces the trainers and members most invitations are for.
+ */
+export function teamInvitationTarget(item: { type?: string | null }): string | null {
+  return item.type === "TEAM_INVITATION" ? "/teams/invitations" : null;
+}
+
+/**
  * Where tapping a notification goes. Billing notices are routed by TYPE
  * (the member's go to Billing, a provider's final payment failure to their
  * members), whatever action URL they carry; everything else resolves its
@@ -39,6 +48,7 @@ export function resolveNotificationTarget(
   return (
     billingNotificationTarget(item, userRole) ??
     contentNotificationTarget(item) ??
+    teamInvitationTarget(item) ??
     resolveNotificationLink(item.actionUrl, userRole)
   );
 }
