@@ -86,9 +86,11 @@ function AcceptInvitationContent() {
       )
     : null;
 
+  // Sign-in and sign-up both come back here (?redirect=, which the sign-in
+  // page and the OTP screen follow), so the invitation is accepted then.
+  const back = encodeURIComponent(`/teams/invite/accept?token=${token}`);
   function handleLoginRedirect() {
-    const returnUrl = encodeURIComponent(`/teams/invite/accept?token=${token}`);
-    router.push(`/login?returnUrl=${returnUrl}`);
+    router.push(`/login?redirect=${back}`);
   }
 
   // ─── Loading ───
@@ -139,7 +141,7 @@ function AcceptInvitationContent() {
             Sign In
           </button>
           <Link
-            href={`/register?returnUrl=${encodeURIComponent(`/teams/invite/accept?token=${token}`)}`}
+            href={`/login?mode=signup&redirect=${back}`}
             className="rounded-(--r-2) border border-border px-6 py-3 text-sm font-semibold text-fg text-center hover:bg-bg-2 transition-colors"
           >
             Create Account

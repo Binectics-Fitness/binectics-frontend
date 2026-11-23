@@ -67,6 +67,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // user.id alone left the old expiry timer running after a refresh, which
   // fired a false "Session Expired" while the session was still valid.)
   const [sessionEpoch, setSessionEpoch] = useState(0);
+  // Signed out: there is no session left to warn about, so the session
+  // modal closes. Done while rendering (React's "adjusting state when a prop
+  // changes"), not in the timer effect below: a synchronous setState in an
+  // effect body is refused by the lint rule.
+  const [sessionOwner, setSessionOwner] = useState<string | null>(null);
+  const currentOwner = user?.id ?? null;
+  if (currentOwner !== sessionOwner) {
+    setSessionOwner(currentOwner);
+    if (!currentOwner) {
+      setShowSessionModal(false);
+      setSessionEnded(false);
+    }
+  }
   const router = useRouter();
 
   // Load user on mount. localStorage is a cache, not the source of truth
@@ -138,11 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Session timeout monitoring
   useEffect(() => {
-    if (!user) {
-      setShowSessionModal(false);
-      setSessionEnded(false);
-      return;
-    }
+    if (!user) return;
 
     const expiresAt = tokenStorage.getExpiry();
     if (!expiresAt) return;
@@ -243,6 +252,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionEnded(false);
   };
 
+  /**
+   * The OTP screen for `email`, carrying the page that sent the visitor to
+   * sign in (?redirect=, e.g. a team invitation link), so verifying goes
+   * back there instead of to onboarding. Same-origin paths only.
+   */
+  const verificationRoute = (email: string): string => {
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const back = safeRedirectPath(params?.get("redirect"));
+    const query = new URLSearchParams({ email });
+    if (back) query.set("redirect", back);
+    return `/verification?${query.toString()}`;
+  };
+
   const login = async (
     data: LoginRequest,
   ): Promise<{
@@ -283,7 +305,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Correct credentials but the email was never OTP-verified — pick the
       // verification flow back up where registration left off.
       if (response.code === "AUTH_EMAIL_NOT_VERIFIED") {
-        router.push(`/verification?email=${encodeURIComponent(data.email)}`);
+        router.push(verificationRoute(data.email));
         return {
           success: false,
           error: response.message || "Please verify your email to continue.",
@@ -341,7 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.data) {
         // Redirect to verification page instead of logging in
-        router.push(`/verification?email=${encodeURIComponent(data.email)}`);
+        router.push(verificationRoute(data.email));
         return { success: true };
       }
 

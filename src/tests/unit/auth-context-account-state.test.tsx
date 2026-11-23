@@ -168,4 +168,45 @@ describe("AuthContext register", () => {
     expect(result).toEqual({ success: true, claimLinkSent: true });
     expect(push).not.toHaveBeenCalled();
   });
+
+  // Q-V (Nov 2026): signing up from a team invitation link lost the link.
+  // The middleware sends the signed-out invitee to /login?redirect=<the
+  // accept page>; the OTP screen has to carry it on.
+  describe("from a page that sent the visitor to sign in (?redirect=)", () => {
+    afterEach(() => window.history.replaceState(null, "", "/"));
+
+    it("carries the way back to the OTP screen", async () => {
+      window.history.replaceState(null, "", `/login?redirect=${encodeURIComponent("/teams/invite/accept?token=abc")}`);
+      authService.register.mockResolvedValue({ success: true, data: { id: "u1", email: "a@b.co" } });
+      mount();
+      await act(async () => {
+        await auth.register({ first_name: "A", last_name: "B", email: "a@b.co", password: "pw", accept_tos: true });
+      });
+      expect(push).toHaveBeenCalledWith(
+        `/verification?email=a%40b.co&redirect=${encodeURIComponent("/teams/invite/accept?token=abc")}`,
+      );
+    });
+
+    it("drops an off-site destination", async () => {
+      window.history.replaceState(null, "", `/login?redirect=${encodeURIComponent("//evil.example/x")}`);
+      authService.register.mockResolvedValue({ success: true, data: { id: "u1", email: "a@b.co" } });
+      mount();
+      await act(async () => {
+        await auth.register({ first_name: "A", last_name: "B", email: "a@b.co", password: "pw", accept_tos: true });
+      });
+      expect(push).toHaveBeenCalledWith("/verification?email=a%40b.co");
+    });
+
+    it("carries it when an unverified account signs in and is sent to verify", async () => {
+      window.history.replaceState(null, "", `/login?redirect=${encodeURIComponent("/teams/invite/accept?token=abc")}`);
+      authService.login.mockResolvedValue({ success: false, code: "AUTH_EMAIL_NOT_VERIFIED", message: "Verify" });
+      mount();
+      await act(async () => {
+        await auth.login({ email: "a@b.co", password: "pw" });
+      });
+      expect(push).toHaveBeenCalledWith(
+        `/verification?email=a%40b.co&redirect=${encodeURIComponent("/teams/invite/accept?token=abc")}`,
+      );
+    });
+  });
 });

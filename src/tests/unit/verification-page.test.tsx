@@ -8,9 +8,10 @@ const refreshUser = vi.fn();
 const verifyOtp = vi.fn();
 const resendOtp = vi.fn();
 
+let search = "email=new%40example.com";
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
-  useSearchParams: () => new URLSearchParams("email=new%40example.com"),
+  useSearchParams: () => new URLSearchParams(search),
 }));
 vi.mock("next/link", () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ refreshUser }) }));
@@ -50,6 +51,30 @@ describe("verification page after a correct code", () => {
     refreshUser.mockResolvedValue({ role: "TRAINER", is_onboarding_complete: true });
     await submit();
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/dashboard/trainer"));
+  });
+
+  // Q-V (Nov 2026): signing up from a team invitation link landed the new
+  // account on Member onboarding, not joined. The link travels as ?redirect=
+  // and is followed before onboarding, so the invitation is accepted first.
+  describe("with a way back (?redirect=)", () => {
+    afterEach(() => {
+      search = "email=new%40example.com";
+    });
+
+    it("goes back to the team invitation instead of onboarding", async () => {
+      search = `email=new%40example.com&redirect=${encodeURIComponent("/teams/invite/accept?token=abc")}`;
+      refreshUser.mockResolvedValue({ role: "USER", is_onboarding_complete: false });
+      await submit();
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/teams/invite/accept?token=abc"));
+      expect(router.replace).not.toHaveBeenCalledWith("/onboarding");
+    });
+
+    it("ignores an off-site destination", async () => {
+      search = `email=new%40example.com&redirect=${encodeURIComponent("https://evil.example")}`;
+      refreshUser.mockResolvedValue({ role: "USER", is_onboarding_complete: false });
+      await submit();
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/onboarding"));
+    });
   });
 
   it("falls back to the login page when the session cannot be loaded", async () => {
