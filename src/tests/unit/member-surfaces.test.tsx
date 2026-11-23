@@ -57,6 +57,8 @@ vi.mock("@/components/messaging/MyCoachesCard", async (orig) => ({
 }));
 vi.mock("@/app/dashboard/member/_components/EnrollmentOffersCard", () => ({ EnrollmentOffersCard: () => null }));
 
+import { mockCoachedTodayReads } from "./coachedTodayMocks";
+
 const NOW = new Date(2026, 9, 7, 10, 0, 0); // Wed 7 Oct 2026, local
 const DAY = 86_400_000;
 const inDays = (n: number) => new Date(NOW.getTime() + n * DAY).toISOString();
@@ -293,6 +295,7 @@ describe("member home: one membership card and the app line", () => {
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([]));
     vi.spyOn(marketplaceService, "getMyProviders").mockReturnValue(ok({ professionals: [], gyms: [] }));
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
+    mockCoachedTodayReads();
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -316,11 +319,11 @@ describe("member home: one membership card and the app line", () => {
   it("shows no membership card when nothing needs the member", async () => {
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([sub({ end_date: inDays(25) })]));
     render(withQuery(<MemberHomePage />));
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    await screen.findByTestId("own-tracking-full");
     expect(screen.queryByTestId("membership-notice")).toBeNull();
   });
 
-  it("tells a program client their tasks are in the app, and nobody else", async () => {
+  it("tells a program client, in the program card, that their tasks are in the app, and nobody else", async () => {
     const program: MyProgram = {
       _id: "p1",
       kind: "program",
@@ -330,12 +333,15 @@ describe("member home: one membership card and the app line", () => {
     };
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([program]));
     const { unmount } = render(withQuery(<MemberHomePage />));
-    expect(await screen.findByTestId("tasks-in-app")).toHaveTextContent("Your daily tasks are in the Binectics app on your phone.");
+    const hint = await screen.findByTestId("tasks-in-app");
+    expect(hint).toHaveTextContent("Tick today's tasks in the Binectics app.");
+    // The slot a web task list would take, if the F17 ruling changes.
+    expect(hint.closest("[data-slot='program-task-list']")).not.toBeNull();
     unmount();
 
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
     render(withQuery(<MemberHomePage />));
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    await screen.findByTestId("own-tracking-full");
     expect(screen.queryByTestId("tasks-in-app")).toBeNull();
   });
 });
