@@ -11,7 +11,6 @@ import {
 } from "@/lib/api/consultations";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { localTimeKey } from "@/lib/bookings/slots";
-import { confirmInDialog } from "@/test/confirmDialog";
 
 vi.mock("next/link", () => ({
   default: ({ children, href, className }: { children: ReactNode; href: string; className?: string }) => (
@@ -149,18 +148,29 @@ describe("trainer session detail page", () => {
     expect(await screen.findByText("Session not found")).toBeInTheDocument();
   });
 
-  it("completes through the existing endpoint and reloads the session", async () => {
-    get.mockResolvedValueOnce(ok(session));
-    get.mockResolvedValueOnce(ok({ ...session, status: ConsultationBookingStatus.COMPLETED }));
-    complete.mockResolvedValue(ok({ ...session, status: ConsultationBookingStatus.COMPLETED }));
-    const nativeConfirm = vi.spyOn(window, "confirm");
+  it("does not offer Complete before the session has started", async () => {
+    get.mockResolvedValue(ok(session));
+    renderPage();
+    // The session is two days out: it can't have happened yet.
+    const button = await screen.findByRole("button", { name: "Complete" });
+    expect(button).toBeDisabled();
+    expect(screen.getByText("Complete and no-show become available once the session start time has passed.")).toBeInTheDocument();
+    await userEvent.click(button);
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("completes a started session through the existing endpoint and reloads it", async () => {
+    const started = {
+      ...session,
+      startsAt: new Date(Date.now() - 30 * 60_000).toISOString(),
+      endsAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+    };
+    get.mockResolvedValueOnce(ok(started));
+    get.mockResolvedValueOnce(ok({ ...started, status: ConsultationBookingStatus.COMPLETED }));
+    complete.mockResolvedValue(ok({ ...started, status: ConsultationBookingStatus.COMPLETED }));
     renderPage();
     await userEvent.click(await screen.findByRole("button", { name: "Complete" }));
-    // The session is two days out, so completing it early asks first.
-    expect(complete).not.toHaveBeenCalled();
-    await confirmInDialog(userEvent, "Complete a session that hasn't started?", "Mark completed");
     expect(complete).toHaveBeenCalledWith(session.id);
-    expect(nativeConfirm).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByText("Completed")).toBeInTheDocument());
     expect(get).toHaveBeenCalledTimes(2);
   });

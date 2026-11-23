@@ -12,7 +12,7 @@ import {
   durationMins,
   hasStarted,
   isActionable,
-  needsEarlyCompleteConfirm,
+  canComplete,
   ACTION_SUCCESS_MESSAGE,
 } from "@/lib/consultations/bookingActions";
 
@@ -96,13 +96,21 @@ describe("canCancel", () => {
   });
 });
 
-describe("needsEarlyCompleteConfirm", () => {
-  it("asks before completing a session that hasn't started", () => {
-    expect(needsEarlyCompleteConfirm(booking(), NOW)).toBe(true);
+describe("canComplete", () => {
+  // The API refuses to complete a session before its start time
+  // (BOOKING_NOT_STARTED): a completed session unlocks the client's review.
+  it("stays closed until the session start time has passed", () => {
+    expect(canComplete(booking(), NOW)).toBe(false);
   });
 
-  it("completes silently once the session has started", () => {
-    expect(needsEarlyCompleteConfirm(booking({ startsAt: "2026-08-01T11:00:00.000Z" }), NOW)).toBe(false);
+  it("opens once the session has started, even before it ends", () => {
+    expect(canComplete(booking({ startsAt: "2026-08-01T11:45:00.000Z", endsAt: "2026-08-01T12:30:00.000Z" }), NOW)).toBe(true);
+  });
+
+  it("never applies to an already-terminal booking", () => {
+    expect(
+      canComplete(booking({ startsAt: "2026-08-01T11:00:00.000Z", status: ConsultationBookingStatus.COMPLETED }), NOW),
+    ).toBe(false);
   });
 });
 

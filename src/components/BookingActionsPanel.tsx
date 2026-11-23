@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { EmptySlate } from "@/components/ds";
 import { toast } from "@/components/Toast";
-import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import {
   consultationsService,
   type ConsultationBooking,
@@ -11,12 +10,12 @@ import {
 import {
   ACTION_SUCCESS_MESSAGE,
   CANCEL_DISABLED_REASON,
-  NO_SHOW_DISABLED_REASON,
+  NOT_STARTED_REASON,
   bookingStatusLabel,
   canCancel,
+  canComplete,
   canMarkNoShow,
   isActionable,
-  needsEarlyCompleteConfirm,
   type BookingActionKind,
 } from "@/lib/consultations/bookingActions";
 
@@ -27,7 +26,8 @@ import {
  *
  * Rules:
  *  - only PENDING/CONFIRMED bookings are actionable — API-enforced;
- *  - no-show stays disabled until the start time has passed — API-enforced;
+ *  - complete and no-show stay disabled until the start time has passed —
+ *    API-enforced (a completed session unlocks the client's review);
  *  - cancel is only offered before the session starts — UI POLICY ONLY. The
  *    API lets a provider cancel any non-terminal booking; only clients face
  *    a cutoff. Do not assume the server will reject a late cancel.
@@ -51,7 +51,6 @@ export interface BookingActionsPanelProps {
 export function BookingActionsPanel({ booking, now, onActionComplete }: BookingActionsPanelProps) {
   const [acting, setActing] = useState<BookingActionKind | null>(null);
   const [cancelReason, setCancelReason] = useState("");
-  const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   if (!isActionable(booking.status)) {
     return (
@@ -62,6 +61,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
     );
   }
 
+  const completeAllowed = canComplete(booking, now);
   const noShowAllowed = canMarkNoShow(booking, now);
   const cancelAllowed = canCancel(booking, now);
 
@@ -102,30 +102,13 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
     setActing(null);
   };
 
-  // Completing before the start time is allowed but unusual, so it asks first.
-  const onComplete = () => {
-    if (!needsEarlyCompleteConfirm(booking, now)) {
-      void runAction("complete");
-      return;
-    }
-    requestConfirmation({
-      title: "Complete a session that hasn't started?",
-      description:
-        "Its start time hasn't come yet. Completing it now tells your client the session is done and lets them review you. This can't be undone.",
-      confirmLabel: "Mark completed",
-      cancelLabel: "Not yet",
-      confirmVariant: "primary",
-      onConfirm: () => runAction("complete"),
-    });
-  };
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2 flex-wrap">
         <button
           className="btn-primary-v2 sm"
-          disabled={acting !== null}
-          onClick={onComplete}
+          disabled={acting !== null || !completeAllowed}
+          onClick={() => void runAction("complete")}
         >
           {acting === "complete" ? "Completing…" : "Complete"}
         </button>
@@ -137,9 +120,10 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
           {acting === "no-show" ? "Marking…" : "Mark no-show"}
         </button>
       </div>
-      {!noShowAllowed && (
+      {!completeAllowed && (
+        // Complete and no-show open together, at the start time.
         <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
-          {NO_SHOW_DISABLED_REASON}
+          {NOT_STARTED_REASON}
         </div>
       )}
 
@@ -170,7 +154,6 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
           {CANCEL_DISABLED_REASON}
         </div>
       )}
-      {confirmationModal}
     </div>
   );
 }

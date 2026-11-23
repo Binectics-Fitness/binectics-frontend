@@ -6,7 +6,7 @@ import {
 /**
  * Pure rules behind the provider booking actions (Complete / Mark no-show /
  * Cancel), shared by the dietitian consultations page and the trainer
- * sessions log. The no-show and terminal-status rules mirror what the API
+ * sessions log. The complete, no-show and terminal-status rules mirror what the API
  * enforces, so the UI never offers a button the backend rejects; the cancel
  * window is a UI policy (the API lets a provider cancel at any time, only
  * clients face a cutoff).
@@ -54,14 +54,13 @@ export function canCancel(booking: ConsultationBooking, now: number): boolean {
 }
 
 /**
- * Completing a session that hasn't started yet is allowed but suspicious —
- * the page double-checks with the provider first.
+ * The API refuses to complete a session before its start time
+ * (BOOKING_NOT_STARTED): completed records that it happened, and it is what
+ * lets the client review the provider. Once started it may end early, so
+ * the start is the line, as for no-show.
  */
-export function needsEarlyCompleteConfirm(
-  booking: ConsultationBooking,
-  now: number,
-): boolean {
-  return !hasStarted(booking, now);
+export function canComplete(booking: ConsultationBooking, now: number): boolean {
+  return isActionable(booking.status) && hasStarted(booking, now);
 }
 
 export const ACTION_SUCCESS_MESSAGE: Record<BookingActionKind, string> = {
@@ -70,8 +69,9 @@ export const ACTION_SUCCESS_MESSAGE: Record<BookingActionKind, string> = {
   cancel: "Session cancelled.",
 };
 
-export const NO_SHOW_DISABLED_REASON =
-  "No-show becomes available once the session start time has passed.";
+/** Why Complete and Mark no-show are disabled: both open at the start time. */
+export const NOT_STARTED_REASON =
+  "Complete and no-show become available once the session start time has passed.";
 
 export const CANCEL_DISABLED_REASON =
   "Cancelling is only available before the session starts.";
