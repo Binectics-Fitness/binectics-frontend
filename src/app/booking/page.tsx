@@ -7,6 +7,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatCurrency, getClientTimezone } from "@/utils/format";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { bookingAssurances } from "@/lib/bookings/assurances";
+import { sessionDaysLabel } from "@/lib/bookings/labels";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { PromoCodeField } from "@/components/coupons/PromoCodeField";
 import { couponsService, type CouponQuote } from "@/lib/api/coupons";
@@ -322,7 +323,9 @@ function BookingPageInner() {
                           style={{ border: on ? "1px solid var(--ink)" : "1px solid var(--border)" }}
                         >
                           <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>{t.name}</div>
-                          <div className="text-[13px] mt-1 font-mono" style={{ color: "var(--fg-3)" }}>{t.defaultDurationMinutes} min</div>
+                          <div className="text-[13px] mt-1 font-mono" style={{ color: "var(--fg-3)" }}>
+                            {[`${t.defaultDurationMinutes} min`, sessionDaysLabel(t.daysOfWeek)].filter(Boolean).join(" · ")}
+                          </div>
                         </button>
                       );
                     })}

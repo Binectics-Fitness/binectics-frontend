@@ -47,6 +47,11 @@ export interface ConsultationType {
   defaultDurationMinutes: number;
   bufferMinutes: number;
   minAdvanceNoticeMinutes: number;
+  /**
+   * Days of the week the session runs on (0 = Sunday), in the provider's
+   * timezone. Empty or absent: every day the provider works.
+   */
+  daysOfWeek?: number[];
   isActive: boolean;
   /** Optional session price in the currency's minor unit (kobo/cents). */
   priceMinor?: number | null;
