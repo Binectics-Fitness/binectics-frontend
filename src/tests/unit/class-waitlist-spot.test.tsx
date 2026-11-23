@@ -205,13 +205,14 @@ describe("MyClassBookingsCard: Cancel asks in the app's dialog", () => {
     myBookings.mockResolvedValue({ success: true, data: [booking({ spot_open: false })] });
     cancelBooking.mockResolvedValue({ success: false, message: "This class has already started." });
     wrap(<MyClassBookingsCard />);
-    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    // The row's own button says what it does (mobile #182).
+    await userEvent.click(await screen.findByRole("button", { name: "Leave the waitlist for Spin" }));
     let dialog = await screen.findByRole("dialog", { name: "Leave the waitlist for Spin?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Keep booking" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(cancelBooking).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: "Leave the waitlist for Spin" }));
     dialog = await screen.findByRole("dialog", { name: "Leave the waitlist for Spin?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Leave waitlist" }));
     expect(await screen.findByRole("status")).toHaveTextContent("This class has already started.");

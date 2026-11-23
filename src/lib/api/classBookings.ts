@@ -32,6 +32,16 @@ export interface ClassBooking {
    * order (a member ahead of them may get it first). A hint, not a hold.
    */
   spot_open?: boolean;
+  /**
+   * The member's own waitlisted bookings only: 1 + the members ahead in the
+   * queue, as it stands now. Absent on an API before it.
+   */
+  waitlist_position?: number;
+  /**
+   * The gym's IANA zone the class's clock time is read in. Not sent by the
+   * member list yet; when it is, "Add to calendar" uses it (lib/bookings/calendar).
+   */
+  time_zone?: string;
   cancelled_at: string | null;
   /** Why the gym cancelled it (status cancelled_by_gym), e.g. "Class removed by the gym". Null otherwise. */
   cancellation_reason?: string | null;

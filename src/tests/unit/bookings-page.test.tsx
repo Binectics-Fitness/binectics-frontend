@@ -130,3 +130,22 @@ describe("bookings page", () => {
     expect(links[0]).toHaveTextContent("Receipt");
   });
 });
+
+describe("bookings page: Add to calendar (mobile #182)", () => {
+  const list = vi.spyOn(consultationsService, "getMyBookings");
+
+  it("is offered on a confirmed upcoming session only, and downloads its .ics", async () => {
+    const calendar = await import("@/lib/bookings/calendar");
+    const download = vi.spyOn(calendar, "downloadIcs").mockImplementation(() => {});
+    list.mockResolvedValue(ok([free, hold]));
+    render(<MyBookingsPage />);
+    const buttons = await screen.findAllByTestId("add-to-calendar");
+    // The held (unpaid) session gets none.
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveAccessibleName(/^Add Check-in on .* to your calendar$/);
+    await userEvent.click(buttons[0]);
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({ uid: "session-free-1", title: "Check-in", startIso: free.startsAt, endIso: free.endsAt }),
+    );
+  });
+});
