@@ -1,8 +1,11 @@
 /**
  * AsyncStates — two lightweight primitives for consistent async UI across dashboards.
  *
- *  <AsyncSpinner />          — inline 20px spinner, used inside list/section containers
- *  <AsyncSpinner size="page" />  — centred 48px spinner, used as full-area fallback
+ *  <AsyncSpinner />          — inline 20px loader, used inside list/section containers
+ *  <AsyncSpinner size="page" />  — centred 40px loader, used as full-area fallback
+ *
+ *  The loader is the Binectics mark tracing (BrandLoader, as on mobile #243),
+ *  not a generic ring.
  *
  *  <EmptySlate message="…" />   — muted empty-state paragraph
  *  <EmptySlate message="…" hint="…" />  — with secondary help text
@@ -12,18 +15,16 @@
  */
 
 import type { ReactNode } from "react";
+import { BrandLoader } from "@/components/brand/BrandLoader";
 
 export interface AsyncSpinnerProps {
-  /** "inline" (default): 20px spinner in a flex row. "page": 48px centred full area. */
+  /** "inline" (default): 20px loader in a flex row. "page": 40px centred full area. */
   size?: "inline" | "page";
   /** Accessible label. Defaults to "Loading". */
   label?: string;
 }
 
 export function AsyncSpinner({ size = "inline", label = "Loading" }: AsyncSpinnerProps) {
-  const dim = size === "page" ? 40 : 20;
-  const borderWidth = size === "page" ? 3 : 2;
-
   if (size === "page") {
     return (
       <div
@@ -32,15 +33,7 @@ export function AsyncSpinner({ size = "inline", label = "Loading" }: AsyncSpinne
         role="status"
         aria-label={label}
       >
-        <div
-          className="animate-spin rounded-full"
-          style={{
-            width: dim,
-            height: dim,
-            border: `${borderWidth}px solid var(--border-2)`,
-            borderTopColor: "var(--ink)",
-          }}
-        />
+        <BrandLoader size={40} className="text-ink" />
         <p className="mt-3 text-sm" style={{ color: "var(--fg-3)" }}>{label}…</p>
       </div>
     );
@@ -53,15 +46,7 @@ export function AsyncSpinner({ size = "inline", label = "Loading" }: AsyncSpinne
       role="status"
       aria-label={label}
     >
-      <div
-        className="animate-spin rounded-full shrink-0"
-        style={{
-          width: dim,
-          height: dim,
-          border: `${borderWidth}px solid var(--border-2)`,
-          borderTopColor: "var(--ink)",
-        }}
-      />
+      <BrandLoader size={20} className="shrink-0 text-ink" />
       {label}…
     </div>
   );

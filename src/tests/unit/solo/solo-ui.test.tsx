@@ -86,6 +86,11 @@ describe("Today: first day", () => {
     expect(screen.getByRole("link", { name: "Log weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");
     expect(screen.getByRole("link", { name: "Build your list" })).toBeInTheDocument();
     expect(screen.getByText("Only you can see what you log")).toBeInTheDocument();
+    // Each card says its state, not how to use it (mobile #271 text cuts).
+    for (const line of ["16:8 or your own length", "No glasses yet", "Not yet", "A few things you want to do most days."]) {
+      expect(screen.getByText(line)).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/kept for you|Tap once for each glass|Once a week is plenty|Tool lines tick/)).toBeNull();
     expect(screen.getByRole("link", { name: "Find a gym or coach" })).toHaveAttribute("href", "/marketplace");
     expect(screen.getByText("Reminders are set in the mobile app")).toBeInTheDocument();
     // No fabricated figures, streaks or scores.

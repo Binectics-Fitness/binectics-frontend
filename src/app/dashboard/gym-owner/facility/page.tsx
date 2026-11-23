@@ -117,7 +117,8 @@ export default function GymLocationsPage() {
             {/* Footer */}
             <div className="flex items-center justify-between px-4.5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
               <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Location · <strong style={{ color: "var(--ink)" }}>{l.city ?? "-"}, {l.country_code ?? "-"}</strong></span>
-              <Link href={`/dashboard/gym-owner/locations/${l._id}`} className="btn-ghost-v2 sm">Manage location</Link>
+              {/* A listing carries no location id (only organization_id), so this goes to the locations list, not /locations/[id]. */}
+              <Link href="/dashboard/gym-owner/locations" className="btn-ghost-v2 sm">Manage locations</Link>
             </div>
           </DSCard>
         ))}
