@@ -14,7 +14,7 @@ agent: Explore
 - **`docs/UI_STANDARDS.md` is LEGACY** — its hex colors (`#00d991`, `#03314b`), Tailwind-scale type (`text-2xl font-black`), and `rounded-2xl/xl` radii are superseded by the token layer. Do NOT audit toward it. The only rules that survive from it (re-asserted in CLAUDE.md) are: SearchableSelect over native `<select>`, enums for domain constants, and `text-sm` mobile minimum.
 - Region pricing: all marketing pages must use `useRegion()` from `@/contexts/RegionContext`
 - Serif italic (owner ruling, Oct 14 2026, reversing the Oct 6 one-word rule): **product screens** get NO serif italic and no decorative italic; titles go through `TitleWithEmphasis` / `PageHeader`, which render plain. **Marketing pages** keep 1-2 serif-italic moments per page.
-- Mobile: 44px min touch targets (min-h-11), responsive at 320-430px
+- Mobile: 44px min touch targets (min-h-touch / min-h-11, both 44px; never min-h-10 or lower without an md: prefix), responsive at 320-430px
 - **Design system components: `src/components/ds/`** — prefer these over bespoke markup that duplicates them (`DSCard`, `DSTable`, shells, `ChipEditor`, etc.).
 - **Dropdowns: `SearchableSelect` (`@/components/SearchableSelect`), never native `<select>`.** Hard rule.
 - **No shadows** except modals and the check-in/kiosk surface (which is also exempt from the hardcoded-color and radii rules where the QR encoder / scannability genuinely requires it — flag those as justified, don't force a fix).
@@ -50,7 +50,7 @@ Exclude `globals.css` and `tailwind.config`.
 
 ### 4. Mobile responsiveness audit (scope: `mobile`)
 Find components that may have mobile issues:
-- Buttons or links without `min-h-11` (44px touch target)
+- Buttons or links without `min-h-touch` or `min-h-11` (44px touch target)
 - `grid-cols-3` or `grid-cols-4` without responsive breakpoints (`sm:` or `lg:` prefix)
 - Fixed widths (`w-[XXXpx]`) without responsive alternatives
 - Tables without `overflow-x-auto`
