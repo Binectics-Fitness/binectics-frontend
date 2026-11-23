@@ -37,6 +37,8 @@ export interface User {
   created_at: Date | string;
   updated_at: Date | string;
   country_code?: string;
+  /** Profile city, free text from onboarding or settings. */
+  city?: string | null;
   is_suspended?: boolean;
   /** Platform admin flag — orthogonal to role, so a gym owner can also be an admin. */
   is_admin?: boolean;
@@ -493,7 +495,10 @@ export interface MarketplaceSearchParams {
   accepting_clients?: boolean;
   verified_only?: boolean;
   min_rating?: number;
-  sort?: "rating" | "newest" | "nearest";
+  /** nearest needs lat/lng (without them the API lists top rated); price sorts list unpriced last. */
+  sort?: "rating" | "newest" | "nearest" | "price_asc";
+  /** The member's own currency (ISO 4217): with price_asc, listings priced in it come first. */
+  currency?: string;
   page?: number;
   limit?: number;
 }
