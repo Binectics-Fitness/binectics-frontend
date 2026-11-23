@@ -94,3 +94,44 @@ describe("Team page: pending invitations", () => {
     expect((screen.getByLabelText("Search members") as HTMLInputElement).value).toBe("");
   });
 });
+
+describe("Team page: sending an invitation", () => {
+  // Q-V (Nov 2026): the API answers an invite with { id, email, status,
+  // expires_at } and no role, and the page put that straight into the list:
+  // reading the missing role's name crashed the page ("Something went
+  // wrong") although the invitation had been sent.
+  it("re-reads the list instead of rendering the API's short answer, and does not crash", async () => {
+    vi.spyOn(teamsService, "getRoles").mockResolvedValue({
+      success: true,
+      data: [{ _id: "r2", name: "Consultant / Trainer", code: "consultant", permissions: [] }],
+    } as never);
+    getInvitations.mockResolvedValueOnce({ success: true, data: [] } as never);
+    const sent = {
+      ...pending,
+      _id: "inv-2",
+      email: "coach2@example.com",
+      team_role_id: { _id: "r2", name: "Consultant / Trainer" },
+    };
+    getInvitations.mockResolvedValue({ success: true, data: [sent] } as never);
+    const invite = vi.spyOn(teamsService, "inviteMember").mockResolvedValue({
+      success: true,
+      data: { id: "inv-2", email: "coach2@example.com", status: "pending", expires_at: sent.expires_at },
+    } as never);
+
+    render(<TeamWorkspacePage />);
+    expect(await screen.findByText("No pending invitations.")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("person@domain.com"), { target: { value: "coach2@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+
+    await vi.waitFor(() => expect(invite).toHaveBeenCalledWith("o1", { email: "coach2@example.com", team_role_id: "r2" }));
+    expect(await screen.findByText("coach2@example.com")).toBeInTheDocument();
+    expect(screen.getByText(/Consultant \/ Trainer · expires/)).toBeInTheDocument();
+    expect(screen.getByText("Invitation sent. They join the team when they accept it.")).toBeInTheDocument();
+  });
+
+  it("does not show a stray link to the accept page, which is for the invitee's email", async () => {
+    render(<TeamWorkspacePage />);
+    expect(await screen.findByText("new.coach@example.com")).toBeInTheDocument();
+    expect(screen.queryByText(/Invite acceptance link/)).toBeNull();
+  });
+});

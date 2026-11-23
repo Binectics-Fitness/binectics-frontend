@@ -110,6 +110,16 @@ export function useOrgManagement(orgId: string, options: { invitations?: boolean
     setIsLoading(false);
   }, [orgId, readInvitations]);
 
+  // After an invite or a direct add, the pending list is read again rather
+  // than the answer appended: the API answers with { id, email, status,
+  // expires_at }, no _id and no role, and rendering that row crashed the Team
+  // page (Q-V, Nov 2026). A failed re-read keeps the list as it was.
+  const reloadInvitations = useCallback(async () => {
+    if (!readInvitations) return;
+    const res = await teamsService.getInvitations(orgId).catch(() => null);
+    if (res?.success && res.data) setInvitations(res.data);
+  }, [orgId, readInvitations]);
+
   // Invite/direct-add return the full response so callers can surface the
   // real API error (e.g. a billing 403) instead of a generic message.
   const inviteMember = useCallback(
@@ -117,12 +127,10 @@ export function useOrgManagement(orgId: string, options: { invitations?: boolean
       data: InviteMemberRequest,
     ): Promise<ApiResponse<TeamInvitation>> => {
       const response = await teamsService.inviteMember(orgId, data);
-      if (response.success && response.data) {
-        setInvitations((prev) => [...prev, response.data!]);
-      }
+      if (response.success) await reloadInvitations();
       return response;
     },
-    [orgId],
+    [orgId, reloadInvitations],
   );
 
   const addMemberDirect = useCallback(
@@ -132,12 +140,10 @@ export function useOrgManagement(orgId: string, options: { invitations?: boolean
       // The API answers with a pending invitation, not a member: nobody joins
       // the team until they accept it.
       const response = await teamsService.addMemberDirect(orgId, data);
-      if (response.success && response.data) {
-        setInvitations((prev) => [...prev, response.data!]);
-      }
+      if (response.success) await reloadInvitations();
       return response;
     },
-    [orgId],
+    [orgId, reloadInvitations],
   );
 
   const removeMember = useCallback(
