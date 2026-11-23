@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
+import { useQueryClient } from "@tanstack/react-query";
+import { AsyncSpinner, DSCard, Eyebrow, StatusPill } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { UploadZone } from "@/app/onboarding/_components";
 import { COUNTRY_NAME_TO_CODE } from "@/app/onboarding/_config";
 import { credentialsService } from "@/lib/api/credentials";
+import { MY_VERIFICATION_KEY, useMyVerification } from "@/lib/queries/verification";
+import { providerVerificationCopy } from "@/lib/verification/labels";
 import {
   DIETITIAN_POPULATIONS,
   DIETITIAN_SPECIALIZATIONS,
@@ -59,6 +62,9 @@ export function CredentialsTab() {
   const [licenses, setLicenses] = useState<LicenseDraft[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploads, setUploads] = useState(0);
+  const queryClient = useQueryClient();
+  const { data: verifications } = useMyVerification();
+  const verification = providerVerificationCopy(verifications?.find((v) => v.subject_type === "dietitian"));
 
   const apply = (view: CredentialsView) => {
     setLoaded(view);
@@ -111,6 +117,8 @@ export function CredentialsTab() {
       }
       apply(res.data);
       toast.success("Credentials saved");
+      // A new licence document puts the review back in the queue.
+      void queryClient.invalidateQueries({ queryKey: MY_VERIFICATION_KEY });
     } catch {
       toast.error("We couldn't save your credentials. Check your connection.");
     } finally {
@@ -131,6 +139,18 @@ export function CredentialsTab() {
 
   return (
     <div className="flex flex-col gap-4 max-w-[760px]">
+      <DSCard>
+        <div className="p-5 flex flex-wrap items-start gap-3" aria-live="polite">
+          <StatusPill
+            tone={verification?.tone ?? "neutral"}
+            label={verification?.label ?? "Not sent"}
+          />
+          <p className="text-[13px] flex-1 min-w-[220px]" style={{ color: "var(--fg-2)" }}>
+            {verification?.text ??
+              "Add your licence document below. Our team reviews it and adds the verified badge to your profile."}
+          </p>
+        </div>
+      </DSCard>
       <DSCard>
         <div className="p-5 flex flex-col gap-5">
           <div>

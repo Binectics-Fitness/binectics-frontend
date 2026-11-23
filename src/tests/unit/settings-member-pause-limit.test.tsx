@@ -54,6 +54,7 @@ vi.mock("@/components/SearchableSelect", () => ({ default: () => null }));
 vi.mock("@/components/provider/GatewaysSection", () => ({ GatewaysSection: () => null }));
 vi.mock("@/components/provider/SetupChecklist", () => ({ ShowSetupChecklist: () => null }));
 vi.mock("@/app/dashboard/gym-owner/settings/NotificationsSection", () => ({ NotificationsSection: () => null }));
+vi.mock("@/app/dashboard/gym-owner/settings/VerificationSection", () => ({ VerificationSection: () => null }));
 vi.mock("@/app/dashboard/gym-owner/settings/TeamAccessSections", () => ({ RolesSection: () => null }));
 vi.mock("@/components/activity/ActivityLogPanel", () => ({
   ActivityLogSection: () => null,

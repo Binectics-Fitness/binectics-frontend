@@ -17,6 +17,7 @@ import { NotificationsSection } from "./NotificationsSection";
 import { RolesSection } from "./TeamAccessSections";
 import { ActivityLogSection, canSeeActivityLog } from "@/components/activity/ActivityLogPanel";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { VerificationSection } from "./VerificationSection";
 import {
   useOrganizationDetails,
   useUpdateOrganization,
@@ -57,7 +58,7 @@ import {
 } from "@/lib/constants/orgSettingsDefaults";
 
 const SECTIONS = [
-  { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
+  { group: "Business", items: [{ id: "org", label: "Organization" }, { id: "verification", label: "Verification" }, { id: "currency", label: "Currency & locale" }, { id: "tax", label: "Tax & VAT" }] },
   { group: "Operations", items: [{ id: "booking", label: "Booking rules" }, { id: "membership", label: "Membership rules" }, { id: "kiosk", label: "Kiosk & QR" }, { id: "notifications", label: "Notifications" }] },
   { group: "Money", items: [{ id: "gateways", label: "Payment gateways" }, { id: "payouts", label: "Payout schedule" }] },
   { group: "Team", items: [{ id: "roles", label: "Roles & scopes" }] },
@@ -208,9 +209,12 @@ export function SettingsClient() {
   const canManage = holds(viewer, TeamPermission.MANAGE_ORGANIZATION);
   const sections = useMemo(
     () =>
-      SECTIONS.filter((g) => isOwner || (g.group !== "Money" && g.group !== "Danger zone")).map((g) =>
-        showActivity && g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
-      ),
+      SECTIONS.filter((g) => isOwner || (g.group !== "Money" && g.group !== "Danger zone"))
+        // Verification documents are the owner's (as on onboarding).
+        .map((g) => (isOwner ? g : { ...g, items: g.items.filter((i) => i.id !== "verification") }))
+        .map((g) =>
+          showActivity && g.group === "Team" ? { ...g, items: [...g.items, { id: "activity", label: "Activity log" }] } : g,
+        ),
     [showActivity, isOwner],
   );
   const { data: org, isLoading } = useOrganizationDetails(orgId);
@@ -259,6 +263,18 @@ export function SettingsClient() {
     return () => {
       cancelled = true;
     };
+  }, [org]);
+
+  // A link to a section (#verification from a verification notice) lands
+  // before the sections render; scroll once they're on the page.
+  const scrolledToHash = useRef(false);
+  useEffect(() => {
+    if (scrolledToHash.current || !org) return;
+    const id = window.location.hash.slice(1);
+    const el = id ? document.getElementById(id) : null;
+    if (!el) return;
+    scrolledToHash.current = true;
+    el.scrollIntoView({ block: "start" });
   }, [org]);
 
   // Scroll-spy: highlight the section currently in view.
@@ -417,6 +433,14 @@ export function SettingsClient() {
               <TextField label="Primary email" type="email" value={form?.primary_email ?? ""} onChange={(v) => set("primary_email", v)} disabled={!form} />
             </DSCard>
           </section>
+
+          {/* Verification: the badge status and the documents behind it */}
+          {isOwner ? (
+            <section id="verification">
+              <SectionHeading title="Verification" desc="Members see the verified badge after our team reviews these documents. They're private to you and the Binectics team." />
+              <VerificationSection org={org ?? undefined} />
+            </section>
+          ) : null}
 
           {/* Currency & locale */}
           <section id="currency">

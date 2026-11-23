@@ -37,6 +37,7 @@ vi.mock("@/components/provider/SetupChecklist", () => ({ ShowSetupChecklist: () 
 vi.mock("@/components/activity/ActivityLogPanel", () => ({ ActivityLogSection: () => null, canSeeActivityLog: () => false }));
 vi.mock("@/app/dashboard/gym-owner/settings/ClassCancellationPolicyEditor", () => ({ ClassCancellationPolicyEditor: () => null }));
 vi.mock("@/app/dashboard/gym-owner/settings/NotificationsSection", () => ({ NotificationsSection: () => null }));
+vi.mock("@/app/dashboard/gym-owner/settings/VerificationSection", () => ({ VerificationSection: () => null }));
 vi.mock("@/app/dashboard/gym-owner/settings/TeamAccessSections", () => ({ RolesSection: () => null }));
 
 beforeEach(() => {

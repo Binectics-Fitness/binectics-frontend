@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProviderListingProfile } from "@/components/provider/ProviderListingProfile";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow } from "@/components/ds";
@@ -19,6 +19,15 @@ type Tab = "Listing" | "Credentials" | "Reviews";
  */
 export function ProfileTabs() {
   const [tab, setTab] = useState<Tab>("Listing");
+  // ?tab=credentials opens Credentials (the link in verification notices).
+  // Read after mount: useSearchParams would need a Suspense boundary here.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    const next: Tab | null = wanted === "credentials" ? "Credentials" : wanted === "reviews" ? "Reviews" : null;
+    if (!next) return;
+    const kick = window.setTimeout(() => setTab(next), 0);
+    return () => window.clearTimeout(kick);
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">
