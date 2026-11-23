@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
-import { COUNTRY_NAME_TO_CODE, SESSION_MISSING, onboardingCurrency, trainerCountry } from "./_config";
+import { SESSION_MISSING, onboardingCurrency } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
 import { useAuth } from "@/contexts/AuthContext";
-import { useHomeCountry } from "./_homeCountry";
-import { LISTING_BIO, accountCountryName, providerDisplayName } from "./_providerSetup";
+import { useStepCountry } from "./_homeCountry";
+import { LISTING_BIO, providerDisplayName } from "./_providerSetup";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -23,17 +23,13 @@ const PRICE_KEYS = ["price1on1", "priceMonthly"] as const;
 
 export function TrainerStep1({ data, setField }: StepProps) {
   const { user } = useAuth();
-  // Start on the account's own country (or the detected region) when the list has it,
+  // Every country, starting on the account's own (or the detected region),
   // and the account's name, so nothing has to be typed twice.
-  const own = accountCountryName(useHomeCountry(), COUNTRY_NAME_TO_CODE);
-  useEffect(() => {
-    if (!data.country && own) setField("country", own);
-  }, [data.country, own, setField]);
+  const country = useStepCountry(data, setField);
   useEffect(() => {
     if (data.firstName === undefined && user?.first_name) setField("firstName", user.first_name);
     if (data.lastName === undefined && user?.last_name) setField("lastName", user.last_name);
   }, [data.firstName, data.lastName, user?.first_name, user?.last_name, setField]);
-  const country = trainerCountry(data);
   return (
     <>
       <StageHead crumb="Step 01 of 05, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
@@ -41,13 +37,13 @@ export function TrainerStep1({ data, setField }: StepProps) {
         <Field label="First name" htmlFor="ob-tr-first"><TextInput id="ob-tr-first" value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
         <Field label="Last name" htmlFor="ob-tr-last"><TextInput id="ob-tr-last" value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
         <Field label="City" htmlFor="ob-tr-city"><TextInput id="ob-tr-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} /></Field>
-        <Field label="Country" htmlFor="ob-tr-country"><SelectField id="ob-tr-country" value={country} onChange={(v) => setField("country", v)} options={["South Africa", "Nigeria", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country" htmlFor="ob-tr-country"><SelectField id="ob-tr-country" value={country.countryName} placeholder="Choose country" onChange={country.pick} options={country.options} /></Field>
         <OnboardingCurrencyField
           id="ob-tr-currency"
           data={data}
           setField={setField}
-          countryCode={COUNTRY_NAME_TO_CODE[country]}
-          countryName={country}
+          countryCode={country.countryCode || undefined}
+          countryName={country.countryName || "your country"}
           priceKeys={PRICE_KEYS}
         />
         <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." htmlFor="ob-tr-headline" full>

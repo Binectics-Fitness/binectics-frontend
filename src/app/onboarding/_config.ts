@@ -3,7 +3,12 @@ export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
-/** The country choices the provider tracks offer, as ISO 3166-1 alpha-2. */
+/**
+ * The six countries the provider tracks used to offer, as ISO 3166-1
+ * alpha-2. Step 1 now lists every country from /utility/countries; this
+ * only reads drafts saved before that (a country name with no code), and
+ * the dietitian profile's licence select still uses it.
+ */
 export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   "South Africa": "ZA",
   Nigeria: "NG",
@@ -53,18 +58,18 @@ export const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
  * role really was preassigned (the member invite / gym enrollment flow) are
  * detected separately, via membership evidence — see the onboarding page.
  */
-/** The default the step 1 select shows when the trainer never touches it. */
-export const TRAINER_DEFAULT_COUNTRY = "South Africa";
-
 /**
- * The country a trainer chose on step 1, or the select's default. The
- * select only writes `data.country` on change, so a trainer who keeps the
- * default has nothing in the data; reading the raw value there saved no
- * country and no workspace currency while step 4 priced in the default's
- * currency anyway.
+ * The country (ISO 3166-1 alpha-2) a trainer or dietitian has on step 1, or
+ * undefined when none is chosen. Step 1 writes `countryCode` with the name,
+ * starting from the account's own country or the detected region and never
+ * from one fixed country. A draft saved before step 1 kept codes holds only
+ * a name; one of the old six still resolves.
  */
-export function trainerCountry(data: Record<string, unknown>): string {
-  return (data.country as string) || TRAINER_DEFAULT_COUNTRY;
+export function providerCountryCode(data: Record<string, unknown>): string | undefined {
+  const code = data.countryCode;
+  if (typeof code === "string" && /^[A-Z]{2}$/.test(code)) return code;
+  const name = data.country;
+  return typeof name === "string" ? COUNTRY_NAME_TO_CODE[name] : undefined;
 }
 
 /** What step 1 of the trainer track persists to the profile and the workspace. */
@@ -77,8 +82,7 @@ export function trainerLocationPatch(data: Record<string, unknown>): {
   if (data.lastName) profile.last_name = data.lastName as string;
   const city = (data.city as string | undefined)?.trim();
   if (city) profile.city = city;
-  const country = trainerCountry(data);
-  const code = COUNTRY_NAME_TO_CODE[country];
+  const code = providerCountryCode(data);
   if (code) profile.country_code = code;
   return { profile, currency: onboardingCurrency(data) };
 }
@@ -169,9 +173,6 @@ export function trainerSessionPatch(data: Record<string, unknown>): OwnSessionPa
   };
 }
 
-/** The default the dietitian step 1 country select shows when untouched. */
-export const DIETITIAN_DEFAULT_COUNTRY = "Nigeria";
-
 /**
  * The name of the session a dietitian's onboarding creates. The settings
  * editor (ConsultationAvailabilityManager) creates a provider's first own
@@ -179,11 +180,6 @@ export const DIETITIAN_DEFAULT_COUNTRY = "Nigeria";
  * whichever own session is active, so the two stay one session.
  */
 export const DIETITIAN_SESSION_NAME = "1:1 session";
-
-/** The country a dietitian chose on step 1, or the select's default. */
-export function dietitianCountry(data: Record<string, unknown>): string {
-  return (data.country as string) || DIETITIAN_DEFAULT_COUNTRY;
-}
 
 /** The currency a dietitian's workspace and consultation price are in, once chosen. */
 export function dietitianCurrency(data: Record<string, unknown>): string | null {
@@ -211,7 +207,7 @@ export function dietitianLocationPatch(data: Record<string, unknown>): {
   }
   const city = (data.city as string | undefined)?.trim();
   if (city) profile.city = city;
-  const code = COUNTRY_NAME_TO_CODE[dietitianCountry(data)];
+  const code = providerCountryCode(data);
   if (code) profile.country_code = code;
   return { profile, currency: dietitianCurrency(data) };
 }

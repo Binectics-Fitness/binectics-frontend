@@ -96,7 +96,8 @@ describe("dietitian onboarding: what steps 1 to 3 save to the credentials", () =
     expect(dietitianCredentialsPatch(2, {})).toEqual({ body: null, error: null });
     const half = dietitianCredentialsPatch(2, { licName: "RD" });
     expect(half.body).toBeNull();
-    expect(half.error).toMatch(/^Add who issued it and the expiry date\. Or clear the licence/);
+    // No country is assumed any more (step 1 had none): it is asked for too.
+    expect(half.error).toMatch(/^Add who issued it, the country and the expiry date\. Or clear the licence/);
   });
 
   it("step 3 saves the codes, at most five specializations", () => {
@@ -144,5 +145,12 @@ describe("onboarding step 2 never wipes licences on file", () => {
   it("finds the id the API gave the onboarding licence", () => {
     expect(onboardingLicenseId([onFile("a")], [onFile("a"), onFile("new")], undefined)).toBe("new");
     expect(onboardingLicenseId([onFile("a"), onFile("mine")], [onFile("a"), onFile("mine")], "mine")).toBe("mine");
+  });
+});
+
+describe("dietitian onboarding: the licence country follows step 1's full-list country", () => {
+  it("starts on step 1's code, any country, and is blank with none", () => {
+    expect(dietitianLicenseDraft({ country: "Egypt", countryCode: "EG" }).countryCode).toBe("EG");
+    expect(dietitianLicenseDraft({}).countryCode).toBe("");
   });
 });

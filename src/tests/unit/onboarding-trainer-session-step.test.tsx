@@ -10,6 +10,20 @@ import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
 const auth = vi.hoisted(() => ({ user: null as null | Record<string, unknown> }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 
+// Step 1 lists every country the API knows (/utility/countries).
+vi.mock("@/lib/queries/utility", () => ({
+  useCountries: () => ({
+    data: [
+      { code: "NG", name: "Nigeria", dialCode: "+234", cities: [] },
+      { code: "ZA", name: "South Africa", dialCode: "+27", cities: [] },
+      { code: "KE", name: "Kenya", dialCode: "+254", cities: [] },
+      { code: "US", name: "United States", dialCode: "+1", cities: [] },
+      { code: "FR", name: "France", dialCode: "+33", cities: [] },
+    ],
+    isLoading: false,
+  }),
+}));
+
 // NGN is the only currency prices can be set in (the seeded state).
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
@@ -87,5 +101,23 @@ describe("trainer basics step", () => {
     await userEvent.click(screen.getByLabelText("Country"));
     await userEvent.click(await screen.findByText("United States"));
     expect(latest.currency).toBe("NGN");
+  });
+
+  it("starts on no country, not a fixed one, when the account and the visit name none", () => {
+    render(<Harness Step={TrainerStep1} />);
+    expect(latest.country).toBeUndefined();
+    expect(latest.countryCode).toBeUndefined();
+    expect(screen.getByText("Choose country")).toBeInTheDocument();
+  });
+
+  it("starts on the account's own country and lists every country, not six", async () => {
+    auth.user = { country_code: "FR" };
+    render(<Harness Step={TrainerStep1} />);
+    expect(latest.countryCode).toBe("FR");
+    expect(latest.country).toBe("France");
+    await userEvent.click(screen.getByLabelText("Country"));
+    await userEvent.click(await screen.findByText("Kenya"));
+    expect(latest.country).toBe("Kenya");
+    expect(latest.countryCode).toBe("KE");
   });
 });

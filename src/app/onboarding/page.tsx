@@ -15,7 +15,7 @@ import { credentialsService } from "@/lib/api/credentials";
 import { dietitianCredentialsPatch, ONBOARDING_LICENSE_ID, onboardingLicenseId, withOnboardingLicense } from "./_credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, COUNTRY_NAME_TO_CODE, trainerCountry, dietitianCountry, TRAINER_STEP, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, providerCountryCode, TRAINER_STEP, type RoleId } from "./_config";
 import { STAFF_INVITED, staffInviteEmails, staffInvited, staffInviteError, trainerMonthlyPlan, onboardingListing, saveOnboardingListing } from "./_providerSetup";
 import { clearOnboardingDraft, isDraftTrack, loadOnboardingDraft, resumableDraft, saveOnboardingDraft } from "./_draft";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
@@ -496,7 +496,7 @@ function OnboardingContent() {
       } else if (currentStep === TRAINER_STEP.listing) {
         // What onboarding asked becomes the marketplace listing (a draft):
         // it used to reach nothing, and My profile said "Listing not found".
-        const listing = onboardingListing("trainer", stepData, COUNTRY_NAME_TO_CODE[trainerCountry(stepData)]);
+        const listing = onboardingListing("trainer", stepData, providerCountryCode(stepData));
         if (listing) return await saveOnboardingListing(listing, marketplaceService);
       }
     } catch { /* non-blocking */ }
@@ -590,7 +590,7 @@ function OnboardingContent() {
         }
       } else if (currentStep === 6) {
         // The marketplace listing (a draft), as the trainer track does.
-        const listing = onboardingListing("dietitian", stepData, COUNTRY_NAME_TO_CODE[dietitianCountry(stepData)]);
+        const listing = onboardingListing("dietitian", stepData, providerCountryCode(stepData));
         if (listing) return await saveOnboardingListing(listing, marketplaceService);
       }
     } catch { /* non-blocking */ }

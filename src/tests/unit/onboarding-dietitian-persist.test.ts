@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  dietitianCountry,
   dietitianCurrency,
   dietitianLocationPatch,
   dietitianSessionPatch,
@@ -15,11 +14,14 @@ import {
 import { TRAINER_STEPS } from "@/app/onboarding/_trainer";
 
 describe("dietitian onboarding: what each step persists", () => {
-  it("treats the untouched country select as its default, so the default is saved too", () => {
-    // The step 1 select shows "Nigeria" without writing data.country.
-    expect(dietitianCountry({})).toBe("Nigeria");
+  it("saves no country when none was chosen, never a fixed default", () => {
     const { profile } = dietitianLocationPatch({ fullName: "Dr Nadia Hassan" });
-    expect(profile).toEqual({ first_name: "Nadia", last_name: "Hassan", country_code: "NG" });
+    expect(profile).toEqual({ first_name: "Nadia", last_name: "Hassan" });
+  });
+
+  it("saves any country from the full list by its code", () => {
+    const { profile } = dietitianLocationPatch({ fullName: "Amira", country: "Egypt", countryCode: "EG" });
+    expect(profile).toEqual({ first_name: "Amira", country_code: "EG" });
   });
 
   it("saves city and country code from step 1 and the currency chosen there", () => {

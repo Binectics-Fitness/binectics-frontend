@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
-import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
+import { SESSION_MISSING, dietitianCurrency } from "./_config";
 import { dietitianLicenseDraft } from "./_credentials";
 import {
   DIETITIAN_POPULATIONS,
@@ -18,8 +17,9 @@ import {
 } from "@/lib/credentials/dietitian";
 import { OnboardingCurrencyField } from "./_currency";
 import { useAuth } from "@/contexts/AuthContext";
-import { useHomeCountry } from "./_homeCountry";
-import { LISTING_BIO, LISTING_HEADLINE, accountCountryName, providerDisplayName } from "./_providerSetup";
+import { useStepCountry } from "./_homeCountry";
+import { useCountries } from "@/lib/queries/utility";
+import { LISTING_BIO, LISTING_HEADLINE, providerDisplayName } from "./_providerSetup";
 
 /** The step 5 price, cleared when the currency changes. */
 const PRICE_KEYS = ["sessionPrice"] as const;
@@ -28,16 +28,9 @@ const PRICE_KEYS = ["sessionPrice"] as const;
 const SPECIALIZATION_LABELS = DIETITIAN_SPECIALIZATIONS.map((o) => o.label);
 const POPULATION_LABELS = DIETITIAN_POPULATIONS.map((o) => o.label);
 
-/** The step 1 countries, as the licence step's choices (name → code). */
-const LICENSE_COUNTRIES = Object.entries(COUNTRY_NAME_TO_CODE);
-
 export function DietStep1({ data, setField }: StepProps) {
-  // Start on the account's own country (or the detected region) when the list has it.
-  const own = accountCountryName(useHomeCountry(), COUNTRY_NAME_TO_CODE);
-  useEffect(() => {
-    if (!data.country && own) setField("country", own);
-  }, [data.country, own, setField]);
-  const country = dietitianCountry(data);
+  // Every country, starting on the account's own (or the detected region).
+  const country = useStepCountry(data, setField);
   return (
     <>
       <StageHead crumb="Step 01 of 06, dietitian track" title="Your practice basics." desc="We'll list this on your profile." />
@@ -45,13 +38,13 @@ export function DietStep1({ data, setField }: StepProps) {
         <Field label="Full name (with title)" htmlFor="ob-diet-name"><TextInput id="ob-diet-name" value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
         <Field label="Pronouns" htmlFor="ob-diet-pronouns"><TextInput id="ob-diet-pronouns" value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v.slice(0, MAX_PRONOUNS))} placeholder="she/her" /></Field>
         <Field label="City" htmlFor="ob-diet-city"><TextInput id="ob-diet-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
-        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={country} onChange={(v) => setField("country", v)} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={country.countryName} placeholder="Choose country" onChange={country.pick} options={country.options} /></Field>
         <OnboardingCurrencyField
           id="ob-diet-currency"
           data={data}
           setField={setField}
-          countryCode={COUNTRY_NAME_TO_CODE[country]}
-          countryName={country}
+          countryCode={country.countryCode || undefined}
+          countryName={country.countryName || "your country"}
           priceKeys={PRICE_KEYS}
         />
         <Field label="Practice name (optional)" htmlFor="ob-diet-practice" full><TextInput id="ob-diet-practice" value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
@@ -68,7 +61,9 @@ export function DietStep1({ data, setField }: StepProps) {
  */
 export function DietStep2({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   const draft = dietitianLicenseDraft(data);
-  const countryName = LICENSE_COUNTRIES.find(([, code]) => code === draft.countryCode)?.[0] ?? DIETITIAN_DEFAULT_COUNTRY;
+  // The licence's country starts on step 1's, from the same full list.
+  const { data: countries = [] } = useCountries();
+  const countryName = countries.find((c) => c.code === draft.countryCode)?.name ?? "";
   return (
     <>
       <StageHead crumb="Step 02 of 06, dietitian track" title="Licensure." desc="Your practising licence. Your profile shows that you're licensed, who issued it and where; the number and the document stay private to you and the Binectics team." />
@@ -83,7 +78,7 @@ export function DietStep2({ data, setField, onUploadStart, onUploadEnd }: StepPr
           <TextInput id="ob-diet-lic-number" value={draft.number} onChange={(v) => setField("licNumber", v.slice(0, 60))} placeholder="Never shown publicly" />
         </Field>
         <Field label="Country" htmlFor="ob-diet-lic-country">
-          <SelectField id="ob-diet-lic-country" value={countryName} onChange={(v) => setField("licCountry", COUNTRY_NAME_TO_CODE[v] ?? "")} options={LICENSE_COUNTRIES.map(([name]) => name)} />
+          <SelectField id="ob-diet-lic-country" value={countryName} placeholder="Choose country" onChange={(v) => setField("licCountry", countries.find((c) => c.name === v)?.code ?? "")} options={countries.map((c) => c.name)} />
         </Field>
         <Field label="Expires" htmlFor="ob-diet-lic-expiry">
           <TextInput id="ob-diet-lic-expiry" type="date" value={draft.expiresAt} onChange={(v) => setField("licExpiry", v)} />
