@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "./client";
+import type { ClosedDate, WeeklyHours } from "@/lib/marketplace/openingHours";
 import { AccountType, type ApiResponse } from "@/lib/types";
 import type {
   FirstDayOfWeek,
@@ -286,6 +287,12 @@ export interface OrganizationLocation {
   country?: string;
   is_primary: boolean;
   is_active: boolean;
+  /** Weekly hours, local times in the location's zone; absent = not set. */
+  opening_hours?: WeeklyHours | null;
+  /** Dates the location is shut (YYYY-MM-DD). */
+  closed_dates?: ClosedDate[];
+  /** IANA zone when it differs from the organization's. */
+  time_zone?: string;
   created_at: string;
   updated_at: string;
 }
@@ -297,6 +304,10 @@ export interface CreateLocationRequest {
   postal_code?: string;
   country?: string;
   is_primary?: boolean;
+  /** null clears the hours (not stated). */
+  opening_hours?: WeeklyHours | null;
+  /** Replaces the whole list. */
+  closed_dates?: ClosedDate[];
 }
 
 export interface CreateTeamRoleRequest {
