@@ -62,10 +62,9 @@ describe("dietitian onboarding: what each step persists", () => {
       "Your practice basics",
       "Licensure",
       "Your specializations",
-      "Seed your library",
       "Set your consultation",
       "Connect your payout",
-      "Preview & publish",
+      "Your marketplace profile",
     ]);
   });
 });
@@ -143,18 +142,18 @@ describe("the session step waits for an answer", () => {
   });
 
   it("holds Continue until a price, Free or Set up later is chosen", () => {
-    expect(sessionStepUnanswered("dietitian", 5, {})).toBe(true);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 0 })).toBe(true);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 1500000 })).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionFree: true })).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionLater: true })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, {})).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 0 })).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 1500000 })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionFree: true })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionLater: true })).toBe(false);
     expect(sessionStepUnanswered("trainer", 4, {})).toBe(true);
     expect(sessionStepUnanswered("trainer", 4, { price1on1Later: true })).toBe(false);
   });
 
   it("never holds other steps or roles", () => {
-    expect(sessionStepUnanswered("dietitian", 4, {})).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 6, {})).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 3, {})).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 5, {})).toBe(false);
     expect(sessionStepUnanswered("gym", 5, {})).toBe(false);
     expect(sessionStepUnanswered("member", 4, {})).toBe(false);
     expect(sessionStepUnanswered(null, 5, {})).toBe(false);

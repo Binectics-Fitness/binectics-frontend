@@ -2,9 +2,13 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DietStep1, DietStep5 } from "@/app/onboarding/_dietitian";
+import { DietStep1, DietStep4 } from "@/app/onboarding/_dietitian";
 import { dietitianSessionPatch } from "@/app/onboarding/_config";
 import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
+
+// The steps start from the account's name and country; this account has neither.
+const auth = vi.hoisted(() => ({ user: null as null | Record<string, unknown> }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
@@ -13,7 +17,7 @@ vi.mock("@/lib/queries/currencies", () => ({
 /** What the page's step data holds, written from setField like the page does. */
 const latest: Record<string, unknown> = {};
 
-function Harness({ initial = { currency: "NGN" }, Step = DietStep5 }: { initial?: Record<string, unknown>; Step?: typeof DietStep5 }) {
+function Harness({ initial = { currency: "NGN" }, Step = DietStep4 }: { initial?: Record<string, unknown>; Step?: typeof DietStep4 }) {
   const [data, setData] = useState<Record<string, unknown>>(initial);
   const setField = (k: string, v: unknown) => {
     latest[k] = v;
@@ -23,8 +27,9 @@ function Harness({ initial = { currency: "NGN" }, Step = DietStep5 }: { initial?
 }
 
 beforeEach(() => {
+  auth.user = null;
   for (const k of Object.keys(latest)) delete latest[k];
-  // What step 1 chose, as the page's data carries it into step 5.
+  // What step 1 chose, as the page's data carries it into step 4.
   latest.currency = "NGN";
 });
 

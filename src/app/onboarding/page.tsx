@@ -15,7 +15,9 @@ import { credentialsService } from "@/lib/api/credentials";
 import { dietitianCredentialsPatch, ONBOARDING_LICENSE_ID, onboardingLicenseId, withOnboardingLicense } from "./_credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, COUNTRY_NAME_TO_CODE, trainerCountry, dietitianCountry, type RoleId } from "./_config";
+import { STAFF_INVITED, staffInviteEmails, staffInvited, staffInviteError, trainerMonthlyPlan, onboardingListing, saveOnboardingListing } from "./_providerSetup";
+import { clearOnboardingDraft, isDraftTrack, loadOnboardingDraft, resumableDraft, saveOnboardingDraft } from "./_draft";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
@@ -166,6 +168,10 @@ function OnboardingContent() {
   // after the first request, with the rest still in flight.
   const [advancing, setAdvancing] = useState(false);
   const [changingRole, setChangingRole] = useState(false);
+  // Why the last Continue did not move on (a refused template, invite or
+  // save). Shown on the step itself: a toast vanished before it was read,
+  // and the page just sat there.
+  const [stepError, setStepError] = useState<string | null>(null);
   const roleDef = role ? ROLES.find((r) => r.id === role) : null;
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
@@ -274,6 +280,7 @@ function OnboardingContent() {
       if (fresh) updateUser(fresh);
       else if (user && fallbackRole) updateUser({ ...user, role: fallbackRole });
       await refreshOrganizations();
+      if (user?.id) clearOnboardingDraft(user.id);
       setManualRole(null);
       setStep(0);
       setData({});
@@ -288,6 +295,29 @@ function OnboardingContent() {
   const setField = useCallback((key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  // A reload resumes a provider track where it was left (the mobile app
+  // does the same): the step and what was typed, from this browser. Once,
+  // as soon as the account is known (render-time adjustment, like the
+  // listing editor's seeding).
+  const [draftChecked, setDraftChecked] = useState(false);
+  if (!draftChecked && user?.id && !user.is_onboarding_complete) {
+    setDraftChecked(true);
+    const draft = resumableDraft(
+      loadOnboardingDraft(user.id),
+      establishedRole,
+      (r) => ROLES.find((x) => x.id === r)?.steps.length ?? 1,
+    );
+    if (draft) {
+      setManualRole(draft.role);
+      setData(draft.data);
+      setStep(draft.step);
+    }
+  }
+  useEffect(() => {
+    if (!draftChecked || !user?.id || !isDraftTrack(role) || rawStep < 1) return;
+    saveOnboardingDraft(user.id, { role, step: rawStep, data });
+  }, [draftChecked, user?.id, role, rawStep, data]);
   const progress = step === 0 ? 0 : Math.round((step / totalSteps) * 100);
   const minsLeft = Math.max(1, Math.round(((totalSteps - step) / totalSteps) * 8));
 
@@ -314,6 +344,7 @@ function OnboardingContent() {
         // pick, or the country's suggestion), so it is saved here with the
         // rest rather than by a separate write racing page navigation.
         if (stepData.currency) patch.currency = stepData.currency as string;
+        if (typeof stepData.countryCode === "string" && /^[A-Z]{2}$/.test(stepData.countryCode)) patch.country = stepData.countryCode;
         if (Object.keys(patch).length > 0) {
           const res = await teamsService.updateOrganization(orgId, patch);
           // Everything else here is best effort; a refused currency is not,
@@ -378,10 +409,11 @@ function OnboardingContent() {
       } else if (currentStep === 7) {
         // Staff invites. (Step 6 only explains how check-in works and has
         // no branch: it used to save kiosk_preference, which nothing read.)
-        const emails = ((stepData.staffEmails as string) || '')
-          .split(/[\n,]/)
-          .map((e) => e.trim())
-          .filter(Boolean);
+        // Only the ones not invited yet, so a retry never invites twice.
+        const already = staffInvited(stepData);
+        const emails = staffInviteEmails(stepData).filter(
+          (e) => !already.some((a) => a.toLowerCase() === e.toLowerCase()),
+        );
         if (emails.length > 0) {
           const rolesRes = await teamsService.getRoles(orgId);
           const roles = rolesRes.data ?? [];
@@ -392,20 +424,28 @@ function OnboardingContent() {
           if (primaryChip.toLowerCase().includes('manager')) targetCode = 'manager';
           else if (primaryChip.toLowerCase().includes('front desk') || primaryChip.toLowerCase().includes('assistant')) targetCode = 'assistant';
           const role = roles.find((r) => r.code === targetCode) ?? roles.find((r) => r.code === 'consultant') ?? roles[0];
-          if (role) {
-            await Promise.allSettled(
-              emails.map((email) =>
-                teamsService.inviteMember(orgId, { email, team_role_id: role._id }),
-              ),
-            );
-          }
+          if (!role) return "We couldn't load staff roles. Try again, or clear the emails and invite staff later from Team.";
+          // Not best effort: the Free plan refuses every invite, and the
+          // summary used to count them as sent anyway.
+          const results = await Promise.allSettled(
+            emails.map((email) => teamsService.inviteMember(orgId, { email, team_role_id: role._id })),
+          );
+          const sent: string[] = [];
+          const failures: { email: string; message?: string }[] = [];
+          results.forEach((r, i) => {
+            if (r.status === 'fulfilled' && r.value.success) sent.push(emails[i]);
+            else failures.push({ email: emails[i], message: r.status === 'fulfilled' ? r.value.message : undefined });
+          });
+          if (sent.length > 0) setField(STAFF_INVITED, [...already, ...sent]);
+          const refused = staffInviteError(failures);
+          if (refused) return refused;
         }
       }
     } catch {
       // Non-blocking: step data save failures don't block navigation
     }
     return null;
-  }, []);
+  }, [setField]);
 
   /**
    * Resolves an error message when the currency chosen on step 1 was refused
@@ -433,10 +473,31 @@ function OnboardingContent() {
         if (session && !(await upsertOwnSession(session, consultationsService))) {
           return "We couldn't save your session. Check your connection and try again.";
         }
+        // The monthly online price becomes a package clients can buy. It was
+        // asked for and thrown away, with the session packs (no longer asked:
+        // a package has no session count to sell a pack by).
+        const plan = trainerMonthlyPlan(stepData);
+        if (plan) {
+          const plans = await marketplaceService.getOrgMembershipPlans(orgId);
+          if (!plans.success) return plans.message || "We couldn't save your monthly price. Try again.";
+          const existing = (plans.data ?? []).find((p) => p.name.toLowerCase() === plan.name.toLowerCase());
+          const { name: _name, plan_type: _type, ...prices } = plan;
+          void _name;
+          void _type;
+          const saved = existing
+            ? await marketplaceService.updateOrgMembershipPlan(orgId, existing._id, prices)
+            : await marketplaceService.createOrgMembershipPlan(orgId, plan);
+          if (!saved.success) return saved.message || "We couldn't save your monthly price. Try again.";
+        }
       } else if (currentStep === 5) {
         if (stepData.payout && stepData.payout !== 'skip' && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
+      } else if (currentStep === 6) {
+        // What onboarding asked becomes the marketplace listing (a draft):
+        // it used to reach nothing, and My profile said "Listing not found".
+        const listing = onboardingListing("trainer", stepData, COUNTRY_NAME_TO_CODE[trainerCountry(stepData)]);
+        if (listing) return await saveOnboardingListing(listing, marketplaceService);
       }
     } catch { /* non-blocking */ }
     return null;
@@ -514,7 +575,7 @@ function OnboardingContent() {
           const refused = res.success ? null : describeCurrencyError(res);
           if (refused) return refused;
         }
-      } else if (currentStep === 5) {
+      } else if (currentStep === 4) {
         // The consultation becomes the dietitian's own session type, which
         // is what members book. There is no dietitian platform default, so
         // without it a new dietitian had nothing bookable. Free saves a
@@ -523,10 +584,14 @@ function OnboardingContent() {
         if (session && !(await upsertOwnSession(session, consultationsService))) {
           return "We couldn't save your consultation. Check your connection and try again.";
         }
-      } else if (currentStep === 6) {
+      } else if (currentStep === 5) {
         if (stepData.payout && stepData.payout !== 'skip' && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
+      } else if (currentStep === 6) {
+        // The marketplace listing (a draft), as the trainer track does.
+        const listing = onboardingListing("dietitian", stepData, COUNTRY_NAME_TO_CODE[dietitianCountry(stepData)]);
+        if (listing) return await saveOnboardingListing(listing, marketplaceService);
       }
     } catch { /* non-blocking */ }
     return null;
@@ -539,6 +604,7 @@ function OnboardingContent() {
    * onboarding with nothing bookable.
    */
   const persistStep = async (orgId: string): Promise<boolean> => {
+    setStepError(null);
     let error: string | null = null;
     if (role === "gym" && orgId) {
       error = await persistGymStep(step, data, orgId);
@@ -549,7 +615,7 @@ function OnboardingContent() {
     } else if (role === "dietitian") {
       error = await persistDietitianStep(step, data, orgId);
     }
-    if (error) toast.error(error);
+    if (error) setStepError(error);
     return error === null;
   };
 
@@ -583,7 +649,12 @@ function OnboardingContent() {
       if (!(await persistStep(orgId))) return;
       setStep(step + 1);
     } else if (role) {
-      if ((await ensureWorkspace()) === null) return;
+      const orgId = await ensureWorkspace();
+      if (orgId === null) return;
+      // A provider's last step saves too (the trainer's and dietitian's
+      // listing); a refusal keeps them on it.
+      if (role !== "member" && !(await persistStep(orgId))) return;
+      if (user?.id) clearOnboardingDraft(user.id);
       setIsFinishing(true);
       // dismiss() is what marks onboarding complete server-side. A silent
       // failure here re-onboards the user on every fresh device — surface
@@ -629,6 +700,7 @@ function OnboardingContent() {
   };
 
   const handleBack = () => {
+    setStepError(null);
     if (step > 1) setStep(step - 1);
     // Consistent with the rail: only reopen the role picker while the role
     // is still an open choice (same roleLocked signal that gates the rail).
@@ -866,6 +938,11 @@ function OnboardingContent() {
             </div>
           ) : null}
           {renderStage()}
+          {stepError ? (
+            <div className="rounded-(--r-3) p-3.5 text-[13.5px] leading-relaxed" style={{ border: "1px solid var(--danger)", background: "var(--bg-2)", color: "var(--danger-ink)" }} role="alert">
+              {stepError}
+            </div>
+          ) : null}
         </div>
 
         {/* Bottom nav bar */}

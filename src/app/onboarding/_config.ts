@@ -109,7 +109,7 @@ function sessionMinutes(value: unknown, fallback = 60): number {
  */
 export const SESSION_FIELDS = {
   trainer: { step: 4, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
-  dietitian: { step: 5, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
+  dietitian: { step: 4, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
 } as const;
 
 /**
@@ -524,7 +524,7 @@ export const ROLES: RoleDef[] = [
       { label: "Step 03", title: "Upload certifications" },
       { label: "Step 04", title: "Set your pricing" },
       { label: "Step 05", title: "Connect your payout" },
-      { label: "Step 06", title: "Preview & publish" },
+      { label: "Step 06", title: "Your marketplace profile" },
     ],
   },
   {
@@ -552,10 +552,9 @@ export const ROLES: RoleDef[] = [
       { label: "Step 01", title: "Your practice basics" },
       { label: "Step 02", title: "Licensure" },
       { label: "Step 03", title: "Your specializations" },
-      { label: "Step 04", title: "Seed your library" },
-      { label: "Step 05", title: "Set your consultation" },
-      { label: "Step 06", title: "Connect your payout" },
-      { label: "Step 07", title: "Preview & publish" },
+      { label: "Step 04", title: "Set your consultation" },
+      { label: "Step 05", title: "Connect your payout" },
+      { label: "Step 06", title: "Your marketplace profile" },
     ],
   },
 ];
