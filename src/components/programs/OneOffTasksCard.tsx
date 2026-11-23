@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import Link from "next/link";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { sentTaskTone } from "@/lib/ui/statusTones";
 import type { Tone } from "@/lib/ui/tones";
@@ -66,6 +67,17 @@ export function oneOffStatus(task: OneOffTask, today: string): { label: string; 
       if (task.due_date === today) return { label: "Due today", tone };
       return { label: `Due ${formatDay(task.due_date)}`, tone };
   }
+}
+
+/**
+ * Where to read a submitted form's answers: the form's responses page, opened
+ * on this submission when the API sent its id. null for anything that isn't
+ * a form the client sent back (mobile SentTasksSection "Answers", #119).
+ */
+export function answersHref(task: Pick<OneOffTask, "type" | "status" | "form_id" | "form_response_id">): string | null {
+  if (task.type !== "form" || task.status !== "done" || !task.form_id) return null;
+  const q = task.form_response_id ? `?response=${encodeURIComponent(task.form_response_id)}` : "";
+  return `/dashboard/forms/${encodeURIComponent(task.form_id)}/responses${q}`;
 }
 
 /** Newest due date first - the order the API lists them in. */
@@ -174,9 +186,11 @@ export default function OneOffTasksCard({
         tasks!.map((t, i, arr) => {
           const s = oneOffStatus(t, calendar!.today);
           const confirming = confirmId === t.id;
+          const answers = answersHref(t);
           return (
-            <div key={t.id} className="flex items-center gap-3 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
-              <div className="min-w-0 flex-1">
+            <div key={t.id} className="flex items-center gap-x-3 gap-y-1 px-5.5 py-3.5 flex-wrap" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
+              {/* At least 180px for the title, so the status and actions wrap below it in a narrow column. */}
+              <div className="min-w-0 flex-1 basis-45">
                 <div className="text-[13.5px] font-medium truncate" style={{ color: "var(--ink)" }}>{t.title}</div>
                 <div className="font-mono text-[11.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
                   {t.type === "form" ? "Form" : "Task"} · due {formatDay(t.due_date)}
@@ -184,6 +198,16 @@ export default function OneOffTasksCard({
                 </div>
               </div>
               <StatusPill tone={s.tone} label={s.label} />
+              {answers && (
+                <Link
+                  href={answers}
+                  aria-label={`See answers to ${t.title}`}
+                  className="inline-flex items-center text-[13px] underline underline-offset-2"
+                  style={{ minHeight: 44, color: "var(--ink)" }}
+                >
+                  Answers
+                </Link>
+              )}
               {t.status === "pending" && (
                 <button
                   type="button"

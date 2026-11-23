@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
 import {
   formsService,
@@ -13,13 +14,33 @@ import {
 } from "@/lib/api/forms";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { Eyebrow, DSCard, DSStatCard, PageHeader } from "@/components/ds";
+import { RESPONSE_GONE, THIS_SUBMISSION } from "./copy";
 
+/**
+ * A form's answers. `?response=<id>` (a client's submission, from a sent form
+ * on the client page or Needs you) opens on Responses with that submission
+ * selected and scrolled to. If it isn't among the form's responses any more,
+ * the list says so and shows them all (mobile CoachFormResponsesScreen).
+ */
 export default function FormResponsesPage({
   params,
 }: {
   params: Promise<{ formId: string }>;
 }) {
+  return (
+    <Suspense fallback={null}>
+      <FormResponsesView params={params} />
+    </Suspense>
+  );
+}
+
+function FormResponsesView({
+  params,
+}: {
+  params: Promise<{ formId: string }>;
+}) {
   const { formId } = use(params);
+  const focusId = useSearchParams()?.get("response") || null;
   const { fmtDateTime, fmtNumber } = useOrgFormat();
   const [form, setForm] = useState<Form | null>(null);
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
@@ -27,8 +48,11 @@ export default function FormResponsesPage({
   const [analytics, setAnalytics] = useState<FormAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<"analytics" | "responses">("analytics");
+  const [activeView, setActiveView] = useState<"analytics" | "responses">(focusId ? "responses" : "analytics");
   const [selectedResponse, setSelectedResponse] = useState<FormResponse | null>(null);
+  const [focusGone, setFocusGone] = useState(false);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const scrolledTo = useRef<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -45,8 +69,13 @@ export default function FormResponsesPage({
         if (formRes.success && formRes.data) setForm(formRes.data);
         if (questionsRes.success && Array.isArray(questionsRes.data))
           setQuestions(questionsRes.data);
-        if (responsesRes.success && Array.isArray(responsesRes.data))
-          setResponses(responsesRes.data);
+        const list = responsesRes.success && Array.isArray(responsesRes.data) ? responsesRes.data : [];
+        setResponses(list);
+        if (focusId) {
+          const focused = list.find((r) => r._id === focusId) ?? null;
+          setSelectedResponse(focused);
+          setFocusGone(!focused);
+        }
         if (analyticsRes.success && analyticsRes.data) setAnalytics(analyticsRes.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load responses");
@@ -55,7 +84,17 @@ export default function FormResponsesPage({
       }
     };
     void load();
-  }, [formId]);
+  }, [formId, focusId]);
+
+  // The submission asked for: scroll to it and move focus there, once.
+  useEffect(() => {
+    if (!selectedResponse || selectedResponse._id !== focusId || scrolledTo.current === focusId) return;
+    const el = detailRef.current;
+    if (!el) return;
+    scrolledTo.current = focusId;
+    el.scrollIntoView?.({ block: "start", behavior: "smooth" });
+    el.focus({ preventScroll: true });
+  }, [selectedResponse, focusId, activeView]);
 
   const questionMap = useMemo(
     () => Object.fromEntries(questions.map((q) => [q._id, q])),
@@ -227,7 +266,14 @@ export default function FormResponsesPage({
             {activeView === "responses" && (
               <>
                 {selectedResponse ? (
-                  <div className="flex flex-col gap-3">
+                  <div
+                    ref={detailRef}
+                    tabIndex={-1}
+                    aria-label={selectedResponse._id === focusId ? THIS_SUBMISSION : undefined}
+                    className="flex flex-col gap-3"
+                    style={{ scrollMarginTop: 80, outline: "none" }}
+                    data-response-id={selectedResponse._id}
+                  >
                     <button
                       type="button"
                       onClick={() => setSelectedResponse(null)}
@@ -237,6 +283,7 @@ export default function FormResponsesPage({
                       &larr; Back to list
                     </button>
                     <div>
+                      {selectedResponse._id === focusId && <Eyebrow className="mb-1">{THIS_SUBMISSION}</Eyebrow>}
                       <div className="font-medium" style={{ color: "var(--ink)" }}>
                         {selectedResponse.submitted_by}
                       </div>
@@ -267,6 +314,11 @@ export default function FormResponsesPage({
                   </div>
                 ) : (
                   <>
+                    {focusGone && (
+                      <p role="status" className="text-sm mb-3" style={{ color: "var(--fg-3)" }}>
+                        {RESPONSE_GONE}
+                      </p>
+                    )}
                     {responses.length === 0 ? (
                       <p className="text-sm" style={{ color: "var(--fg-3)" }}>
                         No responses yet.
