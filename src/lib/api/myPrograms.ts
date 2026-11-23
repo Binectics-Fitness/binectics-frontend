@@ -180,10 +180,14 @@ export interface ProgramDay {
  * started and hasn't run past its last day counts: one-off task holders have
  * no day count, and a paused, finished or not-yet-started program has no
  * "today". The API lists newest first, so the most recent one wins.
+ *
+ * The member's own Starter is never this: it has its own card, and the hero
+ * and "From <coach> today" under it would credit it to their coach (QA 23 Nov
+ * 2026). As mobile's programHero.
  */
 export function currentProgramDay(programs: readonly MyProgram[]): ProgramDay | null {
   for (const p of programs) {
-    if ((p.kind ?? "program") !== "program" || p.status !== "active") continue;
+    if ((p.kind ?? "program") !== "program" || p.status !== "active" || p.source === "starter") continue;
     const progress = p.progress;
     if (!progress || progress.day == null || progress.day < 1) continue;
     const total = progress.total_days && progress.total_days > 0 ? progress.total_days : null;

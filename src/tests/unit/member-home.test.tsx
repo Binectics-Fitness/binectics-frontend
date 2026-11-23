@@ -101,6 +101,12 @@ describe("currentProgramDay", () => {
     expect(currentProgramDay([...skip, program({ name: "Mobility" })])?.name).toBe("Mobility");
   });
 
+  it("skips the member's own Starter: it has its own card and is never the coach's program", () => {
+    const starter = program({ name: "Home Strength Basics", source: "starter" });
+    expect(currentProgramDay([starter])).toBeNull();
+    expect(currentProgramDay([starter, program({ name: "Mobility" })])?.name).toBe("Mobility");
+  });
+
   it("has no total for an open-ended program and no week line when nothing was due", () => {
     const open = program({
       progress: {

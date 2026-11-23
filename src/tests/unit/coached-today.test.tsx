@@ -273,6 +273,26 @@ describe("coached Today: the page", () => {
     expect(screen.queryByTestId("my-coaches")).toBeNull();
   });
 
+  // QA 23 Nov 2026 (Amaka, coached by Tunde): a self-enrolled Starter was
+  // drawn as the coach's program, "From Tunde today". Whose plan it is comes
+  // from its source, never from whether the member has a coach.
+  it("a coached member's own Starter is never credited to the coach", async () => {
+    mockCoachedTodayReads({
+      providers: TUNDE,
+      agenda: [{ scheduled_for: NOW.toISOString(), component_type: "workout_plan", source: "starter" }],
+    });
+    vi.spyOn(myProgramsService, "listMine").mockReturnValue(
+      ok([program({ _id: "si", name: "Home Strength Basics", source: "starter" })]),
+    );
+    renderPage();
+    // Tunde has sent no plan, so his card still asks for one (the Starter's
+    // own card is the starter query's, mocked empty here).
+    await screen.findByTestId("today-coach-card");
+    expect(screen.queryByRole("heading", { name: "From Tunde today" })).toBeNull();
+    expect(screen.queryByTestId("today-program")).toBeNull();
+    expect(screen.queryByTestId("tasks-in-app")).toBeNull();
+  });
+
   it("R6: a running fast under a program is a light row, not a second dark card", async () => {
     mockCoachedTodayReads({
       providers: TUNDE,
