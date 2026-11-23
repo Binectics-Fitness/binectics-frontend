@@ -507,10 +507,9 @@ export const ROLES: RoleDef[] = [
     badge: "Consumer",
     color: "var(--consumer)",
     steps: [
-      { label: "Step 01", title: "What brings you here?" },
-      { label: "Step 02", title: "Where do you train?" },
-      { label: "Step 03", title: "When do you train?" },
-      { label: "Step 04", title: "You're all set" },
+      // The mobile track (#272): the second step is only for "on my own".
+      { label: "Step 01", title: "How to start" },
+      { label: "Step 02", title: "What to use" },
     ],
   },
   {
