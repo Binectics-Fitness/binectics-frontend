@@ -3,6 +3,7 @@
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { DSCard } from "@/components/ds";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
+import { SessionTypesCard } from "@/components/provider/SessionTypesCard";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
 import { TaxSettingsCard } from "@/components/provider/TaxSettingsCard";
@@ -25,6 +26,10 @@ export default function TrainerSettingsPage() {
             : "Weekly hours and blocked dates."
         }
       />
+      {/* A second session type and beyond (the first is Session settings). */}
+      <div className="mt-8">
+        <SessionTypesCard />
+      </div>
       {/* A gym's trainer is paid through the gym: its payment account takes
           the money, so there is none of their own to connect. Membership
           plans otherwise charge on the org's own keys when connected, and
