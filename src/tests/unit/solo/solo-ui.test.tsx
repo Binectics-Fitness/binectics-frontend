@@ -253,11 +253,17 @@ describe("pages", () => {
     expect(screen.getByRole("switch", { name: "Show Log my weight in my list" })).toHaveAttribute("aria-checked", "true");
   });
 
-  it("Log hub links to the three existing logs", async () => {
+  it("Log hub links to every log (as the mobile Log sheet), the journal, goals and history", async () => {
     renderUi(<LogHubPage />);
-    expect(await screen.findByRole("link", { name: /Weight/ })).toHaveAttribute("href", "/dashboard/member/weight-log");
-    expect(screen.getByRole("link", { name: /Meals/ })).toHaveAttribute("href", "/dashboard/member/meal-log");
-    expect(screen.getByRole("link", { name: /Workouts/ })).toHaveAttribute("href", "/dashboard/member/workout-log");
+    const href = (name: RegExp) => screen.getByRole("link", { name }).getAttribute("href");
+    expect(await screen.findByRole("link", { name: /^Weight/ })).toHaveAttribute("href", "/dashboard/member/weight-log");
+    expect(href(/^Fast/)).toBe("/dashboard/member/fasting");
+    expect(href(/^Water/)).toBe("/dashboard/member/water");
+    expect(href(/^Meal/)).toBe("/dashboard/member/meal-log");
+    expect(href(/^Activity/)).toBe("/dashboard/member/workout-log");
+    expect(href(/^Note/)).toBe("/dashboard/member/journal");
+    expect(href(/^Goals/)).toBe("/dashboard/member/goals");
+    expect(href(/^History/)).toBe("/dashboard/member/history");
   });
 });
 
