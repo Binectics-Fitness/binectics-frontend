@@ -14,6 +14,7 @@ import { couponErrorMessage } from "@/lib/coupons/couponUi";
 import {
   consultationsService,
   ConsultationBookingStatus,
+  slotSeatsLabel,
   type ConsultationSlot,
   type ConsultationType,
 } from "@/lib/api/consultations";
@@ -390,7 +391,11 @@ function BookingPageInner() {
                         >
                           <div className="font-mono text-[13px] font-medium" style={{ fontVariantNumeric: "tabular-nums" }}>{formatTimeLabel(s.startsAt)}</div>
                           <div className="font-mono text-[10px] uppercase tracking-[0.04em] mt-1" style={{ color: on ? "oklch(0.75 0.005 85)" : dis ? "var(--fg-4)" : "var(--fg-3)" }}>
-                            {dis ? "Booked" : `${activeType?.defaultDurationMinutes ?? 60} min`}
+                            {dis
+                              ? (s.capacity ?? 1) > 1
+                                ? "Full"
+                                : "Booked"
+                              : (slotSeatsLabel(s) ?? `${activeType?.defaultDurationMinutes ?? 60} min`)}
                           </div>
                         </button>
                       );

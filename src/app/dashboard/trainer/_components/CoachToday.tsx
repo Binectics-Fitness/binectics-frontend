@@ -43,6 +43,8 @@ import {
   dayKeyInTz,
   durationMinutes,
   gapAnchors,
+  groupBySlot,
+  groupTitle,
   initials,
   isExpiredHold,
   isLiveBooking,
@@ -229,15 +231,17 @@ export function CoachToday({
                   </div>
                 ) : (
                   <ScheduleList label={`Today's ${nouns}`}>
-                    {schedule.today.map((b) => {
-                      const name = bookingClientName(b);
-                      const gap = gaps.get(b.id);
+                    {groupBySlot(schedule.today, loadedAt).map((entry) => {
+                      const b = entry.booking;
+                      // A group's gap follows whichever of its rows anchored it.
+                      const gap = entry.attendees.map((a) => gaps.get(a.id)).find(Boolean);
                       return (
                         <ScheduleRowWithGap
                           key={b.id}
                           booking={b}
+                          attendees={entry.attendees}
                           nowMs={loadedAt}
-                          name={name}
+                          name={groupTitle(entry) ?? bookingClientName(b)}
                           time={fmtTime(b.startsAt)}
                           href={sessionHref?.(b.id)}
                           gapLabel={gap ? `${fmtTime(gap.from)} – ${fmtTime(gap.to)} · ${gap.minutes} min` : undefined}
@@ -252,12 +256,13 @@ export function CoachToday({
                 <DSCard>
                   <DSCardHead title="Coming up" subtitle={`Next ${plural(Math.min(schedule.later.length, 8), noun)} after today`} />
                   <ScheduleList label={`Upcoming ${nouns}`}>
-                    {schedule.later.slice(0, 8).map((b) => (
+                    {groupBySlot(schedule.later, loadedAt).slice(0, 8).map(({ booking: b, attendees }) => (
                       <ScheduleRowWithGap
                         key={b.id}
                         booking={b}
+                        attendees={attendees}
                         nowMs={loadedAt}
-                        name={bookingClientName(b)}
+                        name={groupTitle({ booking: b, attendees }) ?? bookingClientName(b)}
                         time={fmtTime(b.startsAt)}
                         timeSub={formatInTz(b.startsAt, "EEE d MMM", timeZone)}
                         href={sessionHref?.(b.id)}
@@ -321,6 +326,7 @@ export function CoachToday({
 
 function ScheduleRowWithGap({
   booking,
+  attendees,
   nowMs,
   name,
   time,
@@ -329,6 +335,8 @@ function ScheduleRowWithGap({
   gapLabel,
 }: {
   booking: ConsultationBooking;
+  /** A group slot's live bookings; their names replace the session type in the meta line. */
+  attendees?: ConsultationBooking[];
   nowMs: number;
   name: string;
   time: string;
@@ -338,7 +346,14 @@ function ScheduleRowWithGap({
 }) {
   const live = isLiveBooking(booking, nowMs);
   const expired = isExpiredHold(booking, nowMs);
-  const meta = [booking.consultationTypeName, `${durationMinutes(booking)} min`, booking.notes].filter(Boolean).join(" · ");
+  const group = (attendees?.length ?? 0) > 1;
+  const meta = (
+    group
+      ? [attendees!.map(bookingClientName).join(", "), `${durationMinutes(booking)} min`]
+      : [booking.consultationTypeName, `${durationMinutes(booking)} min`, booking.notes]
+  )
+    .filter(Boolean)
+    .join(" · ");
   return (
     <>
       <ScheduleRow

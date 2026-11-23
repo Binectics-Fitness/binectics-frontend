@@ -151,3 +151,52 @@ export function initials(name: string): string {
       .join("") || "?"
   );
 }
+
+/**
+ * The slot a booking is in: a group session's attendees share one (same
+ * start, end and session type). A 1:1 slot only ever has one live booking.
+ */
+export function slotKey(b: Pick<ConsultationBooking, "startsAt" | "endsAt" | "consultationTypeId">): string {
+  return `${new Date(b.startsAt).getTime()}|${new Date(b.endsAt).getTime()}|${b.consultationTypeId}`;
+}
+
+export interface ScheduleEntry {
+  /** The row's booking: the first in its slot. Its link opens that booking. */
+  booking: ConsultationBooking;
+  /** Every live booking in the slot, this one first; one for a 1:1. */
+  attendees: ConsultationBooking[];
+}
+
+/**
+ * Rows for a schedule list with a group session's attendees together: live
+ * bookings that share a slot become one entry ("Small-group strength · 3
+ * booked"), in the place of the first. Cancelled, no-show and expired rows
+ * stay on their own, so they still read as what happened to that person.
+ */
+export function groupBySlot(rows: readonly ConsultationBooking[], nowMs?: number): ScheduleEntry[] {
+  const entries: ScheduleEntry[] = [];
+  const bySlot = new Map<string, ScheduleEntry>();
+  for (const b of rows) {
+    if (!isLiveBooking(b, nowMs)) {
+      entries.push({ booking: b, attendees: [b] });
+      continue;
+    }
+    const key = slotKey(b);
+    const existing = bySlot.get(key);
+    if (existing) {
+      existing.attendees.push(b);
+      continue;
+    }
+    const entry = { booking: b, attendees: [b] };
+    bySlot.set(key, entry);
+    entries.push(entry);
+  }
+  return entries;
+}
+
+/** "Small-group strength · 3 booked" for a group entry; null for a single booking. */
+export function groupTitle(entry: ScheduleEntry): string | null {
+  if (entry.attendees.length < 2) return null;
+  const type = entry.booking.consultationTypeName || "Group session";
+  return `${type} · ${entry.attendees.length} booked`;
+}
