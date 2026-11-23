@@ -15,6 +15,7 @@ import {
   durationText,
   elapsedMs,
   fastProgress,
+  formatHours,
   localStatus,
   presetTitle,
   remainingMs,
@@ -23,12 +24,14 @@ import {
   toMs,
 } from "@/lib/solo/fastingRules";
 import { SOLO_HREFS } from "@/lib/solo/nav";
+import { FastEndAction, useGoalReached } from "./FastEndAction";
 import { WriteError } from "./parts";
 
 /**
  * The fast on Today (design 03): a plain ink card, NOT the gradient (the dawn
  * gradient lives on the fasting page's hero only). Running: the numerals, time
- * to go, a thin bar that is a picture of the sentence, Open fast and End fast.
+ * to go, a thin bar that is a picture of the sentence, Open fast and the end
+ * action ("End fast early", which asks, then "Finish fast" at the goal).
  * Ended from here: a short "saved" note with Undo for as long as the API
  * allows. None: the quiet "Start a fast" card. A fast past its limit says so
  * and sends the member to close it. Nothing is invented.
@@ -114,13 +117,43 @@ export function FastTodayCard({
     );
   }
   if (nowMs === null) return <div aria-hidden="true" style={{ height: 200, borderRadius: "var(--r-3)", background: "var(--bg-3)" }} />;
+  // The end mutation stays up here: this component outlives the running card,
+  // so the "ended" note still arrives after the card has gone.
+  const endFast = () => {
+    if (!online) {
+      setError(OFFLINE_WRITE_MESSAGE);
+      return;
+    }
+    setError(null);
+    end.mutate({ id: fast.id }, { onSuccess: (f) => onEnded(f), onError: (e) => setError(e.message) });
+  };
+  return <RunningFastCard fast={fast} nowMs={nowMs} onEnd={endFast} ending={end.isPending} error={error} />;
+}
 
+/** The running (or past-its-limit) fast on its ink card. Split out so the goal hook runs with a real clock. */
+function RunningFastCard({
+  fast,
+  nowMs,
+  onEnd,
+  ending,
+  error,
+}: {
+  fast: FastSession;
+  nowMs: number;
+  onEnd: () => void;
+  ending: boolean;
+  error: string | null;
+}) {
   const expired = fast.status === "expired_unclosed" || localStatus(fast, nowMs) === "expired_unclosed";
   const startMs = toMs(fast.started_at);
   const endAt = startMs + fast.target_hours * HOUR_MS;
   const elapsed = elapsedMs(startMs, nowMs);
   const progress = fastProgress(elapsed, fast.target_hours);
   const remaining = remainingMs(elapsed, fast.target_hours);
+  const { reached, crossedOpen } = useGoalReached(endAt, nowMs);
+  // On ink: the filled look is paper with an ink label, the outline is drawn in paper.
+  const filled = { background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" };
+  const outline = { borderColor: "var(--fg-3)", color: "var(--bg)", background: "transparent" };
 
   return (
     <section
@@ -154,7 +187,7 @@ export function FastTodayCard({
           >
             {clockText(elapsed)}
           </p>
-          <p className="text-[16px]">{remaining > 0 ? `${durationText(remaining)} to go` : "Length reached"}</p>
+          <p className="text-[16px]">{reached ? "Goal reached" : `${durationText(remaining)} to go`}</p>
           <div aria-hidden="true" className="mt-2 h-2 overflow-hidden rounded-full" style={{ background: "var(--ink-2)" }}>
             <i className="block h-full" style={{ width: `${Math.round(progress * 100)}%`, background: "var(--bg)" }} />
           </div>
@@ -164,28 +197,23 @@ export function FastTodayCard({
       <div className="mt-3 flex flex-wrap gap-2.5">
         <Link
           href={SOLO_HREFS.fasting}
-          className="inline-flex items-center justify-center rounded-(--r-2) px-4.5 text-[14px] font-medium"
-          style={{ minHeight: 44, background: "var(--bg)", color: "var(--ink)" }}
+          className="inline-flex items-center justify-center rounded-(--r-2) border px-4.5 text-[14px] font-medium"
+          // At the goal Finish fast is the one filled button; Open fast steps back to an outline.
+          style={{ minHeight: 44, ...(reached && !expired ? outline : filled) }}
         >
           {expired ? "Close this fast" : "Open fast"}
         </Link>
         {!expired && (
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-(--r-2) px-4.5 text-[14px] font-medium"
-            style={{ minHeight: 44, border: "1px solid var(--fg-3)", color: "var(--bg)", background: "transparent" }}
-            disabled={end.isPending}
-            onClick={() => {
-              if (!online) {
-                setError(OFFLINE_WRITE_MESSAGE);
-                return;
-              }
-              setError(null);
-              end.mutate({ id: fast.id }, { onSuccess: (f) => onEnded(f), onError: (e) => setError(e.message) });
-            }}
-          >
-            End fast
-          </button>
+          <FastEndAction
+            reached={reached}
+            crossedOpen={crossedOpen}
+            disabled={ending}
+            elapsedText={durationText(elapsed)}
+            hoursText={formatHours(fast.target_hours)}
+            filled={filled}
+            outline={outline}
+            onEnd={onEnd}
+          />
         )}
       </div>
     </section>

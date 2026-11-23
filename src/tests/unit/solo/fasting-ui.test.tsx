@@ -43,7 +43,7 @@ import { FastStages } from "@/app/dashboard/member/_components/solo/FastStages";
 import { SoloToday } from "@/app/dashboard/member/_components/solo/SoloToday";
 import FastingRoute from "@/app/dashboard/member/fasting/page";
 import TodayListPage from "@/app/dashboard/member/today-list/page";
-import { HOUR_MS } from "@/lib/solo/fastingRules";
+import { HOUR_MS, timeOfDay } from "@/lib/solo/fastingRules";
 import { resetClientNowForTests } from "@/lib/ui/useClientNow";
 import type { FastSession } from "@/lib/api/fasting";
 
@@ -234,7 +234,7 @@ describe("start page", () => {
     }
     expect(screen.getByRole("button", { name: "16 hours" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("16 hours fasting, 8 hours to eat. Fasts can be up to 24 hours.")).toBeInTheDocument();
-    expect(screen.getByTestId("start-label")).toHaveTextContent(/^Today · /);
+    expect(screen.getByTestId("start-label")).toHaveTextContent(/^Now · /);
     expect(screen.getByTestId("end-label")).toHaveTextContent(/^Tomorrow · /);
   });
 
@@ -285,34 +285,46 @@ describe("start page", () => {
     await waitFor(() => expect(fasting.start).toHaveBeenCalledWith({ started_at: iso(NOW), target_hours: 18.5, preset: "custom" }));
   });
 
-  it("'started earlier' accepts up to 36 hours back, refuses older and refuses the future", async () => {
+  it("'Starts' is the control: quick choices count back from the press, a picked time in the future is refused", async () => {
     fasting.start.mockResolvedValue(ok(running()));
     await renderStart();
-    await userEvent.click(screen.getByRole("button", { name: "Started earlier? Change the start time" }));
-    const field = screen.getByLabelText("I started at");
-    const local = (ms: number) => {
-      const d = new Date(ms);
-      const p = (n: number) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-    };
-    fireEvent.change(field, { target: { value: local(NOW - 40 * HOUR_MS) } });
-    expect(await screen.findByText("A fast can start at most 36 hours ago.")).toBeInTheDocument();
+    const starts = screen.getByTestId("fast-starts-button");
+    expect(starts).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(starts);
+    expect(starts).toHaveAttribute("aria-expanded", "true");
+    await userEvent.click(screen.getByRole("button", { name: "1 hour ago" }));
+    expect(screen.getByTestId("start-label")).toHaveTextContent(`Today · ${timeOfDay(NOW - HOUR_MS)}`);
+    expect(screen.getByTestId("fast-start-hint")).toHaveTextContent(`Started 1 h ago, at ${timeOfDay(NOW - HOUR_MS)}.`);
+    // A time later than now, today: said in words, and Start waits.
+    await userEvent.click(screen.getByRole("button", { name: "Pick a time" }));
+    const field = screen.getByTestId("fast-start-time");
+    expect(field).toHaveFocus();
+    fireEvent.change(field, { target: { value: "11:00" } });
+    expect(await screen.findByText(/A fast cannot start in the future\. Pick Yesterday/)).toBeInTheDocument();
     expect(start()).toBeDisabled();
-    fireEvent.change(field, { target: { value: local(NOW + 3 * HOUR_MS) } });
-    expect(await screen.findByText("A fast cannot start in the future.")).toBeInTheDocument();
-    fireEvent.change(field, { target: { value: local(NOW - 2 * HOUR_MS) } });
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // Yesterday at that time is fine.
+    await userEvent.click(screen.getByRole("button", { name: "Yesterday" }));
+    expect(screen.queryByTestId("fast-start-error")).not.toBeInTheDocument();
+    expect(screen.getByTestId("start-label")).toHaveTextContent(`Yesterday · ${timeOfDay(new Date(2026, 10, 16, 11, 0).getTime())}`);
     await userEvent.click(start());
     await waitFor(() => expect(fasting.start).toHaveBeenCalled());
-    const sent = fasting.start.mock.calls[0][0];
-    expect(new Date(sent.started_at).getTime()).toBe(new Date(local(NOW - 2 * HOUR_MS)).getTime());
+    expect(new Date(fasting.start.mock.calls[0][0].started_at).getTime()).toBe(new Date(2026, 10, 16, 11, 0).getTime());
   });
 
-  it("an API refusal is read in the page's own words", async () => {
+  it("an overlap refusal is read in the page's own words and opens the start choices", async () => {
     fasting.start.mockResolvedValue(fail("FASTING_OVERLAP", 409, "ugly server text"));
     await renderStart();
     await userEvent.click(start());
-    expect(await screen.findByText("That time overlaps another fast. Pick a time that does not.")).toBeInTheDocument();
+    expect(await screen.findByText(/Your fast was not started: that start overlaps a fast you already logged/)).toBeInTheDocument();
+    expect(screen.queryByText(/ugly server text/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("fast-starts-button")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("any other refusal is read in the page's own words", async () => {
+    fasting.start.mockResolvedValue(fail("FASTING_BAD_TIME", 400, "ugly server text"));
+    await renderStart();
+    await userEvent.click(start());
+    expect(await screen.findByText(/That time does not work/)).toBeInTheDocument();
     expect(screen.queryByText(/ugly server text/)).not.toBeInTheDocument();
   });
 
@@ -340,6 +352,13 @@ describe("start page", () => {
     expect(fasting.start).not.toHaveBeenCalled();
   });
 });
+
+/** Before the goal the end action asks once: press it, then "End fast" in the question. */
+async function endEarly() {
+  await userEvent.click(await screen.findByTestId("end-fast"));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.click(within(dialog).getByRole("button", { name: "End fast" }));
+}
 
 describe("the running fast", () => {
   it("shows the time from the saved start, the stage, the arc sentence and no extras", async () => {
@@ -386,7 +405,7 @@ describe("the running fast", () => {
     fasting.current.mockResolvedValue(ok(running()));
     fasting.end.mockResolvedValue(ok(ended()));
     renderUi(<FastingContent />);
-    await userEvent.click(await screen.findByTestId("end-fast"));
+    await endEarly();
     expect(fasting.end).toHaveBeenCalledWith("f1", undefined);
     expect(await screen.findByText("Saved to your history at 2 h 00 min")).toBeInTheDocument();
     expect(screen.getByText("Goal was 16 hours. You ended 14 h 00 min before it.")).toBeInTheDocument();
@@ -401,7 +420,7 @@ describe("the running fast", () => {
     let settle!: (v: unknown) => void;
     fasting.undoEnd.mockReturnValue(new Promise((r) => { settle = r; }));
     renderUi(<FastingContent />);
-    await userEvent.click(await screen.findByTestId("end-fast"));
+    await endEarly();
     await userEvent.click(await screen.findByRole("button", { name: "Undo" }));
     // The server has not answered yet: the running fast is already back.
     expect(await screen.findByTestId("fasting-hero")).toBeInTheDocument();
@@ -416,7 +435,7 @@ describe("the running fast", () => {
     fasting.end.mockResolvedValue(ok(ended()));
     fasting.undoEnd.mockResolvedValue(fail("FASTING_UNDO_UNAVAILABLE"));
     renderUi(<FastingContent />);
-    await userEvent.click(await screen.findByTestId("end-fast"));
+    await endEarly();
     await userEvent.click(await screen.findByRole("button", { name: "Undo" }));
     expect(await screen.findByText("This fast can no longer be reopened.")).toBeInTheDocument();
     expect(screen.queryByTestId("fasting-hero")).not.toBeInTheDocument();
@@ -428,7 +447,7 @@ describe("the running fast", () => {
     fasting.current.mockResolvedValue(ok(running()));
     fasting.end.mockResolvedValue(ok(ended({ undo_until: iso(NOW - 1) })));
     renderUi(<FastingContent />);
-    await userEvent.click(await screen.findByTestId("end-fast"));
+    await endEarly();
     await screen.findByText("Saved to your history at 2 h 00 min");
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
@@ -437,7 +456,7 @@ describe("the running fast", () => {
     fasting.current.mockResolvedValue(ok(running()));
     fasting.end.mockResolvedValue(fail("FASTING_BAD_TIME"));
     renderUi(<FastingContent />);
-    await userEvent.click(await screen.findByTestId("end-fast"));
+    await endEarly();
     expect(await screen.findByText(/That time does not work/)).toBeInTheDocument();
     expect(screen.getByTestId("fasting-hero")).toBeInTheDocument();
   });
@@ -686,7 +705,8 @@ describe("Today: the fast", () => {
     water.today.mockResolvedValue(ok({ local_day: "2026-11-17", glasses: 2, glass_ml: 250, target_glasses: null }));
     renderUi(<SoloToday />);
     const card = await screen.findByTestId("fast-today-card");
-    await userEvent.click(within(card).getByRole("button", { name: "End fast" }));
+    await userEvent.click(within(card).getByRole("button", { name: "End fast early" }));
+    await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "End fast" }));
     expect(fasting.end).toHaveBeenCalledWith("f1", undefined);
     const note = await screen.findByTestId("fast-today-ended");
     expect(note).toHaveTextContent("Saved to your history at 3 h 00 min");
@@ -701,7 +721,8 @@ describe("Today: the fast", () => {
     // Nothing else used today: no water, no list, no weight.
     water.today.mockResolvedValue(ok({ local_day: "2026-11-17", glasses: 0, glass_ml: 250, target_glasses: null }));
     renderUi(<SoloToday />);
-    await userEvent.click(within(await screen.findByTestId("fast-today-card")).getByRole("button", { name: "End fast" }));
+    await userEvent.click(within(await screen.findByTestId("fast-today-card")).getByRole("button", { name: "End fast early" }));
+    await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "End fast" }));
     const note = await screen.findByTestId("fast-today-ended");
     expect(within(note).getByRole("button", { name: "Undo" })).toBeInTheDocument();
   });

@@ -16,12 +16,13 @@ import {
   useCurrentFast,
   useEditFast,
   useEndFast,
+  useFastHistory,
   useFastingSettings,
   useScreening,
   useStartFast,
   useUndoEnd,
 } from "@/lib/queries/fasting";
-import { NO_FAST_BODY, NO_FAST_TITLE } from "@/lib/solo/fastingCopy";
+import { NO_FAST_BODY, NO_FAST_TITLE, START_REFUSED_OVERLAP } from "@/lib/solo/fastingCopy";
 import { localStatus, presetTitle, toMs } from "@/lib/solo/fastingRules";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { FastCheck, FastCheckOutcome } from "./FastCheck";
@@ -45,6 +46,13 @@ export function FastingContent() {
   const undo = useUndoEnd();
   const feeling = useAddFeeling();
   const edit = useEditFast();
+  // When the last fast ended: a new one cannot start before it (FASTING_OVERLAP).
+  const history = useFastHistory(!fast);
+  const lastEndMs = (history.data?.pages[0]?.items ?? []).reduce<number | null>((max, f) => {
+    const t = f.ended_at ? toMs(f.ended_at) : null;
+    return t !== null && (max === null || t > max) ? t : max;
+  }, null);
+  const [openStartSignal, setOpenStartSignal] = useState(0);
 
   const [outcome, setOutcome] = useState<ScreeningOutcome | "stored_block" | null>(null);
   const [retaking, setRetaking] = useState(false);
@@ -257,11 +265,20 @@ export function FastingContent() {
         nowMs={nowMs}
         pending={start.isPending}
         error={msgFor("start")}
+        lastEndMs={lastEndMs}
+        openStartSignal={openStartSignal}
         onStart={(input) => {
           if (needOnline("start")) return;
           setMessage(null);
           start.mutate(input, {
             onError: (e) => {
+              if (e.code === "FASTING_OVERLAP") {
+                // A fast this page did not know of: say so, open the start choices, re-read the last end.
+                say("start", START_REFUSED_OVERLAP);
+                setOpenStartSignal((n) => n + 1);
+                void history.refetch();
+                return;
+              }
               say("start", e.message);
               if (e.code === "FASTING_SCREENING_REQUIRED") void settings.refetch();
               if (e.code === "FASTING_ALREADY_RUNNING" || e.code === "FASTING_EXPIRED_UNCLOSED") void current.refetch();
