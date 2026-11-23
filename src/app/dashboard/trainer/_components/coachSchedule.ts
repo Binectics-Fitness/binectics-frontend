@@ -151,3 +151,26 @@ export function initials(name: string): string {
       .join("") || "?"
   );
 }
+
+/**
+ * "To close out": sessions that have started but are still open (confirmed,
+ * or a hold still awaiting payment), oldest first. The mobile coach Today's
+ * toClose list (utils/coachDay.ts#planSessions). The API marks a confirmed
+ * session a no-show 30 minutes after it ends, so this list stays short; an
+ * expired hold won't happen and is left out.
+ */
+export function closeOutSessions(bookings: readonly ConsultationBooking[], nowMs: number): ConsultationBooking[] {
+  return bookings.filter((b) => isOpenBooking(b, nowMs) && startMs(b) <= nowMs).sort(byStart);
+}
+
+/**
+ * An unpaid hold is not closed out: done or a no-show would settle it and
+ * the receipt would then read paid for money never taken (mobile's rule).
+ */
+export function canCloseOut(b: ConsultationBooking, nowMs: number): boolean {
+  return (
+    isOpenBooking(b, nowMs) &&
+    startMs(b) <= nowMs &&
+    !(b.status === ConsultationBookingStatus.PENDING && Boolean(b.payment))
+  );
+}

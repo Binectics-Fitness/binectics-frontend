@@ -20,6 +20,10 @@ vi.mock("@/lib/api/consultations", async (orig) => ({
 vi.mock("@/lib/api/progress", () => ({
   progressService: { getMyClientProfiles: () => getMyClientProfiles() },
 }));
+vi.mock("@/lib/api/coachAttention", async (orig) => ({
+  ...(await orig<typeof import("@/lib/api/coachAttention")>()),
+  coachAttentionService: { getAttention: () => Promise.resolve([]) },
+}));
 vi.mock("@/lib/api/earnings", () => ({
   earningsService: { getOrgSummary: (id: string) => getOrgSummary(id) },
 }));
