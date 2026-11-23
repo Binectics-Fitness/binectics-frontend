@@ -8,7 +8,32 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { formatMinor, isSelectable } from "@/lib/currencies/helpers";
 import { useCurrencies } from "@/lib/queries/currencies";
 import { planPerLabel, planSavingLabel } from "@/lib/marketplace/planDisplay";
-import { listingPriceFrom } from "@/lib/marketplace/listingDisplay";
+import {
+  addressLine,
+  amenityLabel,
+  galleryPhotos,
+  listingNames,
+  mapsUrl,
+  providerSubtitle,
+  providerTitle,
+  publicLocations,
+  listingPriceFrom,
+} from "@/lib/marketplace/listingDisplay";
+import {
+  PLAN_CHOICE_COPY,
+  addPlanLabel,
+  chosenPlan,
+  heldPlanIds,
+  isPurchasable,
+  manageMembershipHref,
+  membershipHere,
+  membershipLine,
+  profileCta,
+} from "@/lib/marketplace/listingMembership";
+import { useMySubscriptions } from "@/lib/queries/marketplace";
+import { ListingGallery, PhotoViewer, type GalleryPhoto } from "@/components/marketplace/ListingGallery";
+import { FacilityStatus, type FacilityItem } from "@/lib/types";
+import { FACILITY_CATEGORY_LABELS } from "@/lib/constants/facility-catalogue";
 import type { PublicListing } from "@/lib/marketplace/publicListing";
 import { useAuth } from "@/contexts/AuthContext";
 import { ListingClassesSection } from "@/components/classes/ListingClassesSection";
@@ -77,6 +102,10 @@ interface Listing {
   amenities?: string[];
   photos?: string[];
   profile_image?: string;
+  /** A gym's facility items (equipment, rooms), each maybe with a photo. */
+  facility_items?: FacilityItem[];
+  /** A gym's addresses (binectics-api #374); absent on an older API. */
+  locations?: unknown;
   city?: string;
   country_code?: string;
   currency?: string;
@@ -89,10 +118,10 @@ interface Listing {
   accepting_clients?: boolean;
   active_client_count?: number;
   published_at?: string;
-  organization?: { _id: string; name: string } | null;
+  organization?: { _id: string; name: string; logo?: string } | null;
   professional?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
-  organization_id?: { _id: string; name: string } | null;
-  professional_id?: { _id: string; first_name: string; last_name: string } | null;
+  organization_id?: { _id: string; name: string; logo?: string } | null;
+  professional_id?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
   /** Dietitians: codes, labelled through lib/credentials/dietitian. */
   specializations?: string[];
   populations?: string[];
@@ -112,6 +141,8 @@ interface Plan {
   currency: string;
   features?: string[];
   is_active?: boolean;
+  /** False for a negotiated, off-app plan the member can't buy here. */
+  is_self_serve?: boolean;
   /** "Save N% vs <plan>" from the API, when the provider set one. */
   comparison?: MarketplaceMembershipPlan["comparison"];
 }
@@ -154,27 +185,55 @@ export function ListingProfile({
   });
   const ratingShown = rating.average ? String(Math.round(rating.average * 10) / 10) : "–";
 
-  const name = listing.organization_id?.name || listing.organization?.name || (listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : listing.headline);
-  const ownerName = listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : "Provider";
+  // A gym is its business name; a trainer or dietitian is their own name,
+  // with the headline as the line under it (mobile #304, listingDisplay.ts).
+  const names = listingNames(listing);
+  const name = providerTitle({ type: listing.account_type, ...names, headline: listing.headline });
+  const ownerName = names.professionalName || "Provider";
   const ownerInitials = ownerName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
   const professionalId = listing.professional_id?._id ?? listing.professional?._id ?? null;
   const organizationId = listing.organization_id?._id ?? listing.organization?._id ?? null;
   const badge = BADGE_STYLES[listing.account_type] || BADGE_STYLES.gym_owner;
   const typeLabel = ACCOUNT_LABELS[listing.account_type] || "Provider";
   const isVerified = listing.verification_badge && listing.verification_badge !== "none";
-  const photos = listing.photos || [];
   const phBg = PH_BG[listing.account_type] || PH_BG.gym_owner;
-  const allAmenities = [...(listing.amenities || []), ...(listing.facilities || [])];
+  // The logo (gym) or portrait (coach) as a small avatar, never the hero.
+  const avatarUrl =
+    listing.profile_image ||
+    listing.professional_id?.profile_picture ||
+    listing.professional?.profile_picture ||
+    listing.organization_id?.logo ||
+    listing.organization?.logo ||
+    undefined;
+  const facilityItems = (listing.facility_items || []).filter((f) => f?.name?.trim());
+  // The listing's own photos (the API puts the profile image first; it is
+  // dropped), then facility photos, each opening the full-screen viewer.
+  const listingPhotos: GalleryPhoto[] = galleryPhotos(listing.photos, listing.profile_image).map((src) => ({ src }));
+  const facilityPhotos: GalleryPhoto[] = facilityItems
+    .filter((f) => f.image_url && f.image_url !== listing.profile_image)
+    .map((f) => ({ src: f.image_url as string, caption: f.name }));
+  const galleryShown = listingPhotos.length > 0 ? listingPhotos : facilityPhotos;
+  const [facilityViewer, setFacilityViewer] = useState<number | null>(null);
+  const allAmenities = [...new Set([...(listing.amenities || []), ...(listing.facilities || [])])].map(amenityLabel);
+  const locations = listing.account_type === "gym_owner" ? publicLocations(listing.locations) : [];
   const specialties = listing.specialties || [];
   const specializations = (listing.specializations || []).map(specializationLabel);
   const populations = (listing.populations || []).map(populationLabel);
   const licenseIssuers = licenseBadgeSummary(listing.license_badges);
   // The headline is only worth a line of its own when it isn't the name.
-  const headline = listing.headline?.trim() && listing.headline.trim() !== name ? listing.headline.trim() : null;
+  const headline = providerSubtitle(name, listing.headline) ?? null;
   const priceFrom = listingPriceFrom(publicListing, currencyList);
-  // A single plan is chosen for the member; with several, they pick.
-  const selectedPlan =
-    plans.find((p) => p._id === chosenPlanId) ?? (plans.length === 1 ? plans[0] : undefined);
+  // The visitor's memberships, so a member here sees their membership and
+  // "Manage membership" rather than a checkout (mobile #304, planChoice.ts).
+  // Signed out (or the request failed): none.
+  const { data: mySubs } = useMySubscriptions(!!user);
+  const held = heldPlanIds(mySubs);
+  const membership = membershipHere(mySubs, { listingId, organizationId });
+  // A newcomer with one buyable plan has it ready; with several, they pick.
+  // A member never has another plan picked for them.
+  const selectedPlan = chosenPlan(plans, chosenPlanId, held);
+  const hasPurchasable = plans.some((p) => isPurchasable(p, held));
+  const cta = profileCta({ membership, selectedPlan, hasPurchasable });
   const planPrice = (p: Plan) => formatMinor(p.currency, p.price_minor, { list: currencyList });
   const selectedIsFree = selectedPlan ? selectedPlan.price_minor === 0 : false;
   const selectedPayable = selectedPlan ? isSelectable(selectedPlan.currency, currencyList, "charge_card") : false;
@@ -215,22 +274,21 @@ export function ListingProfile({
       </header>
 
       {/* ═══ GALLERY ═══ */}
-      <section className="mx-auto max-w-360 px-5 sm:px-10 pt-6 grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr] sm:grid-rows-[200px_200px] gap-2 sm:h-[408px]">
-        {Array.from({ length: 5 }).map((_, i) => {
-          const photo = photos[i];
-          return (
-            <div key={i} className={`rounded-(--r-3) overflow-hidden relative border border-border min-h-[180px] sm:min-h-0 ${i >= 3 ? "hidden sm:block" : ""} ${i === 0 ? "sm:row-span-2" : ""}`} style={{ background: photo ? undefined : phBg }}>
-              {photo && <Image src={photo} alt={`${name} photo ${i + 1}`} fill className="object-cover" sizes="(max-width: 640px) 100vw, 50vw" />}
-              {!photo && <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{typeLabel} · {name}</span>}
-              {i === 4 && photos.length > 5 && (
-                <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-bg border border-border px-3 py-1.5 rounded-full text-[12.5px] font-medium" style={{ color: "var(--ink)" }}>
-                  Show all {photos.length}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </section>
+      {galleryShown.length > 0 ? (
+        <ListingGallery photos={galleryShown} title={name} placeholder={phBg} />
+      ) : (
+        // No photo yet: a plain panel with the logo, never a cropped logo hero.
+        <section aria-hidden="true" className="mx-auto max-w-360 px-5 sm:px-10 pt-6">
+          <div className="rounded-(--r-3) border border-border h-[160px] sm:h-[220px] relative flex items-center justify-center" style={{ background: phBg }}>
+            {avatarUrl ? (
+              <span className="relative w-20 h-20 rounded-full overflow-hidden border border-border bg-bg">
+                <Image src={avatarUrl} alt="" fill className="object-cover" sizes="80px" />
+              </span>
+            ) : null}
+            <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>{typeLabel} · {name}</span>
+          </div>
+        </section>
+      )}
 
       {/* ═══ LAYOUT ═══ */}
       <div className="mx-auto max-w-360 px-5 sm:px-10 pt-8 sm:pt-10 pb-20 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
@@ -253,10 +311,17 @@ export function ListingProfile({
                 </span>
               )}
             </div>
-            <h1 className="text-[28px] sm:text-[36px] lg:text-[44px] font-medium leading-none" style={{ letterSpacing: "-0.03em", color: "var(--ink)" }}>
-              {name}
-              {listing.pronouns && <span className="ml-3 align-middle text-[14px] sm:text-[15px] font-normal" style={{ letterSpacing: 0, color: "var(--fg-3)" }}>({listing.pronouns})</span>}
-            </h1>
+            <div className="flex items-center gap-3.5">
+              {avatarUrl && galleryShown.length > 0 && (
+                <span className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border border-border bg-bg" data-testid="listing-avatar">
+                  <Image src={avatarUrl} alt="" fill className="object-cover" sizes="56px" />
+                </span>
+              )}
+              <h1 className="min-w-0 text-[28px] sm:text-[36px] lg:text-[44px] font-medium leading-none" style={{ letterSpacing: "-0.03em", color: "var(--ink)" }}>
+                {name}
+                {listing.pronouns && <span className="ml-3 align-middle text-[14px] sm:text-[15px] font-normal" style={{ letterSpacing: 0, color: "var(--fg-3)" }}>({listing.pronouns})</span>}
+              </h1>
+            </div>
             {headline && <p className="text-[16px] sm:text-[18px] max-w-[720px]" style={{ color: "var(--fg-2)" }}>{headline}</p>}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4.5 text-[13px] sm:text-[14px]" style={{ color: "var(--fg-2)" }}>
               <span className="flex items-center gap-2">
@@ -268,8 +333,10 @@ export function ListingProfile({
                 <span className="w-[3px] h-[3px] rounded-full bg-border-2" />
                 <span>{listing.city}{listing.country_code ? `, ${listing.country_code}` : ""}</span>
               </>}
-              <span className="w-[3px] h-[3px] rounded-full bg-border-2" />
-              <span>By {ownerName}</span>
+              {ownerName !== name && ownerName !== "Provider" && <>
+                <span className="w-[3px] h-[3px] rounded-full bg-border-2" />
+                <span>{listing.account_type === "gym_owner" ? "Owned by" : "By"} {ownerName}</span>
+              </>}
               {priceFrom && <>
                 <span className="w-[3px] h-[3px] rounded-full bg-border-2" />
                 <span className="font-mono" style={{ fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>{priceFrom}</span>
@@ -296,15 +363,31 @@ export function ListingProfile({
             </div>
           </div>
 
+          {/* A member on a phone sees their membership here, not only in the
+              booking card below the whole profile. */}
+          {cta.kind === "member" && (
+            <div className="lg:hidden mt-5 border border-border rounded-(--r-3) bg-bg p-4 flex flex-col gap-3" data-testid="member-strip">
+              <div>
+                <div className="font-mono text-[10.5px] uppercase tracking-[0.05em] mb-1" style={{ color: "var(--fg-3)" }}>{PLAN_CHOICE_COPY.yourMembership}</div>
+                <div className="text-[14px]" style={{ color: "var(--ink)" }}>{membershipLine(cta.membership)}</div>
+              </div>
+              <Link href={manageMembershipHref(cta.membership)} className="btn-signal-v2 w-full justify-center" style={{ textDecoration: "none", height: "44px" }}>
+                {PLAN_CHOICE_COPY.manage}
+              </Link>
+            </div>
+          )}
+
           {/* Tabs */}
           {/* Jump links to the sections this profile actually has. */}
           <nav className="flex gap-1 mt-6 border-b border-border overflow-x-auto" aria-label="On this page">
             {[
               { id: "about", label: "About" },
               ...(plans.length > 0 ? [{ id: "plans", label: `Plans · ${plans.length}` }] : []),
+              ...(facilityItems.length > 0 ? [{ id: "facilities", label: `Facilities · ${facilityItems.length}` }] : []),
               ...(allAmenities.length > 0 ? [{ id: "amenities", label: `Amenities · ${allAmenities.length}` }] : []),
               { id: "book", label: listing.account_type === "gym_owner" ? "Classes" : "Book" },
               { id: "reviews", label: `Reviews · ${rating.count}` },
+              ...(locations.length > 0 ? [{ id: "location", label: locations.length > 1 ? `Locations · ${locations.length}` : "Location" }] : []),
             ].map((t) => (
               <a key={t.id} href={`#${t.id}`} className="inline-flex items-center min-h-11 px-4 text-[14px] -mb-px shrink-0 hover:text-ink" style={{ color: "var(--fg-2)" }}>{t.label}</a>
             ))}
@@ -369,6 +452,8 @@ export function ListingProfile({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {plans.map((p) => {
                   const isSelected = selectedPlan?._id === p._id;
+                  const isHeld = held.has(p._id);
+                  const buyable = isPurchasable(p, held);
                   return (
                   <div key={p._id} className={`border rounded-(--r-3) p-5 flex flex-col gap-3 ${isSelected ? "border-ink bg-bg-2" : "border-border bg-bg"}`}>
                     <div>
@@ -397,15 +482,21 @@ export function ListingProfile({
                       </div>
                     )}
                     <div className="mt-auto">
-                      <button
-                        type="button"
-                        className={`${isSelected ? "btn-primary-v2" : "btn-ghost-v2"} w-full`}
-                        style={{ height: "44px" }}
-                        aria-pressed={isSelected}
-                        onClick={() => choosePlan(p._id)}
-                      >
-                        {isSelected ? `${p.name} chosen` : `Choose ${p.name}`}
-                      </button>
+                      {isHeld ? (
+                        <div className="h-11 flex items-center justify-center text-[13.5px] font-medium rounded-(--r-2) border border-border bg-bg-2" style={{ color: "var(--ink)" }}>
+                          {PLAN_CHOICE_COPY.currentPlan}
+                        </div>
+                      ) : buyable ? (
+                        <button
+                          type="button"
+                          className={`${isSelected ? "btn-primary-v2" : "btn-ghost-v2"} w-full`}
+                          style={{ height: "44px" }}
+                          aria-pressed={isSelected}
+                          onClick={() => choosePlan(p._id)}
+                        >
+                          {isSelected ? `${p.name} chosen` : membership ? `${PLAN_CHOICE_COPY.add} ${p.name}` : `Choose ${p.name}`}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                   );
@@ -416,15 +507,53 @@ export function ListingProfile({
 
           <ContentOffersStrip offers={contentOffers} />
 
+          {/* Facilities: the gym's own items, with their photos. */}
+          {facilityItems.length > 0 && (
+            <section id="facilities" className="py-8 border-b border-border scroll-mt-4">
+              <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Facilities</h2>
+              <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3 list-none p-0">
+                {facilityItems.map((f) => {
+                  const photoIndex = facilityPhotos.findIndex((ph) => ph.src === f.image_url);
+                  const maintenance = f.status === FacilityStatus.MAINTENANCE;
+                  return (
+                    <li key={f._id || f.name} className="border border-border rounded-(--r-3) overflow-hidden bg-bg flex flex-col">
+                      {f.image_url && photoIndex >= 0 ? (
+                        <button type="button" className="relative aspect-4/3 p-0 cursor-zoom-in border-b border-border" onClick={() => setFacilityViewer(photoIndex)} aria-label={`Open photo of ${f.name}`}>
+                          <Image src={f.image_url} alt={f.name} fill className="object-cover" sizes="(max-width: 640px) 50vw, 240px" />
+                        </button>
+                      ) : (
+                        <div className="aspect-4/3 border-b border-border" style={{ background: phBg }} aria-hidden="true" />
+                      )}
+                      <div className="p-3 flex flex-col gap-1">
+                        <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{f.name}</div>
+                        {f.category && FACILITY_CATEGORY_LABELS[f.category] && (
+                          <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{FACILITY_CATEGORY_LABELS[f.category]}</div>
+                        )}
+                        {maintenance && (
+                          <span className="self-start mt-1 inline-flex items-center h-5.5 px-2 rounded-(--r-1) text-[12px] font-medium" style={{ background: "var(--warn-soft)", color: "var(--warn-ink)" }}>
+                            Under maintenance
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {facilityViewer !== null && (
+                <PhotoViewer photos={facilityPhotos} index={facilityViewer} onIndex={setFacilityViewer} onClose={() => setFacilityViewer(null)} title={name} />
+              )}
+            </section>
+          )}
+
           {/* Amenities */}
           {allAmenities.length > 0 && (
             <section id="amenities" className="py-8 border-b border-border scroll-mt-4">
-              <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Amenities & facilities</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Amenities</h2>
+              <ul className="grid grid-cols-2 sm:grid-cols-4 gap-2 list-none p-0">
                 {allAmenities.map((a) => (
-                  <div key={a} className="flex items-center gap-2.5 px-3.5 py-3 border border-border rounded-(--r-2) text-[13.5px]" style={{ color: "var(--ink)" }}>{a}</div>
+                  <li key={a} className="flex items-center gap-2.5 px-3.5 py-3 border border-border rounded-(--r-2) text-[13.5px]" style={{ color: "var(--ink)" }}>{a}</li>
                 ))}
-              </div>
+              </ul>
             </section>
           )}
 
@@ -458,14 +587,41 @@ export function ListingProfile({
           <div id="reviews" className="scroll-mt-4">
             <ListingReviews listingId={listingId} accountType={listing.account_type} providerName={name} />
           </div>
+
+          {/* Where the gym is: each address with a maps link (api #374). */}
+          {locations.length > 0 && (
+            <section id="location" className="py-8 border-b border-border scroll-mt-4">
+              <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{locations.length > 1 ? "Locations" : "Location"}</h2>
+              <ul className="flex flex-col gap-2 list-none p-0">
+                {locations.map((loc) => (
+                  <li key={loc.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 border border-border rounded-(--r-3) bg-bg">
+                    <div className="min-w-0">
+                      <div className="text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
+                        {loc.name}
+                        {loc.is_primary && locations.length > 1 && <span className="ml-2 font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Main</span>}
+                      </div>
+                      {addressLine(loc) && <div className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{addressLine(loc)}</div>}
+                    </div>
+                    <a href={mapsUrl(loc, name)} target="_blank" rel="noopener noreferrer" className="btn-ghost-v2 sm shrink-0" style={{ textDecoration: "none" }}>
+                      Open in Maps
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
         {/* ─── RIGHT: BOOKING CARD ─── */}
         <aside id="booking-card" className="sticky min-w-0" style={{ top: "88px" }}>
-          <div className="border border-border rounded-(--r-3) bg-bg overflow-hidden">
+          <div className="border border-border rounded-(--r-3) bg-bg overflow-hidden" data-testid="booking-card" data-cta={cta.kind}>
             <div className="px-5 pt-4.5 pb-3.5 border-b border-border flex justify-between items-start">
               <div>
-                {selectedPlan ? (
+                {cta.kind === "member" ? (
+                  <div className="text-[17px] font-medium" style={{ letterSpacing: "-0.015em", color: "var(--ink)" }}>
+                    {PLAN_CHOICE_COPY.yourMembership}
+                  </div>
+                ) : selectedPlan ? (
                   <div className="font-mono text-[24px]" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: "-0.012em", color: "var(--ink)" }}>
                     {planPrice(selectedPlan)}
                     <small className="font-mono text-[13px]" style={{ color: "var(--fg-3)" }}> {planPerLabel(selectedPlan)}</small>
@@ -486,20 +642,37 @@ export function ListingProfile({
               )}
             </div>
 
+            {cta.kind === "member" && (
+              <div className="px-5 pt-4 flex flex-col gap-3">
+                <div className="px-3.5 py-3 rounded-(--r-2) border border-ink bg-bg-2 text-[13.5px]" style={{ color: "var(--ink)" }} data-testid="membership-line">
+                  {membershipLine(cta.membership)}
+                </div>
+                <Link href={manageMembershipHref(cta.membership)} className="btn-signal-v2 lg w-full justify-center" style={{ textDecoration: "none" }}>
+                  {PLAN_CHOICE_COPY.manage}
+                </Link>
+              </div>
+            )}
+
             <div className="px-5 py-4 flex flex-col gap-4">
               {plans.length === 0 ? (
-                <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No membership plans yet.</p>
-              ) : (
+                cta.kind === "member" ? null : <p className="text-[13.5px]" style={{ color: "var(--fg-3)" }}>No membership plans yet.</p>
+              ) : cta.kind === "member" && !hasPurchasable ? null : (
                 <fieldset className="flex flex-col gap-1.5 border-0 p-0 m-0 min-w-0">
-                  <legend className="font-mono text-[12px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>Plan</legend>
+                  <legend className="font-mono text-[12px] uppercase tracking-[0.04em] mb-1.5" style={{ color: "var(--fg-3)" }}>
+                    {cta.kind === "member" ? "Add a plan" : "Plan"}
+                  </legend>
+                  {cta.kind === "member" && (
+                    <p className="text-[12.5px] mb-1" style={{ color: "var(--fg-3)" }}>{PLAN_CHOICE_COPY.addHint}</p>
+                  )}
                   {plans.map((p) => {
                     const checked = selectedPlan?._id === p._id;
+                    const buyable = isPurchasable(p, held);
                     return (
                       <label
                         key={p._id}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-(--r-2) cursor-pointer text-[13.5px]"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-(--r-2) text-[13.5px] ${buyable ? "cursor-pointer" : "cursor-default"}`}
                         style={{
-                          color: "var(--ink)",
+                          color: buyable ? "var(--ink)" : "var(--fg-3)",
                           background: checked ? "var(--bg-2)" : "var(--bg)",
                           border: `1px solid ${checked ? "var(--ink)" : "var(--border-2)"}`,
                         }}
@@ -509,15 +682,18 @@ export function ListingProfile({
                           name="listing-plan"
                           value={p._id}
                           checked={checked}
+                          disabled={!buyable}
                           onChange={() => setChosenPlanId(p._id)}
                           className="shrink-0"
                           style={{ accentColor: "var(--ink)" }}
                         />
                         <span className="flex-1 min-w-0 wrap-break-word">
                           {p.name}
-                          {planSavingLabel(p) && (
+                          {held.has(p._id) ? (
+                            <small className="block text-[12px]" style={{ color: "var(--fg-3)" }}>{PLAN_CHOICE_COPY.currentPlan}</small>
+                          ) : planSavingLabel(p) ? (
                             <small className="block text-[12px]" style={{ color: "var(--signal-ink)" }}>{planSavingLabel(p)}</small>
-                          )}
+                          ) : null}
                         </span>
                         <span className="font-mono shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
                           {planPrice(p)} <small style={{ color: "var(--fg-3)" }}>{planPerLabel(p)}</small>
@@ -538,16 +714,23 @@ export function ListingProfile({
               )}
             </div>
 
-            {plans.length > 0 && (
+            {(cta.kind === "choose" || cta.kind === "checkout" || (cta.kind === "member" && cta.add)) && (
               <div className="px-5 pt-4 pb-4.5 border-t border-border flex flex-col gap-2.5" style={{ background: "var(--bg-2)" }}>
-                <button
-                  type="button"
-                  className="btn-signal-v2 lg w-full disabled:opacity-40 disabled:cursor-not-allowed"
-                  disabled={!selectedPlan}
-                  onClick={continueToCheckout}
-                >
-                  Continue to checkout →
-                </button>
+                {cta.kind === "member" && cta.add ? (
+                  // A second plan is added on purpose: an outline button naming it.
+                  <button type="button" className="btn-ghost-v2 lg w-full" onClick={continueToCheckout}>
+                    {addPlanLabel(cta.add, selectedIsFree ? "Free" : planPrice(cta.add as Plan))}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-signal-v2 lg w-full disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={!selectedPlan}
+                    onClick={continueToCheckout}
+                  >
+                    {PLAN_CHOICE_COPY.checkout}
+                  </button>
+                )}
                 {selectedPlan && (selectedIsFree || selectedPayable) && (
                   <div className="text-[12px] text-center leading-relaxed" style={{ color: "var(--fg-3)" }}>
                     {selectedIsFree ? "Free plan, no payment needed" : "Paid securely with Paystack"}
