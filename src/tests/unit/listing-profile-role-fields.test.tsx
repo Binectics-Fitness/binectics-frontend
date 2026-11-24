@@ -20,6 +20,8 @@ vi.mock("@/contexts/OrganizationContext", () => {
   return { useOrganization: value, useOptionalOrganization: value };
 });
 vi.mock("@/components/provider/GalleryManager", () => ({ GalleryManager: () => <p>gallery</p> }));
+// The logo manager (#362) reads a query client; it is not what this test is about.
+vi.mock("@/components/provider/ListingLogoManager", () => ({ ListingLogoManager: () => null }));
 vi.mock("@/lib/queries/utility", () => ({ useCountries: () => ({ data: [] }) }));
 
 const listing = {
