@@ -119,9 +119,8 @@ describe("member track: the steps", () => {
     expect(memberLanding("invite")).toBe("/dashboard/member/requests");
   });
 
-  it("offers only tools web has: no journal, workouts only with the Starter flag", () => {
-    expect(availableTools(true).map((t) => t.id)).toEqual(["workouts", "fasting", "water", "checklist", "weight", "logs"]);
-    expect(availableTools(false).map((t) => t.id)).not.toContain("workouts");
+  it("offers only tools web has: no journal, and always workouts (no Starter flag)", () => {
+    expect(availableTools().map((t) => t.id)).toEqual(["workouts", "fasting", "water", "checklist", "weight", "logs"]);
   });
 });
 
