@@ -8,6 +8,8 @@ import { AsyncSpinner, StatusPill, DSCard, DSStatCard } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { adminService, type AdminUserDetail, type AdminUserSuspensionResult } from "@/lib/api/admin";
 import { formatAdminDate, formatAdminDateTime, roleLabel } from "@/lib/admin/moderation";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 const SUSPEND_REASON_MAX = 500;
 
@@ -46,6 +48,8 @@ function Verified({ ok, at }: { ok: boolean; at?: string | null }) {
 }
 
 export function UserDetailClient({ userId }: { userId: string }) {
+  // Suspend and unsuspend need users:write.
+  const canManage = useAdminAccess().can(AdminPermission.USERS_WRITE);
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +121,7 @@ export function UserDetailClient({ userId }: { userId: string }) {
         activeItem="Users"
         crumb={user ? name : "User detail"}
         actions={
-          user ? (
+          user && canManage ? (
             user.is_suspended ? (
               <button type="button" className="btn-primary-v2" onClick={() => setUnsuspendOpen(true)}>
                 Unsuspend

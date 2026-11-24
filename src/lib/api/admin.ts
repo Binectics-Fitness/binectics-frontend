@@ -366,7 +366,8 @@ export interface AdminListingDetail
   organization_id: { _id: string; name?: string; logo?: string } | string | null;
   badge_awarded_by?: AdminPersonRef | string | null;
   verification_badge: MarketplaceVerificationBadge;
-  documents: AdminListingDocument[];
+  /** Signed links; null when the caller lacks verification:read. */
+  documents: AdminListingDocument[] | null;
 }
 
 export interface AdminTransactionFilters {

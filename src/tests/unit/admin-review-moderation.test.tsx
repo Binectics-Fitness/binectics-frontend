@@ -6,6 +6,8 @@ import { ReviewDetailClient } from "@/app/admin/reviews/[reviewId]/ReviewDetailC
 import { adminService, type AdminReviewReport, type AdminReviewView } from "@/lib/api/admin";
 import { toast } from "@/components/Toast";
 
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/admin/reviews",

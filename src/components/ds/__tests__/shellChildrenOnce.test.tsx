@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { ProviderDashboardShell } from "../ProviderDashboardShell";
 import { AdminDashboardShell } from "../AdminDashboardShell";
 
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/dashboard/trainer",
@@ -11,6 +13,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/hooks/useRequireAuth", () => ({
   useAdminGuard: () => ({ isAuthorized: true, isLoading: false }),
+  isPlatformAdmin: () => true,
   useRoleGuard: () => ({ isAuthorized: true, isLoading: false }),
 }));
 vi.mock("@/contexts/AuthContext", () => ({

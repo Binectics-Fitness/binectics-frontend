@@ -10,6 +10,8 @@ import { isScrollLocked } from "@/lib/ui/scrollLock";
 
 let pathname = "/dashboard/trainer";
 // These tests are about the non-solo shell; the solo answer is a separate read.
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -18,6 +20,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/hooks/useRequireAuth", () => ({
   useAdminGuard: () => ({ isAuthorized: true, isLoading: false }),
+  isPlatformAdmin: () => true,
 }));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "a-1", role: "ADMIN", first_name: "Ada" }, isLoading: false, logout: vi.fn() }),

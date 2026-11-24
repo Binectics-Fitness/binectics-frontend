@@ -13,6 +13,8 @@ import {
 } from "@/lib/api/admin";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { ChargeRefundPanel } from "@/components/refunds/ChargeRefundPanel";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 const REFERENCE_LABEL: Record<string, string> = {
   membership_subscription: "Membership subscription",
@@ -62,6 +64,11 @@ export function signedAmount(row: {
 }
 
 export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
+  // The refund panel reads the charge's refund view (refunds:read); sending
+  // a refund moves money (refunds:write).
+  const access = useAdminAccess();
+  const canSeeRefunds = access.can(AdminPermission.REFUNDS_READ);
+  const canRefund = access.can(AdminPermission.REFUNDS_WRITE);
   const [detail, setDetail] = useState<AdminTransactionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -283,11 +290,12 @@ export function PaymentDetailClient({ paymentId }: { paymentId: string }) {
                     No refunds recorded against this payment.
                   </div>
                 ) : null}
-                {detail.transaction.direction === "credit" &&
+                {canSeeRefunds &&
+                detail.transaction.direction === "credit" &&
                 (detail.transaction.type === "consultation" || detail.transaction.type === "subscription") ? (
                   <div className="mt-4">
                     {/* The API decides who may refund: only platform money here. */}
-                    <ChargeRefundPanel mode="admin" chargeId={paymentId} />
+                    <ChargeRefundPanel mode="admin" chargeId={paymentId} canRefund={canRefund} />
                   </div>
                 ) : null}
               </Card>

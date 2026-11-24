@@ -7,6 +7,8 @@ import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
 let mockUser: Record<string, unknown> = {};
 let mockGym: { _id: string; name: string } | null = null;
 
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/",
@@ -16,7 +18,10 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: mockUser, isLoading: false, logout: vi.fn() }),
 }));
 vi.mock("@/hooks/useTrainerAccess", () => ({ useCoachingGym: () => mockGym }));
-vi.mock("@/hooks/useRequireAuth", () => ({ useAdminGuard: () => ({ isAuthorized: true, isLoading: false }) }));
+vi.mock("@/hooks/useRequireAuth", () => ({
+  useAdminGuard: () => ({ isAuthorized: true, isLoading: false }),
+  isPlatformAdmin: () => true,
+}));
 vi.mock("@/components/ds/ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
 vi.mock("@/lib/queries/onboarding", () => ({
   useOnboardingStatus: () => ({ data: { is_dismissed: false }, isLoading: false }),

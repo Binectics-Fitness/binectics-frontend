@@ -8,6 +8,8 @@ import { currencyPatch, describeInFlight, draftOf, sharedOffReasons } from "@/li
 import { UserRole } from "@/lib/types";
 
 const replace = vi.fn();
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, push: vi.fn() }),
   usePathname: () => "/admin/currencies",

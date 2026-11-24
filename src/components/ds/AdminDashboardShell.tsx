@@ -9,6 +9,13 @@ import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { ROLE_LABEL, personInitials, shortName } from "@/lib/identity";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useRegisterShellNav } from "@/hooks/useShellNav";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import {
+  AdminPermission as P,
+  gateList,
+  permissionLabel,
+  type AdminPermissionGate,
+} from "@/lib/admin/permissions";
 
 /* ─── Icon helper ──────────────────────────────────────────── */
 
@@ -28,6 +35,14 @@ interface SideItem {
   icon: React.ReactNode;
   badge?: string;
   alert?: boolean;
+  /** What it takes to see this page: one permission, or any one of a list.
+   *  None means any admin. The API enforces the same gate on its routes. */
+  permission?: AdminPermissionGate;
+}
+
+interface SideSection {
+  label: string;
+  items: SideItem[];
 }
 
 /*
@@ -36,27 +51,49 @@ interface SideItem {
  * promise the page can keep. Their routes stay, so add each back here when
  * its page is built.
  */
-export const SIDEBAR: { label: string; items: SideItem[] }[] = [
+export const SIDEBAR: SideSection[] = [
   { label: "Moderate", items: [
     { name: "Overview", href: "/admin/dashboard", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
-    { name: "Listings", href: "/admin/listings", icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
-    { name: "Reviews", href: "/admin/reviews", icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
-    { name: "Refunds", href: "/admin/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
-    { name: "Disputes", href: "/admin/disputes", icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
+    { name: "Listings", href: "/admin/listings", permission: P.CONTENT_READ, icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
+    { name: "Reviews", href: "/admin/reviews", permission: P.CONTENT_READ, icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
+    { name: "Refunds", href: "/admin/refunds", permission: P.REFUNDS_READ, icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
+    { name: "Disputes", href: "/admin/disputes", permission: P.REFUNDS_READ, icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
   ]},
   { label: "Platform", items: [
-    { name: "Payments", href: "/admin/payments", icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
-    { name: "Currencies", href: "/admin/currencies", icon: <I><circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5M12 6.5v1.5M12 16v1.5"/></I> },
-    { name: "Plans", href: "/admin/plans", icon: <I><path d="M4 7h16M4 12h16M4 17h10"/><rect x="2" y="4" width="20" height="16" rx="2"/></I> },
-    { name: "Users", href: "/admin/users", icon: <I><circle cx="9" cy="8" r="4"/><circle cx="17" cy="10" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a5 5 0 0 1 10 0"/></I> },
-    { name: "Analytics", href: "/admin/analytics", icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
+    { name: "Payments", href: "/admin/payments", permission: P.BILLING_READ, icon: <I><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></I> },
+    { name: "Currencies", href: "/admin/currencies", permission: [P.PLATFORM_READ, P.BILLING_READ], icon: <I><circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5M12 6.5v1.5M12 16v1.5"/></I> },
+    { name: "Plans", href: "/admin/plans", permission: P.BILLING_READ, icon: <I><path d="M4 7h16M4 12h16M4 17h10"/><rect x="2" y="4" width="20" height="16" rx="2"/></I> },
+    { name: "Users", href: "/admin/users", permission: P.USERS_READ, icon: <I><circle cx="9" cy="8" r="4"/><circle cx="17" cy="10" r="3"/><path d="M2 21a7 7 0 0 1 14 0M14 21a5 5 0 0 1 10 0"/></I> },
+    { name: "Analytics", href: "/admin/analytics", permission: P.ANALYTICS_READ, icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
   ]},
   { label: "Operate", items: [
     { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
-    { name: "Feature flags", href: "/admin/feature-flags", icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
-    { name: "Audit log", href: "/admin/audit-log", icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5" /> },
+    { name: "Feature flags", href: "/admin/feature-flags", permission: P.PLATFORM_READ, icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
+    { name: "Audit log", href: "/admin/audit-log", permission: P.AUDIT_READ, icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5" /> },
   ]},
 ];
+
+/**
+ * The sidebar this admin can use: items whose permission they lack are
+ * dropped, and so is a group left with no items.
+ */
+export function filterSidebar(
+  sections: SideSection[],
+  allows: (gate: AdminPermissionGate | undefined) => boolean,
+): SideSection[] {
+  return sections
+    .map((s) => ({ ...s, items: s.items.filter((i) => allows(i.permission)) }))
+    .filter((s) => s.items.length > 0);
+}
+
+/** The gate of the nav item a page sits under (detail pages share it). */
+export function pageGate(activeItem: string): AdminPermissionGate | undefined {
+  for (const s of SIDEBAR) {
+    const item = s.items.find((i) => i.name === activeItem);
+    if (item) return item.permission;
+  }
+  return undefined;
+}
 
 /* ─── Props ────────────────────────────────────────────────── */
 
@@ -64,12 +101,46 @@ interface AdminDashboardShellProps {
   activeItem: string;
   crumb: string;
   actions?: React.ReactNode;
+  /** The page's own gate, when it differs from its nav item's (or it has
+   *  no nav item). Defaults to the gate of the `activeItem` nav item. */
+  permission?: AdminPermissionGate;
   children: React.ReactNode;
+}
+
+/* ─── No access ────────────────────────────────────────────── */
+
+/**
+ * A page opened by URL without its permission: say so and name what is
+ * missing. No redirect: the address stays, so the admin can ask for it.
+ */
+export function AdminNoAccess({ gate }: { gate: AdminPermissionGate }) {
+  const needed = gateList(gate).map(permissionLabel);
+  const which =
+    needed.length === 1
+      ? `“${needed[0]}”`
+      : `one of ${needed.map((n) => `“${n}”`).join(" or ")}`;
+  return (
+    <section
+      role="status"
+      className="flex flex-col items-start gap-3 rounded-(--r-3) p-6 lg:p-8 max-w-[560px]"
+      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+    >
+      <h1 className="text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
+        You don&apos;t have access to this page
+      </h1>
+      <p className="text-sm" style={{ color: "var(--fg-2)" }}>
+        It needs the {which} permission. Ask an admin who manages roles to add it to one of your roles.
+      </p>
+      <Link href="/admin/dashboard" className="btn-ghost-v2 sm">
+        Back to the overview
+      </Link>
+    </section>
+  );
 }
 
 /* ─── Sidebar content (shared between desktop + mobile) ───── */
 
-function SidebarContent({ activeItem }: { activeItem: string }) {
+function SidebarContent({ activeItem, sections }: { activeItem: string; sections: SideSection[] }) {
   const { user } = useAuth();
   const name = shortName(user) || "Your account";
   const initials = personInitials(user) || "··";
@@ -92,7 +163,7 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
       </span>
 
       {/* Nav sections */}
-      {SIDEBAR.map((s) => (
+      {sections.map((s) => (
         <nav key={s.label} className="flex flex-col gap-0.5" aria-label={s.label}>
           <div
             className="font-mono text-[10.5px] uppercase tracking-[0.06em] px-2 py-1 mb-1"
@@ -159,7 +230,7 @@ function SidebarContent({ activeItem }: { activeItem: string }) {
 /* ─── Dark mobile nav for admin ───────────────────────────── */
 
 /** Modal behaviour (focus trap, Escape, inert page, close on navigation and at desktop width) comes from useNavDrawer. */
-function AdminMobileNav({ activeItem }: { activeItem: string }) {
+function AdminMobileNav({ activeItem, sections }: { activeItem: string; sections: SideSection[] }) {
   const { open, show, close, triggerRef, overlayRef, panelRef, closeOnLinkClick } = useNavDrawer();
 
   return (
@@ -227,7 +298,7 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
             {/* Sidebar content. Picking a link closes the drawer; the account
                 menu doesn't. */}
             <div onClick={closeOnLinkClick}>
-              <SidebarContent activeItem={activeItem} />
+              <SidebarContent activeItem={activeItem} sections={sections} />
             </div>
           </div>
         </div>
@@ -238,15 +309,23 @@ function AdminMobileNav({ activeItem }: { activeItem: string }) {
 
 /* ═══ Shell ═══ */
 
-export function AdminDashboardShell({ activeItem, crumb, actions, children }: AdminDashboardShellProps) {
+export function AdminDashboardShell({ activeItem, crumb, actions, permission, children }: AdminDashboardShellProps) {
   const { isAuthorized, isLoading } = useAdminGuard();
+  const access = useAdminAccess();
+  const sections = filterSidebar(SIDEBAR, access.allows);
   // The command bar offers exactly this sidebar while the shell is on screen.
-  useRegisterShellNav(SIDEBAR);
+  useRegisterShellNav(sections);
+  const gate = permission ?? pageGate(activeItem);
+  // Until the access answer arrives a gated page waits (its own requests
+  // would only be refused); once it has, a page without its permission
+  // says so instead of rendering.
+  const waiting = gate !== undefined && !access.ready;
+  const blocked = gate !== undefined && access.ready && !access.allows(gate);
   if (!isLoading && !isAuthorized) return null;
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       {/* Mobile nav — dark variant */}
-      <AdminMobileNav activeItem={activeItem} />
+      <AdminMobileNav activeItem={activeItem} sections={sections} />
 
       {/* ONE content slot: the page and the header actions render once and
           CSS switches the chrome (see ProviderDashboardShell). */}
@@ -262,7 +341,7 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
           }}
           aria-label="Sidebar navigation"
         >
-          <SidebarContent activeItem={activeItem} />
+          <SidebarContent activeItem={activeItem} sections={sections} />
         </aside>
 
         {/* Main */}
@@ -288,13 +367,21 @@ export function AdminDashboardShell({ activeItem, crumb, actions, children }: Ad
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
               <ShellNotificationBell />
-              {actions}
+              {!waiting && !blocked && actions}
             </div>
           </header>
 
           {/* Body */}
           <main className="flex flex-col gap-4 sm:gap-6 p-4 lg:p-7 flex-1">
-            {children}
+            {waiting ? (
+              <div aria-busy="true" className="text-sm" style={{ color: "var(--fg-3)" }}>
+                Loading…
+              </div>
+            ) : blocked && gate !== undefined ? (
+              <AdminNoAccess gate={gate} />
+            ) : (
+              children
+            )}
           </main>
         </div>
       </div>
