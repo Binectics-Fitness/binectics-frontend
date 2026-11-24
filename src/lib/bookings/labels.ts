@@ -38,3 +38,19 @@ export function formatClock(iso: string): string {
     minute: "2-digit",
   });
 }
+
+const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_LONG = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
+
+/**
+ * "Saturdays only", "Sun, Sat only": the days a session type runs on
+ * (0 = Sunday, in the provider's timezone). Null when it runs on every day
+ * the provider works (no days listed, or all seven). The slots endpoint
+ * already offers only those days; this tells the member why.
+ */
+export function sessionDaysLabel(days: readonly number[] | null | undefined): string | null {
+  const set = [...new Set(days ?? [])].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
+  if (set.length === 0 || set.length === 7) return null;
+  if (set.length === 1) return `${DAY_LONG[set[0]]} only`;
+  return `${set.map((d) => DAY_SHORT[d]).join(", ")} only`;
+}
