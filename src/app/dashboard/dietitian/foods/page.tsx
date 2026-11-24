@@ -96,7 +96,7 @@ function parseFoodForm(
   };
 }
 
-const labelCls = "font-mono text-[10.5px] uppercase tracking-[0.06em]";
+const labelCls = "text-[12.5px] font-medium";
 const inputStyle = {
   background: "var(--bg-2)",
   border: "1px solid var(--border-2)",
@@ -489,7 +489,7 @@ export default function DietitianFoodsPage() {
                   </td>
                   <td className="px-4.5 py-3">
                     {f.category ? (
-                      <span className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian)" }}>{f.category}</span>
+                      <span className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--dietitian-soft)", color: "var(--dietitian-ink)" }}>{f.category}</span>
                     ) : (
                       <span style={{ color: "var(--fg-3)" }}>-</span>
                     )}

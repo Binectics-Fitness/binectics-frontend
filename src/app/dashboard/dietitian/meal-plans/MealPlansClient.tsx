@@ -289,7 +289,7 @@ function PlanFormModal({
 
               {activeDay === EVERY_DAY ? (
                 <div className="text-[12px]" style={{ color: "var(--fg-3)", lineHeight: 1.5 }}>
-                  Meals here repeat on every day of the week. Build the base menu first, then add day-specific meals on the weekday tabs.
+                  These repeat every day of the week.
                 </div>
               ) : dayRows.length === 0 ? (
                 <div className="text-[12px]" style={{ color: "var(--fg-3)", lineHeight: 1.5 }}>
@@ -594,7 +594,7 @@ function MealPlanCard({
               type="button"
               onClick={onAssign}
               className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
-              style={{ border: "1px solid var(--border)", color: "var(--dietitian)", background: "transparent" }}
+              style={{ border: "1px solid var(--border)", color: "var(--dietitian-ink)", background: "transparent" }}
             >
               Assign
             </button>
