@@ -78,6 +78,7 @@ describe("SessionTypesCard", () => {
         name: "Small-group session",
         description: undefined,
         defaultDurationMinutes: 45,
+        capacity: 1,
         priceMinor: 1_500_000,
         currency: "NGN",
         bufferMinutes: 15,
@@ -124,6 +125,7 @@ describe("SessionTypesCard", () => {
         name: "Check-in",
         description: undefined,
         defaultDurationMinutes: 20,
+        capacity: 1,
         priceMinor: 0,
         currency: "NGN",
       }),
@@ -171,7 +173,7 @@ describe("mainSessionType", () => {
 });
 
 describe("draftIssues", () => {
-  const base = { name: "X", description: "", duration: 30, free: true, priceText: "", priceMinor: null, currency: "" };
+  const base = { name: "X", description: "", duration: 30, capacity: 1, free: true, priceText: "", priceMinor: null, currency: "" };
   it("accepts a free session with no currency", () => expect(draftIssues(base)).toEqual({}));
   it("rejects lengths outside 5-240", () => {
     expect(draftIssues({ ...base, duration: 4 }).duration).toBeDefined();
@@ -179,4 +181,50 @@ describe("draftIssues", () => {
   });
   it("needs a currency for a paid session", () =>
     expect(draftIssues({ ...base, free: false, priceMinor: 100 }).currency).toBeDefined());
+  it("takes 1 to 20 people per slot", () => {
+    expect(draftIssues({ ...base, capacity: 4 })).toEqual({});
+    expect(draftIssues({ ...base, capacity: 20 })).toEqual({});
+    expect(draftIssues({ ...base, capacity: 0 }).capacity).toBeDefined();
+    expect(draftIssues({ ...base, capacity: 21 }).capacity).toBeDefined();
+    expect(draftIssues({ ...base, capacity: 2.5 }).capacity).toBeDefined();
+  });
+});
+
+describe("SessionTypesCard group sessions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    svc.getOwnTypes.mockResolvedValue({
+      success: true,
+      data: [type({}), type({ id: "t2", name: "Small-group strength", capacity: 4, createdAt: "z" })],
+    });
+  });
+
+  it("shows a group session's size and saves a new capacity", async () => {
+    svc.updateOwnType.mockResolvedValue({ success: true, data: type({ id: "t2", capacity: 6 }) });
+    render(<SessionTypesCard />);
+    expect(await screen.findByText(/Group of 4/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Small-group strength" }));
+    const field = screen.getByLabelText("People per slot");
+    expect(field).toHaveValue(4);
+    expect(screen.getByText("group session")).toBeInTheDocument();
+    fireEvent.change(field, { target: { value: "6" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save session" }));
+    await waitFor(() =>
+      expect(svc.updateOwnType).toHaveBeenCalledWith("t2", expect.objectContaining({ capacity: 6 })),
+    );
+  });
+
+  it("explains a capacity below what is already booked instead of blaming the name", async () => {
+    svc.updateOwnType.mockResolvedValue({
+      success: false,
+      status: 409,
+      code: "CONSULTATION_CAPACITY_BELOW_BOOKED",
+      message: "3 people are booked into one upcoming session, so places can't go below 3.",
+    });
+    render(<SessionTypesCard />);
+    fireEvent.click(await screen.findByRole("button", { name: "Edit Small-group strength" }));
+    fireEvent.change(screen.getByLabelText("People per slot"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save session" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/places can't go below 3/);
+  });
 });

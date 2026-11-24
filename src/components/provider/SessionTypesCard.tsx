@@ -30,18 +30,22 @@ export function mainSessionType<T extends Pick<ConsultationType, "isActive" | "c
 
 const NAME_MAX = 120;
 const DESCRIPTION_MAX = 1000;
+/** The most people one slot can take (the API's limit). */
+export const CAPACITY_MAX = 20;
 
 interface Draft {
   name: string;
   description: string;
   duration: number;
+  /** People per slot: 1 is a 1:1 session, more is a group session. */
+  capacity: number;
   free: boolean;
   priceText: string;
   priceMinor: number | null;
   currency: string;
 }
 
-export type DraftIssues = Partial<Record<"name" | "duration" | "price" | "currency", string>>;
+export type DraftIssues = Partial<Record<"name" | "duration" | "capacity" | "price" | "currency", string>>;
 
 /** What stops a draft saving, by field. Empty when it can be saved. */
 export function draftIssues(d: Draft): DraftIssues {
@@ -50,9 +54,17 @@ export function draftIssues(d: Draft): DraftIssues {
   else if (d.name.trim().length > NAME_MAX) out.name = `Keep the name under ${NAME_MAX} characters.`;
   if (!Number.isInteger(d.duration) || d.duration < 5 || d.duration > 240)
     out.duration = "Length must be 5 to 240 minutes.";
+  if (!Number.isInteger(d.capacity) || d.capacity < 1 || d.capacity > CAPACITY_MAX)
+    out.capacity = `People per slot must be 1 to ${CAPACITY_MAX}.`;
   if (!d.free && (d.priceMinor === null || d.priceMinor <= 0)) out.price = "Set a price, or mark it free.";
   if (!d.free && !d.currency) out.currency = "Pick a currency.";
   return out;
+}
+
+/** "Group of 4" for a group session; null for a 1:1. */
+export function capacityLabel(t: Pick<ConsultationType, "capacity">): string | null {
+  const capacity = t.capacity ?? 1;
+  return capacity > 1 ? `Group of ${capacity}` : null;
 }
 
 function priceLabel(t: ConsultationType): string {
@@ -119,6 +131,7 @@ export function SessionTypesCard() {
       name: "",
       description: "",
       duration: main?.defaultDurationMinutes ?? 30,
+      capacity: 1,
       free: false,
       priceText: "",
       priceMinor: null,
@@ -137,6 +150,7 @@ export function SessionTypesCard() {
       name: t.name,
       description: t.description ?? "",
       duration: t.defaultDurationMinutes,
+      capacity: t.capacity ?? 1,
       free: !priced,
       priceText: priced ? formatMinorForInput(t.priceMinor as number, { currency }) : "",
       priceMinor: priced ? (t.priceMinor as number) : null,
@@ -171,6 +185,7 @@ export function SessionTypesCard() {
       name: draft.name.trim(),
       description: draft.description.trim() || undefined,
       defaultDurationMinutes: draft.duration,
+      capacity: draft.capacity,
       ...price,
     };
     const res =
@@ -190,9 +205,11 @@ export function SessionTypesCard() {
     setSaving(false);
     if (!res.success) {
       setError(
-        res.status === 409
-          ? `You already have a session called "${draft.name.trim()}". Pick another name.`
-          : writeErrorMessage(res, "Couldn't save the session. Try again."),
+        res.code === "CONSULTATION_CAPACITY_BELOW_BOOKED"
+          ? (res.message ?? "More people are booked into an upcoming session than that.")
+          : res.status === 409
+            ? `You already have a session called "${draft.name.trim()}". Pick another name.`
+            : writeErrorMessage(res, "Couldn't save the session. Try again."),
       );
       return;
     }
@@ -278,7 +295,7 @@ export function SessionTypesCard() {
                   )}
                 </p>
                 <p className="mt-0.5 text-xs text-fg-3">
-                  {t.defaultDurationMinutes} min · {priceLabel(t)}
+                  {t.defaultDurationMinutes} min{capacityLabel(t) ? ` · ${capacityLabel(t)}` : ""} · {priceLabel(t)}
                   {i === 0 ? " · edit it in Session settings above" : ""}
                 </p>
                 {t.description && <p className="mt-1 text-xs text-fg-3">{t.description}</p>}
@@ -350,6 +367,31 @@ export function SessionTypesCard() {
               </div>
               {issues.duration && <p className="mt-1 text-xs text-danger-ink">{issues.duration}</p>}
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="st-capacity" className="mb-1 block text-xs font-semibold text-fg-2">
+              People per slot
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="st-capacity"
+                type="number"
+                min={1}
+                max={CAPACITY_MAX}
+                step={1}
+                value={draft.capacity}
+                onChange={(e) => setDraft({ ...draft, capacity: Number(e.target.value || 0) })}
+                aria-invalid={!!issues.capacity || undefined}
+                aria-describedby="st-capacity-help"
+                className="w-24 rounded-(--r-2) border border-border bg-bg px-3 py-2 text-sm focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
+              />
+              <span className="text-sm text-fg-2">{draft.capacity > 1 ? "group session" : "1:1 session"}</span>
+            </div>
+            <p id="st-capacity-help" className="mt-1 text-xs text-fg-3">
+              1 is a 1:1. More lets that many clients book the same time, each paying the session price.
+            </p>
+            {issues.capacity && <p className="mt-1 text-xs text-danger-ink">{issues.capacity}</p>}
           </div>
 
           <div>

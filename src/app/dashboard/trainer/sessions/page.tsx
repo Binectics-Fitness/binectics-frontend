@@ -17,6 +17,7 @@ import {
 import { clientDisplayName, durationMins } from "@/lib/consultations/bookingActions";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { buildSessionsCsv } from "./sessions-csv";
+import { isLiveBooking, slotKey } from "../_components/coachSchedule";
 
 const TIME_RANGE_OPTIONS = [
   { label: "This month", value: "This month" },
@@ -125,6 +126,16 @@ export default function TrainerSessionsListPage() {
       },
       { All: 0, Upcoming: 0, Completed: 0, "No-show": 0, Cancelled: 0 },
     );
+  }, [bookings]);
+
+  // How many live bookings share each slot: a group session's attendees.
+  const slotCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const b of bookings) {
+      if (!isLiveBooking(b)) continue;
+      counts.set(slotKey(b), (counts.get(slotKey(b)) ?? 0) + 1);
+    }
+    return counts;
   }, [bookings]);
 
   const filtered = useMemo(() => {
@@ -242,7 +253,9 @@ export default function TrainerSessionsListPage() {
               ) : (
                 filtered.map((s, i) => {
                   const label = clientDisplayName(s);
-                  const typeLabel = bookingTypeName(s, typesById) ?? "Consultation";
+                  const inSlot = isLiveBooking(s) ? (slotCounts.get(slotKey(s)) ?? 1) : 1;
+                  const typeLabel =
+                    (bookingTypeName(s, typesById) ?? "Consultation") + (inSlot > 1 ? ` · ${inSlot} booked` : "");
                   const note = s.notes?.trim() || "No notes";
 
                   return (
