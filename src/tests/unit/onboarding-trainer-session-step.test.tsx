@@ -6,6 +6,10 @@ import { TrainerStep1, TrainerStep4, TrainerStep6 } from "@/app/onboarding/_trai
 import { trainerSessionPatch } from "@/app/onboarding/_config";
 import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
 
+// The steps start from the account's name and country; this account has neither.
+const auth = vi.hoisted(() => ({ user: null as null | Record<string, unknown> }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
+
 // NGN is the only currency prices can be set in (the seeded state).
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
@@ -23,6 +27,7 @@ function Harness({ initial = {}, Step }: { initial?: Record<string, unknown>; St
 }
 
 beforeEach(() => {
+  auth.user = null;
   for (const k of Object.keys(latest)) delete latest[k];
 });
 

@@ -1,9 +1,13 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { useEffect } from "react";
+import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
 import { COUNTRY_NAME_TO_CODE, SESSION_MISSING, onboardingCurrency, trainerCountry } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
+import { useAuth } from "@/contexts/AuthContext";
+import { useHomeCountry } from "./_homeCountry";
+import { LISTING_BIO, accountCountryName, providerDisplayName } from "./_providerSetup";
 
 const SPECIALIZATIONS = ["Strength", "Hypertrophy", "Running", "Olympic lifting", "Powerlifting", "Bodybuilding", "Functional", "Mobility", "HIIT", "CrossFit", "Pre-natal", "Post-natal"];
 const FORMATS = ["In-person 1:1", "In-person small group", "Online video", "Programming only", "Hybrid"];
@@ -15,9 +19,20 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
 }
 
 /** The step 4 prices, cleared when the currency changes. */
-const PRICE_KEYS = ["price1on1", "price4pack", "price12pack", "priceMonthly"] as const;
+const PRICE_KEYS = ["price1on1", "priceMonthly"] as const;
 
 export function TrainerStep1({ data, setField }: StepProps) {
+  const { user } = useAuth();
+  // Start on the account's own country (or the detected region) when the list has it,
+  // and the account's name, so nothing has to be typed twice.
+  const own = accountCountryName(useHomeCountry(), COUNTRY_NAME_TO_CODE);
+  useEffect(() => {
+    if (!data.country && own) setField("country", own);
+  }, [data.country, own, setField]);
+  useEffect(() => {
+    if (data.firstName === undefined && user?.first_name) setField("firstName", user.first_name);
+    if (data.lastName === undefined && user?.last_name) setField("lastName", user.last_name);
+  }, [data.firstName, data.lastName, user?.first_name, user?.last_name, setField]);
   const country = trainerCountry(data);
   return (
     <>
@@ -165,10 +180,9 @@ export function TrainerStep4({ data, setField }: StepProps) {
           />
         </Field>
         <Field label="Duration" htmlFor="ob-tr-duration"><SelectField id="ob-tr-duration" value={duration} onChange={(v) => setField("duration", v)} options={["60 min", "45 min", "30 min"]} /></Field>
-        <Field label="4-session pack" htmlFor="ob-tr-pack4"><MoneyField id="ob-tr-pack4" {...money("price4pack")} placeholder="280,000" /></Field>
-        <Field label="12-session pack" htmlFor="ob-tr-pack12"><MoneyField id="ob-tr-pack12" {...money("price12pack")} placeholder="800,000" /></Field>
-        <Field label="Online programming · monthly" htmlFor="ob-tr-monthly"><MoneyField id="ob-tr-monthly" {...money("priceMonthly")} placeholder="120,000 / month" /></Field>
+        <Field label="Online coaching · monthly (optional)" htmlFor="ob-tr-monthly" hint="Becomes a monthly package clients can buy." full><MoneyField id="ob-tr-monthly" {...money("priceMonthly")} placeholder="120,000 / month" /></Field>
       </FormGrid>
+      <p style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 10 }}>Session packs can be added from Packages after setup.</p>
     </>
   );
 }
@@ -182,8 +196,9 @@ export function TrainerStep5({ data, setField }: StepProps) {
   );
 }
 
-export function TrainerStep6({ data }: StepProps) {
-  const name = `${(data.firstName as string) || "Your"} ${(data.lastName as string) || "Name"}`;
+export function TrainerStep6({ data, setField }: StepProps) {
+  const { user } = useAuth();
+  const name = providerDisplayName("trainer", data, user) || "Your name";
   const specs = ((data.specializations as string[]) || []).slice(0, 2).join(" & ") || "Specializations";
   const city = (data.city as string) || "City";
   // Only what the trainer answered: no price segment for a blank price or
@@ -197,7 +212,15 @@ export function TrainerStep6({ data }: StepProps) {
   const meta = `${specs} · ${city}${price}`;
   return (
     <>
-      <StageHead crumb="Step 06 of 06, trainer track" title="Preview & publish." desc="Your profile goes live the moment we verify your docs. Usually within 48h." />
+      <StageHead crumb="Step 06 of 06, trainer track" title="Your marketplace profile." desc="Finishing saves this as your profile, as a draft. Add photos and publish it from My profile when you're ready." />
+      <FormGrid>
+        <Field label="Headline" htmlFor="ob-tr-headline-6" full>
+          <TextInput id="ob-tr-headline-6" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach" />
+        </Field>
+        <Field label="Short bio" htmlFor="ob-tr-bio" hint="Who you help and how. Needed, with the headline, to create your profile." full>
+          <TextArea id="ob-tr-bio" value={(data[LISTING_BIO] as string) || ""} onChange={(v) => setField(LISTING_BIO, v.slice(0, 3000))} placeholder="I help busy professionals get strong with three sessions a week." />
+        </Field>
+      </FormGrid>
       <PreviewCard name={name} meta={meta} />
     </>
   );
