@@ -91,7 +91,7 @@ export default function ExercisePicker({
         <button
           type="button"
           onClick={onClose}
-          className="min-h-[44px] sm:min-h-0 font-mono text-[10.5px] uppercase tracking-[0.04em] px-3 sm:px-2.5 py-1.25 rounded-(--r-1)"
+          className="min-h-touch sm:min-h-0 font-mono text-[10.5px] uppercase tracking-[0.04em] px-3 sm:px-2.5 py-1.25 rounded-(--r-1)"
           style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
         >
           Close
@@ -150,7 +150,7 @@ export default function ExercisePicker({
                   type="button"
                   onClick={() => setPreviewId((p) => (p === e.id ? null : e.id))}
                   aria-expanded={previewId === e.id}
-                  className="min-h-[44px] sm:min-h-0 text-[12px] px-3 sm:px-2 py-1 rounded-(--r-1)"
+                  className="min-h-touch sm:min-h-0 text-[12px] px-3 sm:px-2 py-1 rounded-(--r-1)"
                   style={{ color: "var(--fg-2)", border: "1px solid var(--border)", background: "transparent" }}
                 >
                   {previewId === e.id ? "Hide" : "Preview"}
@@ -160,7 +160,7 @@ export default function ExercisePicker({
                 type="button"
                 onClick={() => onPick(e)}
                 aria-label={`Add ${e.name}`}
-                className="min-h-[44px] sm:min-h-0 text-[12px] font-medium px-4 sm:px-2.5 py-1 rounded-(--r-1)"
+                className="min-h-touch sm:min-h-0 text-[12px] font-medium px-4 sm:px-2.5 py-1 rounded-(--r-1)"
                 style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}
               >
                 Add
