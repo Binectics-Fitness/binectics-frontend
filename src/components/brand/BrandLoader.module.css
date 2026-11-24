@@ -1,0 +1,35 @@
+/*
+ * The Binectics mark as a loader ("Trace", mobile #243): the outer arc holds,
+ * the inner arc draws on and wipes off in one direction, on a calm loop.
+ * The inner path has pathLength="1"; an offset of 1.2 hides it before the
+ * start and -1.2 past the end, so a round cap never leaves a dot.
+ * Timing matches mobile BRAND_PROGRESS_TIMING: 640 draw, 260 hold, 640 wipe.
+ */
+.inner {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1.2;
+  animation: trace 1540ms cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes trace {
+  0% {
+    stroke-dashoffset: 1.2;
+  }
+  41.5% {
+    stroke-dashoffset: 0;
+  }
+  58.4% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -1.2;
+  }
+}
+
+/* Reduced motion: no loop, a still half-drawn inner arc. */
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    animation: none;
+    stroke-dashoffset: 0.5;
+  }
+}

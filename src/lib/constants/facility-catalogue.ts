@@ -72,52 +72,43 @@ export const FACILITY_ICON_OPTIONS: ReadonlyArray<{
   { key: "Waves", icon: Waves, label: "Pool" },
 ];
 
+/**
+ * Gradient swatches for a facility with no photo. Every colour is a v2 token
+ * from the `@theme` block in globals.css (`--color-<name>` gives `from-<name>`
+ * and `to-<name>`), so a swatch can never point at a colour that is not
+ * there. The preview draws a light icon (`text-bg`) on top, so each pair is a
+ * mid or dark tone. Keys are stored on the facility item: never rename one.
+ */
 export const GRADIENT_OPTIONS: ReadonlyArray<{
   key: string;
   className: string;
   label: string;
 }> = [
-  {
-    key: "blue-purple",
-    className: "from-accent-blue-500 to-accent-purple-500",
-    label: "Blue → Purple",
-  },
-  {
-    key: "blue-green",
-    className: "from-accent-blue-500 to-primary-500",
-    label: "Blue → Green",
-  },
-  {
-    key: "purple-blue",
-    className: "from-accent-purple-500 to-accent-blue-500",
-    label: "Purple → Blue",
-  },
-  {
-    key: "yellow-orange",
-    className: "from-accent-yellow-500 to-orange-500",
-    label: "Yellow → Orange",
-  },
-  {
-    key: "neutral",
-    className: "from-neutral-700 to-neutral-900",
-    label: "Charcoal",
-  },
-  {
-    key: "cyan",
-    className: "from-accent-blue-400 to-cyan-500",
-    label: "Cyan",
-  },
-  {
-    key: "green-yellow",
-    className: "from-primary-500 to-accent-yellow-500",
-    label: "Green → Yellow",
-  },
-  {
-    key: "neutral-blue",
-    className: "from-neutral-600 to-accent-blue-500",
-    label: "Slate → Blue",
-  },
+  { key: "blue-purple", className: "from-gym to-dietitian", label: "Blue → Purple" },
+  { key: "blue-green", className: "from-gym to-signal", label: "Blue → Green" },
+  { key: "purple-blue", className: "from-dietitian to-gym", label: "Purple → Blue" },
+  { key: "yellow-orange", className: "from-trainer to-warn-ink", label: "Yellow → Orange" },
+  { key: "neutral", className: "from-ink-2 to-ink", label: "Charcoal" },
+  { key: "cyan", className: "from-water to-water-ink", label: "Cyan" },
+  { key: "green-yellow", className: "from-signal to-trainer", label: "Green → Yellow" },
+  { key: "neutral-blue", className: "from-fg-2 to-gym", label: "Slate → Blue" },
 ];
+
+/**
+ * Class strings an earlier version stored instead of a key. Their colour
+ * names (`accent-blue-500`, `primary-500`, …) were removed with the v1 theme
+ * and draw nothing, so each maps back to the swatch it was.
+ */
+const LEGACY_GRADIENT_CLASSES: Readonly<Record<string, string>> = {
+  "from-accent-blue-500 to-accent-purple-500": "blue-purple",
+  "from-accent-blue-500 to-primary-500": "blue-green",
+  "from-accent-purple-500 to-accent-blue-500": "purple-blue",
+  "from-accent-yellow-500 to-orange-500": "yellow-orange",
+  "from-neutral-700 to-neutral-900": "neutral",
+  "from-accent-blue-400 to-cyan-500": "cyan",
+  "from-primary-500 to-accent-yellow-500": "green-yellow",
+  "from-neutral-600 to-accent-blue-500": "neutral-blue",
+};
 
 export function getFacilityIcon(key?: string | null): LucideIcon {
   if (!key) return Dumbbell;
@@ -127,13 +118,16 @@ export function getFacilityIcon(key?: string | null): LucideIcon {
 }
 
 export function getFacilityGradient(key?: string | null): string {
-  if (!key) return GRADIENT_OPTIONS[0].className;
-  // Allow either a catalog key or a raw tailwind gradient string saved by an
-  // earlier version.
+  const fallback = GRADIENT_OPTIONS[0].className;
+  if (!key) return fallback;
   const fromCatalog = GRADIENT_OPTIONS.find((g) => g.key === key);
   if (fromCatalog) return fromCatalog.className;
-  if (key.includes(" ") || key.startsWith("from-")) return key;
-  return GRADIENT_OPTIONS[0].className;
+  // A class string saved by an earlier version: map it to its swatch. Any
+  // other free-form string is not passed through, since Tailwind only builds
+  // classes it finds in the source and an unknown one would draw nothing.
+  const legacyKey = LEGACY_GRADIENT_CLASSES[key.trim().replace(/\s+/g, " ")];
+  const legacy = legacyKey ? GRADIENT_OPTIONS.find((g) => g.key === legacyKey) : undefined;
+  return legacy?.className ?? fallback;
 }
 
 export const FACILITY_CATEGORY_LABELS: Record<FacilityCategory, string> = {
