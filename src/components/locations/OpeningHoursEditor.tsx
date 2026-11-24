@@ -193,7 +193,7 @@ export function OpeningHoursEditor({
                         )}
                       </div>
                       {problem && (
-                        <div id={errorId} role="alert" className="text-[12.5px]" style={{ color: "var(--danger)" }}>
+                        <div id={errorId} role="alert" className="text-[12.5px]" style={{ color: "var(--danger-ink)" }}>
                           {problem}
                         </div>
                       )}
