@@ -15,6 +15,8 @@ import { ListingClassesSection } from "@/components/classes/ListingClassesSectio
 import { MarketplaceAuthCluster } from "@/components/MarketplaceAuthCluster";
 import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import { ConnectRequestButton } from "@/components/marketplace/ConnectRequestButton";
+import { ShareListingButton } from "@/components/marketplace/ShareListingButton";
+import { ListingMessageButton } from "@/components/marketplace/ListingMessageButton";
 import { ListingReviews, useListingRating } from "@/components/marketplace/ListingReviews";
 import type { MarketplaceMembershipPlan, MembershipPlanType } from "@/lib/types";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -54,6 +56,11 @@ function includesText(plan: unknown, on: boolean): string {
     .map((i) => (typeof i?.title === "string" ? i.title : ""))
     .filter(Boolean)
     .join(", ");
+}
+
+/** The owner card's line: only an explicit `false` means not taking new clients. */
+export function acceptingLabel(accepting: boolean | null | undefined): string {
+  return accepting === false ? "Not taking new clients" : "Accepting clients";
 }
 
 /* ─── Types ──────────────────────────────────────────────── */
@@ -150,6 +157,8 @@ export function ListingProfile({
   const name = listing.organization_id?.name || listing.organization?.name || (listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : listing.headline);
   const ownerName = listing.professional_id ? `${listing.professional_id.first_name} ${listing.professional_id.last_name}` : listing.professional ? `${listing.professional.first_name} ${listing.professional.last_name}` : "Provider";
   const ownerInitials = ownerName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const professionalId = listing.professional_id?._id ?? listing.professional?._id ?? null;
+  const organizationId = listing.organization_id?._id ?? listing.organization?._id ?? null;
   const badge = BADGE_STYLES[listing.account_type] || BADGE_STYLES.gym_owner;
   const typeLabel = ACCOUNT_LABELS[listing.account_type] || "Provider";
   const isVerified = listing.verification_badge && listing.verification_badge !== "none";
@@ -197,7 +206,6 @@ export function ListingProfile({
           <nav className="hidden md:flex gap-0.5">
             <Link href="/" className="px-3 py-2 rounded-(--r-2) text-[13.5px] hover:bg-bg-2" style={{ color: "var(--fg-2)" }}>Home</Link>
             <Link href="/marketplace" className="px-3 py-2 rounded-(--r-2) text-[13.5px] hover:bg-bg-2" style={{ color: "var(--fg-2)" }}>Marketplace</Link>
-            <span className="px-3 py-2 rounded-(--r-2) text-[13.5px]" style={{ color: "var(--fg-2)" }}>For providers</span>
             <Link href="/pricing" className="px-3 py-2 rounded-(--r-2) text-[13.5px] hover:bg-bg-2" style={{ color: "var(--fg-2)" }}>Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
@@ -272,31 +280,38 @@ export function ListingProfile({
               {listing.account_type !== "gym_owner" && (
                 <ConnectRequestButton
                   listingId={listing._id}
-                  professionalId={listing.professional_id?._id ?? listing.professional?._id ?? null}
+                  professionalId={professionalId}
                   providerName={ownerName.split(" ")[0] || ownerName}
                   acceptingClients={listing.accepting_clients}
                 />
               )}
-              <button className="btn-ghost-v2 sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8" /><path d="m17 8-5-5-5 5M12 3v12" /></svg>
-                Share
-              </button>
-              <button className="btn-ghost-v2 sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z" /></svg>
-                Message
-              </button>
+              <ShareListingButton listingId={listing._id} listingName={name} />
+              <ListingMessageButton
+                listingId={listing._id}
+                accountType={listing.account_type}
+                professionalId={professionalId}
+                organizationId={organizationId}
+                providerName={name}
+              />
             </div>
           </div>
 
           {/* Tabs */}
-          <nav className="flex gap-1 mt-6 border-b border-border overflow-x-auto">
-            {["About", plans.length > 0 ? `Plans · ${plans.length}` : "Plans", allAmenities.length > 0 ? `Amenities · ${allAmenities.length}` : "Amenities", "Schedule", `Reviews · ${rating.count}`, "Location"].map((t, i) => (
-              <span key={t} className={`px-4 py-3 text-[14px] -mb-px cursor-pointer shrink-0 ${i === 0 ? "border-b-[1.5px] border-ink font-medium" : ""}`} style={{ color: i === 0 ? "var(--ink)" : "var(--fg-2)" }}>{t}</span>
+          {/* Jump links to the sections this profile actually has. */}
+          <nav className="flex gap-1 mt-6 border-b border-border overflow-x-auto" aria-label="On this page">
+            {[
+              { id: "about", label: "About" },
+              ...(plans.length > 0 ? [{ id: "plans", label: `Plans · ${plans.length}` }] : []),
+              ...(allAmenities.length > 0 ? [{ id: "amenities", label: `Amenities · ${allAmenities.length}` }] : []),
+              { id: "book", label: listing.account_type === "gym_owner" ? "Classes" : "Book" },
+              { id: "reviews", label: `Reviews · ${rating.count}` },
+            ].map((t) => (
+              <a key={t.id} href={`#${t.id}`} className="inline-flex items-center min-h-11 px-4 text-[14px] -mb-px shrink-0 hover:text-ink" style={{ color: "var(--fg-2)" }}>{t.label}</a>
             ))}
           </nav>
 
           {/* About */}
-          <section className="py-8 border-b border-border">
+          <section id="about" className="py-8 border-b border-border scroll-mt-4">
             <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>About</h2>
             <div className="text-[15px] leading-[1.65] max-w-[720px]" style={{ color: "var(--fg-2)" }}>
               <p>{listing.bio || "No description provided."}</p>
@@ -349,7 +364,7 @@ export function ListingProfile({
 
           {/* Plans */}
           {plans.length > 0 && (
-            <section className="py-8 border-b border-border">
+            <section id="plans" className="py-8 border-b border-border scroll-mt-4">
               <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Plans</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {plans.map((p) => {
@@ -403,7 +418,7 @@ export function ListingProfile({
 
           {/* Amenities */}
           {allAmenities.length > 0 && (
-            <section className="py-8 border-b border-border">
+            <section id="amenities" className="py-8 border-b border-border scroll-mt-4">
               <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>Amenities & facilities</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {allAmenities.map((a) => (
@@ -415,6 +430,7 @@ export function ListingProfile({
 
           {/* Booking: gyms run a class timetable; solo providers take 1:1
               consultation bookings. */}
+          <div id="book" className="scroll-mt-4">
           {listing.account_type === "gym_owner" ? (
             <ListingClassesSection
               listingId={listingId}
@@ -438,7 +454,10 @@ export function ListingProfile({
 
           {/* Reviews: the rating, the reviews, and "Write a review" for a
               member the API says may review this provider (F10). */}
-          <ListingReviews listingId={listingId} accountType={listing.account_type} providerName={name} />
+          </div>
+          <div id="reviews" className="scroll-mt-4">
+            <ListingReviews listingId={listingId} accountType={listing.account_type} providerName={name} />
+          </div>
         </div>
 
         {/* ─── RIGHT: BOOKING CARD ─── */}
@@ -542,11 +561,17 @@ export function ListingProfile({
             <div className="w-12 h-12 rounded-full bg-bg-3 flex items-center justify-center font-semibold" style={{ color: "var(--fg-2)" }}>{ownerInitials}</div>
             <div className="flex-1">
               <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{ownerName}</div>
-              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{listing.accepting_clients ? "Accepting clients" : "Not accepting clients"}</div>
+              {/* Only `false` means not taking: a listing without the field is accepting (mobile, Explore cards). */}
+              <div className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{acceptingLabel(listing.accepting_clients)}</div>
             </div>
-            <button className="w-10 h-10 sm:w-8 sm:h-8 border border-border rounded-(--r-2) flex items-center justify-center bg-bg" style={{ color: "var(--fg-2)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.5 8.5 0 1 1 16-4z" /></svg>
-            </button>
+            <ListingMessageButton
+              listingId={listing._id}
+              accountType={listing.account_type}
+              professionalId={professionalId}
+              organizationId={organizationId}
+              providerName={ownerName}
+              variant="icon"
+            />
           </div>
         </aside>
       </div>

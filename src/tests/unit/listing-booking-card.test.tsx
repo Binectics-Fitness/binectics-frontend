@@ -29,6 +29,10 @@ vi.mock("@/components/marketplace/ListingReviews", () => ({
 vi.mock("@/components/marketplace/ConnectRequestButton", () => ({
   ConnectRequestButton: () => null,
 }));
+// Message gating has its own tests (listing-share-message.test.tsx).
+vi.mock("@/components/messaging/MyCoachesCard", () => ({
+  useMyProviders: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
 
 const NGN: PlatformCurrency = {
   code: "NGN",
@@ -185,6 +189,14 @@ describe("listing booking card", () => {
     expect(screen.queryByText(/Cancel any time|24.hr review window/)).toBeNull();
     expect(card.queryByText("Platform fee")).toBeNull();
     expect(card.queryByText("Location")).toBeNull();
+  });
+
+  it("says the owner is accepting clients when the API leaves the field out", async () => {
+    renderWithPlans([]);
+    expect(await screen.findByText("Accepting clients")).toBeTruthy();
+    expect(screen.queryByText(/Not (accepting|taking)/)).toBeNull();
+    // Share is wired, never a dead button.
+    expect(screen.getByRole("button", { name: "Share Ada Obi" })).toBeTruthy();
   });
 
   describe("Programs & meal plans strip (paid content)", () => {
