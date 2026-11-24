@@ -181,7 +181,8 @@ export function Drawer({
               ref={closeRef}
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-bg-2 hover:text-ink"
+              // 44px target, pulled into the header padding so the header keeps its height.
+              className="-my-2 -mr-2.5 flex h-11 w-11 items-center justify-center rounded-(--r-2) text-fg-3 hover:bg-bg-2 hover:text-ink"
               aria-label="Close"
             >
               <svg

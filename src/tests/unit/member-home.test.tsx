@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render as rtlRender, screen, waitFor, within } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { mockCoachedTodayReads } from "./coachedTodayMocks";
 import MemberHomePage from "@/app/dashboard/member/page";
 import { activeGyms, lastCheckInLabel, nextUp, weightSummary } from "@/app/dashboard/member/memberHome";
 import { currentProgramDay, myProgramsService, type MyProgram } from "@/lib/api/myPrograms";
@@ -28,7 +30,6 @@ vi.mock("@/components/ds/MemberDashboardShell", () => ({
   MemberDashboardShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock("@/components/messaging/StartConversationButton", () => ({ StartConversationButton: () => null }));
-vi.mock("@/components/messaging/MyCoachesCard", () => ({ MyCoachesCard: () => null }));
 // Covered in its own test (it needs a QueryClient); not part of this page's layout checks.
 vi.mock("@/app/dashboard/member/_components/EnrollmentOffersCard", () => ({ EnrollmentOffersCard: () => null }));
 // Needs a QueryClient too; covered in member-surfaces.test.tsx.
@@ -179,6 +180,10 @@ describe("member home helpers", () => {
   });
 });
 
+/** The coached Today reads through react-query: each render gets a fresh client. */
+const render = (ui: React.ReactElement) =>
+  rtlRender(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>);
+
 describe("member home page", () => {
   const ok = <T,>(data: T) => Promise.resolve({ success: true, data });
 
@@ -196,6 +201,7 @@ describe("member home page", () => {
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(ok([]));
     vi.spyOn(myProgramsService, "listMine").mockReturnValue(ok([]));
     vi.spyOn(myProgramsService, "about").mockReturnValue(ok({ description: null, cautions: null }));
+    mockCoachedTodayReads();
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -207,7 +213,7 @@ describe("member home page", () => {
     const h1 = screen.getByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("Hey, Yemi.");
     expect(h1.querySelector("em")).toBeNull();
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    expect(await screen.findByTestId("own-tracking-full")).toBeInTheDocument();
   });
 
   it("shows a program client 'Day N of M' with a real bar", async () => {
@@ -218,7 +224,8 @@ describe("member home page", () => {
     expect(bar).toHaveAttribute("aria-valuemax", "28");
     expect(screen.getByText("Day 7")).toBeInTheDocument();
     expect(screen.getByText("of 28")).toBeInTheDocument();
-    expect(screen.getByText("9 of 12 tasks done · last 7 days")).toBeInTheDocument();
+    // One line under the number, as on the phone (board R5).
+    expect(screen.getByText("Strength foundations · 9 of 12 done in the last 7 days")).toBeInTheDocument();
     // Not a gym member and never checked in: no check-in widgets at all.
     expect(screen.queryByTestId("visits-row")).toBeNull();
     expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
@@ -265,12 +272,8 @@ describe("member home page", () => {
     expect(within(row).getByText(visitsThisWeek(2))).toBeInTheDocument();
     expect(within(row).getByRole("link")).toHaveAttribute("href", "/dashboard/member/activity");
     expect(screen.queryByText(/streak|keep it going|Longest|Personal best/i)).toBeNull();
-    const strip = screen.getByRole("list", { name: "Check-ins this week" });
-    // Wed 7 Oct: Mon 5 and Tue 6 are done, today is still open.
-    expect(within(strip).getByText("Mon 5 Oct, checked in")).toBeInTheDocument();
-    expect(within(strip).getByText("Tue 6 Oct, checked in")).toBeInTheDocument();
-    expect(within(strip).getByText("Wed 7 Oct, today")).toBeInTheDocument();
-    expect(screen.getByText("Last: Yesterday")).toBeInTheDocument();
+    // The visits row is the one check-in line (Direction C): no week strip, no stat pair.
+    expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
     expect(screen.getByText("Dapo Fitness Hub")).toBeInTheDocument();
   });
 
@@ -290,40 +293,34 @@ describe("member home page", () => {
     const row = await screen.findByTestId("visits-row");
     expect(within(row).getByText(CHECKED_IN_TODAY)).toBeInTheDocument();
     expect(within(row).getByText(visitsThisWeek(3))).toBeInTheDocument();
-    const strip = screen.getByRole("list", { name: "Check-ins this week" });
-    expect(within(strip).getByText("Sun 4 Oct, checked in")).toBeInTheDocument();
   });
 
   it("shows no hero and no visits row for a member with neither", async () => {
     render(<MemberHomePage />);
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    await screen.findByTestId("own-tracking-full");
     expect(screen.queryByTestId("visits-row")).toBeNull();
     expect(screen.queryByText("Your program")).toBeNull();
     expect(screen.queryByText(/Personal best|Longest/)).toBeNull();
-    expect(screen.getByRole("link", { name: "Log your weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");
+    expect(await screen.findByRole("link", { name: "Log your weight" })).toHaveAttribute("href", "/dashboard/member/weight-log");
   });
 
-  it("shows a dash, not invented zeros, when reads fail", async () => {
+  it("hides what it could not read rather than inventing it", async () => {
     vi.spyOn(marketplaceService, "getMyMembershipSubscriptions").mockReturnValue(
       ok([{ status: MembershipSubscriptionStatus.ACTIVE, organization_id: { _id: "g1", name: "Dapo" } } as MembershipSubscription]),
     );
     vi.spyOn(checkinsService, "getMyHistory").mockRejectedValue(new Error("offline"));
     vi.spyOn(loyaltyService, "getPrograms").mockResolvedValue({ success: false, message: "boom" } as never);
-    vi.spyOn(progressService, "getMyOwnProfiles").mockReturnValue(ok([{ _id: "cp" }] as never));
-    vi.spyOn(progressService, "getWeightLogs").mockRejectedValue(new Error("offline"));
     render(<MemberHomePage />);
-    expect(await screen.findByText(/Couldn.t load this week.s check-ins/)).toBeInTheDocument();
-    expect(screen.queryByRole("list", { name: "Check-ins this week" })).toBeNull();
-    const values = Array.from(document.querySelectorAll("[data-stat-value]")).map((el) => el.textContent);
-    expect(values).toEqual(["–", "–"]); // check-ins this week, weight
-    expect(screen.queryByText("Log your weight")).toBeNull();
+    await screen.findByTestId("own-tracking-full");
+    // No week count is known, so none is shown; there is no "0 visits".
+    expect(screen.queryByText(/visits? this week/)).toBeNull();
     // Loyalty is optional per provider: a failed read hides the card.
     expect(screen.queryByText("Loyalty points")).toBeNull();
   });
 
   it("shows no loyalty card when none of the member's providers runs a program", async () => {
     render(<MemberHomePage />);
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
+    await screen.findByTestId("own-tracking-full");
     expect(screen.queryByText("Loyalty points")).toBeNull();
     expect(screen.queryByRole("link", { name: /Rewards/ })).toBeNull();
   });
@@ -342,11 +339,12 @@ describe("member home page", () => {
     expect(screen.getByRole("link", { name: /Rewards/ })).toHaveAttribute("href", "/dashboard/loyalty");
   });
 
-  it("lets Weight take the row when there are no check-in widgets", async () => {
+  it("has no Quick log card and no 'Nothing booked' row (own tracking and the nav cover them)", async () => {
     render(<MemberHomePage />);
-    await waitFor(() => expect(screen.getByText("Nothing booked")).toBeInTheDocument());
-    const weightCard = screen.getByText("Weight").closest("[data-size]")!;
-    expect(weightCard.parentElement?.className).toContain("grid-cols-1");
+    await screen.findByTestId("own-tracking-full");
+    expect(screen.queryByText("Quick log")).toBeNull();
+    expect(screen.queryByText("Nothing booked")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Next up" })).toBeNull();
   });
 
   it("puts the next booking in a row that opens bookings", async () => {

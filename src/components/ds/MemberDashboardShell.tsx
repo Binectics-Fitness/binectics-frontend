@@ -9,7 +9,7 @@ import { ShellAccountMenu } from "@/components/ds/ShellAccountMenu";
 import { ShellNotificationBell } from "@/components/ds/ShellNotificationBell";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { openCommandBar } from "@/hooks/useCommandBar";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
@@ -17,7 +17,8 @@ import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { paidContentOn } from "@/lib/paidContent/helpers";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
-import { SOLO_MENU_LINKS, soloActiveLabel, soloNavLinks } from "@/lib/solo/nav";
+import { SOLO_MENU_LINKS, TRACKING_LABEL, isTrackingPage, soloActiveLabel, soloNavLinks, trackingNavLinks } from "@/lib/solo/nav";
+import { MemberTrackingMenu } from "@/components/ds/MemberTrackingMenu";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -200,6 +201,10 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
   const navLinks = isSolo ? soloNavLinks() : memberNavLinks;
   const navActiveLabel = isSolo ? soloActiveLabel(activeLabel, pathname) : activeLabel;
   const accountExtras = isSolo ? SOLO_MENU_LINKS : undefined;
+  // Everyone else reaches their own tools from "Tracking", right after Home
+  // (the solo bar already lists them).
+  const showTracking = !isSolo;
+  const onTrackingPage = showTracking && isTrackingPage(activeLabel, pathname);
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
   const memberInitials =
@@ -207,7 +212,9 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
   // Phone menu: a modal dialog (focus trap, Escape, inert page, scroll lock),
   // closed on navigation and once the lg top nav takes over. Eight links
   // don't fit a tablet row (768px overflowed by ~80px), so tablets get the
-  // phone bar and its menu too.
+  // phone bar and its menu too. The full member bar (fourteen entries with
+  // Tracking) only fits from 1280px, so it switches there; the short solo bar
+  // keeps 1024px.
   const {
     open: mobileOpen,
     show: openMobileMenu,
@@ -215,14 +222,14 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
     triggerRef: mobileTriggerRef,
     overlayRef: mobileOverlayRef,
     panelRef: mobilePanelRef,
-  } = useNavDrawer("(min-width: 64rem)");
+  } = useNavDrawer(isSolo ? "(min-width: 64rem)" : "(min-width: 80rem)");
   const setMobileOpen = (next: boolean) => (next ? openMobileMenu() : closeMobileMenu());
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       {/* ── Desktop top nav (lg and up) ── */}
       <header
-        className="sticky top-0 z-50 hidden lg:block"
+        className={`sticky top-0 z-50 hidden ${isSolo ? "lg:block" : "xl:block"}`}
         style={{
           background: "oklch(0.985 0.005 85 / 0.85)",
           backdropFilter: "blur(8px) saturate(140%)",
@@ -241,16 +248,16 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
-            {navLinks.map((link) => {
+            {navLinks.map((link, i) => {
               const isActive = isMemberNavActive(link, navActiveLabel, pathname);
               return (
+                <Fragment key={link.label}>
                 <Link
-                  key={link.label}
                   href={link.href}
                   aria-current={isActive ? "page" : undefined}
-                  // Ten links share the row from 1024px: no wrapping, and a
-                  // little less padding until xl.
-                  className={`whitespace-nowrap rounded-(--r-2) px-2 py-1.5 text-[13.5px] xl:px-2.5 ${isActive ? "font-medium" : ""}`}
+                  // No wrapping. The solo bar gets a little more padding
+                  // from xl; the full bar needs every pixel it has.
+                  className={`whitespace-nowrap rounded-(--r-2) px-2 py-1.5 text-[13.5px] ${isSolo ? "xl:px-2.5" : ""} ${isActive ? "font-medium" : ""}`}
                   style={{
                     color: isActive ? "var(--ink)" : "var(--fg-2)",
                     background: isActive ? "var(--bg-3)" : undefined,
@@ -273,6 +280,8 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
                   {link.label}
                   {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                 </Link>
+                {showTracking && i === 0 && <MemberTrackingMenu active={onTrackingPage} pathname={pathname} />}
+                </Fragment>
               );
             })}
           </nav>
@@ -333,7 +342,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
       {/* ── Phone + tablet top bar ── */}
       <header
-        className="lg:hidden sticky top-0 z-50 flex items-center justify-between"
+        className={`${isSolo ? "lg:hidden" : "xl:hidden"} sticky top-0 z-50 flex items-center justify-between`}
         style={{
           height: 56,
           padding: "0 16px",
@@ -394,7 +403,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
       {/* ── Mobile dropdown overlay ── */}
       {mobileOpen && (
-        <div ref={mobileOverlayRef} className="fixed inset-0 z-50 lg:hidden" style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
+        <div ref={mobileOverlayRef} className={`fixed inset-0 z-50 ${isSolo ? "lg:hidden" : "xl:hidden"}`} style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
           {/* Backdrop */}
           <div
             className="absolute inset-0"
@@ -408,7 +417,8 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="absolute inset-0 flex flex-col"
+            // Scrolls: the full list is taller than a phone.
+            className="absolute inset-0 flex flex-col overflow-y-auto"
             style={{ background: "var(--bg)" }}
           >
             {/* Panel header */}
@@ -440,11 +450,11 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
-              {navLinks.map((link) => {
+              {navLinks.map((link, i) => {
                 const isActive = isMemberNavActive(link, navActiveLabel, pathname);
                 return (
+                  <Fragment key={link.label}>
                   <Link
-                    key={link.label}
                     href={link.href}
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => setMobileOpen(false)}
@@ -459,6 +469,39 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
                     {link.label}
                     {link.href === "/dashboard/messages" && <NavCount count={unreadMessages} />}
                   </Link>
+                  {showTracking && i === 0 && (
+                    <div role="group" aria-labelledby="phone-tracking-h" className="flex flex-col" style={{ gap: 4 }}>
+                      <span
+                        id="phone-tracking-h"
+                        className="font-mono text-[11px] uppercase tracking-[0.06em]"
+                        style={{ padding: "10px 12px 2px", color: "var(--fg-3)" }}
+                      >
+                        {TRACKING_LABEL}
+                      </span>
+                      {trackingNavLinks().map((t) => {
+                        const here = pathname?.replace(/\/$/, "") ?? "";
+                        const current = here === t.href || here.startsWith(`${t.href}/`);
+                        return (
+                          <Link
+                            key={t.href}
+                            href={t.href}
+                            aria-current={current ? "page" : undefined}
+                            onClick={() => setMobileOpen(false)}
+                            className={`flex items-center rounded-(--r-2) text-[16px] ${current ? "font-medium" : ""}`}
+                            style={{
+                              height: 48,
+                              padding: "0 12px 0 24px",
+                              color: current ? "var(--ink)" : "var(--fg-2)",
+                              background: current ? "var(--bg-3)" : undefined,
+                            }}
+                          >
+                            {t.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  </Fragment>
                 );
               })}
             </nav>
