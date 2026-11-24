@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { render as rtlRender, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClassForm } from "@/app/dashboard/gym-owner/schedule/ClassForm";
+
+// The form reads the gym's locations and team through react-query.
+const render = (ui: ReactElement) =>
+  rtlRender(<QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>);
 
 /**
  * Class start time is a native time picker, so the 24-hour HH:mm the API

@@ -434,7 +434,8 @@ export function ListingProfile({
                 // be a stale default (USD) that no price is actually in.
                 ["Prices in", [...new Set(plans.map((p) => p.currency).filter(Boolean))].join(" · ") || "–"],
                 ["Languages", listing.languages?.join(" · ") || "–"],
-                ["Active clients", String(listing.active_client_count ?? "–")],
+                // A gym's count is its members with a live membership (the API counts them).
+                [listing.account_type === "gym_owner" ? "Active members" : "Active clients", String(listing.active_client_count ?? "–")],
                 ["Rating", rating.average ? `${ratingShown} / 5` : "–"],
                 ["Reviews", String(rating.count)],
               ].map(([l, v]) => (
