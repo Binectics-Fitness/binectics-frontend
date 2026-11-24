@@ -67,6 +67,7 @@ export const SIDEBAR: SideSection[] = [
     { name: "Analytics", href: "/admin/analytics", permission: P.ANALYTICS_READ, icon: <I d="M3 3v18h18M7 14l4-4 3 3 5-7" /> },
   ]},
   { label: "Operate", items: [
+    { name: "Team & roles", href: "/admin/roles", permission: P.ADMINS_READ, icon: <I><circle cx="9" cy="8" r="4"/><circle cx="17" cy="10" r="3"/><path d="M2 21a7 7 0 0 1 14 0M15 21a5 5 0 0 1 7-4.6"/></I> },
     { name: "Forms", href: "/dashboard/forms", icon: <I><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></I> },
     { name: "Feature flags", href: "/admin/feature-flags", permission: P.PLATFORM_READ, icon: <I><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8M4.6 9a1.7 1.7 0 0 0-.3-1.8"/></I> },
     { name: "Audit log", href: "/admin/audit-log", permission: P.AUDIT_READ, icon: <I d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5" /> },

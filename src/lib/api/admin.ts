@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "./client";
+import type { AdminUserAccess } from "./adminRoles";
 import type {
   ApiResponse,
   MarketplaceListing,
@@ -493,7 +494,11 @@ export interface AdminUserDetail extends AdminUserListItem {
   is_onboarding_complete: boolean;
   must_change_password: boolean;
   account_type_from_team: boolean;
-  admin_permissions: string[];
+  /**
+   * Their admin roles and effective permissions: null when they aren't an
+   * admin, absent when the caller lacks admins:read.
+   */
+  admin_access?: AdminUserAccess | null;
   suspension_reason: string | null;
   updated_at: string | null;
   listings: Array<{

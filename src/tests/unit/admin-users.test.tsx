@@ -48,7 +48,6 @@ const detail: AdminUserDetail = {
   is_onboarding_complete: true,
   must_change_password: false,
   account_type_from_team: true,
-  admin_permissions: [],
   suspension_reason: null,
   updated_at: null,
   listings: [

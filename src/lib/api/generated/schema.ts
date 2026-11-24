@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/v1/admin/admins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every admin (active and suspended) with their roles and effective permissions; emails only with users:read */
+        get: operations["AdminAdminsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/admins/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a person's admin access: every role and direct permission, and the admin flag. Same refusals as setting roles */
+        delete: operations["AdminAdminsController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/admins/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set a person's admin roles (the whole list). The first role makes them an admin; returns what changed. Refusals: ADMIN_SELF_CHANGE, ADMIN_ROLE_EXCEEDS_YOURS, ADMIN_TARGET_INELIGIBLE, ADMIN_LAST_MANAGER, ADMIN_ROLE_STALE */
+        put: operations["AdminAdminsController_setRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/announcements/broadcast": {
         parameters: {
             query?: never;
@@ -980,6 +1031,60 @@ export interface paths {
         patch: operations["AdminReviewsController_setReviewStatus"];
         trace?: never;
     };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every admin role with its permissions and how many people hold it (Super admin first) */
+        get: operations["AdminRolesController_list"];
+        put?: never;
+        /** Create a role. You can only include permissions you hold (403 ADMIN_ROLE_EXCEEDS_YOURS); 409 ADMIN_ROLE_NAME_TAKEN */
+        post: operations["AdminRolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One role with its holders (their emails only with users:read) */
+        get: operations["AdminRolesController_get"];
+        put?: never;
+        post?: never;
+        /** Delete a role nobody holds (409 ADMIN_ROLE_IN_USE with holder_count otherwise) */
+        delete: operations["AdminRolesController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit a role (name, description, permissions). Needs expected_updated_at (409 ADMIN_ROLE_STALE); the Super admin role is refused (403 ADMIN_ROLE_SYSTEM) */
+        patch: operations["AdminRolesController_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/roles/{roleId}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The role's change history (created, edited, deleted), newest first */
+        get: operations["AdminRolesController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/transactions": {
         parameters: {
             query?: never;
@@ -1038,7 +1143,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Account view: profile basics, role, verification, suspension, owned listings/orgs, team memberships, counts */
+        /** Account view: profile basics, role, verification, suspension, owned listings/orgs, team memberships, counts; admin_access (roles, effective permissions) only with admins:read */
         get: operations["AdminUsersController_getUser"];
         put?: never;
         post?: never;
@@ -10075,6 +10180,12 @@ export interface components {
             /** @example Upper body workout */
             title: string;
         };
+        CreateAdminRoleDto: {
+            description?: string;
+            /** @example Support lead */
+            name: string;
+            permissions: ("users:read" | "users:write" | "content:read" | "content:write" | "verification:read" | "suggestions:read" | "suggestions:write" | "billing:read" | "billing:write" | "refunds:read" | "refunds:write" | "platform:read" | "platform:write" | "announcements:send" | "loyalty:read" | "loyalty:write" | "analytics:read" | "audit:read" | "exports:run" | "admins:read" | "admins:manage")[];
+        };
         CreateApiKeyDto: {
             /**
              * @description Optional expiry; omit for a non-expiring key.
@@ -11128,7 +11239,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "OTP_SEND_FAILED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "RATE_LIMITED" | "CHECKIN_ALREADY_RECORDED" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "ORG_CLOSED" | "ORG_ALREADY_CLOSED" | "ORG_NOT_CLOSED" | "ORG_REOPEN_WINDOW_EXPIRED" | "ORG_CLOSE_CONFIRMATION_MISMATCH" | "ORG_CLOSE_NOT_SUPPORTED" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "ADMIN_PERMISSION_MISSING" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "PROGRAM_PHASE_LENGTH_MISSING" | "PROGRAM_METRIC_UNKNOWN" | "PROGRAM_TARGET_INVALID" | "PROGRAM_UNPUBLISHED_CHANGES" | "CONTENT_ENTITLEMENT_REQUIRED" | "CONTENT_ACCESS_FROZEN" | "PAID_MEAL_PLAN_IN_FREE_PROGRAM" | "CONTENT_NO_SELLER_ORG" | "CONTENT_ACCESS_INVALID" | "CONTENT_ALREADY_OWNED" | "CONTENT_NOT_FOR_SALE" | "CONTENT_NO_SEAT" | "CONTENT_OWN_ITEM" | "CONTENT_PRICE_BELOW_MINIMUM" | "CONTENT_PURCHASE_NOT_REFUNDABLE" | "FEATURE_DISABLED" | "STARTER_NOT_FOUND" | "STARTER_SAFETY_REQUIRED" | "STARTER_BAD_START_DATE" | "STARTER_BAD_TIMEZONE" | "STARTER_ALREADY_ACTIVE" | "STARTER_NOT_ACTIVE" | "PROGRAM_NOT_STARTER" | "STARTER_SHARE_NOT_LINKED" | "EXPORT_TOO_LARGE" | "EXPORT_BAD_REQUEST" | "COUPON_INVALID" | "COUPON_EXPIRED" | "COUPON_EXHAUSTED" | "COUPON_ALREADY_USED" | "COUPON_BELOW_MINIMUM" | "COUPON_CURRENCY_UNSUPPORTED" | "COUPON_NO_DISCOUNT" | "COUPON_RENEWAL_NOT_FREE" | "MEMBER_CHARGE_ALREADY_PAID" | "MEMBER_CHARGE_NOT_PAYABLE" | "MEMBER_CHARGE_USE_RENEWAL_CHECKOUT" | "MEMBER_CHARGE_TRANSFER_IN_PROGRESS" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "PAYOUT_BANK_UNKNOWN" | "PAYOUT_ACCOUNT_NOT_RESOLVED" | "PAYOUT_BANK_LOOKUP_UNAVAILABLE" | "PAYOUT_CURRENCY_NOT_ALLOWED" | "PAYOUT_RESOLVE_DAILY_LIMIT" | "CONSULTATION_SLOT_UNAVAILABLE" | "AVAILABILITY_END_BEFORE_START" | "AVAILABILITY_OVERLAP" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED" | "CLASS_REMOVED" | "FASTING_SESSION_NOT_FOUND" | "FASTING_SCREENING_REQUIRED" | "FASTING_ALREADY_RUNNING" | "FASTING_BAD_TIME" | "FASTING_OVERLAP" | "FASTING_EXPIRED_UNCLOSED" | "FASTING_BAD_STATE" | "FASTING_UNDO_UNAVAILABLE" | "FASTING_FEELINGS_FULL" | "FASTING_DAILY_LIMIT_REACHED" | "FASTING_SUMMARY_TOO_MANY" | "FASTING_PLAN_NOT_FOUND" | "FASTING_PLAN_ALREADY_OPEN" | "FASTING_PLAN_LIMIT_REACHED" | "FASTING_PLAN_BAD_STATE" | "FASTING_PLAN_BAD_INPUT" | "PLAN_NOT_ACTIVE_TODAY" | "FASTING_PLAN_SUMMARY_TOO_MANY" | "WATER_BAD_DAY" | "CHECKLIST_ITEM_NOT_FOUND" | "CHECKLIST_LIMIT_REACHED" | "CHECKLIST_SYSTEM_DERIVED" | "CHECKLIST_BAD_REQUEST" | "JOURNAL_NOTE_NOT_FOUND" | "JOURNAL_LIMIT_REACHED" | "JOURNAL_BAD_REQUEST" | "GOAL_NOT_FOUND" | "GOAL_LIMIT_REACHED" | "GOAL_BAD_REQUEST" | "HISTORY_BAD_REQUEST" | "SERIES_BAD_REQUEST" | "SERIES_TOO_MANY_POINTS" | "SERIES_TOO_MANY_ENTRIES" | "TARGET_BAD_REQUEST" | "TARGET_BELOW_SUPPORTED_RANGE" | "REMINDER_BACKUP_STALE" | "PLAN_LOCATION_REQUIRED" | "PLAN_LOCATION_INVALID" | "PLAN_LOCATION_LOCKED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "OTP_SEND_FAILED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "RATE_LIMITED" | "CHECKIN_ALREADY_RECORDED" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "ORG_CLOSED" | "ORG_ALREADY_CLOSED" | "ORG_NOT_CLOSED" | "ORG_REOPEN_WINDOW_EXPIRED" | "ORG_CLOSE_CONFIRMATION_MISMATCH" | "ORG_CLOSE_NOT_SUPPORTED" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "ADMIN_PERMISSION_MISSING" | "ADMIN_ROLE_NAME_TAKEN" | "ADMIN_ROLE_SYSTEM" | "ADMIN_ROLE_IN_USE" | "ADMIN_ROLE_STALE" | "ADMIN_ROLE_EXCEEDS_YOURS" | "ADMIN_SELF_CHANGE" | "ADMIN_LAST_MANAGER" | "ADMIN_TARGET_INELIGIBLE" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "PROGRAM_PHASE_LENGTH_MISSING" | "PROGRAM_METRIC_UNKNOWN" | "PROGRAM_TARGET_INVALID" | "PROGRAM_UNPUBLISHED_CHANGES" | "CONTENT_ENTITLEMENT_REQUIRED" | "CONTENT_ACCESS_FROZEN" | "PAID_MEAL_PLAN_IN_FREE_PROGRAM" | "CONTENT_NO_SELLER_ORG" | "CONTENT_ACCESS_INVALID" | "CONTENT_ALREADY_OWNED" | "CONTENT_NOT_FOR_SALE" | "CONTENT_NO_SEAT" | "CONTENT_OWN_ITEM" | "CONTENT_PRICE_BELOW_MINIMUM" | "CONTENT_PURCHASE_NOT_REFUNDABLE" | "FEATURE_DISABLED" | "STARTER_NOT_FOUND" | "STARTER_SAFETY_REQUIRED" | "STARTER_BAD_START_DATE" | "STARTER_BAD_TIMEZONE" | "STARTER_ALREADY_ACTIVE" | "STARTER_NOT_ACTIVE" | "PROGRAM_NOT_STARTER" | "STARTER_SHARE_NOT_LINKED" | "EXPORT_TOO_LARGE" | "EXPORT_BAD_REQUEST" | "COUPON_INVALID" | "COUPON_EXPIRED" | "COUPON_EXHAUSTED" | "COUPON_ALREADY_USED" | "COUPON_BELOW_MINIMUM" | "COUPON_CURRENCY_UNSUPPORTED" | "COUPON_NO_DISCOUNT" | "COUPON_RENEWAL_NOT_FREE" | "MEMBER_CHARGE_ALREADY_PAID" | "MEMBER_CHARGE_NOT_PAYABLE" | "MEMBER_CHARGE_USE_RENEWAL_CHECKOUT" | "MEMBER_CHARGE_TRANSFER_IN_PROGRESS" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "PAYOUT_BANK_UNKNOWN" | "PAYOUT_ACCOUNT_NOT_RESOLVED" | "PAYOUT_BANK_LOOKUP_UNAVAILABLE" | "PAYOUT_CURRENCY_NOT_ALLOWED" | "PAYOUT_RESOLVE_DAILY_LIMIT" | "CONSULTATION_SLOT_UNAVAILABLE" | "AVAILABILITY_END_BEFORE_START" | "AVAILABILITY_OVERLAP" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED" | "CLASS_REMOVED" | "FASTING_SESSION_NOT_FOUND" | "FASTING_SCREENING_REQUIRED" | "FASTING_ALREADY_RUNNING" | "FASTING_BAD_TIME" | "FASTING_OVERLAP" | "FASTING_EXPIRED_UNCLOSED" | "FASTING_BAD_STATE" | "FASTING_UNDO_UNAVAILABLE" | "FASTING_FEELINGS_FULL" | "FASTING_DAILY_LIMIT_REACHED" | "FASTING_SUMMARY_TOO_MANY" | "FASTING_PLAN_NOT_FOUND" | "FASTING_PLAN_ALREADY_OPEN" | "FASTING_PLAN_LIMIT_REACHED" | "FASTING_PLAN_BAD_STATE" | "FASTING_PLAN_BAD_INPUT" | "PLAN_NOT_ACTIVE_TODAY" | "FASTING_PLAN_SUMMARY_TOO_MANY" | "WATER_BAD_DAY" | "CHECKLIST_ITEM_NOT_FOUND" | "CHECKLIST_LIMIT_REACHED" | "CHECKLIST_SYSTEM_DERIVED" | "CHECKLIST_BAD_REQUEST" | "JOURNAL_NOTE_NOT_FOUND" | "JOURNAL_LIMIT_REACHED" | "JOURNAL_BAD_REQUEST" | "GOAL_NOT_FOUND" | "GOAL_LIMIT_REACHED" | "GOAL_BAD_REQUEST" | "HISTORY_BAD_REQUEST" | "SERIES_BAD_REQUEST" | "SERIES_TOO_MANY_POINTS" | "SERIES_TOO_MANY_ENTRIES" | "TARGET_BAD_REQUEST" | "TARGET_BELOW_SUPPORTED_RANGE" | "REMINDER_BACKUP_STALE" | "PLAN_LOCATION_REQUIRED" | "PLAN_LOCATION_INVALID" | "PLAN_LOCATION_LOCKED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -12579,6 +12690,9 @@ export interface components {
             /** @example 7500 */
             revenue_minor: number;
         };
+        RevokeAdminDto: {
+            reason?: string;
+        };
         ScanCheckInDto: {
             /** @description Gym identifier from the scanned QR — an organization id (current QRs) or a marketplace listing id (older printed QRs) */
             gym_id?: string;
@@ -12639,6 +12753,11 @@ export interface components {
             title?: string;
             /** @enum {string} */
             type: "form" | "instruction";
+        };
+        SetAdminRolesDto: {
+            reason?: string;
+            /** @description Every role the person should hold (set semantics). The first role makes them an admin; an empty list takes every role away, and also their admin access when they have no direct permissions. */
+            role_ids: string[];
         };
         SetContentAccessDto: {
             /** @description Active plans of the seller workspace whose members get this item */
@@ -12880,6 +12999,17 @@ export interface components {
             /** @description Threads with unread messages. */
             threads: number;
             unread: number;
+        };
+        UpdateAdminRoleDto: {
+            /** @description An empty string clears it. */
+            description?: string;
+            /**
+             * @description The role's updated_at as it was loaded. A different value means someone changed the role since: 409 ADMIN_ROLE_STALE.
+             * @example 2026-11-24T09:30:00.000Z
+             */
+            expected_updated_at: string;
+            name?: string;
+            permissions?: ("users:read" | "users:write" | "content:read" | "content:write" | "verification:read" | "suggestions:read" | "suggestions:write" | "billing:read" | "billing:write" | "refunds:read" | "refunds:write" | "platform:read" | "platform:write" | "announcements:send" | "loyalty:read" | "loyalty:write" | "analytics:read" | "audit:read" | "exports:run" | "admins:read" | "admins:manage")[];
         };
         UpdateAmenitiesDto: {
             /** @description Full replacement set of amenity keys for this listing. */
@@ -13671,6 +13801,69 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    AdminAdminsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminAdminsController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeAdminDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminAdminsController_setRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAdminRolesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_broadcastAnnouncement: {
         parameters: {
             query?: never;
@@ -14969,6 +15162,127 @@ export interface operations {
                 "application/json": components["schemas"]["SetReviewStatusDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAdminRoleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAdminRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminRolesController_history: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
