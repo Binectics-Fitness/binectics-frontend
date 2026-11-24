@@ -9,6 +9,7 @@ import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { GymClosureGate } from "@/components/orgClosure/GymClosureGate";
 import { useOrgPendingRequestCount } from "@/lib/queries/orgRequests";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
 import {
   GYM_NAV_ACCESS,
   allows,
@@ -20,6 +21,15 @@ import {
 } from "@/lib/gymStaffNav";
 
 export { useGymViewer };
+
+/** Pricing the gym's programs and meal plans: listed only while selling is on. */
+export const CONTENT_ITEM = "Programs & meal plans";
+
+/** The sidebar without the content item when paid content is off for this gym. */
+export function withContentItem<S extends { items: { name: string }[] }>(sections: readonly S[], sellingOn: boolean): S[] {
+  if (sellingOn) return [...sections];
+  return sections.map((s) => ({ ...s, items: s.items.filter((i) => i.name !== CONTENT_ITEM) }));
+}
 
 export const SIDEBAR: NavSection[] = [
   { label: "Operate", items: [
@@ -36,6 +46,7 @@ export const SIDEBAR: NavSection[] = [
     { name: "Refunds", href: "/dashboard/refunds", icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
     { name: "Discount codes", href: "/dashboard/discount-codes", icon: <I d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01" /> },
     { name: "Plans & pricing", href: "/dashboard/gym-owner/plans", icon: <I d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /> },
+    { name: CONTENT_ITEM, href: "/dashboard/gym-owner/content", icon: <I><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></I> },
   ]},
   { label: "Workspace", items: [
     { name: "My listing", href: "/dashboard/profile-edit", icon: <I><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></I> },
@@ -75,9 +86,10 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
   const refundsWaiting = useRefundsAttentionCount(viewer.isOwner);
   // Only asked for when the role may see requests; the API refuses the rest.
   const requestsWaiting = useOrgPendingRequestCount(viewer.orgId ?? undefined, allows(viewer, GYM_NAV_ACCESS.Requests));
+  const { on: sellingOn } = usePaidContentSeller();
   const sections = gymSidebarFor(
     withNavBadge(
-      withNavBadge(withNavBadge(SIDEBAR, "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+      withNavBadge(withNavBadge(withContentItem(SIDEBAR, sellingOn), "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
       "Requests",
       requestsWaiting,
       "warn",

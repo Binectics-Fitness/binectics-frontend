@@ -94,6 +94,10 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   "Discount codes": needs(P.COUPONS_MANAGE),
   // /marketplace/organizations/:id/plans
   "Plans & pricing": needs(P.MARKETPLACE_MANAGE_LISTING),
+  // PUT /content/:kind/:id/access (assertCanPrice): the owner or
+  // manage_listing, never a staff trainer (paid-content D10). Shown only
+  // while selling is on (GymDashboardShell).
+  "Programs & meal plans": needs(P.MARKETPLACE_MANAGE_LISTING),
   // The gym's listing, gallery, cover photo and publishing:
   // /marketplace/organizations/:id/listing* (manage_listing). Staff edit the
   // gym's listing there, never their own.
@@ -148,6 +152,7 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   // GET .../revenue-stats, and the tax settings from GET /teams/organizations/:id
   ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS)],
   ["/dashboard/gym-owner/plans", NAV["Plans & pricing"]],
+  ["/dashboard/gym-owner/content", NAV["Programs & meal plans"]],
   ["/dashboard/gym-owner/locations", NAV.Locations],
   // GET /marketplace/my-listings + facility items (manage_listing)
   ["/dashboard/gym-owner/facility", needs(P.MARKETPLACE_MANAGE_LISTING)],

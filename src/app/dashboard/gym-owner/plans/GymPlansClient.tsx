@@ -30,6 +30,8 @@ import { PlanComparisonFields, comparisonFromPlan, comparisonPayload, ownerSavin
 import SearchableSelect from "@/components/SearchableSelect";
 import { toast } from "@/components/Toast";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
+import { PlanIncludesSection } from "@/components/plans/PlanIncludesSection";
 
 const INPUT_STYLE = {
   border: "1px solid var(--border-2)",
@@ -230,7 +232,18 @@ function EditPlanForm({ plan, plans, locations, orgId, onDone }: { plan: Marketp
     if (res.success) onDone();
     else setError(writeErrorMessage(res, "Couldn't save the plan."));
   };
-  return <PlanForm initial={plan} plans={plans} locations={locations} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />;
+  // What the plan includes: shown while selling is on, to whoever may price (D10).
+  const { on: sellingOn, canPrice } = usePaidContentSeller();
+  return (
+    <div className="flex flex-col gap-5">
+      <PlanForm initial={plan} plans={plans} locations={locations} saving={update.isPending} error={error} defaultCurrency={plan.currency} onSubmit={(d) => void onSave(d)} onCancel={onDone} />
+      {sellingOn && canPrice && (
+        <div className="pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <PlanIncludesSection orgId={orgId} planId={plan._id} planName={plan.name} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function PlanForm({ initial, plans, locations = [], saving, error, defaultCurrency, onSubmit, onCancel, submitLabel = "Save plan" }: {
