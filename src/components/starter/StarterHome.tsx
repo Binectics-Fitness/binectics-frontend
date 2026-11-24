@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { AsyncSpinner, DSCard, Eyebrow, ListRow, PageHeader } from "@/components/ds";
 import ExerciseIllustration, { hasExerciseIllustration } from "@/components/ExerciseIllustration";
+import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
+import { exerciseDetailHref } from "@/lib/exercises/exerciseDetail";
 import { useActiveStarter } from "@/lib/queries/starter";
 import { STARTER_STOP_NOTE } from "@/lib/starter/copy";
 import {
@@ -18,6 +20,7 @@ import { ErrorBox } from "./StarterSession";
 import { StarterManage } from "./StarterManage";
 
 const START = "/dashboard/member/starter/start";
+const HISTORY = "/dashboard/member/starter/history";
 const sessionHref = (id: string) => `/dashboard/member/starter/session/${encodeURIComponent(id)}`;
 
 function sessionFacts(t: StarterTask): string {
@@ -94,7 +97,18 @@ export function StarterHome() {
                       ) : (
                         <span aria-hidden="true" className="h-14 w-14 shrink-0" />
                       )}
-                      <span className="min-w-0 flex-1 text-[15px]" style={{ color: "var(--ink)" }}>{e.name}</span>
+                      {e.mediaId && getExerciseInfo(e.mediaId) ? (
+                        <Link
+                          href={exerciseDetailHref(e.mediaId, { session: today.id, index: i })}
+                          className="flex min-h-[44px] min-w-0 flex-1 items-center text-[15px] underline decoration-[var(--border-2)] underline-offset-4 hover:decoration-[var(--ink)]"
+                          style={{ color: "var(--ink)" }}
+                          aria-label={`${e.name}, how to do it`}
+                        >
+                          {e.name}
+                        </Link>
+                      ) : (
+                        <span className="min-w-0 flex-1 text-[15px]" style={{ color: "var(--ink)" }}>{e.name}</span>
+                      )}
                       <span className="font-mono text-[13px]" style={{ color: "var(--fg-2)" }}>{exerciseDose(e)}</span>
                     </li>
                   ))}
@@ -158,6 +172,10 @@ export function StarterHome() {
           </ul>
         </section>
       )}
+
+      <div>
+        <Link href={HISTORY} className="btn-ghost-v2 lg min-h-[44px]">Your history</Link>
+      </div>
 
       <StarterManage program={program} />
     </div>
