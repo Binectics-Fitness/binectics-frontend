@@ -5,7 +5,9 @@
  * dashboards (each wraps it in its own shell). Follows the desktop coach
  * mock (DashboardMosaic) and dashboard-trainer.html: a "Today, {name}"
  * header, real KPIs, today's time-gutter schedule, what's coming up and the
- * active clients.
+ * active clients. From the mobile coach Today: "To close out" (sessions that
+ * started and are still open) and "Needs you" (forms submitted, tasks
+ * missed); see CoachTriage.
  *
  * Left out of the mock for want of data: slot utilisation, the 30-day
  * rating, the "forecast" and the per-row Check-in / Join buttons.
@@ -39,6 +41,7 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { formatInTz } from "@/utils/format";
 import {
   bookingClientName,
+  closeOutSessions,
   coachSchedule,
   dayKeyInTz,
   durationMinutes,
@@ -50,6 +53,7 @@ import {
 } from "./coachSchedule";
 import { ScheduleGap, ScheduleList, ScheduleRow } from "@/components/ds/ScheduleRow";
 import type { CoachTodayData } from "./useCoachTodayData";
+import { CloseOutCard, NeedsYou } from "./CoachTriage";
 
 export interface CoachTodayProps {
   /** Loaded by the page, outside the shell (see useCoachTodayData). */
@@ -79,6 +83,11 @@ function clientName(c: ClientProfile): string {
     return `${c.client_id.first_name} ${c.client_id.last_name}`.trim();
   }
   return "Client";
+}
+
+/** The client's user id on a profile, populated or not. */
+function clientUserId(c: ClientProfile): string {
+  return typeof c.client_id === "object" && c.client_id !== null ? String(c.client_id._id) : String(c.client_id);
 }
 
 function plural(n: number, noun: string): string {
@@ -130,6 +139,19 @@ export function CoachToday({
     return `${formatInTz(iso, "EEE d MMM", timeZone)} · ${fmtTime(iso)}`;
   };
   const activeClients = useMemo(() => clients.filter((c) => c.is_active), [clients]);
+  const toClose = useMemo(() => (loadedAt ? closeOutSessions(bookings, loadedAt) : []), [bookings, loadedAt]);
+  const profileByUser = useMemo(() => new Map(clients.map((c) => [clientUserId(c), c._id])), [clients]);
+  /** The session page where the role has one; otherwise the client's page. */
+  const closeOutHref = (b: ConsultationBooking): string | undefined => {
+    if (sessionHref) return sessionHref(b.id);
+    const profileId = profileByUser.get(b.clientUserId);
+    return profileId ? clientHref(profileId) : undefined;
+  };
+  /** A session still open from an earlier day says which day. */
+  const daySub = (iso: string): string | undefined => {
+    if (!schedule || dayKeyInTz(iso, timeZone) === schedule.todayKey) return undefined;
+    return formatInTz(iso, "EEE d MMM", timeZone);
+  };
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const first = user?.first_name?.trim().split(/\s+/)[0];
@@ -198,6 +220,18 @@ export function CoachToday({
 
           <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
             <div className="flex flex-col gap-3 min-w-0">
+              {toClose.length > 0 && (
+                <CloseOutCard
+                  sessions={toClose}
+                  nowMs={loadedAt}
+                  noun={noun}
+                  time={fmtTime}
+                  daySub={daySub}
+                  rowHref={closeOutHref}
+                  onClosed={data.reload}
+                />
+              )}
+
               <DSCard>
                 <DSCardHead
                   title="Today's schedule"
@@ -268,44 +302,48 @@ export function CoachToday({
               )}
             </div>
 
-            <section aria-labelledby="coach-active-clients" className="flex flex-col gap-2 min-w-0">
-              <div className="flex items-baseline justify-between px-0.5">
-                <Eyebrow as="h2" id="coach-active-clients">
-                  Active clients · {activeClients.length}
-                </Eyebrow>
-                <Link href={clientsHref} className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
-                  All clients →
-                </Link>
-              </div>
-              {activeClients.length === 0 ? (
-                <DSCard>
-                  <div className="px-4.5 py-4">
-                    <EmptySlate
-                      message="No active clients yet."
-                      mt="mt-0"
-                      action={
-                        <button type="button" className="btn-ghost-v2 sm" onClick={() => setInviteOpen(true)}>
-                          Invite a client
-                        </button>
-                      }
-                    />
-                  </div>
-                </DSCard>
-              ) : (
-                activeClients.slice(0, 6).map((c) => {
-                  const name = clientName(c);
-                  return (
-                    <ListRow
-                      key={c._id}
-                      href={clientHref(c._id)}
-                      leading={<IconTile initials={initials(name)} size="sm" />}
-                      title={name}
-                      meta={c.goals?.length ? c.goals.slice(0, 2).join(" · ") : `Since ${format(new Date(c.created_at), "MMM yyyy")}`}
-                    />
-                  );
-                })
-              )}
-            </section>
+            <div className="flex flex-col gap-5 min-w-0">
+              <NeedsYou items={data.attention ?? []} today={schedule.todayKey} clientHref={clientHref} />
+
+              <section aria-labelledby="coach-active-clients" className="flex flex-col gap-2 min-w-0">
+                <div className="flex items-baseline justify-between px-0.5">
+                  <Eyebrow as="h2" id="coach-active-clients">
+                    Active clients · {activeClients.length}
+                  </Eyebrow>
+                  <Link href={clientsHref} className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
+                    All clients →
+                  </Link>
+                </div>
+                {activeClients.length === 0 ? (
+                  <DSCard>
+                    <div className="px-4.5 py-4">
+                      <EmptySlate
+                        message="No active clients yet."
+                        mt="mt-0"
+                        action={
+                          <button type="button" className="btn-ghost-v2 sm" onClick={() => setInviteOpen(true)}>
+                            Invite a client
+                          </button>
+                        }
+                      />
+                    </div>
+                  </DSCard>
+                ) : (
+                  activeClients.slice(0, 6).map((c) => {
+                    const name = clientName(c);
+                    return (
+                      <ListRow
+                        key={c._id}
+                        href={clientHref(c._id)}
+                        leading={<IconTile initials={initials(name)} size="sm" />}
+                        title={name}
+                        meta={c.goals?.length ? c.goals.slice(0, 2).join(" · ") : `Since ${format(new Date(c.created_at), "MMM yyyy")}`}
+                      />
+                    );
+                  })
+                )}
+              </section>
+            </div>
           </div>
         </>
       )}
