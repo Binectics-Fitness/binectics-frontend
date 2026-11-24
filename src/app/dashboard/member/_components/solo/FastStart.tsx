@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { ChipGroup, DSCard } from "@/components/ds";
-import { DEFAULT_PRESET, PRESET_OPTIONS, HOUR_MS, START_MAX_PAST_MS, fromLocalInput, parseCustomHours, presetHint, relativeDay, startProblem, timeOfDay, toLocalInput } from "@/lib/solo/fastingRules";
+import { DEFAULT_PRESET, PRESET_OPTIONS, HOUR_MS, parseCustomHours, presetHint, relativeDay, timeOfDay } from "@/lib/solo/fastingRules";
+import { startLimit, startTimeProblem } from "@/lib/solo/fastStartTime";
 import type { FastingPresetKey, StartFastInput } from "@/lib/api/fasting";
-import { CUSTOM_LABEL, EARLIER_LABEL, START_BUTTON, START_CAP_NOTE, START_EARLIER, START_FOOT, START_NOW, START_STEP, START_TITLE } from "@/lib/solo/fastingCopy";
+import { CUSTOM_LABEL, ENDS_PICK_LENGTH, START_BUTTON, START_CAP_NOTE, START_FOOT, START_STEP, START_TITLE } from "@/lib/solo/fastingCopy";
+import { FastCoachNote } from "./FastCoachNote";
+import { StartTimeControl } from "./StartTimeControl";
 import { WriteError } from "./parts";
 import styles from "./fasting.module.css";
 
@@ -12,9 +15,12 @@ import styles from "./fasting.module.css";
 export function buildStart(opts: {
   preset: FastingPresetKey;
   customText: string;
-  earlierText: string | null;
+  /** The chosen start, or null for now. */
+  startMs: number | null;
   nowMs: number;
-}): { ok: true; input: StartFastInput; hours: number; startMs: number } | { ok: false; hoursMessage: string | null; startMessage: string | null } {
+  /** When the last fast ended: a new one cannot start before it. */
+  lastEndMs?: number | null;
+}): { ok: true; input: StartFastInput; hours: number; startMs: number } | { ok: false; hoursMessage: string | null; startBlocked: boolean } {
   const preset = PRESET_OPTIONS.find((p) => p.key === opts.preset) ?? PRESET_OPTIONS[2];
   let hoursMessage: string | null = null;
   let hours = preset.hours;
@@ -26,14 +32,9 @@ export function buildStart(opts: {
       hoursMessage = c.message;
     }
   }
-  let startMs = opts.nowMs;
-  let startMessage: string | null = null;
-  if (opts.earlierText !== null) {
-    const parsed = fromLocalInput(opts.earlierText);
-    startMessage = startProblem(parsed, opts.nowMs);
-    if (parsed !== null) startMs = parsed;
-  }
-  if (hours === null || startMessage) return { ok: false, hoursMessage, startMessage };
+  const startMs = opts.startMs ?? opts.nowMs;
+  const startBlocked = startTimeProblem(opts.startMs, opts.nowMs, startLimit(opts.lastEndMs ?? null, opts.nowMs)) !== null;
+  if (hours === null || startBlocked) return { ok: false, hoursMessage, startBlocked };
   return {
     ok: true,
     hours,
@@ -42,27 +43,39 @@ export function buildStart(opts: {
   };
 }
 
-/** The start page, step 2 of 2 (design 04): a length, optionally an earlier start, then Start fast. */
+/**
+ * The start page, step 2 of 2 (design 04): a length, the Starts / Ends card
+ * (Starts is the control), the coach note for a coached member, then Start.
+ */
 export function FastStart({
   nowMs,
   onStart,
   pending,
   error,
+  lastEndMs = null,
+  openStartSignal = 0,
 }: {
   nowMs: number;
   onStart: (input: StartFastInput) => void;
   pending: boolean;
   error: string | null;
+  /** When the member's last fast ended (epoch ms), or null when none is known. */
+  lastEndMs?: number | null;
+  /** Changing it opens the start-time choices (after the server refused a start). */
+  openStartSignal?: number;
 }) {
   const [preset, setPreset] = useState<FastingPresetKey>(DEFAULT_PRESET);
   const [customText, setCustomText] = useState("18");
-  const [earlier, setEarlier] = useState<string | null>(null);
+  const [startMs, setStartMs] = useState<number | null>(null);
 
-  const built = useMemo(() => buildStart({ preset, customText, earlierText: earlier, nowMs }), [preset, customText, earlier, nowMs]);
-  const hours = built.ok ? built.hours : null;
-  const startMs = built.ok ? built.startMs : earlier !== null ? fromLocalInput(earlier) ?? nowMs : nowMs;
+  const built = useMemo(() => buildStart({ preset, customText, startMs, nowMs, lastEndMs }), [preset, customText, startMs, nowMs, lastEndMs]);
+  const option = PRESET_OPTIONS.find((p) => p.key === preset) ?? PRESET_OPTIONS[2];
+  const customParsed = preset === "custom" ? parseCustomHours(customText) : null;
+  const hours = customParsed ? (customParsed.ok ? customParsed.hours : null) : option.hours;
+  const startAt = startMs ?? nowMs;
   const hoursMessage = built.ok ? null : built.hoursMessage;
-  const startMessage = built.ok ? null : built.startMessage;
+  const startOk = built.ok || !built.startBlocked;
+  const endText = hours !== null ? `${relativeDay(startAt + hours * HOUR_MS, nowMs)} · ${timeOfDay(startAt + hours * HOUR_MS)}` : ENDS_PICK_LENGTH;
 
   const step = (delta: number) => {
     const n = Number(customText.replace(",", "."));
@@ -130,64 +143,9 @@ export function FastStart({
         {START_CAP_NOTE}
       </p>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3">
-        <div>
-          <dt className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-            Starts
-          </dt>
-          <dd className="text-[15px] font-medium" data-testid="start-label">
-            {relativeDay(startMs, nowMs)} · {timeOfDay(startMs)}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
-            Ends
-          </dt>
-          <dd className="text-[15px] font-medium" data-testid="end-label">
-            {hours !== null ? `${relativeDay(startMs + hours * HOUR_MS, nowMs)} · ${timeOfDay(startMs + hours * HOUR_MS)}` : "Pick a length"}
-          </dd>
-        </div>
-      </dl>
+      <StartTimeControl nowMs={nowMs} startMs={startMs} onChange={setStartMs} endText={endText} lastEndMs={lastEndMs} openSignal={openStartSignal} />
 
-      <div className="mt-3">
-        {earlier === null ? (
-          <button
-            type="button"
-            className="text-[14px] underline underline-offset-2"
-            style={{ color: "var(--fg-2)", minHeight: 44 }}
-            onClick={() => setEarlier(toLocalInput(nowMs))}
-          >
-            {START_EARLIER}
-          </button>
-        ) : (
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="earlier-start" className={styles.label}>
-                {EARLIER_LABEL}
-              </label>
-              <input
-                id="earlier-start"
-                type="datetime-local"
-                className={styles.field}
-                value={earlier}
-                min={toLocalInput(nowMs - START_MAX_PAST_MS)}
-                max={toLocalInput(nowMs)}
-                onChange={(e) => setEarlier(e.target.value)}
-                aria-invalid={startMessage ? true : undefined}
-                aria-describedby={startMessage ? "earlier-msg" : undefined}
-              />
-            </div>
-            <button type="button" className="text-[14px] underline underline-offset-2" style={{ color: "var(--fg-2)", minHeight: 44 }} onClick={() => setEarlier(null)}>
-              {START_NOW}
-            </button>
-          </div>
-        )}
-        {startMessage && (
-          <p id="earlier-msg" role="alert" className={`${styles.error} mt-1`}>
-            {startMessage}
-          </p>
-        )}
-      </div>
+      <FastCoachNote nowMs={nowMs} startAt={startAt} hours={hours} canTell={startOk} />
 
       {error && (
         <div className="mt-3">
@@ -201,7 +159,7 @@ export function FastStart({
         disabled={!built.ok || pending}
         onClick={() => {
           // Re-read the clock at the tap: the tick that drew this page can be up to 30 seconds old.
-          const fresh = buildStart({ preset, customText, earlierText: earlier, nowMs: Date.now() });
+          const fresh = buildStart({ preset, customText, startMs, nowMs: Date.now(), lastEndMs });
           if (fresh.ok) onStart(fresh.input);
         }}
       >
