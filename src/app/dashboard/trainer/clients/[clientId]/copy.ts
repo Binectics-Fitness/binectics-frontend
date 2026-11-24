@@ -7,7 +7,8 @@
 export const CLIENT_PAGE_COPY = {
   message: "Message",
   openProgram: "Open program",
-  assignProgram: "Assign a program",
+  startProgram: "Start a program",
+  startAnother: "Start another program",
   activeClient: "Active client",
   formerClient: "Former client",
   clientSince: (date: string) => `Client since ${date}`,

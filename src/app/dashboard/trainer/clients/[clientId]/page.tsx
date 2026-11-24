@@ -18,6 +18,8 @@ import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
 import ProgramResultsSection from "@/components/programs/results/ProgramResultsSection";
 import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
+import { StartProgramDialog } from "@/components/clients/StartProgramDialog";
+import { LogWeightForm, LOG_WEIGHT_COPY } from "@/components/clients/LogWeightForm";
 import { CLIENT_PAGE_COPY as C, SESSION_LABEL } from "./copy";
 
 /**
@@ -77,6 +79,7 @@ function timeLabel(at: number): string {
   return new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+const LOG_WEIGHT_LABEL = LOG_WEIGHT_COPY.open;
 const h2 = "text-[15px] font-medium";
 const ink = { color: "var(--ink)" } as const;
 const muted = { color: "var(--fg-3)" } as const;
@@ -177,6 +180,8 @@ function ClientPage({
   const [saving, setSaving] = useState(false);
   const [allNotes, setAllNotes] = useState(false);
   const [trend, setTrend] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [logging, setLogging] = useState(false);
   // "Now" for splitting next from past sessions, fixed when the page opens.
   const [now] = useState(() => Date.now());
 
@@ -222,6 +227,7 @@ function ClientPage({
     ? [lead.name, week && week.missed > 0 ? C.missed(week.missed) : null].filter(Boolean).join(" · ")
     : C.notOnProgram;
   const shownNotes = allNotes ? journals : journals.slice(0, 1);
+  const active = profile.is_active;
 
   return (
     <>
@@ -244,14 +250,26 @@ function ClientPage({
             </div>
           </div>
         </div>
-        <div className="flex gap-2 shrink-0">
-          {userId && <StartConversationButton recipientUserId={userId} messagesHref="/dashboard/trainer/messages" label={C.message} />}
-          <Link
-            href={lead ? `${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${lead.id}` : TRAINER_PROGRAMS_CONFIG.basePath}
-            className="btn-primary-v2 sm"
-          >
-            {lead ? C.openProgram : C.assignProgram}
-          </Link>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {userId && (
+            <StartConversationButton recipientUserId={userId} messagesHref="/dashboard/trainer/messages" label={C.message} className="btn-ghost-v2 min-h-11" />
+          )}
+          {lead && active && (
+            <button type="button" className="btn-ghost-v2 min-h-11" onClick={() => setStarting(true)}>
+              {C.startAnother}
+            </button>
+          )}
+          {lead ? (
+            <Link href={`${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${lead.id}`} className="btn-primary-v2 min-h-11">
+              {C.openProgram}
+            </Link>
+          ) : (
+            active && (
+              <button type="button" className="btn-primary-v2 min-h-11" onClick={() => setStarting(true)}>
+                {C.startProgram}
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -368,12 +386,32 @@ function ClientPage({
                   : C.noWeight}
               </div>
             </div>
-            {weights.length > 1 && (
-              <button type="button" className="btn-ghost-v2 sm" aria-expanded={trend} aria-controls="weight-trend" onClick={() => setTrend((v) => !v)}>
-                {trend ? C.hideTrend : C.showTrend}
-              </button>
-            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              {weights.length > 1 && (
+                <button type="button" className="btn-ghost-v2 min-h-11" aria-expanded={trend} aria-controls="weight-trend" onClick={() => setTrend((v) => !v)}>
+                  {trend ? C.hideTrend : C.showTrend}
+                </button>
+              )}
+              {active && !logging && (
+                <button type="button" className="btn-ghost-v2 min-h-11" onClick={() => setLogging(true)}>
+                  {LOG_WEIGHT_LABEL}
+                </button>
+              )}
+            </div>
           </div>
+          {logging && (
+            <div className="px-4.5 py-3.5" style={{ borderTop: "1px solid var(--border)" }}>
+              <LogWeightForm
+                clientProfileId={clientId}
+                clientName={firstName}
+                onCancel={() => setLogging(false)}
+                onSaved={(log) => {
+                  queryClient.setQueryData<ClientPageData>(clientPageKey(clientId), (d) => (d ? { ...d, weights: [log, ...d.weights] } : d));
+                  setLogging(false);
+                }}
+              />
+            </div>
+          )}
           {trend && (
             <ul id="weight-trend" className="px-4.5 pt-1 pb-2.5" style={{ borderTop: "1px solid var(--border)" }}>
               {weights.map((w, i) => (
@@ -386,6 +424,19 @@ function ClientPage({
           )}
         </DSCard>
       </section>
+
+      {starting && (
+        <StartProgramDialog
+          clientProfileId={clientId}
+          clientName={firstName}
+          programsPath={TRAINER_PROGRAMS_CONFIG.basePath}
+          onClose={() => setStarting(false)}
+          onStarted={() => {
+            setStarting(false);
+            void queryClient.invalidateQueries({ queryKey: clientPageKey(clientId) });
+          }}
+        />
+      )}
     </>
   );
 }

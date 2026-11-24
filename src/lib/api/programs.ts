@@ -156,6 +156,8 @@ export interface ProgramTemplate {
   access?: unknown;
   /** On list rows (api #361). */
   publish_state?: ProgramPublishState;
+  /** On list rows: tasks in the latest version. Absent on older responses. */
+  task_count?: number;
   created_at: string;
   updated_at: string;
 }
