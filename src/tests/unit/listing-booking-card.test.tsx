@@ -29,6 +29,11 @@ vi.mock("@/components/marketplace/ListingReviews", () => ({
 vi.mock("@/components/marketplace/ConnectRequestButton", () => ({
   ConnectRequestButton: () => null,
 }));
+// The member's memberships: none here (listing-profile-parity.test.tsx covers members).
+vi.mock("@/lib/queries/marketplace", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/queries/marketplace")>()),
+  useMySubscriptions: () => ({ data: [] }),
+}));
 // Message gating has its own tests (listing-share-message.test.tsx).
 vi.mock("@/components/messaging/MyCoachesCard", () => ({
   useMyProviders: () => ({ data: undefined, isLoading: false, isError: false }),

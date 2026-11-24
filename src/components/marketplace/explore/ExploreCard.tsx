@@ -6,6 +6,7 @@ import { EXPLORE_CARD_COPY, listingPriceParts } from "@/lib/marketplace/exploreC
 import { placeLabel } from "@/lib/marketplace/exploreFilters";
 import { SaveListingButton } from "@/components/marketplace/SaveListingButton";
 import { specializationLabel } from "@/lib/credentials/dietitian";
+import { galleryPhotos, listingDisplayName, providerSubtitle } from "@/lib/marketplace/listingDisplay";
 
 /** A listing as GET /marketplace/listings returns it on a card. */
 export interface ExploreListing {
@@ -35,7 +36,7 @@ export interface ExploreListing {
   distance_km?: number | null;
   /** "exact" when the provider placed the pin, else the city centre. */
   location_precision?: string | null;
-  organization?: { _id: string; name: string } | null;
+  organization?: { _id: string; name: string; logo?: string } | null;
   professional?: { _id: string; first_name: string; last_name: string; profile_picture?: string } | null;
   specializations?: string[];
   licensed?: boolean;
@@ -56,10 +57,23 @@ const PH_BG: Record<Kind, string> = {
   dietitian: "repeating-linear-gradient(135deg, oklch(0.90 0.018 300) 0 10px, oklch(0.93 0.014 300) 10px 20px)",
 };
 
+/** A gym's business name; a trainer's or dietitian's own name (listingDisplay.ts). */
 export function listingName(l: ExploreListing): string {
-  if (l.organization?.name) return l.organization.name;
-  if (l.professional) return `${l.professional.first_name} ${l.professional.last_name}`;
-  return l.headline;
+  return listingDisplayName(l);
+}
+
+/**
+ * The card's picture: the first listing photo, never the logo (the API puts
+ * the profile image first in `photos`). Search results carry no photos
+ * today, so most cards show the role pattern with the avatar.
+ */
+export function cardPhoto(l: Pick<ExploreListing, "photos" | "profile_image">): string | undefined {
+  return galleryPhotos(l.photos, l.profile_image)[0];
+}
+
+/** The logo (gym) or portrait (coach) shown small on the card. */
+export function cardAvatar(l: ExploreListing): string | undefined {
+  return l.profile_image || l.professional?.profile_picture || l.organization?.logo || undefined;
 }
 
 /** "PCOS · Lagos, NG · About 4 km": what they do, where, and how far. */
@@ -70,7 +84,8 @@ export function listingSubline(l: ExploreListing, distance?: string): string {
   const where = placeLabel(l);
   if (where) parts.push(where);
   if (distance) parts.push(distance);
-  return parts.join(" · ") || l.headline;
+  // The headline has its own line on the card now.
+  return parts.join(" · ");
 }
 
 function listingTags(l: ExploreListing): string[] {
@@ -127,7 +142,9 @@ export function ExploreCard({ l, distance }: { l: ExploreListing; distance?: str
   const status = listingStatus(l);
   const notTaking = l.accepting_clients === false;
   const isVerified = !!l.verification_badge && l.verification_badge !== "none";
-  const photoUrl = l.photos?.[0] || l.profile_image;
+  const photoUrl = cardPhoto(l);
+  const avatarUrl = cardAvatar(l);
+  const headline = providerSubtitle(name, l.headline);
   const hasRating = l.review_count > 0 && l.average_rating > 0;
 
   return (
@@ -147,6 +164,13 @@ export function ExploreCard({ l, distance }: { l: ExploreListing; distance?: str
               </span>
             )}
           </div>
+          {!photoUrl && avatarUrl && (
+            <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+              <span className="relative w-16 h-16 rounded-full overflow-hidden border border-border bg-bg">
+                <Image src={avatarUrl} alt="" fill className="object-cover" sizes="64px" />
+              </span>
+            </span>
+          )}
           {!photoUrl && (
             <span className="absolute bottom-2.5 left-3 font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
               {type} · {name}
@@ -166,7 +190,12 @@ export function ExploreCard({ l, distance }: { l: ExploreListing; distance?: str
             )}
           </div>
           <div className="text-[16px] font-medium" style={{ letterSpacing: "-0.014em", color: "var(--ink)" }}>{name}</div>
-          <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{listingSubline(l, distance)}</div>
+          {headline && (
+            <div className="text-[13px] line-clamp-2" style={{ color: "var(--fg-2)" }} data-testid="card-headline">{headline}</div>
+          )}
+          {listingSubline(l, distance) && (
+            <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{listingSubline(l, distance)}</div>
+          )}
           {notTaking && <div className="text-[13px]" style={{ color: "var(--fg-3)" }}>{EXPLORE_CARD_COPY.notTakingClients}</div>}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.25 mt-1">
