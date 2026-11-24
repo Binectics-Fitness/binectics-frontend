@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useSyncExternalStore } from "react";
 import { BinecticsMark } from "@/components/BinecticsLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminGuard } from "@/hooks/useRequireAuth";
@@ -16,6 +17,7 @@ import {
   permissionLabel,
   type AdminPermissionGate,
 } from "@/lib/admin/permissions";
+import { verificationService } from "@/lib/api/verification";
 
 /* ─── Icon helper ──────────────────────────────────────────── */
 
@@ -55,6 +57,7 @@ export const SIDEBAR: SideSection[] = [
   { label: "Moderate", items: [
     { name: "Overview", href: "/admin/dashboard", icon: <I><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></I> },
     { name: "Listings", href: "/admin/listings", permission: P.CONTENT_READ, icon: <I d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" /> },
+    { name: "Verification", href: "/admin/verification", permission: P.VERIFICATION_READ, icon: <I><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z"/><path d="m9 12 2 2 4-4"/></I> },
     { name: "Reviews", href: "/admin/reviews", permission: P.CONTENT_READ, icon: <I d="m13 3 1 7 7 1-7 1-1 7-1-7-7-1 7-1z" /> },
     { name: "Refunds", href: "/admin/refunds", permission: P.REFUNDS_READ, icon: <I d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /> },
     { name: "Disputes", href: "/admin/disputes", permission: P.REFUNDS_READ, icon: <I><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/><path d="M16 8 8 16M8 8l8 8"/></I> },
@@ -94,6 +97,55 @@ export function pageGate(activeItem: string): AdminPermissionGate | undefined {
     if (item) return item.permission;
   }
   return undefined;
+}
+
+/*
+ * The pending-verification count beside "Verification". One fetch shared by
+ * every shell mount (a module store, not react-query: the shell also renders
+ * in tests without a query client), refreshed at most once a minute and
+ * whenever the queue page or a decision calls refreshVerificationCount().
+ */
+let verificationPending: number | null = null;
+let verificationFetchedAt = 0;
+let verificationInflight: Promise<void> | null = null;
+const verificationListeners = new Set<() => void>();
+
+export function refreshVerificationCount(): Promise<void> {
+  if (verificationInflight) return verificationInflight;
+  verificationFetchedAt = Date.now();
+  verificationInflight = verificationService
+    .summary()
+    .then((res) => {
+      if (res.success && res.data) verificationPending = res.data.pending;
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      verificationInflight = null;
+      verificationListeners.forEach((l) => l());
+    });
+  return verificationInflight;
+}
+
+function subscribeVerificationCount(listener: () => void) {
+  verificationListeners.add(listener);
+  return () => {
+    verificationListeners.delete(listener);
+  };
+}
+
+/** Live counts beside nav items, by item name. Only fetched while the
+ *  Verification item is in this admin's nav (verification:read). */
+function useNavCounts(showVerification: boolean): Record<string, string | undefined> {
+  const pending = useSyncExternalStore(
+    subscribeVerificationCount,
+    () => verificationPending,
+    () => null,
+  );
+  useEffect(() => {
+    if (!showVerification) return;
+    if (Date.now() - verificationFetchedAt > 60_000) void refreshVerificationCount();
+  }, [showVerification]);
+  return { Verification: showVerification && pending ? String(pending) : undefined };
 }
 
 /* ─── Props ────────────────────────────────────────────────── */
@@ -146,6 +198,7 @@ function SidebarContent({ activeItem, sections }: { activeItem: string; sections
   const name = shortName(user) || "Your account";
   const initials = personInitials(user) || "··";
   const roleLabel = user ? (ROLE_LABEL[user.role] ?? user.role) : "";
+  const counts = useNavCounts(sections.some((s) => s.items.some((i) => i.name === "Verification")));
   return (
     <div className="flex flex-col gap-5.5 px-3.5 pb-6">
       {/* Brand */}
@@ -172,7 +225,8 @@ function SidebarContent({ activeItem, sections }: { activeItem: string; sections
           >
             {s.label}
           </div>
-          {s.items.map((item) => {
+          {s.items.map((navItem) => {
+            const item = counts[navItem.name] ? { ...navItem, badge: counts[navItem.name] } : navItem;
             const isActive = item.name === activeItem;
             return (
               <Link
