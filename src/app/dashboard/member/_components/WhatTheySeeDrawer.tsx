@@ -52,7 +52,7 @@ function SeesList({ heading, items, seen }: { heading: string; items: string[]; 
         {items.map((t, i) => (
           <li
             key={t}
-            className="flex min-h-10 items-center gap-3 py-2 text-[14px]"
+            className="flex min-h-11 items-center gap-3 py-2 text-[14px]"
             style={{ color: "var(--ink)", borderBottom: i < items.length - 1 ? "1px solid var(--border)" : undefined }}
           >
             <Icon size={18} aria-hidden="true" style={{ color: "var(--fg-2)", flexShrink: 0 }} />
