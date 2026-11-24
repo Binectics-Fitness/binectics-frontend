@@ -12,6 +12,7 @@
  * API returns it; there is no conversion and no made-up fallback amount.
  */
 
+import { weeklyHoursOf, type ClosedDate, type WeeklyHours } from "./openingHours";
 import type { MarketplaceListing } from "@/lib/types";
 import type { PlatformCurrency } from "@/lib/api/currencies";
 import { formatMinor } from "@/lib/currencies/helpers";
@@ -127,6 +128,11 @@ export interface ListingLocation {
   postal_code?: string | null;
   country?: string | null;
   is_primary?: boolean;
+  /** IANA zone the hours are read in (api: the location's, else the gym's). */
+  time_zone?: string | null;
+  /** Weekly hours in that zone; null when the gym has not set them. */
+  opening_hours?: WeeklyHours | null;
+  closed_dates?: ClosedDate[];
 }
 
 /** "9 Fola Osibo Road, Lagos 106104": the parts that exist, in reading order. */
@@ -161,6 +167,13 @@ export function publicLocations(raw: unknown): ListingLocation[] {
       postal_code: str(r.postal_code),
       country: str(r.country),
       is_primary: r.is_primary === true,
+      time_zone: str(r.time_zone),
+      opening_hours: weeklyHoursOf(r.opening_hours),
+      closed_dates: Array.isArray(r.closed_dates)
+        ? (r.closed_dates as unknown[]).filter(
+            (c): c is ClosedDate => !!c && typeof (c as ClosedDate).date === "string",
+          )
+        : [],
     });
   }
   return out.sort((a, b) => Number(!!b.is_primary) - Number(!!a.is_primary));

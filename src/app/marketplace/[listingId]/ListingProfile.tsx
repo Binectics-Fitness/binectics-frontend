@@ -49,6 +49,7 @@ import { useOptionalOrganization } from "@/contexts/OrganizationContext";
 import { paidContentOn } from "@/lib/paidContent/helpers";
 import { offersFromListing } from "@/lib/paidContent/offers";
 import { ContentOffersStrip } from "@/components/content/ContentOffersStrip";
+import { LocationHours } from "@/components/marketplace/LocationHours";
 import { licenseBadgeSummary, populationLabel, specializationLabel } from "@/lib/credentials/dietitian";
 
 /* ─── Icons ──────────────────────────────────────────────── */
@@ -588,7 +589,8 @@ export function ListingProfile({
             <ListingReviews listingId={listingId} accountType={listing.account_type} providerName={name} />
           </div>
 
-          {/* Where the gym is: each address with a maps link (api #374). */}
+          {/* Where the gym is: each address with a maps link (api #374) and its
+              opening hours, read in the location's zone. */}
           {locations.length > 0 && (
             <section id="location" className="py-8 border-b border-border scroll-mt-4">
               <h2 className="text-[22px] font-medium mb-3.5" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{locations.length > 1 ? "Locations" : "Location"}</h2>
@@ -601,6 +603,9 @@ export function ListingProfile({
                         {loc.is_primary && locations.length > 1 && <span className="ml-2 font-mono text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>Main</span>}
                       </div>
                       {addressLine(loc) && <div className="text-[13.5px]" style={{ color: "var(--fg-2)" }}>{addressLine(loc)}</div>}
+                      {loc.opening_hours && loc.time_zone && (
+                        <LocationHours hours={loc.opening_hours} closedDates={loc.closed_dates} timeZone={loc.time_zone} />
+                      )}
                     </div>
                     <a href={mapsUrl(loc, name)} target="_blank" rel="noopener noreferrer" className="btn-ghost-v2 sm shrink-0" style={{ textDecoration: "none" }}>
                       Open in Maps
