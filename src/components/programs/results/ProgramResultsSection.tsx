@@ -24,11 +24,14 @@ export default function ProgramResultsSection({
   clientProfileId,
   clientFirstName,
   summaries,
+  programsPath = TRAINER_PROGRAMS_CONFIG.basePath,
 }: {
   clientProfileId: string;
   clientFirstName: string;
   /** The overview's programs, for each card's "Day N of M" line. */
   summaries: ClientProgramSummary[];
+  /** The role's programs list; each card opens `${programsPath}/instances/:id`. */
+  programsPath?: string;
 }) {
   const [range, setRange] = useState<ResultRange>(7);
   const [programs, setPrograms] = useState<ProgramResultProgram[] | null>(null);
@@ -100,7 +103,7 @@ export default function ProgramResultsSection({
         <>
           <div className="flex flex-col gap-3">
             {programs.map((p) => (
-              <ProgramCard key={p.id} program={p} summary={summaries.find((s) => s.id === p.id)} range={range} />
+              <ProgramCard key={p.id} program={p} summary={summaries.find((s) => s.id === p.id)} range={range} programsPath={programsPath} />
             ))}
           </div>
           <p className="text-[12px] mt-2.5 leading-normal" style={{ color: "var(--fg-3)" }}>{C.privacy}</p>
@@ -114,10 +117,12 @@ function ProgramCard({
   program,
   summary,
   range,
+  programsPath,
 }: {
   program: ProgramResultProgram;
   summary: ClientProgramSummary | undefined;
   range: number;
+  programsPath: string;
 }) {
   const subtitle = programSubtitle(summary);
   return (
@@ -131,7 +136,7 @@ function ProgramCard({
           {subtitle && <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>{subtitle}</div>}
         </div>
         <Link
-          href={`${TRAINER_PROGRAMS_CONFIG.basePath}/instances/${program.id}`}
+          href={`${programsPath}/instances/${program.id}`}
           className="text-[12.5px] whitespace-nowrap hover:underline"
           style={{ color: "var(--fg-2)" }}
         >
