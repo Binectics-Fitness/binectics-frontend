@@ -36,7 +36,7 @@ export function TrainerStep1({ data, setField }: StepProps) {
           priceKeys={PRICE_KEYS}
         />
         <Field label="Headline (60 char)" hint="Shows under your name in marketplace results." htmlFor="ob-tr-headline" full>
-          <TextInput id="ob-tr-headline" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · Sea Point" />
+          <TextInput id="ob-tr-headline" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach · online and in person" />
         </Field>
       </FormGrid>
     </>
