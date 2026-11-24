@@ -1,17 +1,24 @@
 import { describe, it, expect } from "vitest";
 import {
   currencyStepUnanswered,
-  trainerCountry,
+  providerCountryCode,
   trainerLocationPatch,
   trainerSessionPatch,
 } from "@/app/onboarding/_config";
 
 describe("trainer onboarding: what each step persists", () => {
-  it("treats the untouched country select as its default, so the default is saved too", () => {
-    // The select shows "South Africa" without writing data.country.
-    expect(trainerCountry({})).toBe("South Africa");
+  it("saves no country when none was chosen, never a fixed default", () => {
+    expect(providerCountryCode({})).toBeUndefined();
     const { profile } = trainerLocationPatch({ firstName: "Ada" });
-    expect(profile).toEqual({ first_name: "Ada", country_code: "ZA" });
+    expect(profile).toEqual({ first_name: "Ada" });
+  });
+
+  it("saves any country from the full list by its code", () => {
+    const { profile } = trainerLocationPatch({ country: "France", countryCode: "FR", currency: "EUR" });
+    expect(profile).toEqual({ country_code: "FR" });
+    // A draft saved before step 1 kept codes still resolves one of the old six.
+    expect(providerCountryCode({ country: "Kenya" })).toBe("KE");
+    expect(providerCountryCode({ country: "France" })).toBeUndefined();
   });
 
   it("saves city and country code from step 1 and the currency chosen there", () => {

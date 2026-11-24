@@ -1,4 +1,4 @@
-import { COUNTRY_NAME_TO_CODE, dietitianCountry } from "./_config";
+import { providerCountryCode } from "./_config";
 import {
   isBlankLicense,
   licenseDraftError,
@@ -24,7 +24,7 @@ export function dietitianLicenseDraft(data: Record<string, unknown>): LicenseDra
     name: (data.licName as string) || "",
     issuingBody: (data.licBody as string) || "",
     number: (data.licNumber as string) || "",
-    countryCode: (data.licCountry as string) || COUNTRY_NAME_TO_CODE[dietitianCountry(data)] || "",
+    countryCode: (data.licCountry as string) || providerCountryCode(data) || "",
     expiresAt: (data.licExpiry as string) || "",
     newDocumentUrl: (data.doc_license as string) || undefined,
   };

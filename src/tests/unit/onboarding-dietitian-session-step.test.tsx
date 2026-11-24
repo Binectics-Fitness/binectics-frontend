@@ -10,6 +10,20 @@ import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
 const auth = vi.hoisted(() => ({ user: null as null | Record<string, unknown> }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 
+// Step 1 lists every country the API knows (/utility/countries).
+vi.mock("@/lib/queries/utility", () => ({
+  useCountries: () => ({
+    data: [
+      { code: "NG", name: "Nigeria", dialCode: "+234", cities: [] },
+      { code: "ZA", name: "South Africa", dialCode: "+27", cities: [] },
+      { code: "KE", name: "Kenya", dialCode: "+254", cities: [] },
+      { code: "US", name: "United States", dialCode: "+1", cities: [] },
+      { code: "FR", name: "France", dialCode: "+33", cities: [] },
+    ],
+    isLoading: false,
+  }),
+}));
+
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
 }));
@@ -89,7 +103,8 @@ describe("dietitian basics step", () => {
   });
 
   it("uses the country's currency as a suggestion when it can be charged", () => {
-    // The select's default country is Nigeria, and NGN is selectable.
+    // The account is in Nigeria, and NGN is selectable.
+    auth.user = { country_code: "NG" };
     render(<Harness Step={DietStep1} initial={{}} />);
     expect(latest.currency).toBe("NGN");
     expect(screen.getByText(/Suggested for Nigeria/)).toBeInTheDocument();
@@ -114,5 +129,18 @@ describe("dietitian basics step", () => {
   it("shows the missing-currency prompt as an alert after Continue", () => {
     render(<Harness Step={DietStep1} initial={{ country: "Ghana", currencyMissing: true }} />);
     expect(screen.getByRole("alert")).toHaveTextContent("Choose the currency you charge in to continue.");
+  });
+
+  it("starts on no country, not Nigeria, when the account and the visit name none", () => {
+    render(<Harness Step={DietStep1} initial={{}} />);
+    expect(latest.country).toBeUndefined();
+    expect(screen.getByText("Choose country")).toBeInTheDocument();
+  });
+
+  it("starts on the account's own country from the full list", () => {
+    auth.user = { country_code: "fr" };
+    render(<Harness Step={DietStep1} initial={{}} />);
+    expect(latest.countryCode).toBe("FR");
+    expect(latest.country).toBe("France");
   });
 });
