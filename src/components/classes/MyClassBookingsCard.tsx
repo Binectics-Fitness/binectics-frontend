@@ -13,6 +13,11 @@ import {
   type ClassBooking,
 } from "@/lib/api/classBookings";
 import { confirmedCancelCopy, policyHasFee } from "@/lib/classes/cancellationPolicy";
+import { classBookingEvent, downloadIcs } from "@/lib/bookings/calendar";
+import { waitlistPlaceLabel } from "@/lib/bookings/waitlistPlace";
+
+/** Row actions are 44px tall: a comfortable target on a phone. */
+const ACTION_STYLE = { height: 44 } as const;
 
 type Notice = { text: string; tone: "ok" | "info" | "error" };
 const NOTICE_COLOR: Record<Notice["tone"], string> = {
@@ -115,6 +120,18 @@ export function MyClassBookingsCard() {
     },
   });
 
+  // Downloads the booking as an .ics file for the member's calendar app.
+  const addToCalendar = (b: ClassBooking) => {
+    try {
+      downloadIcs(classBookingEvent(b));
+    } catch (err) {
+      setNotices((n) => ({
+        ...n,
+        [b._id]: { text: err instanceof Error ? err.message : "Couldn't add this to your calendar.", tone: "error" },
+      }));
+    }
+  };
+
   if (bookings.length === 0 && cancelled.length === 0) return null;
 
   return (
@@ -128,7 +145,9 @@ export function MyClassBookingsCard() {
       </div>
       {bookings.map((b, i) => {
         const c = classOf(b);
-        const canTake = b.status === "waitlisted" && b.spot_open === true && !!b.listing_id && !!c;
+        const waitlisted = b.status === "waitlisted";
+        const canTake = waitlisted && b.spot_open === true && !!b.listing_id && !!c;
+        const place = waitlisted ? waitlistPlaceLabel(b.waitlist_position) : "";
         const notice = notices[b._id];
         return (
           <div key={b._id} className="px-4.5 py-3" style={{ borderBottom: i < bookings.length - 1 || cancelled.length > 0 ? "1px solid var(--border)" : "none" }}>
@@ -150,11 +169,17 @@ export function MyClassBookingsCard() {
                     A spot is open.
                   </div>
                 )}
+                {place && !canTake && (
+                  <div className="text-[12px] mt-1" style={{ color: "var(--fg-2)" }} data-testid={`waitlist-place-${b._id}`}>
+                    {place}
+                  </div>
+                )}
               </div>
               {canTake && (
                 <button
                   type="button"
                   className="btn-primary-v2 sm shrink-0"
+                  style={ACTION_STYLE}
                   disabled={take.isPending}
                   aria-label={`Take the spot in ${c?.name ?? "this class"} on ${occurrenceLabel(b.booking_date)}`}
                   onClick={() => take.mutate(b)}
@@ -162,12 +187,26 @@ export function MyClassBookingsCard() {
                   {take.isPending && take.variables?._id === b._id ? "Taking…" : "Take the spot"}
                 </button>
               )}
+              {!waitlisted && c?.start_time && (
+                <button
+                  type="button"
+                  className="btn-ghost-v2 sm shrink-0"
+                  style={ACTION_STYLE}
+                  aria-label={`Add ${c.name ?? "this class"} on ${occurrenceLabel(b.booking_date)} to your calendar`}
+                  onClick={() => addToCalendar(b)}
+                >
+                  Add to calendar
+                </button>
+              )}
               <button
+                type="button"
                 className="btn-ghost-v2 sm shrink-0"
+                style={ACTION_STYLE}
                 disabled={cancel.isPending}
+                aria-label={waitlisted ? `Leave the waitlist for ${c?.name ?? "this class"}` : undefined}
                 onClick={() => askCancel(b)}
               >
-                Cancel
+                {waitlisted ? "Leave waitlist" : "Cancel"}
               </button>
             </div>
             {notice && (

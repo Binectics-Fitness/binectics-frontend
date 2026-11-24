@@ -23,6 +23,8 @@ import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
 import { hasPaidReceipt, receiptHref } from "@/lib/bookings/receipt";
 import { refundsService, type CancellationQuote } from "@/lib/api/refunds";
 import { formatMinor } from "@/lib/currencies/helpers";
+import { downloadIcs, sessionBookingEvent } from "@/lib/bookings/calendar";
+import { HealthFormRows } from "@/app/dashboard/member/_components/HealthFormRows";
 
 type TabKey = "upcoming" | "past" | "cancelled";
 
@@ -60,16 +62,28 @@ function groupByMonth(bookings: ConsultationBooking[]) {
   return Array.from(groups.entries());
 }
 
+/** Downloads the session as an .ics file for the member's calendar app. */
+function addSessionToCalendar(booking: ConsultationBooking) {
+  try {
+    downloadIcs(sessionBookingEvent(booking));
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Couldn't add this to your calendar.");
+  }
+}
+
 function BookingRow({
   booking,
   isSelected,
   onSelect,
   onPay,
+  canAddToCalendar = false,
   children,
 }: {
   booking: ConsultationBooking;
   isSelected: boolean;
   onSelect: () => void;
+  /** A confirmed session still to come: offer "Add to calendar". */
+  canAddToCalendar?: boolean;
   /** Selects the booking and opens its payment, for a held session. */
   onPay?: () => void;
   /** Rendered under the row: the payment panel, where there is no detail column. */
@@ -150,8 +164,20 @@ function BookingRow({
         {/* Siblings of the row, not children: a button cannot contain a
             link or another button. Pay now is hidden where the panel
             below already offers the payment. */}
-        {(hasPaidReceipt(booking) || onPay) && (
+        {(hasPaidReceipt(booking) || onPay || canAddToCalendar) && (
           <div className="flex justify-end gap-2">
+            {canAddToCalendar && (
+              <button
+                type="button"
+                className="btn-ghost-v2 sm"
+                style={{ height: 44 }}
+                aria-label={`Add ${booking.consultationTypeName ?? "this session"} on ${date.full} to your calendar`}
+                onClick={() => addSessionToCalendar(booking)}
+                data-testid="add-to-calendar"
+              >
+                Add to calendar
+              </button>
+            )}
             {hasPaidReceipt(booking) && (
               <Link href={receiptHref(booking.id)} className="btn-ghost-v2 sm" data-testid="booking-receipt-link">
                 Receipt
@@ -469,6 +495,9 @@ export default function MyBookingsPage() {
             }
           />
 
+          {/* A gym's health form still to fill in: renders only when one is pending. */}
+          <HealthFormRows className="mb-6" />
+
           {/* Gym class bookings — renders only when the member has some */}
           <MyClassBookingsCard />
 
@@ -539,6 +568,7 @@ export default function MyBookingsPage() {
                           isSelected={b.id === selectedId}
                           onSelect={() => setSelectedId(b.id)}
                           onPay={isPayable(b) ? () => payFor(b.id) : undefined}
+                          canAddToCalendar={activeTab === "upcoming" && b.status === ConsultationBookingStatus.CONFIRMED}
                         >
                           {b.id === selectedId && isPayable(b) && (
                             <div className="lg:hidden pt-1 pb-3">
