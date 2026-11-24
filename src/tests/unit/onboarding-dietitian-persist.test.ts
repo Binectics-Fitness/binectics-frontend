@@ -10,7 +10,9 @@ import {
   SESSION_FIELDS,
   ROLES,
   type OwnSessionApi,
+  TRAINER_STEP,
 } from "@/app/onboarding/_config";
+import { TRAINER_STEPS } from "@/app/onboarding/_trainer";
 
 describe("dietitian onboarding: what each step persists", () => {
   it("treats the untouched country select as its default, so the default is saved too", () => {
@@ -141,14 +143,25 @@ describe("the session step waits for an answer", () => {
     expect(title("trainer", SESSION_FIELDS.trainer.step)).toBe("Set your pricing");
   });
 
+  it("names every trainer step the page saves on, and asks for no documents", () => {
+    const steps = ROLES.find((r) => r.id === "trainer")!.steps.map((s) => s.title);
+    expect(steps).toHaveLength(TRAINER_STEPS.length);
+    expect(steps[TRAINER_STEP.profile - 1]).toBe("Tell us about yourself");
+    expect(steps[TRAINER_STEP.specializations - 1]).toBe("Your specializations");
+    expect(steps[TRAINER_STEP.pricing - 1]).toBe("Set your pricing");
+    expect(steps[TRAINER_STEP.payout - 1]).toBe("Connect your payout");
+    expect(steps[TRAINER_STEP.listing - 1]).toBe("Your marketplace profile");
+    expect(steps.join(" ")).not.toMatch(/certif|document|upload/i);
+  });
+
   it("holds Continue until a price, Free or Set up later is chosen", () => {
     expect(sessionStepUnanswered("dietitian", 4, {})).toBe(true);
     expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 0 })).toBe(true);
     expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 1500000 })).toBe(false);
     expect(sessionStepUnanswered("dietitian", 4, { sessionFree: true })).toBe(false);
     expect(sessionStepUnanswered("dietitian", 4, { sessionLater: true })).toBe(false);
-    expect(sessionStepUnanswered("trainer", 4, {})).toBe(true);
-    expect(sessionStepUnanswered("trainer", 4, { price1on1Later: true })).toBe(false);
+    expect(sessionStepUnanswered("trainer", 3, {})).toBe(true);
+    expect(sessionStepUnanswered("trainer", 3, { price1on1Later: true })).toBe(false);
   });
 
   it("never holds other steps or roles", () => {

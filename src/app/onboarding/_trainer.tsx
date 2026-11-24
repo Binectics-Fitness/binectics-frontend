@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
 import { COUNTRY_NAME_TO_CODE, SESSION_MISSING, onboardingCurrency, trainerCountry } from "./_config";
 import { OnboardingCurrencyField } from "./_currency";
@@ -18,7 +18,7 @@ function toggleChip(list: string[], chip: string, max?: number): string[] {
   return [...list, chip];
 }
 
-/** The step 4 prices, cleared when the currency changes. */
+/** The pricing step's prices, cleared when the currency changes. */
 const PRICE_KEYS = ["price1on1", "priceMonthly"] as const;
 
 export function TrainerStep1({ data, setField }: StepProps) {
@@ -36,7 +36,7 @@ export function TrainerStep1({ data, setField }: StepProps) {
   const country = trainerCountry(data);
   return (
     <>
-      <StageHead crumb="Step 01 of 06, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
+      <StageHead crumb="Step 01 of 05, trainer track" title="Tell us about yourself." desc="This is what members see in your profile." />
       <FormGrid>
         <Field label="First name" htmlFor="ob-tr-first"><TextInput id="ob-tr-first" value={(data.firstName as string) || ""} onChange={(v) => setField("firstName", v)} /></Field>
         <Field label="Last name" htmlFor="ob-tr-last"><TextInput id="ob-tr-last" value={(data.lastName as string) || ""} onChange={(v) => setField("lastName", v)} /></Field>
@@ -63,50 +63,13 @@ export function TrainerStep2({ data, setField }: StepProps) {
   const formats = (data.formats as string[]) || [];
   return (
     <>
-      <StageHead crumb="Step 02 of 06, trainer track" title="Your specializations." desc="Pick up to 5. Members filter on these." />
+      <StageHead crumb="Step 02 of 05, trainer track" title="Your specializations." desc="Pick up to 5. Members filter on these." />
       <Field label="Specializations" full>
         <ChipGrid options={SPECIALIZATIONS} selected={specs} onToggle={(c) => setField("specializations", toggleChip(specs, c, 5))} />
       </Field>
       <Field label="Session format" full>
         <ChipGrid options={FORMATS} selected={formats} onToggle={(c) => setField("formats", toggleChip(formats, c))} />
       </Field>
-    </>
-  );
-}
-
-export function TrainerStep3({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
-  return (
-    <>
-      <StageHead crumb="Step 03 of 06, trainer track" title="Upload your certifications." desc="Members see a verified badge once our team has confirmed them." />
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <UploadZone
-          title="Primary certification"
-          hint="NSCA-CSCS · NASM-CPT · ACE · ACSM · etc."
-          folder="teams/documents"
-          value={data.doc_cert as string | undefined}
-          onUpload={(r) => setField("doc_cert", r.url)}
-          onUploadStart={onUploadStart}
-          onUploadEnd={onUploadEnd}
-        />
-        <UploadZone
-          title="Public liability insurance"
-          hint="Required for in-person sessions"
-          folder="teams/documents"
-          value={data.doc_insurance as string | undefined}
-          onUpload={(r) => setField("doc_insurance", r.url)}
-          onUploadStart={onUploadStart}
-          onUploadEnd={onUploadEnd}
-        />
-        <UploadZone
-          title="ID document"
-          hint="For payout verification"
-          folder="teams/documents"
-          value={data.doc_id as string | undefined}
-          onUpload={(r) => setField("doc_id", r.url)}
-          onUploadStart={onUploadStart}
-          onUploadEnd={onUploadEnd}
-        />
-      </div>
     </>
   );
 }
@@ -119,7 +82,7 @@ export function trainerPricingCurrency(data: Record<string, unknown>): string {
   return onboardingCurrency(data) ?? "";
 }
 
-export function TrainerStep4({ data, setField }: StepProps) {
+export function TrainerStep3({ data, setField }: StepProps) {
   const currency = trainerPricingCurrency(data);
   // The display string is what the field shows again; the minor amount is
   // what the session type is created from when the step is saved.
@@ -145,7 +108,7 @@ export function TrainerStep4({ data, setField }: StepProps) {
   };
   return (
     <>
-      <StageHead crumb="Step 04 of 06, trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
+      <StageHead crumb="Step 03 of 05, trainer track" title="Set your pricing." desc="Members see this on your profile. You can always change it." />
       <FormGrid>
         <Field label="1:1 session" htmlFor="ob-tr-price" full>
           <MoneyField
@@ -187,16 +150,16 @@ export function TrainerStep4({ data, setField }: StepProps) {
   );
 }
 
-export function TrainerStep5({ data, setField }: StepProps) {
+export function TrainerStep4({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 05 of 06, trainer track" title="Connect your payout." desc="Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified." />
+      <StageHead crumb="Step 04 of 05, trainer track" title="Connect your payout." desc="Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified." />
       <PayoutChoice data={data} setField={setField} />
     </>
   );
 }
 
-export function TrainerStep6({ data, setField }: StepProps) {
+export function TrainerStep5({ data, setField }: StepProps) {
   const { user } = useAuth();
   const name = providerDisplayName("trainer", data, user) || "Your name";
   const specs = ((data.specializations as string[]) || []).slice(0, 2).join(" & ") || "Specializations";
@@ -212,7 +175,7 @@ export function TrainerStep6({ data, setField }: StepProps) {
   const meta = `${specs} · ${city}${price}`;
   return (
     <>
-      <StageHead crumb="Step 06 of 06, trainer track" title="Your marketplace profile." desc="Finishing saves this as your profile, as a draft. Add photos and publish it from My profile when you're ready." />
+      <StageHead crumb="Step 05 of 05, trainer track" title="Your marketplace profile." desc="Finishing saves this as your profile, as a draft. Add photos and publish it from My profile when you're ready." />
       <FormGrid>
         <Field label="Headline" htmlFor="ob-tr-headline-6" full>
           <TextInput id="ob-tr-headline-6" value={(data.headline as string) || ""} onChange={(v) => setField("headline", v)} placeholder="Strength & running coach" />
@@ -222,8 +185,9 @@ export function TrainerStep6({ data, setField }: StepProps) {
         </Field>
       </FormGrid>
       <PreviewCard name={name} meta={meta} />
+      <p style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 10 }}>You can list your certifications on My profile. Binectics doesn&apos;t check certificates yet, so they show as you enter them.</p>
     </>
   );
 }
 
-export const TRAINER_STEPS = [TrainerStep1, TrainerStep2, TrainerStep3, TrainerStep4, TrainerStep5, TrainerStep6];
+export const TRAINER_STEPS = [TrainerStep1, TrainerStep2, TrainerStep3, TrainerStep4, TrainerStep5];

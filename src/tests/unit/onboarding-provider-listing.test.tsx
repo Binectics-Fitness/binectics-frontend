@@ -91,10 +91,30 @@ beforeEach(() => {
 });
 
 describe("trainer onboarding", () => {
+  // The track used to ask for a certificate, insurance and an ID, and saved
+  // none of them: nothing on the API holds them and nobody reviews them.
+  it("asks for no documents: specializations lead straight to pricing", async () => {
+    saveOnboardingDraft("u-9", { role: "trainer", step: 2, data: { country: "Nigeria", currency: "NGN" } });
+    render(<OnboardingPage />);
+    expect(await screen.findByText("Your specializations.")).toBeInTheDocument();
+    expect(screen.getByText(/Step 02 of 05/)).toBeInTheDocument();
+    expect(screen.queryByText(/Upload (your )?certifications/i)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(await screen.findByText("Set your pricing.")).toBeInTheDocument();
+    expect(screen.queryByText(/liability insurance|ID document|verified badge/i)).toBeNull();
+  });
+
+  it("says certificates are not checked, rather than promising a badge", async () => {
+    saveOnboardingDraft("u-9", { role: "trainer", step: 5, data: { country: "Nigeria", currency: "NGN" } });
+    render(<OnboardingPage />);
+    await screen.findByText("Your marketplace profile.");
+    expect(screen.getByText(/doesn't check certificates yet/)).toBeInTheDocument();
+  });
+
   it("creates the listing from what onboarding asked, and shows the account's name", async () => {
     saveOnboardingDraft("u-9", {
       role: "trainer",
-      step: 6,
+      step: 5,
       data: { country: "Nigeria", currency: "NGN", city: "Lagos", headline: "Strength coach · Surulere", specializations: ["Strength"] },
     });
     render(<OnboardingPage />);
@@ -117,7 +137,7 @@ describe("trainer onboarding", () => {
 
   it("stays on the step and says why when the listing is refused", async () => {
     h.createMyListing.mockResolvedValue({ success: false, status: 403, message: "You coach at Imole Forge." });
-    saveOnboardingDraft("u-9", { role: "trainer", step: 6, data: { country: "Nigeria", currency: "NGN", headline: "Coach", bio: "Hi." } });
+    saveOnboardingDraft("u-9", { role: "trainer", step: 5, data: { country: "Nigeria", currency: "NGN", headline: "Coach", bio: "Hi." } });
     render(<OnboardingPage />);
     await screen.findByText("Your marketplace profile.");
     await userEvent.click(screen.getByRole("button", { name: /Go to dashboard/ }));
@@ -126,7 +146,7 @@ describe("trainer onboarding", () => {
   });
 
   it("finishes without a listing when the headline or bio is left out", async () => {
-    saveOnboardingDraft("u-9", { role: "trainer", step: 6, data: { country: "Nigeria", currency: "NGN" } });
+    saveOnboardingDraft("u-9", { role: "trainer", step: 5, data: { country: "Nigeria", currency: "NGN" } });
     render(<OnboardingPage />);
     await screen.findByText("Your marketplace profile.");
     await userEvent.click(screen.getByRole("button", { name: /Go to dashboard/ }));
@@ -137,7 +157,7 @@ describe("trainer onboarding", () => {
   it("saves the monthly online price as a package, and asks for no session packs", async () => {
     saveOnboardingDraft("u-9", {
       role: "trainer",
-      step: 4,
+      step: 3,
       data: { country: "Nigeria", currency: "NGN", price1on1Free: true, priceMonthly: "40,000", priceMonthlyMinor: 4_000_000 },
     });
     render(<OnboardingPage />);
@@ -160,7 +180,7 @@ describe("trainer onboarding", () => {
     h.updatePlan.mockResolvedValue({ success: true });
     saveOnboardingDraft("u-9", {
       role: "trainer",
-      step: 4,
+      step: 3,
       data: { country: "Nigeria", currency: "NGN", price1on1Free: true, priceMonthlyMinor: 5_000_000, priceMonthly: "50,000" },
     });
     render(<OnboardingPage />);

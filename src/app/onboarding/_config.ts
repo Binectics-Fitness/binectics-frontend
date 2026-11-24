@@ -107,8 +107,16 @@ function sessionMinutes(value: unknown, fallback = 60): number {
  * "Set up later"; Continue waits for one of the three, so no provider leaves
  * the step with nothing bookable without having chosen that.
  */
+/**
+ * The trainer track's steps, by what each one saves. There is no documents
+ * step: nothing on the API holds a trainer's certificate, insurance or ID,
+ * and nobody reviews them, so asking for them only implied a check that
+ * never happened (mobile never asked either).
+ */
+export const TRAINER_STEP = { profile: 1, specializations: 2, pricing: 3, payout: 4, listing: 5 } as const;
+
 export const SESSION_FIELDS = {
-  trainer: { step: 4, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
+  trainer: { step: TRAINER_STEP.pricing, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
   dietitian: { step: 4, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
 } as const;
 
@@ -142,7 +150,7 @@ export interface OwnSessionPatch {
 }
 
 /**
- * The trainer's own "1:1 session" as step 4 describes it: a price, or 0 when
+ * The trainer's own "1:1 session" as the pricing step describes it: a price, or 0 when
  * Free was chosen. Null when neither was given; a blank price is not a free
  * session, it is no answer, and the trainer sets it up later.
  */
@@ -521,10 +529,9 @@ export const ROLES: RoleDef[] = [
     steps: [
       { label: "Step 01", title: "Tell us about yourself" },
       { label: "Step 02", title: "Your specializations" },
-      { label: "Step 03", title: "Upload certifications" },
-      { label: "Step 04", title: "Set your pricing" },
-      { label: "Step 05", title: "Connect your payout" },
-      { label: "Step 06", title: "Your marketplace profile" },
+      { label: "Step 03", title: "Set your pricing" },
+      { label: "Step 04", title: "Connect your payout" },
+      { label: "Step 05", title: "Your marketplace profile" },
     ],
   },
   {

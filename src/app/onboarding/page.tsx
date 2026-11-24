@@ -15,7 +15,7 @@ import { credentialsService } from "@/lib/api/credentials";
 import { dietitianCredentialsPatch, ONBOARDING_LICENSE_ID, onboardingLicenseId, withOnboardingLicense } from "./_credentials";
 import { toast } from "@/components/Toast";
 import { AccountType } from "@/lib/types";
-import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, COUNTRY_NAME_TO_CODE, trainerCountry, dietitianCountry, type RoleId } from "./_config";
+import { ROLES, GENERIC_STEPS, ROLE_CARDS, ACCOUNT_ROLE_TO_ID, resolveEstablishedRole, resolvePreselectedRole, canChangeRole, workspaceDecision, membershipGate, enrolledMemberMessage, enrolledMemberNote, workspaceCreateError, workspaceCreateFlags, type WorkspaceError, ACCOUNT_TYPE_TO_USER_ROLE, trainerLocationPatch, trainerSessionPatch, dietitianLocationPatch, dietitianSessionPatch, upsertOwnSession, sessionStepUnanswered, SESSION_MISSING, currencyStepUnanswered, CURRENCY_MISSING, planSeedError, COUNTRY_NAME_TO_CODE, trainerCountry, dietitianCountry, TRAINER_STEP, type RoleId } from "./_config";
 import { STAFF_INVITED, staffInviteEmails, staffInvited, staffInviteError, trainerMonthlyPlan, onboardingListing, saveOnboardingListing } from "./_providerSetup";
 import { clearOnboardingDraft, isDraftTrack, loadOnboardingDraft, resumableDraft, saveOnboardingDraft } from "./_draft";
 import { describeCurrencyError } from "@/lib/currencies/helpers";
@@ -453,7 +453,7 @@ function OnboardingContent() {
    */
   const persistTrainerStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>, orgId: string): Promise<string | null> => {
     try {
-      if (currentStep === 1) {
+      if (currentStep === TRAINER_STEP.profile) {
         const { profile, currency } = trainerLocationPatch(stepData);
         if (Object.keys(profile).length > 0) await authService.updateProfile(profile);
         // The workspace trades in the currency chosen here, as the gym track
@@ -463,7 +463,7 @@ function OnboardingContent() {
           const refused = res.success ? null : describeCurrencyError(res);
           if (refused) return refused;
         }
-      } else if (currentStep === 4) {
+      } else if (currentStep === TRAINER_STEP.pricing) {
         // The 1:1 price and length become the trainer's own session type,
         // which is what clients book. Until this was saved the step
         // collected a price and threw it away, and a trainer who finished
@@ -489,11 +489,11 @@ function OnboardingContent() {
             : await marketplaceService.createOrgMembershipPlan(orgId, plan);
           if (!saved.success) return saved.message || "We couldn't save your monthly price. Try again.";
         }
-      } else if (currentStep === 5) {
+      } else if (currentStep === TRAINER_STEP.payout) {
         if (stepData.payout && stepData.payout !== 'skip' && orgId) {
           await teamsService.updateOrganization(orgId, { preferred_payout_gateway: stepData.payout as string });
         }
-      } else if (currentStep === 6) {
+      } else if (currentStep === TRAINER_STEP.listing) {
         // What onboarding asked becomes the marketplace listing (a draft):
         // it used to reach nothing, and My profile said "Listing not found".
         const listing = onboardingListing("trainer", stepData, COUNTRY_NAME_TO_CODE[trainerCountry(stepData)]);
@@ -1040,13 +1040,17 @@ function OnboardingContent() {
           ))}
         </div>
 
-        {/* Why we ask */}
-        <div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 10 }}>Why we ask</div>
-          <p style={{ fontSize: "12.5px", color: "var(--fg-3)", lineHeight: 1.6 }}>
-            Members see a verified badge on your profile only after ID and certification are confirmed by our team.
-          </p>
-        </div>
+        {/* Why we ask: only on the tracks that collect documents (the gym's
+            verification documents, the dietitian's licence). Trainers and
+            members are asked for none, so it promised a check that never ran. */}
+        {(role === "gym" || role === "dietitian") && (
+          <div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 10 }}>Why we ask</div>
+            <p style={{ fontSize: "12.5px", color: "var(--fg-3)", lineHeight: 1.6 }}>
+              Members see a verified badge on your profile only after ID and certification are confirmed by our team.
+            </p>
+          </div>
+        )}
       </aside>
     </div>
 
