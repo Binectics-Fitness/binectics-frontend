@@ -10,6 +10,7 @@ import { adminService, type AdminUserDetail, type AdminUserSuspensionResult } fr
 import { formatAdminDate, formatAdminDateTime, roleLabel } from "@/lib/admin/moderation";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { AdminPermission } from "@/lib/admin/permissions";
+import { AdminAccessCard } from "./AdminAccessCard";
 
 const SUSPEND_REASON_MAX = 500;
 
@@ -302,19 +303,17 @@ export function UserDetailClient({ userId }: { userId: string }) {
                     },
                     {
                       label: "Platform admin",
-                      value: user.is_admin
-                        ? user.admin_permissions.length
-                          ? `Yes · ${user.admin_permissions.join(", ")}`
-                          : "Yes · full access"
-                        : "No",
+                      value: user.is_admin ? "Yes" : "No",
                     },
                   ]}
                 />
-                <p className="text-[12px] mt-3" style={{ color: "var(--fg-3)" }}>
-                  Admin access is granted only by the grant-admin script, not from this page.
-                </p>
               </Card>
             </div>
+
+            {/* Present only for a caller with admins:read (null: not an admin). */}
+            {user.admin_access !== undefined && (
+              <AdminAccessCard user={user} access={user.admin_access} onChanged={load} />
+            )}
 
             <Card title={`Listings (${user.listings.length})`}>
               {user.listings.length === 0 ? (

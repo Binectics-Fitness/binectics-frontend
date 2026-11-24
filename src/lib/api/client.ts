@@ -76,6 +76,8 @@ interface RawResponseBody {
   required?: unknown;
   /** Whether it needs all of `required` or any one (ADMIN_PERMISSION_MISSING). */
   match?: unknown;
+  /** How many people hold a role that can't be deleted (ADMIN_ROLE_IN_USE). */
+  holder_count?: unknown;
 }
 
 /**
@@ -107,6 +109,8 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   // A refused admin route (403 ADMIN_PERMISSION_MISSING): what it needs.
   "required",
   "match",
+  // 409 ADMIN_ROLE_IN_USE: how many people hold the role.
+  "holder_count",
 ] as const;
 
 function detailsOf(
