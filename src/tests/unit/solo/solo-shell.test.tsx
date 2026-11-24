@@ -56,7 +56,6 @@ beforeEach(() => {
   flags.on = new Set();
   solo.answer = null;
   window.sessionStorage.clear();
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
 });
 afterEach(() => {
   vi.unstubAllGlobals();

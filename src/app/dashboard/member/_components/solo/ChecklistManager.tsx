@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { DSCard, Eyebrow } from "@/components/ds";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { useOnline, OFFLINE_WRITE_MESSAGE } from "@/hooks/useOnline";
 import {
   useAddSystemLine,
@@ -36,11 +35,6 @@ import {
 import { AutoTick, CardSkeleton, Row, Switch, TickButton, WriteError } from "./parts";
 import styles from "./solo.module.css";
 
-/** A tool line is offered only when the tool is there to tick it. */
-function toolOffered(key: ChecklistSystemKey): boolean {
-  if (key === ChecklistSystemKey.STARTER_SESSION) return isStarterProgramEnabled();
-  return true;
-}
 
 const LIMIT_MESSAGE = `You have ${CHECKLIST_MAX_ACTIVE} lines, which is the most. Remove or pause one to add another.`;
 
@@ -128,7 +122,7 @@ export function ChecklistManager() {
       </p>
 
       <ul className="mt-2">
-        {TOOL_ORDER.filter((k) => toolByKey.get(k) || toolOffered(k)).map((key) => {
+        {TOOL_ORDER.map((key) => {
           const line = toolByKey.get(key);
           const on = !!line?.active;
           const done = line ? (doneToday.get(line.id) ?? false) : false;

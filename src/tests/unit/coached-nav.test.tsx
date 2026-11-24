@@ -70,7 +70,6 @@ beforeEach(() => {
   pathname = "/dashboard/member";
   solo.answer = false;
   window.sessionStorage.clear();
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
 });
 afterEach(() => {
   vi.unstubAllGlobals();

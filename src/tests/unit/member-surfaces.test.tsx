@@ -396,6 +396,8 @@ describe("Classes on My gym (F15)", () => {
 describe("member nav (F8)", () => {
   it("has Billing, and every link is a real page", () => {
     expect(MEMBER_NAV_LINKS.map((l) => l.label)).toContain("Billing");
+    // No feature flag: Starter is always in the member nav, with no env set.
+    expect(MEMBER_NAV_LINKS.find((l) => l.label === "Starter")?.href).toBe("/dashboard/member/starter");
     expect(MEMBER_NAV_LINKS.find((l) => l.label === "Billing")?.href).toBe("/dashboard/member/billing");
     for (const link of MEMBER_NAV_LINKS) expect(isAppRoute(link.href)).toBe(true);
   });

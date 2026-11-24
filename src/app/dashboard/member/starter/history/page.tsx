@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { StarterHistory } from "@/components/starter/StarterHistory";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { StarterShell } from "../_shell";
 
 export const metadata: Metadata = {
@@ -10,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function StarterHistoryPage() {
-  if (!isStarterProgramEnabled()) notFound();
   return (
     <StarterShell>
       <StarterHistory />
