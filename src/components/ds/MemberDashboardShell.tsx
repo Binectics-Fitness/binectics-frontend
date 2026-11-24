@@ -13,7 +13,6 @@ import { Fragment, useEffect, useState } from "react";
 import { useNavDrawer } from "@/lib/ui/useNavDrawer";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useWorkspaceSwitch } from "@/hooks/useWorkspaceSwitch";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { paidContentOn } from "@/lib/paidContent/helpers";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
@@ -48,16 +47,14 @@ const BASE_MEMBER_NAV_LINKS = [
   { label: "Payments",    href: "/dashboard/member/payments" },
 ];
 
-/** The Starter Program link, shown only while its feature flag is on. */
+/** The Starter Program link. */
 export const STARTER_NAV_LINK = { label: "Starter", href: "/dashboard/member/starter" };
 
 /** Shown while paid content is on (runtime flag `paid_content`), before Billing. */
 export const PURCHASES_NAV_LINK = { label: "Purchases", href: "/dashboard/member/purchases" };
 
-/** The member's nav links; "Starter" joins them while the feature is on. */
-export const MEMBER_NAV_LINKS = isStarterProgramEnabled()
-  ? [...BASE_MEMBER_NAV_LINKS.slice(0, 8), STARTER_NAV_LINK, ...BASE_MEMBER_NAV_LINKS.slice(8)]
-  : BASE_MEMBER_NAV_LINKS;
+/** The member's nav links, with "Starter" after Requests. */
+export const MEMBER_NAV_LINKS = [...BASE_MEMBER_NAV_LINKS.slice(0, 8), STARTER_NAV_LINK, ...BASE_MEMBER_NAV_LINKS.slice(8)];
 
 /**
  * Whether a nav link is the current page: the page names its label, and a

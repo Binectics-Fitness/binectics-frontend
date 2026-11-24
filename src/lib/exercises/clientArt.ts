@@ -7,8 +7,8 @@ export interface LibraryRef {
   libraryVariant?: string | null;
 }
 
-/** Shown under a list that has illustrations. Never claims review or approval. */
-export const DEMO_ART_NOTE = "Illustrated demo art, not professionally reviewed.";
+/** Shown under a list that has illustrations. */
+export const DEMO_ART_NOTE = "Illustrated demo";
 
 /**
  * The bundled illustration key for a provider-assigned exercise, or null.

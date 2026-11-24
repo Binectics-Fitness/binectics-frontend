@@ -43,7 +43,7 @@ describe("ExerciseDetail", () => {
     for (const h of ["Muscles worked", "How to do it", "Form cues", "Common mistakes", "Stay safe", "Make it easier", "No equipment?"]) {
       expect(screen.getByRole("heading", { level: 2, name: h })).toBeInTheDocument();
     }
-    expect(screen.getByText(/not professionally reviewed/)).toBeInTheDocument();
+    expect(screen.getByText(/not medical advice\. Illustrated demo\./)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See Chair squat" })).toHaveAttribute("href", "/dashboard/member/exercises/chair-squat");
     expect(screen.getByRole("link", { name: "Back to your program" })).toHaveAttribute("href", "/dashboard/member/starter");
     expect(api.listMine).not.toHaveBeenCalled();

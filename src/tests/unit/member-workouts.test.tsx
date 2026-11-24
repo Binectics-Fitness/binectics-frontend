@@ -90,11 +90,11 @@ describe("member workout plan page", () => {
     });
     expect(await screen.findByText("Goblet squat")).toBeTruthy();
     expect(screen.getAllByTestId("exercise-art")).toHaveLength(1);
-    expect(screen.getByText("Illustrated demo")).toBeTruthy(); // sr-only accessible name of the tag
+    expect(screen.getByText("Illustrated demo", { selector: "span" })).toBeTruthy(); // sr-only accessible name of the tag
     expect(screen.queryByText(/Guide:/)).toBeNull();
     expect(screen.getByText("Plank")).toBeTruthy();
     expect(screen.getByText("Heavy")).toBeTruthy();
-    expect(screen.getByText("Illustrated demo art, not professionally reviewed.")).toBeTruthy();
+    expect(screen.getByText("Illustrated demo", { selector: "p" })).toBeTruthy();
     const img = document.querySelector("img");
     expect(img?.getAttribute("src")).toBe("/exercises/goblet-squat.svg");
   });

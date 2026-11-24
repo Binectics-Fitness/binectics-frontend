@@ -44,7 +44,6 @@
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | GA4 id (only after consent, from #339) | `src/lib/analytics/consent.ts` |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog key; added by #339 so the banner appears; wired by the PostHog PR | `src/lib/analytics/consent.ts` |
 | `NEXT_PUBLIC_FIREBASE_CONFIG`, `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | Web push (public by design) | `src/lib/push/push.ts` |
-| `NEXT_PUBLIC_FEATURE_STARTER_PROGRAM` | Feature flag | `src/lib/starter` |
 
 `.env.example` also lists `NEXT_PUBLIC_STRIPE_*`, `NEXT_PUBLIC_FLUTTERWAVE_*`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_ENABLE_*` and `NEXT_PUBLIC_MAINTENANCE_MODE`. No code reads them. None is a secret.
 

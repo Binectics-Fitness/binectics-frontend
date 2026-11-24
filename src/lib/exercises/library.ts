@@ -3,8 +3,7 @@
  * binectics-plans/provider-library-contract.md). React-free so the picker
  * logic is unit-tested directly.
  *
- * The art is illustrated demo art, not professionally reviewed. Never call it
- * approved, cleared or reviewed.
+ * The art is illustrated demo art.
  */
 
 /** Program block exercises are capped at 80 characters, workout plans at 200. */
@@ -15,7 +14,7 @@ export const MAX_INLINE_EXERCISES = 30;
 
 /** The neutral tag shown on provider-side art. Wording is an owner/lawyer decision (O-8). */
 export const DEMO_TAG = "Demo";
-export const DEMO_ART_NOTE = "Illustrated demo art, not professionally reviewed";
+export const DEMO_ART_NOTE = "Illustrated demo";
 
 export interface LibraryExercise {
   id: string;

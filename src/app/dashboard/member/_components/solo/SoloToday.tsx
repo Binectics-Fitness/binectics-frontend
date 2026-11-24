@@ -11,7 +11,6 @@ import { useChecklistToday, useLatestWeight, useWaterToday } from "@/lib/queries
 import type { FastSession } from "@/lib/api/fasting";
 import { useCurrentFast } from "@/lib/queries/fasting";
 import { useActiveStarter } from "@/lib/queries/starter";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { LOG_CATEGORY, LOG_ICON } from "@/lib/ui/categories";
@@ -75,7 +74,6 @@ export function SoloToday() {
   const { user } = useAuth();
   const online = useOnline();
   const now = useClientNow();
-  const starterOn = isStarterProgramEnabled();
 
   const water = useWaterToday();
   const checklist = useChecklistToday();
@@ -83,14 +81,14 @@ export function SoloToday() {
   // A fast ended from the card on this page: kept so the page does not swap layouts under its Undo.
   const [endedHere, setEndedHere] = useState<FastSession | null>(null);
   const weight = useLatestWeight(true);
-  const starter = useActiveStarter(starterOn);
+  const starter = useActiveStarter();
 
   const asked = [
     water,
     checklist,
     fasting,
     weight,
-    starterOn ? starter : null,
+    starter,
   ].filter((q): q is NonNullable<typeof q> => q !== null);
 
   const loading = asked.some((q) => q.isLoading);
@@ -100,7 +98,7 @@ export function SoloToday() {
   const hasList = (checklist.data?.items.length ?? 0) > 0;
   const hasFast = (!!fasting.data || !!endedHere);
   const hasWeight = !!weight.data;
-  const hasStarter = starterOn && !!starter.data?.program;
+  const hasStarter = !!starter.data?.program;
   const firstDay = !hasWater && !hasList && !hasWeight && !hasStarter && !hasFast;
 
   const updatedAt = Math.max(0, ...asked.map((q) => q.dataUpdatedAt));
@@ -150,9 +148,7 @@ export function SoloToday() {
             <StartCard title="Start a fast" text="16:8 or your own length" href={SOLO_HREFS.fasting} action="Start a fast" icon={LOG_ICON.fast} tone={categoryTone(LOG_CATEGORY.fast)} />
             <StartCard title="Count today's water" text="No glasses yet" href={SOLO_HREFS.water} action="Open water" icon={LOG_ICON.water} tone={categoryTone(LOG_CATEGORY.water)} />
             <StartCard title="Log your weight" text="Not yet" href="/dashboard/member/weight-log" action="Log weight" icon={LOG_ICON.weight} tone={categoryTone(LOG_CATEGORY.weight)} />
-            {starterOn && (
-              <StartCard title="Start a free program" text="Three questions" href="/dashboard/member/starter" action="Find a program" icon={LOG_ICON.session} tone={categoryTone(LOG_CATEGORY.session)} />
-            )}
+            <StartCard title="Start a free program" text="Three questions" href="/dashboard/member/starter" action="Find a program" icon={LOG_ICON.session} tone={categoryTone(LOG_CATEGORY.session)} />
             <StartCard title="Make a daily list" text="A few things you want to do most days." href={SOLO_HREFS.todayList} action="Build your list" icon={ListChecks} tone="neutral" />
           </div>
           <DSCard flat className="p-5">

@@ -27,12 +27,12 @@ const list = vi.hoisted(() => ({
   complete: vi.fn(), uncomplete: vi.fn(), addSystem: vi.fn(), removeSystem: vi.fn(),
 }));
 const progress = vi.hoisted(() => ({ getMyOwnProfiles: vi.fn(), getWeightLogs: vi.fn() }));
-const starterQ = vi.hoisted(() => ({ program: null as null | { name: string } }));
+const starterQ = vi.hoisted(() => ({ program: null as null | { name: string }, failed: false }));
 vi.mock("@/lib/api/water", async (o) => ({ ...(await o<typeof import("@/lib/api/water")>()), waterService: water }));
 vi.mock("@/lib/api/checklist", async (o) => ({ ...(await o<typeof import("@/lib/api/checklist")>()), checklistService: list }));
 vi.mock("@/lib/api/progress", async (o) => ({ ...(await o<typeof import("@/lib/api/progress")>()), progressService: progress }));
 vi.mock("@/lib/queries/starter", () => ({
-  useActiveStarter: () => ({ data: starterQ.program ? { program: starterQ.program, tasks: [] } : null, isLoading: false, isError: false, dataUpdatedAt: 0, refetch: vi.fn() }),
+  useActiveStarter: () => ({ data: starterQ.program ? { program: starterQ.program, tasks: [] } : null, isLoading: false, isError: starterQ.failed, dataUpdatedAt: 0, refetch: vi.fn() }),
 }));
 
 import { SoloToday } from "@/app/dashboard/member/_components/solo/SoloToday";
@@ -53,9 +53,9 @@ function renderUi(ui: ReactNode) {
 const setOnline = (v: boolean) => Object.defineProperty(window.navigator, "onLine", { value: v, configurable: true });
 
 beforeEach(() => {
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   starterQ.program = null;
+  starterQ.failed = false;
   [...Object.values(water), ...Object.values(list), ...Object.values(progress)].forEach((f) => f.mockReset());
   water.today.mockResolvedValue(ok(WATER));
   water.getSettings.mockResolvedValue(ok({ target_glasses: 8, glass_ml: 250 }));
@@ -98,9 +98,9 @@ describe("Today: first day", () => {
     expect(screen.queryByRole("button", { name: "+ 1 glass" })).toBeNull();
   });
 
-  it("offers the Starter Program only when the starter flag is on", async () => {
+  it("offers the Starter Program with no env set (no feature flag)", async () => {
     emptyEverything();
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "true");
+    vi.stubEnv("NODE_ENV", "production");
     renderUi(<SoloToday />);
     expect(await screen.findByRole("link", { name: "Find a program" })).toHaveAttribute("href", "/dashboard/member/starter");
   });
@@ -191,6 +191,7 @@ describe("Today: states", () => {
     water.today.mockResolvedValue(fail("down"));
     list.today.mockResolvedValue(fail("down"));
     progress.getMyOwnProfiles.mockResolvedValue(fail("down"));
+    starterQ.failed = true;
     renderUi(<SoloToday />);
     expect(await screen.findByText("We could not load Today")).toBeInTheDocument();
     water.today.mockResolvedValue(ok(WATER));

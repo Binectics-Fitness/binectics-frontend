@@ -87,8 +87,8 @@ export function GuidedSettingsDialog({ open, onClose }: { open: boolean; onClose
       )}
       <p className="mt-3 text-[13px] leading-snug" style={{ color: "var(--fg-3)" }}>
         Voice uses your browser&apos;s own text to speech. Keep this tab open: away for more than two minutes, and the
-        session comes back paused where you left it. The exercise figures are illustrated demo art, not
-        professionally reviewed. This is general guidance, not medical advice: stop if something hurts.
+        session comes back paused where you left it. The exercise figures are illustrated demos. This is general
+        guidance, not medical advice: stop if something hurts.
       </p>
       </div>
     </Modal>

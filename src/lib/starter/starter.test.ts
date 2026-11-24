@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   STARTER_NOT_MEDICAL_ADVICE,
   STARTER_STOP_NOTE,
@@ -6,7 +6,6 @@ import {
   safetyParagraphs,
   starterFactsLine,
 } from "./copy";
-import { isStarterProgramEnabled } from "./flag";
 import { suggestStarterGoal } from "./goals";
 import {
   addDaysLocal,
@@ -52,24 +51,10 @@ const program = (o: Partial<StarterProgram> = {}): StarterProgram => ({
   ...o,
 });
 
-describe("feature flag", () => {
-  afterEach(() => vi.unstubAllEnvs());
-  it("is on outside production by default", () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "");
-    expect(isStarterProgramEnabled()).toBe(true);
-  });
-  it("is off in production until set", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "");
-    expect(isStarterProgramEnabled()).toBe(false);
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "true");
-    expect(isStarterProgramEnabled()).toBe(true);
-  });
-  it("false turns it off everywhere", () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
-    expect(isStarterProgramEnabled()).toBe(false);
+describe("no feature flag", () => {
+  it("the Starter Program has no flag module left to switch it off", async () => {
+    const mods = import.meta.glob("./flag.ts");
+    expect(Object.keys(mods)).toEqual([]);
   });
 });
 
@@ -106,7 +91,8 @@ describe("copy", () => {
     const copy = await import("./copy");
     const all = Object.values(copy).filter((v): v is string => typeof v === "string").join(" ");
     expect(all).not.toMatch(/\b(approved|cleared|certified)\b/i);
-    expect(copy.STARTER_ART_NOTE).toMatch(/not been professionally reviewed/);
+    expect(copy.STARTER_ART_NOTE).toMatch(/Follow the written cues and go easy\./);
+    expect(copy.STARTER_ART_NOTE).not.toMatch(/review/i);
   });
 });
 

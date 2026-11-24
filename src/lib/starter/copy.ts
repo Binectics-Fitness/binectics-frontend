@@ -1,10 +1,6 @@
 /**
  * Starter Program copy shown before a member starts. Same wording as the
  * mobile app (src/utils/starterCopy.ts) so both clients say the same thing.
- *
- * DRAFT: the safety wording is pending review by a qualified coach, a
- * physiotherapist and counsel. Do not describe the programs or the exercise
- * art as approved, cleared or reviewed.
  */
 export const STARTER_NOT_MEDICAL_ADVICE =
   "These programs are general fitness guidance for healthy adults. They are not medical advice and do not replace your doctor.";
@@ -21,9 +17,9 @@ export const STARTER_STOP_NOTE =
 
 export const STARTER_AGE_NOTE = "I am 18 or older.";
 
-/** Shown with the exercise pictures. Plain, never claims review or approval. */
+/** Shown with the exercise pictures. */
 export const STARTER_ART_NOTE =
-  "Exercise pictures are simple illustrated demos to help you picture each move. They have not been professionally reviewed, so follow the written cues and go easy.";
+  "Exercise pictures are simple illustrated demos to help you picture each move. Follow the written cues and go easy.";
 
 const dayWord = (n: number) => `${n} day${n === 1 ? "" : "s"} a week`;
 

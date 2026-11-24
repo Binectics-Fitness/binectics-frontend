@@ -33,7 +33,6 @@ import { memberGoalsService } from "@/lib/api/memberGoals";
 import { countVisitsThisWeek, toWeekStart, visitsRow, type WeekStart } from "@/lib/checkins/visits";
 import { useCurrentFast } from "@/lib/queries/fasting";
 import { useActiveStarter } from "@/lib/queries/starter";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { localStatus } from "@/lib/solo/fastingRules";
 import {
   audienceOf,
@@ -167,8 +166,7 @@ function MemberHomeContent() {
   const fasting = useCurrentFast();
   // A fast ended from the dark card: kept so the card does not vanish under its Undo.
   const [endedHere, setEndedHere] = useState<FastSession | null>(null);
-  const starterOn = isStarterProgramEnabled();
-  const starter = useActiveStarter(starterOn);
+  const starter = useActiveStarter();
 
   useEffect(() => {
     let isMounted = true;
@@ -230,7 +228,7 @@ function MemberHomeContent() {
   // The plan.
   const program = snapshot.program;
   const tasks = snapshot.tasks ?? [];
-  const hasStarter = starterOn && !!starter.data?.program;
+  const hasStarter = !!starter.data?.program;
   const later = now && !program ? startsLater(snapshot.programs, now) : null;
   const hasPlan = !!program || hasStarter || hasCoachPlan(snapshot.programs, tasks);
   const planUnknown = snapshot.programs === null || snapshot.tasks === null;

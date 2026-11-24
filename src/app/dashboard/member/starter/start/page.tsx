@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { StartFlow } from "@/components/starter/StartFlow";
 import { AsyncSpinner } from "@/components/ds";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { StarterShell } from "../_shell";
 
 export const metadata: Metadata = {
@@ -12,7 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default function StartStarterPage() {
-  if (!isStarterProgramEnabled()) notFound();
   return (
     <StarterShell>
       <Suspense fallback={<AsyncSpinner size="page" label="Loading" />}>

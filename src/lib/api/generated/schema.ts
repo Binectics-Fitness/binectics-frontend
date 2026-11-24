@@ -2602,7 +2602,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The exercises a provider can attach to a plan or program (illustrated demo art, not professionally reviewed). Ids and names only; the art is delivered separately. `available: false` means the index could not be loaded and the picker should offer custom exercises only. */
+        /** The exercises a provider can attach to a plan or program (illustrated demo art). Ids and names only; the art is delivered separately. `available: false` means the index could not be loaded and the picker should offer custom exercises only. */
         get: operations["ExerciseLibraryController_list"];
         put?: never;
         post?: never;

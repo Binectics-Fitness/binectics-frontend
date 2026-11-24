@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { ExerciseDetail } from "@/components/exercises/ExerciseDetail";
 import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
 import { parseRowIndex } from "@/lib/exercises/exerciseDetail";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { StarterShell } from "../../starter/_shell";
 
 type Params = Promise<{ mediaId: string }>;
@@ -22,11 +21,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 /**
- * One exercise's own page. Gated with the Starter Program: its guidance is
- * the Starter exercise library, and every link to it comes from Starter.
+ * One exercise's own page. Its guidance is the Starter exercise library, and
+ * every link to it comes from Starter.
  */
 export default async function ExercisePage({ params, searchParams }: { params: Params; searchParams: Search }) {
-  if (!isStarterProgramEnabled()) notFound();
   const { mediaId } = await params;
   if (!MEDIA_ID.test(mediaId)) notFound();
   const sp = await searchParams;

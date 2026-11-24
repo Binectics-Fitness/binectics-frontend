@@ -38,7 +38,7 @@ describe("exercise info (port of mobile data/exerciseInfo.ts)", () => {
 
   it("keeps the disclaimer honest", () => {
     expect(EXERCISE_GUIDANCE_DISCLAIMER).toMatch(/not medical advice/);
-    expect(EXERCISE_GUIDANCE_DISCLAIMER).toMatch(/not professionally reviewed/);
+    expect(EXERCISE_GUIDANCE_DISCLAIMER).toBe("General guidance for beginners, not medical advice. Illustrated demo.");
   });
 
   it.each(MOBILE_IDS.map((id) => [id]))("%s is complete and makes no review claims", (id) => {

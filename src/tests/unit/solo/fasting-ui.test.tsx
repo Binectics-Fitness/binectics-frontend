@@ -80,7 +80,6 @@ function renderUi(ui: ReactNode) {
 const setOnline = (v: boolean) => Object.defineProperty(window.navigator, "onLine", { value: v, configurable: true });
 
 beforeEach(() => {
-  vi.stubEnv("NEXT_PUBLIC_FEATURE_STARTER_PROGRAM", "false");
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   [...Object.values(fasting), ...Object.values(water), ...Object.values(list), ...Object.values(progress)].forEach((f) => f.mockReset());
   fasting.settings.mockResolvedValue(ok(PASSED));

@@ -4,7 +4,6 @@ import { Clock, Droplet, Dumbbell, ListChecks, Scale, Utensils, type LucideIcon 
 import { IconTile } from "@/components/ds/IconTile";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tone } from "@/lib/ui/tones";
-import { isStarterProgramEnabled } from "@/lib/starter/flag";
 import { isStartPath, onlySoloTools, saveSoloTools, saveStartPath, type SoloTool, type StartPath } from "@/lib/solo/startChoice";
 import type { StepProps } from "./_components";
 
@@ -204,13 +203,13 @@ interface ToolOption {
 }
 
 /**
- * Only tools web has: fasting, water, the daily list, weight, and meals and
- * activity always; workouts only with the Starter Program flag. The journal
- * is not on web yet, so it is not offered here.
+ * Only tools web has: workouts (the Starter Program), fasting, water, the
+ * daily list, weight, and meals and activity. The journal is not on web yet,
+ * so it is not offered here.
  */
-export function availableTools(starterOn: boolean = isStarterProgramEnabled()): ToolOption[] {
+export function availableTools(): ToolOption[] {
   return [
-    ...(starterOn ? [{ id: "workouts" as const, icon: Dumbbell, tone: "move" as const }] : []),
+    { id: "workouts", icon: Dumbbell, tone: "move" },
     { id: "fasting", icon: Clock, tone: "fast" },
     { id: "water", icon: Droplet, tone: "water" },
     { id: "checklist", icon: ListChecks, tone: "neutral" },

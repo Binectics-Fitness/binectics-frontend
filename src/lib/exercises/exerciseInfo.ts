@@ -9,8 +9,7 @@
  * text.
  *
  * Honesty rules: this is general guidance written for beginners. It is NOT
- * medical advice and has NOT been reviewed by a qualified coach or clinician.
- * Never describe it as reviewed or approved. No statistics, no claims about
+ * medical advice. No statistics, no claims about
  * results. Each entry is written for its own movement; adding an exercise
  * means adding a full entry (the unit test fails on missing or empty fields).
  */
@@ -743,4 +742,4 @@ export function getExerciseInfo(mediaId?: string | null): ExerciseInfo | null {
 
 /** Shown wherever art or guidance is displayed. */
 export const EXERCISE_GUIDANCE_DISCLAIMER =
-  'General guidance for beginners, not medical advice. Illustrated demo art, not professionally reviewed.';
+  'General guidance for beginners, not medical advice. Illustrated demo.';
