@@ -49,6 +49,16 @@ vi.mock("@/lib/api/credentials", () => ({
 }));
 vi.mock("@/app/onboarding/_components", () => ({ UploadZone: () => null }));
 vi.mock("@/components/Toast", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
+// The verification status line (#372) reads a query client and its own
+// query; neither is what this test is about.
+vi.mock("@/lib/queries/verification", () => ({
+  MY_VERIFICATION_KEY: ["verification", "me"],
+  useMyVerification: () => ({ data: [] }),
+}));
+vi.mock("@tanstack/react-query", async (orig) => ({
+  ...(await orig<typeof import("@tanstack/react-query")>()),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}));
 
 describe("CredentialsTab licence country", () => {
   it("offers the API's countries and keeps a saved one outside the old list", async () => {
