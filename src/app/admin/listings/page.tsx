@@ -9,6 +9,8 @@ import { ActionModal } from "@/components/ds/ActionModal";
 import { toast } from "@/components/Toast";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { adminService } from "@/lib/api/admin";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 import {
   MarketplaceVerificationBadge,
   type MarketplaceListing,
@@ -73,6 +75,9 @@ function TypePill({ type }: { type: "Gym" | "Trainer" | "Dietitian" }) {
 }
 
 export default function AdminListingsPage() {
+  // Suspend, unsuspend and verify need content:write; without it the
+  // column is left out (the API refuses them anyway).
+  const canModerate = useAdminAccess().can(AdminPermission.CONTENT_WRITE);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -279,7 +284,7 @@ export default function AdminListingsPage() {
           <table className="w-full text-[13.5px]" style={{ borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                {["Provider", "Type", "Country", "Rating", "Status", "Actions"].map((h) => (
+                {["Provider", "Type", "Country", "Rating", "Status", ...(canModerate ? ["Actions"] : [])].map((h) => (
                   <th
                     key={h}
                     className="font-mono text-[10.5px] uppercase tracking-[0.04em] py-2.5 px-4.5 text-left"
@@ -358,6 +363,7 @@ export default function AdminListingsPage() {
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <StatusBadge listing={l} />
                       </td>
+                      {canModerate && (
                       <td className="py-3 px-4.5" style={{ borderBottom: "1px solid var(--border)" }}>
                         <div className="flex gap-1.5">
                           {l.is_suspended ? (
@@ -433,6 +439,7 @@ export default function AdminListingsPage() {
                             )}
                         </div>
                       </td>
+                      )}
                     </tr>
                   );
                 })}

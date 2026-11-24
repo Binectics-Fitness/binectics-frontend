@@ -25,6 +25,8 @@ const api = vi.hoisted(() => ({
   toastError: vi.fn(),
 }));
 
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("@/components/ds/AdminDashboardShell", () => ({
   AdminDashboardShell: ({ children, actions }: { children: ReactNode; actions?: ReactNode }) => (
     <div>

@@ -10,6 +10,11 @@ import { isAdminLoginPath } from "@/lib/routing/adminPaths";
 import { getDeviceId } from "@/lib/device/deviceId";
 import { ORG_CLOSED_MESSAGE } from "@/lib/orgClosure/closure";
 import {
+  ADMIN_PERMISSION_MISSING,
+  ADMIN_PERMISSION_MISSING_MESSAGE,
+  notifyAdminPermissionMissing,
+} from "@/lib/admin/accessEvents";
+import {
   ACCOUNT_STATE_ROUTES,
   isAccountStateRoute,
 } from "@/lib/routing/accountState";
@@ -67,6 +72,10 @@ interface RawResponseBody {
   overlaps_index?: unknown;
   /** Why auto-renew isn't offered (AUTO_RENEW_NOT_AVAILABLE). */
   reason?: unknown;
+  /** The admin permissions a refused route needs (ADMIN_PERMISSION_MISSING). */
+  required?: unknown;
+  /** Whether it needs all of `required` or any one (ADMIN_PERMISSION_MISSING). */
+  match?: unknown;
 }
 
 /**
@@ -95,6 +104,9 @@ const TOP_LEVEL_DETAIL_FIELDS = [
   "index",
   "field",
   "overlaps_index",
+  // A refused admin route (403 ADMIN_PERMISSION_MISSING): what it needs.
+  "required",
+  "match",
 ] as const;
 
 function detailsOf(
@@ -283,6 +295,19 @@ class ApiClient {
       }
       if (response.status === 409 && (body.code === "ORG_CLOSED" || body.error === "ORG_CLOSED")) {
         message = ORG_CLOSED_MESSAGE;
+      }
+      // An admin route refused for a missing permission: the admin's access
+      // changed under them (or the UI offered something it shouldn't). Say
+      // it in words, and tell useAdminAccess to refetch so the nav and the
+      // actions catch up.
+      if (response.status === 403 && body.code === ADMIN_PERMISSION_MISSING) {
+        message = ADMIN_PERMISSION_MISSING_MESSAGE;
+        notifyAdminPermissionMissing({
+          required: Array.isArray(body.required)
+            ? body.required.filter((r): r is string => typeof r === "string")
+            : undefined,
+          match: body.match === "all" || body.match === "any" ? body.match : undefined,
+        });
       }
 
       return {

@@ -28,7 +28,14 @@ export type ChargeRefundPanelProps =
       payerName?: string;
       onChanged?: () => void;
     }
-  | { mode: "admin"; chargeId: string; onChanged?: () => void };
+  | {
+      mode: "admin";
+      chargeId: string;
+      onChanged?: () => void;
+      /** The admin holds refunds:write; without it the refund form is left
+       *  out and only the figures show (the API refuses it anyway). */
+      canRefund?: boolean;
+    };
 
 function when(iso?: string | null): string {
   if (!iso) return "";
@@ -272,7 +279,7 @@ export function ChargeRefundPanel(props: ChargeRefundPanelProps) {
         </p>
       ) : null}
 
-      {quote.action !== "none" ? (
+      {quote.action !== "none" && (props.mode !== "admin" || props.canRefund !== false) ? (
         <form
           className="flex flex-col gap-3"
           onSubmit={(e) => {

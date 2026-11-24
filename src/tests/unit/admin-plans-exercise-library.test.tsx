@@ -8,6 +8,8 @@ import AdminPlansPage from "@/app/admin/plans/page";
 const listPlans = vi.fn();
 const updatePlan = vi.fn();
 
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("@/components/ds/AdminDashboardShell", () => ({
   AdminDashboardShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));

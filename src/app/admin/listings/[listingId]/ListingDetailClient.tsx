@@ -10,6 +10,8 @@ import { adminService, type AdminListingDetail } from "@/lib/api/admin";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { MarketplaceVerificationBadge } from "@/lib/types";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 type ModalKind = "suspend" | "unsuspend" | "award" | "revoke" | null;
 
@@ -63,6 +65,11 @@ function formatBytes(n: number): string {
 }
 
 export function ListingDetailClient({ listingId }: { listingId: string }) {
+  const access = useAdminAccess();
+  // Badges and suspension need content:write; the documents (signed links)
+  // need verification:read, and the API sends them as null without it.
+  const canModerate = access.can(AdminPermission.CONTENT_WRITE);
+  const canSeeDocuments = access.can(AdminPermission.VERIFICATION_READ);
   const [listing, setListing] = useState<AdminListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +120,7 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
   const hasBadge =
     !!listing && listing.verification_badge !== MarketplaceVerificationBadge.NONE;
 
-  const actions = listing ? (
+  const actions = listing && canModerate ? (
     <div className="flex flex-wrap items-center gap-2">
       {hasBadge ? (
         <button type="button" className="btn-ghost-v2" onClick={() => setModal("revoke")}>
@@ -312,6 +319,7 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
                 />
               </Card>
 
+              {canSeeDocuments && listing.documents ? (
               <Card title={`Documents (${listing.documents.length})`}>
                 {listing.documents.length === 0 ? (
                   <EmptySlate
@@ -351,6 +359,7 @@ export function ListingDetailClient({ listingId }: { listingId: string }) {
                   </ul>
                 )}
               </Card>
+              ) : null}
             </div>
           </div>
         </>

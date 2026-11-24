@@ -15,6 +15,8 @@ import {
   type FlagFilter,
 } from "@/lib/featureFlags/helpers";
 import { ConfirmFlagChange, flagWriteError } from "./ConfirmFlagChange";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 /**
  * Admin: runtime feature flags (GET/PATCH /admin/feature-flags).
@@ -25,6 +27,8 @@ import { ConfirmFlagChange, flagWriteError } from "./ConfirmFlagChange";
  */
 export default function FeatureFlagsClient() {
   const queryClient = useQueryClient();
+  // Turning a flag on or off needs platform:write.
+  const canChange = useAdminAccess().can(AdminPermission.PLATFORM_WRITE);
   const { data, isLoading, error, refetch } = useQuery<AdminFeatureFlag[]>({
     queryKey: featureFlagKeys.adminList(),
     queryFn: async () => {
@@ -103,7 +107,7 @@ export default function FeatureFlagsClient() {
           <ul className="flex flex-col gap-3 mt-4" aria-label="Feature flags">
             {rows.map((flag) => (
               <li key={flag.key}>
-                <FlagCard flag={flag} onToggle={() => setToggling(flag)} />
+                <FlagCard flag={flag} onToggle={canChange ? () => setToggling(flag) : undefined} />
               </li>
             ))}
           </ul>
@@ -133,7 +137,8 @@ export default function FeatureFlagsClient() {
   );
 }
 
-function FlagCard({ flag, onToggle }: { flag: AdminFeatureFlag; onToggle: () => void }) {
+/** Without `onToggle` (no platform:write) the card has no toggle button. */
+function FlagCard({ flag, onToggle }: { flag: AdminFeatureFlag; onToggle?: () => void }) {
   const overrides = describeOverrides(flag);
   return (
     <DSCard className="p-4 sm:p-5">
@@ -172,15 +177,17 @@ function FlagCard({ flag, onToggle }: { flag: AdminFeatureFlag; onToggle: () => 
           <Link href={`/admin/feature-flags/${encodeURIComponent(flag.key)}`} className="btn-ghost-v2 sm">
             Overrides &amp; history
           </Link>
-          <button
-            type="button"
-            className="btn-ghost-v2 sm"
-            style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
-            onClick={onToggle}
-            aria-label={`Turn ${flag.key} ${flag.enabled ? "off" : "on"} everywhere`}
-          >
-            {flag.enabled ? "Turn off" : "Turn on"}
-          </button>
+          {onToggle && (
+            <button
+              type="button"
+              className="btn-ghost-v2 sm"
+              style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
+              onClick={onToggle}
+              aria-label={`Turn ${flag.key} ${flag.enabled ? "off" : "on"} everywhere`}
+            >
+              {flag.enabled ? "Turn off" : "Turn on"}
+            </button>
+          )}
         </div>
       </div>
     </DSCard>

@@ -27,6 +27,8 @@ import {
 } from "@/lib/api/admin";
 import { revenueHeadline, revenueRows } from "@/lib/admin/revenue";
 import { formatAdminDate, roleLabel } from "@/lib/admin/moderation";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -45,6 +47,10 @@ function initials(u: AdminUserListItem): string {
 }
 
 export default function AdminUsersPage() {
+  // The platform counts come from metrics/overview (analytics:read). Without
+  // it the counts are left out rather than fetched and refused.
+  const access = useAdminAccess();
+  const canSeeCounts = access.can(AdminPermission.ANALYTICS_READ);
   const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
 
@@ -57,6 +63,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!canSeeCounts) return;
     let active = true;
     void (async () => {
       const res = await adminService.getPlatformMetrics();
@@ -67,7 +74,7 @@ export default function AdminUsersPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [canSeeCounts]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -143,11 +150,13 @@ export default function AdminUsersPage() {
         subtitle="Search by email or name, then open an account to see its details or suspend it."
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {kpis.map((kpi) => (
-          <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={<span className="whitespace-normal">{kpi.delta}</span>} />
-        ))}
-      </div>
+      {canSeeCounts && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {kpis.map((kpi) => (
+            <DSStatCard key={kpi.label} size="sm" label={kpi.label} value={kpi.value} delta={<span className="whitespace-normal">{kpi.delta}</span>} />
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <input

@@ -398,7 +398,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One listing with owner, organization, badge awarder and documents */
+        /**
+         * One listing with owner, organization, badge awarder and documents
+         * @description documents (signed links) needs verification:read as well; without it the field is null.
+         */
         get: operations["AdminController_getListingDetail"];
         put?: never;
         post?: never;
@@ -477,6 +480,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/me/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's effective admin permissions and roles, resolved fresh on every request */
+        get: operations["AdminAccessController_myAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/member-billing/reconcile": {
         parameters: {
             query?: never;
@@ -523,6 +543,23 @@ export interface paths {
         };
         /** An organization's KYC documents as short-lived signed links, for verification review */
         get: operations["AdminOrganizationsController_getVerificationDocuments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every admin permission with its label, description, PII flag and kind, grouped by area */
+        get: operations["AdminAccessController_listPermissions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -977,22 +1014,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/user/permission": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["AdminController_getPermissions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -1044,6 +1065,23 @@ export interface paths {
         patch: operations["AdminController_suspendUser"];
         trace?: never;
     };
+    "/api/v1/admin/users/{userId}/unlock-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lift every sign-in lock held against this account (support: "I cannot sign in"). Sources that sprayed many accounts stay blocked until their own lock ends. */
+        post: operations["AdminUsersController_unlockLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users/{userId}/unsuspend": {
         parameters: {
             query?: never;
@@ -1059,6 +1097,23 @@ export interface paths {
         head?: never;
         /** Unsuspend a user account and restore listings */
         patch: operations["AdminController_unsuspendUser"];
+        trace?: never;
+    };
+    "/api/v1/app-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Minimum and recommended mobile app versions and store links */
+        get: operations["AppConfigController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/auth/account/delete": {
@@ -1259,7 +1314,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Resend OTP verification code */
+        /**
+         * Resend OTP verification code
+         * @description Answers 200 with the same body whether the address has no account, has an already verified account, or got a new code: the endpoint does not reveal which addresses are registered, and mails only an account that is pending verification. An account a gym created and nobody claimed gets its set-password link instead and `data.claim_link_sent: true`. 429 when the per-email or per-IP cap is hit; 503 OTP_SEND_FAILED when the mail could not be sent.
+         */
         post: operations["AuthController_resendOtp"];
         delete?: never;
         options?: never;
@@ -1426,6 +1484,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkins/organizations/{organizationId}/members/{memberUserId}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A member's check-in and class activity at this organisation
+         * @description Total and last-30-day visits, the last visit, confirmed class bookings (last 30 days and the next upcoming), classes staff marked attended, and the 20 most recent check-ins and booked classes together. Duplicate scans are not counted. Only this organisation's rows are read.
+         */
+        get: operations["CheckinsController_getMemberActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkins/organizations/{organizationId}/rejections": {
         parameters: {
             query?: never;
@@ -1471,6 +1549,95 @@ export interface paths {
         put?: never;
         /** Record a QR check-in for the authenticated member */
         post: operations["CheckinsController_scanCheckIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checklist/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All my lines, active and paused */
+        get: operations["ChecklistController_list"];
+        put?: never;
+        /** Add my own line (max 12 active) */
+        post: operations["ChecklistController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checklist/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a line and its ticks */
+        delete: operations["ChecklistController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit a line: label (custom), days, active, order */
+        patch: operations["ChecklistController_update"];
+        trace?: never;
+    };
+    "/api/v1/checklist/items/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tick a custom line for a day (tool lines tick themselves: 400) */
+        post: operations["ChecklistController_complete"];
+        /** Undo a tick on a custom line */
+        delete: operations["ChecklistController_uncomplete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checklist/system/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Show a tool on my checklist (idempotent; ticks itself) */
+        post: operations["ChecklistController_addSystem"];
+        /** Take a tool off my checklist */
+        delete: operations["ChecklistController_removeSystem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checklist/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's lines (by weekday) with done, derived from real data for tool lines */
+        get: operations["ChecklistController_today"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1613,6 +1780,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/consultations/bookings/validate-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview a discount code on a session price (does not redeem it) */
+        post: operations["ConsultationsController_validateBookingCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/consultations/catalog": {
         parameters: {
             query?: never;
@@ -1673,7 +1857,10 @@ export interface paths {
         };
         /** Get my availability rules */
         get: operations["ConsultationsController_getMyAvailability"];
-        /** Replace my availability rules */
+        /**
+         * Replace my availability rules
+         * @description Refuses (400) a rule that ends at or before it starts (AVAILABILITY_END_BEFORE_START) and two active rules that overlap on the same day (AVAILABILITY_OVERLAP; back to back is fine). The body names the rule: `index` (its position in `rules`), `field` ('startTime' | 'endTime'), and for an overlap `overlaps_index` (the earlier rule).
+         */
         put: operations["ConsultationsController_setMyAvailability"];
         post?: never;
         delete?: never;
@@ -1726,7 +1913,10 @@ export interface paths {
         /** Get my availability exceptions */
         get: operations["ConsultationsController_getMyExceptions"];
         put?: never;
-        /** Create availability exception */
+        /**
+         * Create availability exception
+         * @description Custom hours that end at or before they start are refused (400 AVAILABILITY_END_BEFORE_START, field 'endTime'). Adding a block that already exists (same date and type, and for custom hours the same times) returns the existing one instead of storing a second.
+         */
         post: operations["ConsultationsController_createException"];
         delete?: never;
         options?: never;
@@ -1840,6 +2030,363 @@ export interface paths {
         patch: operations["ConsultationsController_updateType"];
         trace?: never;
     };
+    "/api/v1/content/{kind}/{id}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set a program or library meal plan free or paid
+         * @description 400 FEATURE_DISABLED (paid, flag off), CONTENT_ACCESS_INVALID, CONTENT_NO_SELLER_ORG, CURRENCY_NOT_SELECTABLE, PAID_MEAL_PLAN_IN_FREE_PROGRAM (with conflicts).
+         */
+        put: operations["ContentAccessController_setAccess"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/{kind}/{id}/access-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Does this client have this item? (the assign dialog) */
+        get: operations["ContentAccessController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/{kind}/{id}/ask-to-pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask a client to buy the item or join a plan */
+        post: operations["ContentAccessController_askToPay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/{kind}/{id}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start buying a paid program or library meal plan (server-side price)
+         * @description 400 FEATURE_DISABLED / CONTENT_NOT_FOR_SALE / CURRENCY_NOT_SELECTABLE, 403 CONTENT_NO_SEAT / CONTENT_OWN_ITEM, 409 CONTENT_ALREADY_OWNED. Returns { purchase, payment }.
+         */
+        post: operations["ContentPurchaseController_checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/{kind}/{id}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active grants of one item */
+        get: operations["ContentAccessController_grants"];
+        put?: never;
+        /** Give a paid item to a client for free */
+        post: operations["ContentAccessController_grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/{kind}/{id}/offer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A paid item's public offer, and whether the caller has it
+         * @description 404 for unknown, free, or unlisted items the caller never held. for_sale is false (no prices, no plans) when paid_content is off for the seller.
+         */
+        get: operations["ContentMemberController_offer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/entitlements/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's own access to paid programs and meal plans
+         * @description Purchases, grants, carry-overs and live plan inclusion. Not behind the paid_content flag: owned items stay visible. Query: limit (1-50, default 20), cursor (opaque, from next_cursor). Returns { items, next_cursor }.
+         */
+        get: operations["ContentMemberController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/grants/{grantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw a grant (delivered copies freeze if nothing else gives access) */
+        delete: operations["ContentAccessController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/organizations/{organizationId}/export/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download paid-content sales of an organization (CSV or JSON). Owner always, even after it is closed; Admin and Manager only while it is open
+         * @description One row per paid or refunded sale over [from, to) by paid_at (default: all time), oldest first. Integer minor units plus the currency code and exponent; never summed across currencies. Streamed. Anyone else gets 404. Each download is written to the audit log.
+         */
+        get: operations["ContentSalesExportController_sales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/organizations/{organizationId}/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paid-content sales of an organization (owner, Admin, Manager). Paginated with limit/skip; filter by status and trainer_id. */
+        get: operations["ContentOrgSalesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/programs/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a program you have access to yourself (Start today / pick a date) */
+        post: operations["ContentPurchaseController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/purchases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of the caller's own purchases (404 for anyone else's) */
+        get: operations["ContentPurchaseController_one"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/purchases/{id}/verify-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify a purchase with the gateway and unlock the item */
+        post: operations["ContentPurchaseController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/purchases/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's own purchases */
+        get: operations["ContentPurchaseController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sales of your paid programs and meal plans */
+        get: operations["ContentSalesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/content/sales/{id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a sale in full (own-key: sent now; platform-collected: requested from Binectics). The buyer’s copy freezes once processed. */
+        post: operations["ContentSalesController_refund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coupons/organizations/{organizationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's discount codes, newest first */
+        get: operations["CouponsController_list"];
+        put?: never;
+        /** Create a discount code */
+        post: operations["CouponsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coupons/organizations/{organizationId}/{couponId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Switch a code back on */
+        post: operations["CouponsController_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coupons/organizations/{organizationId}/{couponId}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Switch a code off (past uses stand; checkouts in flight finish) */
+        post: operations["CouponsController_deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coupons/organizations/{organizationId}/{couponId}/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paid uses of a code, newest first */
+        get: operations["CouponsController_redemptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/credentials/me": {
         parameters: {
             query?: never;
@@ -1937,6 +2484,300 @@ export interface paths {
         put?: never;
         /** Add evidence: a note and/or a private document uploaded via POST /upload/document */
         post: operations["DisputesController_addEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exercise-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The exercises a provider can attach to a plan or program (illustrated demo art, not professionally reviewed). Ids and names only; the art is delivered separately. `available: false` means the index could not be loaded and the picker should offer custom exercises only. */
+        get: operations["ExerciseLibraryController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My plans, newest first (status filter, limit) */
+        get: operations["FastingPlansController_list"];
+        put?: never;
+        /** Create a plan (one active or paused plan at a time, up to 10 in all). Needs the safety check passed. */
+        post: operations["FastingPlansController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my plans */
+        get: operations["FastingPlansController_get"];
+        put?: never;
+        post?: never;
+        /** Delete a plan only. Its fasts stay in history with plan_id cleared. */
+        delete: operations["FastingPlansController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit name, window, weekdays, reminders or zone. start_day only before the plan starts; days only before it starts or upwards (max 60). */
+        patch: operations["FastingPlansController_update"];
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End a plan (always available) */
+        post: operations["FastingPlansController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause an active plan */
+        post: operations["FastingPlansController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume a paused plan */
+        post: operations["FastingPlansController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/{id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A plain count of the closed fasts on this plan: no per-day flags, no missing days, no percentages */
+        get: operations["FastingPlansController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/plans/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My active or paused plan, or null */
+        get: operations["FastingPlansController_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/screening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One-time safety check. Stores only passed/at/version, never the answers. */
+        post: operations["FastingController_screening"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My finished fasts, newest first (cursor paged) */
+        get: operations["FastingController_history"];
+        put?: never;
+        /** Start a fast (one running at a time) */
+        post: operations["FastingController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete one of my fasts */
+        delete: operations["FastingController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit start, end, target, preset or note */
+        patch: operations["FastingController_edit"];
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End a running fast (ended_at optional) */
+        post: operations["FastingController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/{id}/feelings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a private how-I-feel entry (max 20 per fast) */
+        post: operations["FastingController_feeling"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/{id}/undo-end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen a fast ended in the last 10 minutes */
+        post: operations["FastingController_undoEnd"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My running fast, or null. Past its cap: expired_unclosed. */
+        get: operations["FastingController_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/sessions/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counts and hours per local day for a week strip (by the day a fast ended) */
+        get: operations["FastingController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fasting/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My fasting settings (the safety check result) */
+        get: operations["FastingController_mySettings"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2598,7 +3439,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search/browse published marketplace listings */
+        /**
+         * Search/browse published marketplace listings
+         * @description Listings not accepting new clients come after the ones that are, in every sort. Each card carries accepting_clients, has_free_intro (a solo provider with their own active free session; always false for organization listings) and location_precision ("exact" when the provider placed the listing, else "city"; distances from a city-level point are approximate). The stored point is never returned.
+         */
         get: operations["MarketplaceController_searchListings"];
         put?: never;
         post?: never;
@@ -2687,6 +3531,23 @@ export interface paths {
         put?: never;
         /** Open the gateway checkout for a plan, at the plan's own price */
         post: operations["MarketplaceController_startPlanCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/listings/{id}/plans/{planId}/validate-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview a discount code on a plan (does not redeem it) */
+        post: operations["MarketplaceController_validatePlanCode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2798,6 +3659,23 @@ export interface paths {
         };
         /** Get a single marketplace listing by slug */
         get: operations["MarketplaceController_getListingBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/listings/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Count the listings a search would return (same filters as GET /marketplace/listings; sort and paging ignored) */
+        get: operations["MarketplaceController_countListings"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2925,6 +3803,23 @@ export interface paths {
         head?: never;
         /** Reject a request */
         patch: operations["MarketplaceProController_rejectRequest"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/my-listing/session-price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's cheapest priced session: what an 'auto' listing price shows (null when none) */
+        get: operations["MarketplaceProController_getSessionPrice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/my-listing/unpublish": {
@@ -3547,6 +4442,23 @@ export interface paths {
         patch: operations["MarketplaceOrgController_unpublishListing"];
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organization's listings (one per location), oldest first: where a plan can be sold */
+        get: operations["MarketplaceOrgController_getLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/member-billing/charges": {
         parameters: {
             query?: never;
@@ -3684,6 +4596,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/health-form": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A member's health form status (no answers): not_sent, pending or done, and the follow-up flag */
+        get: operations["OrgHealthFormsController_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/health-form/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A member's health form answers. Each read is audit-logged. */
+        get: operations["OrgHealthFormsController_answers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/health-form/followed-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark the follow-up done (who and when) */
+        post: operations["OrgHealthFormsController_followedUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/members/{memberUserId}/restore": {
         parameters: {
             query?: never;
@@ -3802,6 +4765,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/marketplace/organizations/{organizationId}/payout-account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The payout bank account, masked (owner only)
+         * @description account is null when none is saved. payouts_enabled stays false until KYC verification (payouts_blocked_reason: kyc_required).
+         */
+        get: operations["OrgPayoutAccountController_get"];
+        /**
+         * Save the payout bank account, replacing any other (owner only; audited)
+         * @description Resolved again with Paystack before it is stored; a client-sent account name is never used. Same errors as resolve.
+         */
+        put: operations["OrgPayoutAccountController_save"];
+        post?: never;
+        /** Remove the payout bank account (owner only; audited) */
+        delete: operations["OrgPayoutAccountController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/payout-account/banks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Paystack's banks for a currency (default: the workspace's)
+         * @description 502 PAYOUT_BANK_LOOKUP_UNAVAILABLE when Paystack could not be asked.
+         */
+        get: operations["OrgPayoutAccountController_banks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/payout-account/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up the account name for a bank and number (saves nothing)
+         * @description The name comes from Paystack (platform key). 10 a minute per user and 50 a day per workspace (429 PAYOUT_RESOLVE_DAILY_LIMIT). 400 PAYOUT_BANK_UNKNOWN / PAYOUT_CURRENCY_NOT_ALLOWED, 422 PAYOUT_ACCOUNT_NOT_RESOLVED, 502 PAYOUT_BANK_LOOKUP_UNAVAILABLE.
+         */
+        post: operations["OrgPayoutAccountController_resolve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/marketplace/organizations/{organizationId}/plans": {
         parameters: {
             query?: never;
@@ -3871,6 +4899,27 @@ export interface paths {
         head?: never;
         /** Deactivate organization membership plan */
         patch: operations["MarketplaceOrgController_deactivatePlan"];
+        trace?: never;
+    };
+    "/api/v1/marketplace/organizations/{organizationId}/plans/{planId}/includes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Programs and meal plans a plan includes */
+        get: operations["PlanIncludesController_get"];
+        /**
+         * Replace what a plan includes
+         * @description Added items become paid. Removed items stay with current members until their term ends (carry-over).
+         */
+        put: operations["PlanIncludesController_set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/marketplace/organizations/{organizationId}/price-currencies": {
@@ -4123,7 +5172,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Re-send the welcome / set-your-password email to an enrolled member */
+        /** Re-send the set-your-password email to an unclaimed member (409 MEMBER_ALREADY_CLAIMED once they have claimed their account) */
         post: operations["MarketplaceOrgController_resendMemberInvite"];
         delete?: never;
         options?: never;
@@ -4309,6 +5358,303 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/health-forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My gyms' health forms: pending ones while the gym asks for them, and every one I sent */
+        get: operations["MyHealthFormsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/health-forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my health forms, with its questions */
+        get: operations["MyHealthFormsController_one"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/health-forms/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send my answers. 400 HEALTH_FORM_INCOMPLETE when a yes/no is missing; 409 HEALTH_FORM_ALREADY_SENT. */
+        post: operations["MyHealthFormsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-billing/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What I owe gyms, per currency, with each item */
+        get: operations["MemberPaymentsController_owed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-billing/charges/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One thing I owe, in any state (404 for anyone else’s) */
+        get: operations["MemberPaymentsController_one"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-billing/charges/{id}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the Paystack checkout for what I owe; asking again returns the same checkout */
+        post: operations["MemberPaymentsController_checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-billing/charges/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask the gateway about my payment and settle it. The checkout callback is never proof. */
+        post: operations["MemberPaymentsController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My goals (active; archived with include_archived) */
+        get: operations["MemberGoalsController_list"];
+        put?: never;
+        /** Add a goal (10 active, 50 in all) */
+        post: operations["MemberGoalsController_make"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-goals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a goal for good */
+        delete: operations["MemberGoalsController_discard"];
+        options?: never;
+        head?: never;
+        /** Change a goal, archive it (active false) or restore it */
+        patch: operations["MemberGoalsController_edit"];
+        trace?: never;
+    };
+    "/api/v1/member-goals/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This week's count (from my real logs) and the target, per weekly goal */
+        get: operations["MemberGoalsController_progress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-goals/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My goal settings (week start, hide daily weights) */
+        get: operations["MemberGoalsController_mySettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change my week start or hide-daily-weights choice (either, or both) */
+        patch: operations["MemberGoalsController_updateMySettings"];
+        trace?: never;
+    };
+    "/api/v1/member-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Everything I logged, newest first, paged (cursor on time and id), filter by type and local days */
+        get: operations["MemberHistoryController_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My notes, newest first, paged */
+        get: operations["MemberJournalController_list"];
+        put?: never;
+        /** Write a private note (5 a day, 1000 in all). A repeated client_op_id adds nothing. */
+        post: operations["MemberJournalController_write"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-notes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my notes */
+        get: operations["MemberJournalController_getOne"];
+        put?: never;
+        post?: never;
+        /** Delete my note */
+        delete: operations["MemberJournalController_discard"];
+        options?: never;
+        head?: never;
+        /** Change the text or mood of my note */
+        patch: operations["MemberJournalController_edit"];
+        trace?: never;
+    };
+    "/api/v1/member-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One metric as at most 120 points (day, week or month buckets): average for weight and steps, total for fasting hours, water and activity minutes */
+        get: operations["MemberSeriesController_read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-series/weight/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weight then and now: the average of the last 7 days against the 7 days ending 4 weeks, 3 months or 1 year earlier */
+        get: operations["MemberSeriesController_compare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/member-targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My targets: weight range, fasting window and the water aim (a read-only mirror of GET /water/settings target_glasses) */
+        get: operations["MemberTargetsController_read"];
+        put?: never;
+        post?: never;
+        /** Clear every target, the water aim included */
+        delete: operations["MemberTargetsController_clear"];
+        options?: never;
+        head?: never;
+        /** Set or clear targets (partial: a missing key is untouched, null clears). water_glasses is saved as the water setting. */
+        patch: operations["MemberTargetsController_change"];
         trace?: never;
     };
     "/api/v1/messaging/broadcast": {
@@ -4582,6 +5928,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my-programs/{instanceId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave my starter program (history is kept) */
+        post: operations["StarterMyProgramsController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/{instanceId}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Turn the morning reminder on or off */
+        patch: operations["StarterMyProgramsController_reminders"];
+        trace?: never;
+    };
+    "/api/v1/my-programs/{instanceId}/sharing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Choose which providers can see my starter */
+        patch: operations["StarterMyProgramsController_sharing"];
+        trace?: never;
+    };
+    "/api/v1/my-programs/{instanceId}/swap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave my starter and start another */
+        post: operations["StarterMyProgramsController_swap"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/my-programs/agenda": {
         parameters: {
             query?: never;
@@ -4591,6 +6005,23 @@ export interface paths {
         };
         /** Today's tasks across all my active programs */
         get: operations["ProgramsClientController_agenda"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-programs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download my own history: programs, tasks, workouts, weight and goals (json is complete; csv is one flat activity log) */
+        get: operations["ProgramsExportController_export"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5003,7 +6434,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List my program templates, each with phase_count, task_count and duration_days of its latest version */
+        /** List my program templates, each with phase_count, task_count and duration_days of its latest version, and publish_state { sold_or_listed, published_version_no, has_unpublished_changes, needs_publish } */
         get: operations["ProgramsController_list"];
         put?: never;
         /** Create a program (protocol) template draft. 403 PROGRAM_ORG_FORBIDDEN when organization_id is not an org the caller owns or actively belongs to */
@@ -5021,7 +6452,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a program template with its latest version */
+        /** Get a program template with its latest version and publish_state { sold_or_listed, published_version_no, has_unpublished_changes, needs_publish } */
         get: operations["ProgramsController_get"];
         put?: never;
         post?: never;
@@ -5042,7 +6473,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Assign a published program to a client */
+        /** Assign a published program to a client. With publish_latest: true ("Start a client"), publish the latest draft first and return { instance, template, version, published, publish_state }; 409 PROGRAM_UNPUBLISHED_CHANGES on a sold or listed program with unpublished changes */
         post: operations["ProgramsController_assign"];
         delete?: never;
         options?: never;
@@ -5093,7 +6524,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TOO_MANY_TASKS when it cannot be followed; 409 PROGRAM_ARCHIVED when it was archived meanwhile */
+        /** Publish the current draft version (freezes it). 400 PROGRAM_EMPTY / PROGRAM_TASK_MISSING_CONTENT / PROGRAM_TASK_CONFLICTING_CONTENT / PROGRAM_TASK_TOO_MANY_EXERCISES / PROGRAM_TOO_MANY_TASKS when it cannot be followed; 409 PROGRAM_ARCHIVED when it was archived meanwhile */
         post: operations["ProgramsController_publish"];
         delete?: never;
         options?: never;
@@ -5127,6 +6558,40 @@ export interface paths {
         };
         /** One client's programs from my side (progress, adherence) and what they have on Today from me */
         get: operations["ProgramsController_clientOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/clients/{clientProfileId}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One client's program tasks from me, day by day (last `days` days to today, default 14, max 60). Fasting and water tasks give their state and one number only. */
+        get: operations["ProgramsController_clientResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/clients/{clientProfileId}/shared-starter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A client's own starter program, read-only, only when they shared it with me (404 otherwise) */
+        get: operations["ProgramsController_sharedStarter"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6872,6 +8337,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reminders/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My saved reminder list (empty with null times when nothing was saved) */
+        get: operations["ReminderBackupController_read"];
+        /** Replace my saved reminder list. 409 REMINDER_BACKUP_STALE when the saved one changed later than client_updated_at. */
+        put: operations["ReminderBackupController_save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -6965,7 +8448,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get reviews for a provider target */
+        /**
+         * Get reviews for a provider target
+         * @description Reviewers who turned off show_real_name_on_reviews appear as "First L." with reviewerUserId null and no reviewerAvatarUrl, except to themselves and admins.
+         */
         get: operations["ReviewsController_getReviews"];
         put?: never;
         post?: never;
@@ -7018,6 +8504,77 @@ export interface paths {
         };
         /** Unified global search across key dashboard domains */
         get: operations["SearchController_unifiedSearch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/starter-programs/{templateId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Week one in full, later weeks as one line each */
+        get: operations["StarterProgramsController_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/starter-programs/{templateId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a starter program on my own profile */
+        post: operations["StarterProgramsController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/starter-programs/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Best-matching starter programs for goal, equipment and days */
+        get: operations["StarterProgramsController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/closed-organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's own closed gyms (with the reopen deadline)
+         * @description Closed gyms are not in GET /teams/organizations. This lists them for their owner so the closed-gym page can offer exports and reopen.
+         */
+        get: operations["OrgClosureController_myClosed"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7283,6 +8840,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/classes/{classId}/bookings/{bookingId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Record whether a booked member attended (staff only)
+         * @description attended, no_show, or null to clear. Only a confirmed booking, and only once the class has started. Data only: no charge, refund or notification.
+         */
+        put: operations["ClassesController_markAttendance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/organizations/{organizationId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close a gym (owner only). Deletes nothing; reopen within 30 days
+         * @description Body: { confirm: <gym name or CLOSE>, reason? }. Hides the gym from the marketplace, stops new bookings, memberships, purchases and invitations, and removes team access. Existing members, payments and records are untouched; nothing is refunded or cancelled. The owner keeps read access to revenue and sales records and can export them. 400 ORG_CLOSE_CONFIRMATION_MISMATCH / ORG_CLOSE_NOT_SUPPORTED, 409 ORG_ALREADY_CLOSED, 404 for anyone but the owner.
+         */
+        post: operations["OrgClosureController_close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/invitations": {
         parameters: {
             query?: never;
@@ -7471,6 +9068,26 @@ export interface paths {
         patch: operations["OrgNotificationSettingsController_updateOrgNotificationSettings"];
         trace?: never;
     };
+    "/api/v1/teams/organizations/{organizationId}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reopen a closed gym within the reopen window (owner only)
+         * @description 409 ORG_NOT_CLOSED, 409 ORG_REOPEN_WINDOW_EXPIRED (30 days after closing), 404 for anyone but the owner. Restores the listings the close hid.
+         */
+        post: operations["OrgClosureController_reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams/organizations/{organizationId}/roles": {
         parameters: {
             query?: never;
@@ -7511,6 +9128,177 @@ export interface paths {
          * @description 403 TEAM_ROLE_EXCEEDS_YOURS when the role has, or would get, permissions you don't; TEAM_SELF_CHANGE when adding permissions to the role you hold. 400 TEAM_ROLE_CODE_RESERVED for a built-in code.
          */
         patch: operations["TeamsController_updateRole"];
+        trace?: never;
+    };
+    "/api/v1/transactions/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My payments: memberships, sessions, paid content and refunds, newest first */
+        get: operations["MemberPaymentsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/me/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The receipt for one of my payments */
+        get: operations["MemberPaymentsController_receipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/me/attributed-earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's own attributed revenue (read-only)
+         * @description Settled payments attributed to the signed-in trainer across the organizations they work for, less refunds. Only their own rows; no payer details.
+         */
+        get: operations["AttributedRevenueController_myAttributedEarnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/me/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What I have paid and been refunded, per currency */
+        get: operations["MemberPaymentsController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/export/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the organization transaction ledger (CSV or JSON). Owner only, even after the organization is closed
+         * @description One row per ledger row over [from, to) by occurred_at (default: all time), oldest first, every status. Integer minor units plus currency and exponent. Streamed; large organizations do not load into memory. Admin and Manager roles get 404: the raw ledger carries payer ids and gateway references. Each download is written to the audit log.
+         */
+        get: operations["AttributedRevenueController_exportLedger"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/export/revenue-by-trainer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download revenue by trainer (CSV or JSON). Owner always, even after the organization is closed; Admin and Manager only while it is open
+         * @description One row per trainer and currency over [from, to) (default: all time). Integer minor units plus the currency code and its minor-unit exponent; currencies are never summed. No page or date cap. Same authority as the on-screen report: anyone else gets 404. Each download is written to the audit log.
+         */
+        get: operations["AttributedRevenueController_exportRevenueByTrainer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/income-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Informational income summary for one calendar year (UTC), by month and currency
+         * @description Gross payments, refunds and adjustments from settled ledger rows. Payouts are excluded. Includes an informational sales-tax estimate when a tax rate is saved; no tax is charged or filed.
+         */
+        get: operations["ProviderTransactionsController_getIncomeSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/payout-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Where money was collected (own account or platform) and what has been paid out
+         * @description Net collected per gateway account and the sum of PAYOUT rows, per currency. Reports no balance: payout rules are not built.
+         */
+        get: operations["ProviderTransactionsController_getPayoutOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/organizations/{organizationId}/revenue-by-trainer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Settled revenue by trainer for a date range (owner and admins)
+         * @description One row per trainer and currency: settled sessions they delivered and memberships an assignment rule routed to them, less refunds. Integer minor units; currencies are never summed. Owner, Admin and Manager roles only (marketplace.manage_listing); everyone else gets 404. Each row also splits gross into consultations, memberships and content.
+         */
+        get: operations["AttributedRevenueController_revenueByTrainer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/transactions/organizations/{organizationId}/summary": {
@@ -7692,6 +9480,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/utility/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search cities by name prefix
+         * @description Cities whose name starts with q (case and accents ignored), exact names first, with state, country and coordinates. Pass a result's lat/lng to GET /marketplace/listings to search around that city.
+         */
+        get: operations["UtilityController_searchCities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/utility/countries": {
         parameters: {
             query?: never;
@@ -7725,6 +9533,75 @@ export interface paths {
          */
         get: operations["UtilityController_getPlatformConfig"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/water/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My water target and glass size */
+        get: operations["WaterController_mySettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set my own target (null clears it) or glass size */
+        patch: operations["WaterController_updateMySettings"];
+        trace?: never;
+    };
+    "/api/v1/water/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Glasses per local day (at most 62 days) */
+        get: operations["WaterController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/water/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's glasses in the member's time zone */
+        get: operations["WaterController_today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/water/today/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** One glass up or down (floor 0, ceiling 50). A repeated client_op_id counts once. */
+        put: operations["WaterController_adjust"];
         post?: never;
         delete?: never;
         options?: never;
@@ -7849,6 +9726,12 @@ export interface components {
             /** @example Session held on 3 Oct; attendance log attached. */
             note?: string;
         };
+        AddFeelingDto: {
+            /** @description Default now */
+            at?: string;
+            /** @enum {string} */
+            value: "fine" | "hungry" | "low_energy" | "unwell";
+        };
         AddMemberDirectDto: {
             /** @example john.doe@example.com */
             email: string;
@@ -7877,6 +9760,23 @@ export interface components {
             points: number;
             reason: string;
         };
+        AdjustWaterDto: {
+            /** @description A unique id per tap. A replay with the same id is counted once. */
+            client_op_id?: string;
+            /**
+             * @description One glass up or down
+             * @enum {number}
+             */
+            delta: 1 | -1;
+            glass_ml?: number;
+            /**
+             * @description For an offline replay: today or up to two days back
+             * @example 2026-11-17
+             */
+            local_day?: string;
+            /** @example Africa/Lagos */
+            tz: string;
+        };
         AnswerDto: {
             /**
              * @description Question ID
@@ -7903,6 +9803,11 @@ export interface components {
         AssignProgramDto: {
             /** @description ClientProfile id to assign the program to */
             client_profile_id: string;
+            /**
+             * @description "Start a client": publish the latest draft, then assign it, in one call. Everything that could refuse the assignment (the client, a running copy, paid access) and everything that could refuse the publish is checked before anything is written, so a refusal leaves the program as it was. When the latest version is already published it is just assigned. The response is { instance, template, version, published, publish_state } instead of the bare instance. 409 PROGRAM_UNPUBLISHED_CHANGES on a sold or listed program whose draft differs from its published version: publish those changes first (POST /programs/:id/publish), or assign without publish_latest to start the client on the published version.
+             * @default false
+             */
+            publish_latest: boolean;
             /** @description ISO start date; defaults to now */
             start_date?: string;
             /** @example Africa/Lagos */
@@ -7937,6 +9842,24 @@ export interface components {
         AwardGymBadgeDto: {
             /** @enum {string} */
             verification_badge: "none" | "verified" | "premium_verified" | "featured";
+        };
+        BackedUpReminderDto: {
+            /** @default false */
+            enabled: boolean;
+            /** @example water */
+            id: string;
+            /** @enum {string} */
+            kind: "fast_end" | "fast_start" | "water" | "checklist" | "workout" | "journal" | "goal" | "custom";
+            /** @example Water */
+            label?: string;
+            /**
+             * @default chime
+             * @enum {string}
+             */
+            sound: "chime" | "bell" | "drop" | "silent";
+            /** @default true */
+            vibrate: boolean;
+            when: components["schemas"]["ReminderWhenDto"];
         };
         BookingRulesDto: {
             /** @example true */
@@ -7996,11 +9919,34 @@ export interface components {
             reason?: string;
         };
         ChangePasswordDto: Record<string, never>;
+        CheckoutContentDto: {
+            /**
+             * @description One of the item prices
+             * @example NGN
+             */
+            currency?: string;
+        };
         CityDto: {
             /** @example New York */
             name: string;
             /** @example NY */
             stateCode: string;
+        };
+        CitySearchResultDto: {
+            /** @example NG */
+            country_code: string;
+            /** @example Nigeria */
+            country_name: string | null;
+            /** @example 6.45407 */
+            lat: number;
+            /** @example 3.39467 */
+            lng: number;
+            /** @example Lagos */
+            name: string;
+            /** @example LA */
+            state_code: string;
+            /** @example Lagos */
+            state_name: string | null;
         };
         /** @enum {string} */
         ClassBookingStatus: "confirmed" | "waitlisted" | "cancelled_by_member" | "cancelled_by_gym";
@@ -8021,9 +9967,26 @@ export interface components {
             window_hours: number;
         };
         ClonePlanForAudienceDto: Record<string, never>;
+        CloseOrganizationDto: {
+            /**
+             * @description Type the organization name exactly (case-insensitive) or the word CLOSE.
+             * @example Iron Gym
+             */
+            confirm: string;
+            reason?: string;
+        };
         CompleteBookingDto: {
             /** @example Consultation completed successfully */
             note?: string;
+        };
+        CompleteItemDto: {
+            /**
+             * @description For an offline replay: today or up to two days back
+             * @example 2026-11-17
+             */
+            local_day?: string;
+            /** @example Africa/Lagos */
+            tz: string;
         };
         ConfirmMemberImportDto: {
             /**
@@ -8055,6 +10018,22 @@ export interface components {
             /** @example mbr-renew-v1 */
             text_version: string;
         };
+        ContentClientDto: {
+            /** @description ClientProfile id */
+            client_profile_id: string;
+        };
+        ContentPriceDto: {
+            /**
+             * @description Price in the currency minor unit (kobo, cents)
+             * @example 1500000
+             */
+            amount_minor: number;
+            /**
+             * @description ISO 4217, org-selectable
+             * @example NGN
+             */
+            currency: string;
+        };
         CounterpartyDto: {
             name: string;
             profile_picture?: string | null;
@@ -8068,6 +10047,15 @@ export interface components {
             dialCode: string;
             /** @example United States */
             name: string;
+        };
+        CouponAmountDto: {
+            /**
+             * @description Minor units (kobo, cents)
+             * @example 500000
+             */
+            amount_minor: number;
+            /** @example NGN */
+            currency: string;
         };
         CreateActivityReportDto: {
             /**
@@ -8101,7 +10089,7 @@ export interface components {
              *       "form:view"
              *     ]
              */
-            scopes: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
+            scopes: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "coupons:manage" | "messaging:answer_members")[];
         };
         CreateAssignmentRuleDto: {
             /** @description Match only these client tiers (empty = any tier). */
@@ -8154,11 +10142,30 @@ export interface components {
             /** @example America/New_York */
             clientTimezone: string;
             consultationTypeId: string;
+            /**
+             * @description A provider's discount code. Priced on the server (preview with POST /consultations/bookings/validate-code); a code that takes the whole price confirms the booking at once.
+             * @example WELCOME10
+             */
+            couponCode?: string;
             /** @example Initial nutrition consultation */
             notes?: string;
             providerId: string;
             /** @example 2026-03-25T09:00:00Z */
             startsAt: string;
+        };
+        CreateChecklistItemDto: {
+            /**
+             * @description Weekdays it shows on, 0 = Sunday to 6 = Saturday
+             * @example [
+             *       1,
+             *       2,
+             *       3,
+             *       4,
+             *       5
+             *     ]
+             */
+            days?: number[];
+            label: string;
         };
         CreateCheckoutSessionDto: Record<string, never>;
         CreateClassBookingDto: {
@@ -8215,6 +10222,46 @@ export interface components {
              * @enum {string}
              */
             providerRole?: "DIETITIAN" | "PERSONAL_TRAINER" | "OTHER";
+        };
+        CreateCouponDto: {
+            amounts_minor?: components["schemas"]["CouponAmountDto"][];
+            applies_to?: ("membership" | "booking")[];
+            /**
+             * @description Apply to the first N automatic renewals after the first purchase (0-24). Default 0: the discount does not carry into auto-renew. Above 0 the code can be combined with "Renew automatically". A 100% percentage code cannot carry into renewals.
+             * @default 0
+             * @example 0
+             */
+            apply_to_renewals: number;
+            /**
+             * @description 3-20 letters and digits. Omit to generate one.
+             * @example WELCOME10
+             */
+            code?: string;
+            /** @enum {string} */
+            discount_type: "percent" | "fixed";
+            /** @example 2026-12-31T23:59:59Z */
+            expires_at?: string;
+            /** @example New member offer */
+            label?: string;
+            /**
+             * @description Default 1
+             * @example 1
+             */
+            max_per_user?: number;
+            /** @example 100 */
+            max_redemptions?: number;
+            min_order_minor?: components["schemas"]["CouponAmountDto"][];
+            /**
+             * @description Whole percent 1-100
+             * @example 10
+             */
+            percent_off?: number;
+            /**
+             * @description Give the code back when the discounted payment is fully refunded, so the member can use it again. Default false. Partial refunds never give it back.
+             * @default false
+             * @example false
+             */
+            return_on_refund: boolean;
         };
         CreateDietDayDto: {
             /**
@@ -8283,6 +10330,28 @@ export interface components {
              */
             status: "AVAILABLE" | "MAINTENANCE";
         };
+        CreateFastingPlanDto: {
+            days: number;
+            /** @description Weekdays, 0 (Sunday) to 6; at least one */
+            days_of_week: number[];
+            /** @enum {string} */
+            kind: "ramadan" | "lent" | "daniel_fast" | "church" | "custom";
+            name: string;
+            /** @default false */
+            reminders_enabled: boolean;
+            /**
+             * @description First local day
+             * @example 2027-02-08
+             */
+            start_day: string;
+            /**
+             * @description Gives start_day and the weekdays their meaning
+             * @example Africa/Lagos
+             */
+            timezone: string;
+            /** @description {mode:'fixed',from_minutes,to_minutes} or {mode:'astronomical',basis:'dawn_to_sunset',city,latitude,longitude,method,adjust_minutes_dawn,adjust_minutes_sunset}. The phone calculates astronomical times; the server never does. */
+            window: Record<string, never>;
+        };
         CreateFoodItemDto: {
             /** @example 340 */
             caloriesKcal: number;
@@ -8350,6 +10419,18 @@ export interface components {
              * @example Customer Satisfaction Survey
              */
             title: string;
+        };
+        CreateGoalDto: {
+            /** @enum {string} */
+            kind: "free_text" | "weekly_target";
+            /**
+             * @description weekly_target only
+             * @enum {string}
+             */
+            metric?: "fasts" | "water_days" | "walks" | "sessions";
+            /** @description weekly_target only */
+            target?: number;
+            text: string;
         };
         CreateGymClassDto: {
             /** @example 16 */
@@ -8458,12 +10539,27 @@ export interface components {
             max_clients?: number;
             photos?: string[];
             /**
+             * @description What price_from_minor buys on a solo listing: session, recurring or one_off. Organization listings take it from their cheapest plan and ignore this.
+             * @enum {string}
+             */
+            price_cadence?: "recurring" | "one_off" | "session";
+            /**
+             * @description Solo listings: 'auto' shows the provider's cheapest priced session (cadence 'session') and keeps it in step; 'custom' shows price_from_minor / price_cadence as typed. On 'auto' the price fields sent are ignored. Organization listings ignore this.
+             * @enum {string}
+             */
+            price_display?: "auto" | "custom";
+            /**
              * @description Display "from" price in the currency minor unit (kobo, cents).
              * @example 5000
              */
             price_from_minor?: number;
             /** @example From $50/month */
             price_label?: string;
+            /**
+             * @description Solo 'custom' listings: how often a recurring price repeats (required with price_cadence 'recurring') or how long a one-off covers (optional): 7, 30, 90 or 365 days. null clears it. Ignored on 'auto' and on organization listings.
+             * @enum {number|null}
+             */
+            price_period_days?: 7 | 30 | 90 | 365 | null;
             /**
              * @example [
              *       "weight loss",
@@ -8551,6 +10647,24 @@ export interface components {
             /** @description ID of the membership plan to subscribe to */
             plan_id: string;
         };
+        CreateNoteDto: {
+            body: string;
+            /** @description A unique id per create. A replay with the same id adds nothing. */
+            client_op_id?: string;
+            /** @description A plain id the phone chose (letters, digits, - and _). Never a reference; needs linked_kind. */
+            linked_id?: string;
+            /** @enum {string} */
+            linked_kind?: "fast" | "starter_session" | "activity" | "other";
+            /**
+             * @description For an offline replay: today or up to two days back
+             * @example 2026-11-17
+             */
+            local_day?: string;
+            /** @enum {string} */
+            mood?: "good" | "okay" | "tired" | "low";
+            /** @example Africa/Lagos */
+            tz: string;
+        };
         CreateOrganizationDto: {
             /** @enum {string} */
             account_type: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
@@ -8616,10 +10730,10 @@ export interface components {
             /** @example VAT */
             tax_label?: string;
             /**
-             * @description Tax percentage applied on receipts/invoices (0–100).
+             * @description Tax percentage applied on receipts/invoices (0–100). Send null on an update to clear a saved rate (0 is a real rate, not "unset").
              * @example 15
              */
-            tax_rate?: number;
+            tax_rate?: number | null;
             /** @enum {string} */
             time_format?: "12h" | "24h";
             /**
@@ -8631,10 +10745,14 @@ export interface components {
             vat_registration_number?: string;
         };
         CreateOrgMembershipPlanDto: {
+            /** @description Another active plan of this provider, in the same currency, that this plan is a saving against (e.g. Annual vs Monthly). null clears it. A label only: the price is unchanged. */
+            compare_to_plan_id?: string | null;
             /** @example USD */
             currency?: string;
             /** @example Unlimited gym access for 30 days */
             description?: string;
+            /** @description The saving shown to members against compare_to_plan_id, a whole percent (0 to 90). 0 = none. */
+            discount_percent?: number;
             /** @example 30 */
             duration_days: number;
             features?: string[];
@@ -8642,6 +10760,8 @@ export interface components {
             is_active: boolean;
             /** @default true */
             is_public: boolean;
+            /** @description The location (one of the organization's listings) that sells this plan. Required when the organization has two or more listings; defaults to the only one when it has one. */
+            listing_id?: string;
             /** @example Monthly Unlimited */
             name: string;
             /**
@@ -8785,7 +10905,7 @@ export interface components {
             description?: string;
             /** @example Senior Trainer */
             name: string;
-            permissions: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
+            permissions: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "coupons:manage" | "messaging:answer_members")[];
         };
         CreateWeightLogDto: {
             /** @example Morning fasted weight */
@@ -8800,6 +10920,21 @@ export interface components {
             description?: string;
             /** @example 5 */
             duration_minutes?: number;
+            /**
+             * @description Illustration library exercise id (lowercase letters, digits, hyphens). Set by the picker; omit for a custom exercise.
+             * @example goblet-squat
+             */
+            library_exercise_id?: string;
+            /**
+             * @description Chosen variant or view (the part after "--" in media_id). Omit for the default.
+             * @example front
+             */
+            library_variant?: string;
+            /**
+             * @description Illustration key `exercise_id[--variant]`. Equals library_exercise_id, or library_exercise_id--library_variant, when those are sent.
+             * @example squat--front
+             */
+            media_id?: string;
             /** @example Barbell Bench Press */
             name: string;
             /** @example Focus on controlled eccentric */
@@ -8865,9 +11000,23 @@ export interface components {
         DisputeNoteDto: {
             note: string;
         };
+        EditFastDto: {
+            /** @description Closed fasts only */
+            ended_at?: string;
+            /** @description Empty string clears */
+            note?: string;
+            /** @enum {string} */
+            preset?: "12_12" | "14_10" | "16_8" | "18_6" | "20_4" | "one_meal" | "custom";
+            started_at?: string;
+            target_hours?: number;
+        };
         EditMessageDto: {
             /** @description Plain text, 1..4000 characters after trimming. */
             body: string;
+        };
+        EndFastDto: {
+            /** @description The real end time. Default now. Required once the fast has passed its cap. */
+            ended_at?: string;
         };
         EnrollMemberDto: {
             /**
@@ -8979,7 +11128,7 @@ export interface components {
         };
         ErrorResponseDto: {
             /** @enum {string} */
-            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "CONSULTATION_SLOT_UNAVAILABLE" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED" | "CLASS_REMOVED";
+            code: "AUTH_INVALID_CREDENTIALS" | "AUTH_ACCOUNT_SUSPENDED" | "AUTH_EMAIL_NOT_VERIFIED" | "OTP_SEND_FAILED" | "AUTH_UNAUTHORIZED" | "AUTH_FORBIDDEN" | "AUTH_INVALID_TOKEN" | "AUTH_TOKEN_USED" | "VALIDATION_FAILED" | "RESOURCE_NOT_FOUND" | "INTERNAL_ERROR" | "RATE_LIMITED" | "CHECKIN_ALREADY_RECORDED" | "USER_NOT_FOUND" | "USER_ALREADY_EXISTS" | "USER_EMAIL_IN_USE" | "ROLE_NOT_FOUND" | "PERMISSION_NOT_FOUND" | "ACCESS_DENIED" | "WORKSPACE_STAFF_MEMBER" | "PENDING_INVITATIONS_LIMIT" | "INVITATION_DAILY_LIMIT" | "INVITATION_RECIPIENT_COOLDOWN" | "TEAM_OWNER_CANNOT_LEAVE" | "WORKSPACE_ENROLLED_MEMBER" | "WORKSPACE_GYM_OWNER" | "TEAM_ROLE_EXCEEDS_YOURS" | "TEAM_SELF_CHANGE" | "TEAM_OWNER_PROTECTED" | "TEAM_ROLE_CODE_RESERVED" | "ORG_OWNER_ONLY" | "ORG_CLOSED" | "ORG_ALREADY_CLOSED" | "ORG_NOT_CLOSED" | "ORG_REOPEN_WINDOW_EXPIRED" | "ORG_CLOSE_CONFIRMATION_MISMATCH" | "ORG_CLOSE_NOT_SUPPORTED" | "TEAM_STAFF_TRAINER_ELSEWHERE" | "LOCATION_PRIMARY" | "LOCATION_LAST_ACTIVE" | "LOCATION_NAME_IN_USE" | "ADMIN_SUSPEND_FORBIDDEN" | "ADMIN_PERMISSION_MISSING" | "SAVED_LISTINGS_LIMIT" | "HEALTH_IMPORT_DISABLED" | "HEALTH_NOT_CONNECTED" | "HEALTH_TOO_MANY_DEVICES" | "HEALTH_TYPE_NOT_GRANTED" | "HEALTH_IMPLAUSIBLE" | "HEALTH_TOO_OLD" | "HEALTH_IN_FUTURE" | "HEALTH_DAILY_LIMIT" | "HEALTH_IMPORTED_READ_ONLY" | "HEALTH_SYNC_CONFLICT" | "PROGRAM_AUTO_RULE_INVALID" | "PROGRAM_ARCHIVED" | "PROGRAM_PHASE_LENGTH_MISSING" | "PROGRAM_METRIC_UNKNOWN" | "PROGRAM_TARGET_INVALID" | "PROGRAM_UNPUBLISHED_CHANGES" | "CONTENT_ENTITLEMENT_REQUIRED" | "CONTENT_ACCESS_FROZEN" | "PAID_MEAL_PLAN_IN_FREE_PROGRAM" | "CONTENT_NO_SELLER_ORG" | "CONTENT_ACCESS_INVALID" | "CONTENT_ALREADY_OWNED" | "CONTENT_NOT_FOR_SALE" | "CONTENT_NO_SEAT" | "CONTENT_OWN_ITEM" | "CONTENT_PRICE_BELOW_MINIMUM" | "CONTENT_PURCHASE_NOT_REFUNDABLE" | "FEATURE_DISABLED" | "STARTER_NOT_FOUND" | "STARTER_SAFETY_REQUIRED" | "STARTER_BAD_START_DATE" | "STARTER_BAD_TIMEZONE" | "STARTER_ALREADY_ACTIVE" | "STARTER_NOT_ACTIVE" | "PROGRAM_NOT_STARTER" | "STARTER_SHARE_NOT_LINKED" | "EXPORT_TOO_LARGE" | "EXPORT_BAD_REQUEST" | "COUPON_INVALID" | "COUPON_EXPIRED" | "COUPON_EXHAUSTED" | "COUPON_ALREADY_USED" | "COUPON_BELOW_MINIMUM" | "COUPON_CURRENCY_UNSUPPORTED" | "COUPON_NO_DISCOUNT" | "COUPON_RENEWAL_NOT_FREE" | "MEMBER_CHARGE_ALREADY_PAID" | "MEMBER_CHARGE_NOT_PAYABLE" | "MEMBER_CHARGE_USE_RENEWAL_CHECKOUT" | "MEMBER_CHARGE_TRANSFER_IN_PROGRESS" | "CURRENCY_NOT_SELECTABLE" | "CURRENCY_LOCKED" | "CURRENCY_IN_USE" | "CURRENCY_MISSING" | "GATEWAY_NOT_SUPPORTED" | "PROVIDER_CURRENCY_UNKNOWN" | "PROVIDER_CURRENCY_UNSUPPORTED" | "PROVIDER_CURRENCY_BLOCKED" | "PROVIDER_ACCOUNT_MISSING" | "PROVIDER_CURRENCY_NOT_ON_ACCOUNT" | "PROVIDER_ACCOUNT_CHECK_FAILED" | "PAYOUT_BANK_UNKNOWN" | "PAYOUT_ACCOUNT_NOT_RESOLVED" | "PAYOUT_BANK_LOOKUP_UNAVAILABLE" | "PAYOUT_CURRENCY_NOT_ALLOWED" | "PAYOUT_RESOLVE_DAILY_LIMIT" | "CONSULTATION_SLOT_UNAVAILABLE" | "AVAILABILITY_END_BEFORE_START" | "AVAILABILITY_OVERLAP" | "REFUND_REQUEST_REQUIRED" | "REFUND_NOT_COLLECTOR" | "REFUND_DIRECT_ONLY" | "REFUND_EXCEEDS_REMAINING" | "REFUND_IDEMPOTENCY_CONFLICT" | "REFUND_INVALID_STATE" | "REFUND_COLLECTOR_UNKNOWN" | "REFUND_COLLECTOR_CHECK_FAILED" | "REFUND_POLICY_ACK_REQUIRED" | "REFUND_DISPUTE_OPEN" | "CONSULTATION_SLOT_TAKEN" | "CONSULTATION_BOOKING_NOT_MOVABLE" | "CONSULTATION_HOURS_OVERRIDE_FORBIDDEN" | "CONSULTATION_OVERRIDE_REASON_REQUIRED" | "BOOKING_AWAITING_PAYMENT" | "BILLING_LIMIT_REACHED" | "BILLING_FEATURE_DISABLED" | "PROGRESS_REPORT_NO_ACCESS" | "PROGRESS_REPORT_INVALID_PERIOD" | "PROGRESS_REPORT_RATE_LIMITED" | "PROGRESS_REPORT_LINK_INVALID" | "MAIL_SEND_FAILED" | "CLASS_WAITLIST_SPOT_TAKEN" | "CLASS_ALREADY_WAITLISTED" | "CLASS_REMOVED" | "FASTING_SESSION_NOT_FOUND" | "FASTING_SCREENING_REQUIRED" | "FASTING_ALREADY_RUNNING" | "FASTING_BAD_TIME" | "FASTING_OVERLAP" | "FASTING_EXPIRED_UNCLOSED" | "FASTING_BAD_STATE" | "FASTING_UNDO_UNAVAILABLE" | "FASTING_FEELINGS_FULL" | "FASTING_DAILY_LIMIT_REACHED" | "FASTING_SUMMARY_TOO_MANY" | "FASTING_PLAN_NOT_FOUND" | "FASTING_PLAN_ALREADY_OPEN" | "FASTING_PLAN_LIMIT_REACHED" | "FASTING_PLAN_BAD_STATE" | "FASTING_PLAN_BAD_INPUT" | "PLAN_NOT_ACTIVE_TODAY" | "FASTING_PLAN_SUMMARY_TOO_MANY" | "WATER_BAD_DAY" | "CHECKLIST_ITEM_NOT_FOUND" | "CHECKLIST_LIMIT_REACHED" | "CHECKLIST_SYSTEM_DERIVED" | "CHECKLIST_BAD_REQUEST" | "JOURNAL_NOTE_NOT_FOUND" | "JOURNAL_LIMIT_REACHED" | "JOURNAL_BAD_REQUEST" | "GOAL_NOT_FOUND" | "GOAL_LIMIT_REACHED" | "GOAL_BAD_REQUEST" | "HISTORY_BAD_REQUEST" | "SERIES_BAD_REQUEST" | "SERIES_TOO_MANY_POINTS" | "SERIES_TOO_MANY_ENTRIES" | "TARGET_BAD_REQUEST" | "TARGET_BELOW_SUPPORTED_RANGE" | "REMINDER_BACKUP_STALE" | "PLAN_LOCATION_REQUIRED" | "PLAN_LOCATION_INVALID" | "PLAN_LOCATION_LOCKED";
             /**
              * @description Structured detail of a billing refusal: { quota, limit, current_usage, plan_tier } for BILLING_LIMIT_REACHED sent to the provider (only { quota } when the refused party is a member joining), { feature, plan_tier } for BILLING_FEATURE_DISABLED.
              * @example {
@@ -8992,18 +11141,44 @@ export interface components {
             details?: {
                 [key: string]: unknown;
             };
+            /**
+             * @description AUTH_ACCOUNT_LOCKED only: whose lock it is. 'email' (this email from this place) and 'account' (this email from anywhere) are lifted by a password reset; 'device' and 'ip' (one place trying many accounts) are not.
+             * @enum {string}
+             */
+            lock_scope?: "email" | "account" | "device" | "ip";
             /** @example Validation failed */
             message: Record<string, never>;
             /** @example POST */
             method: string;
             /** @example /api/v1/auth/login */
             path: string;
+            /**
+             * @description Seconds to wait before retrying: on a sign-in lockout (AUTH_ACCOUNT_LOCKED) and on a throttled request (RATE_LIMITED, matching the Retry-After header).
+             * @example 120
+             */
+            retry_after_seconds?: number;
             /** @example 400 */
             statusCode: number;
             /** @example false */
             success: boolean;
             /** @example 2026-01-01T00:00:00.000Z */
             timestamp: string;
+        };
+        FastingScreeningDto: {
+            /** @description The member saw the not-medical-advice note */
+            acknowledged: boolean;
+            diabetes_or_medication: boolean;
+            eating_disorder_history: boolean;
+            pregnant_or_breastfeeding: boolean;
+            under_18: boolean;
+        };
+        FastingWindowDto: {
+            /** @example 4 */
+            days_per_week: number;
+            /** @example 20 */
+            max_hours: number;
+            /** @example 16 */
+            min_hours: number;
         };
         ForgotPasswordDto: Record<string, never>;
         GeoResolveDto: {
@@ -9037,6 +11212,12 @@ export interface components {
         };
         HealthDeletionDto: {
             record_id: string;
+        };
+        HealthFormAnswerDto: {
+            /** @description Question position in the form, 0-based */
+            index: number;
+            /** @description 'yes' or 'no' for a screening question; text for details */
+            value: string;
         };
         HealthRecordDto: {
             /** @description metadata.clientRecordId, if set */
@@ -9232,6 +11413,10 @@ export interface components {
             /** @enum {string} */
             side: "mine" | "theirs";
         };
+        LeaveStarterDto: {
+            /** @enum {string} */
+            reason?: "too_hard" | "too_easy" | "no_time" | "no_equipment" | "other";
+        };
         LicenseInputDto: {
             /** @description The id of a licence already on file, to keep it. Leave out for a new one. */
             _id?: string;
@@ -9310,6 +11495,13 @@ export interface components {
             name: string;
             points_cost: number;
         };
+        MarkAttendanceDto: {
+            /**
+             * @description attended, no_show, or null to clear the mark.
+             * @enum {string|null}
+             */
+            attendance: "attended" | "no_show" | null;
+        };
         MarkNotSentDto: {
             /** @description What was checked in the Paystack dashboard. */
             note: string;
@@ -9328,6 +11520,16 @@ export interface components {
             payment_proof_url?: string;
             /** @description External payment reference (e.g. bank transfer narration) */
             payment_reference?: string;
+        };
+        MemberCurrencyTotalDto: {
+            /** @example NGN */
+            currency: string;
+            /** @description paid_minor - refunded_minor */
+            net_minor: number;
+            /** @description Total paid, integer minor units */
+            paid_minor: number;
+            /** @description Total returned to you, integer minor units */
+            refunded_minor: number;
         };
         MemberImportMappingDto: {
             /** @description Column index (0-based) holding branch; leave out when the file has none. */
@@ -9350,6 +11552,76 @@ export interface components {
             plan?: number;
             /** @description Column index (0-based) holding start_date; leave out when the file has none. */
             start_date?: number;
+        };
+        MemberPaymentProviderDto: {
+            id?: string | null;
+            /** @example i-Fitness Gym */
+            name: string;
+        };
+        MemberPaymentRefundStateDto: {
+            /** @description Integer minor units (kobo, cents) */
+            refunded_minor: number;
+            /** @enum {string} */
+            state: "none" | "partial" | "full";
+        };
+        MemberPaymentRowDto: {
+            /** @description Integer minor units. Positive for a payment; for kind "refund" the amount returned to you. */
+            amount_minor: number;
+            /** @example NGN */
+            currency: string;
+            /** @example Monthly membership */
+            description: string;
+            /** @description The ledger row id; use it for the receipt */
+            id: string;
+            /** @enum {string} */
+            kind: "membership" | "session" | "content" | "service" | "refund";
+            /**
+             * @description How it was paid, in words a member recognises
+             * @enum {string}
+             */
+            method: "card" | "bank_transfer" | "cash" | "other";
+            /** Format: date-time */
+            paid_at: string;
+            provider: components["schemas"]["MemberPaymentProviderDto"];
+            receipt_available: boolean;
+            /** @description The reference printed on your bank or card statement; null for a payment recorded by the gym by hand */
+            reference?: string | null;
+            refund: components["schemas"]["MemberPaymentRefundStateDto"];
+            /** @enum {string} */
+            status: "paid" | "refund";
+        };
+        MemberPaymentsPageDto: {
+            items: components["schemas"]["MemberPaymentRowDto"][];
+            next_cursor?: string | null;
+        };
+        MemberPaymentsSummaryDto: {
+            /** @description One entry per currency. Currencies are never added together. */
+            by_currency: components["schemas"]["MemberCurrencyTotalDto"][];
+        };
+        MemberReceiptDto: {
+            amount_minor: number;
+            /** @example NGN */
+            currency: string;
+            description: string;
+            /** @enum {string} */
+            kind: "membership" | "session" | "content" | "service" | "refund";
+            /** @description The member the receipt is issued to */
+            member_name: string;
+            /** @enum {string} */
+            method: "card" | "bank_transfer" | "cash" | "other";
+            /** Format: date-time */
+            paid_at: string;
+            /** @description Dates the payment covers; null when not recorded */
+            period?: Record<string, never> | null;
+            provider: components["schemas"]["MemberPaymentProviderDto"];
+            /**
+             * @description Stable per payment
+             * @example R-1A2B3C4D
+             */
+            receipt_number: string;
+            reference?: string | null;
+            refund: components["schemas"]["MemberPaymentRefundStateDto"];
+            refunds: components["schemas"]["ReceiptRefundDto"][];
         };
         MembershipRulesDto: {
             /**
@@ -9634,6 +11906,70 @@ export interface components {
             new_members_count: number;
             timeseries: components["schemas"]["RevenueTimeseriesItemDto"][];
         };
+        OutstandingChargeDto: {
+            /** @description Integer minor units */
+            amount_minor: number;
+            /** @example NGN */
+            currency: string;
+            /** @example Monthly membership */
+            description: string;
+            /** @description The membership id. Use it in /pay/membership/:id and the endpoints below. */
+            id: string;
+            /** @enum {string} */
+            kind: "first_payment" | "renewal";
+            /**
+             * Format: date-time
+             * @description For a renewal: when the grace period ends and access is lost. Null for a first payment.
+             */
+            lapses_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When it became owed
+             */
+            owed_since: string;
+            /** Format: date-time */
+            paid_at?: string | null;
+            /**
+             * @description checkout: pay with the endpoints on this resource. renewal_checkout: pay through the existing renew flow with the ids in `renewal`.
+             * @enum {string}
+             */
+            pay_via: "checkout" | "renewal_checkout";
+            provider: components["schemas"]["MemberPaymentProviderDto"];
+            /** @description Present for pay_via renewal_checkout */
+            renewal?: Record<string, never> | null;
+            /**
+             * @description payable: can be paid now. paid: settled. closed: the membership was ended or the amount no longer applies.
+             * @enum {string}
+             */
+            state: "payable" | "paid" | "closed";
+        };
+        OutstandingCheckoutDto: {
+            /** @description Open this with Paystack inline */
+            access_code: string;
+            amount_minor: number;
+            authorization_url?: string | null;
+            /** @example NGN */
+            currency: string;
+            /** @description The gym's Paystack public key; null means the platform's public key */
+            paystack_public_key?: string | null;
+            /** @description The Paystack reference of this payment */
+            reference: string;
+        };
+        OutstandingListDto: {
+            items: components["schemas"]["OutstandingChargeDto"][];
+            /** @description Owed amount per currency: [{ currency, amount_minor }]. Never added across currencies. */
+            totals_by_currency: Record<string, never>[];
+        };
+        OutstandingVerifyDto: {
+            charge: components["schemas"]["OutstandingChargeDto"];
+            /**
+             * @description verification.gateway_status
+             * @example {
+             *       "gateway_status": "success"
+             *     }
+             */
+            verification: Record<string, never>;
+        };
         PatchConnectionDto: {
             consent_copy_version?: string;
             /** @description Stop syncing from another device */
@@ -9654,6 +11990,70 @@ export interface components {
             used: number;
             /** @enum {string} */
             window: "rolling_12_months";
+        };
+        PayoutAccountInputDto: {
+            /**
+             * @description Digits only
+             * @example 0123456789
+             */
+            account_number: string;
+            /**
+             * @description Paystack's bank code, from GET .../payout-account/banks
+             * @example 058
+             */
+            bank_code: string;
+            /**
+             * @description The currency whose bank list the bank comes from. Defaults to the workspace's currency.
+             * @example NGN
+             */
+            currency?: string;
+        };
+        PayoutAccountStatusDto: {
+            account: components["schemas"]["PayoutAccountViewDto"] | null;
+            /**
+             * @example kyc_required
+             * @enum {string|null}
+             */
+            payouts_blocked_reason: "kyc_required" | null;
+            /**
+             * @description False until the workspace has passed KYC verification. No payout is sent before then.
+             * @example false
+             */
+            payouts_enabled: boolean;
+        };
+        PayoutAccountViewDto: {
+            /** @example 6789 */
+            account_last4: string;
+            /** @example IRON TEMPLE FITNESS LTD */
+            account_name: string;
+            /** @example ******6789 */
+            account_number_masked: string;
+            /** @example 058 */
+            bank_code: string;
+            /** @example Guaranty Trust Bank */
+            bank_name: string;
+            /** @example NGN */
+            currency: string;
+            /** Format: date-time */
+            updated_at: string | null;
+            /**
+             * @description Always true: an account is only saved once Paystack resolved its name
+             * @example true
+             */
+            verified: boolean;
+            /** Format: date-time */
+            verified_at: string;
+        };
+        PayoutBankDto: {
+            /** @example 058 */
+            code: string;
+            /** @example Guaranty Trust Bank */
+            name: string;
+        };
+        PayoutBanksViewDto: {
+            banks: components["schemas"]["PayoutBankDto"][];
+            /** @example NGN */
+            currency: string;
         };
         PayoutScheduleDto: {
             /**
@@ -9694,14 +12094,23 @@ export interface components {
         };
         ProgramAutoRuleDto: {
             activity_types?: ("cardio" | "strength" | "flexibility" | "hiit" | "yoga" | "swimming" | "cycling" | "running" | "walking" | "other")[];
-            /** @enum {string} */
+            /**
+             * @description fasting_hours and water_glasses accept only gte.
+             * @enum {string}
+             */
             comparator: "gte" | "lte" | "any";
-            /** @enum {string} */
-            metric: "steps" | "sleep_minutes" | "resting_hr_bpm" | "weight_kg" | "exercise_minutes" | "exercise_session";
+            /**
+             * @description What completes the task. From Health Connect: steps, sleep_minutes, resting_hr_bpm, weight_kg, exercise_minutes, exercise_session. From the member's own logs in the app (no Health Connect permission involved): fasting_hours (habit only, comparator gte, threshold 1-24 whole hours; a fast counts on the member-local day it reaches the target, while running or after it ends) and water_glasses (habit only, comparator gte, threshold 1-30 glasses; the day's water count). Fasting and water rules use window scheduled_day only, ignore sources and recording_methods, and share with the provider only that task's day: done or not, and the one number (hours fasted to 0.1, or glasses).
+             * @enum {string}
+             */
+            metric: "steps" | "sleep_minutes" | "resting_hr_bpm" | "weight_kg" | "exercise_minutes" | "exercise_session" | "fasting_hours" | "water_glasses";
             /** @description Default ['automatic','active']: entries typed into the health app don't count */
             recording_methods?: ("manual" | "automatic" | "active" | "unknown")[];
             sources?: ("health_connect" | "healthkit")[];
-            /** @example 8000 */
+            /**
+             * @description Steps, minutes, bpm, kg, hours (fasting_hours, 1-24) or glasses (water_glasses, 1-30).
+             * @example 8000
+             */
             threshold?: number;
             /**
              * @default scheduled_day
@@ -9720,16 +12129,26 @@ export interface components {
             detail?: string;
             /** @example 28 */
             duration_days?: number;
+            /** @description Inline exercises for a workout_plan block */
+            exercises?: components["schemas"]["ProgramExerciseDto"][];
             /** @description Form id for a form block; the task completes on submission */
             form_id?: string;
             /** @description DietPlan id for a meal_plan block */
             meal_plan_id?: string;
-            /** @example weight_kg */
+            /**
+             * @description measurement only: what the client logs. One of: weight_kg, waist_cm, steps, sleep_hours, resting_hr_bpm, body_fat_pct, fasting_glucose_mg_dl, blood_pressure_systolic, symptom_score. 400 PROGRAM_METRIC_UNKNOWN for another key, unless the program already had it.
+             * @example weight_kg
+             */
             metric?: string;
             /** @example 0 */
             order: number;
             /** @example 0 */
             start_offset_days?: number;
+            /**
+             * @description measurement only: the value the client is working toward. Saving it makes the program's goal for this metric (label like "Weight 78 kg", direction reach, from_block true), or sets the target of the goal that already tracks the metric. Removing it removes a goal it made. With several tasks on one metric, the last in schedule order wins. 400 PROGRAM_TARGET_INVALID on any other task, or a measurement with no metric.
+             * @example 78
+             */
+            target?: number;
             /** @example 3 */
             times_per_week?: number;
             /** @example Drink 2.5L of water */
@@ -9739,12 +12158,49 @@ export interface components {
             /** @description WorkoutPlan id for a workout_plan block */
             workout_plan_id?: string;
         };
+        ProgramExerciseDto: {
+            /** @description Short plain cues */
+            cues?: string[];
+            /**
+             * @description Illustration library exercise id (lowercase letters, digits, hyphens). Set by the picker; omit for a custom exercise.
+             * @example goblet-squat
+             */
+            library_exercise_id?: string;
+            /**
+             * @description Chosen variant or view (the part after "--" in media_id). Omit for the default.
+             * @example front
+             */
+            library_variant?: string;
+            /**
+             * @description Illustration key `exercise_id[--variant]`. Equals library_exercise_id, or library_exercise_id--library_variant, when those are sent.
+             * @example squat--front
+             */
+            media_id?: string;
+            /** @example Goblet squat */
+            name: string;
+            /** @example 10 */
+            reps?: number;
+            /** @example 45 */
+            rest_seconds?: number;
+            /**
+             * @description Timed work, instead of reps
+             * @example 30
+             */
+            seconds?: number;
+            /** @example 3 */
+            sets?: number;
+        };
         ProgramGoalDefDto: {
             /** @enum {string} */
             direction: "reach" | "reduce" | "maintain";
+            /** @description Set by the API on a goal made from a measurement task's target. Send it back unchanged with the goal; such a goal follows its task and goes when the task's target does. */
+            from_block?: boolean;
             /** @example Reduce bloating */
             label: string;
-            /** @example symptom_score */
+            /**
+             * @description The measurement this goal tracks. One of: weight_kg, waist_cm, steps, sleep_hours, resting_hr_bpm, body_fat_pct, fasting_glucose_mg_dl, blood_pressure_systolic, symptom_score. 400 PROGRAM_METRIC_UNKNOWN for another key, unless the program already had it.
+             * @example symptom_score
+             */
             metric?: string;
             /** @example 2 */
             target?: number;
@@ -9804,6 +12260,15 @@ export interface components {
             shared_at?: string | null;
             snapshot: components["schemas"]["ProgressReportSnapshot"];
         };
+        PutReminderBackupDto: {
+            /**
+             * @description When the list changed on the phone. A save older than the stored one is refused (409).
+             * @example 2026-11-19T18:30:00.000Z
+             */
+            client_updated_at: string;
+            /** @description The whole list (replaces the saved one). Definitions only: no history or alarm state. */
+            reminders: components["schemas"]["BackedUpReminderDto"][];
+        };
         QuestionOptionDto: {
             /**
              * @description Option label
@@ -9829,6 +12294,11 @@ export interface components {
             key: "thumbs_up" | "heart" | "joy" | "tada" | "pray" | "open_mouth";
             mine: boolean;
         };
+        ReceiptRefundDto: {
+            amount_minor: number;
+            /** Format: date-time */
+            refunded_at: string;
+        };
         RecordRenewalPaymentDto: {
             /**
              * @description How the member paid
@@ -9847,6 +12317,9 @@ export interface components {
              * @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
              */
             refreshToken?: string;
+        };
+        RefundContentPurchaseDto: {
+            reason?: string;
         };
         RefundDecisionDto: {
             note?: string;
@@ -9919,6 +12392,19 @@ export interface components {
         };
         RejectRefundDto: {
             note: string;
+        };
+        ReminderWhenDto: {
+            /**
+             * @description once: the moment, epoch milliseconds
+             * @example 1795000000000
+             */
+            at?: number;
+            hour?: number;
+            minute?: number;
+            /** @enum {string} */
+            type: "repeat" | "once";
+            /** @description 1 = Monday ... 7 = Sunday. May be empty (no days chosen). */
+            weekdays?: number[];
         };
         RemoveFeatureFlagOverrideDto: {
             reason?: string;
@@ -10040,6 +12526,20 @@ export interface components {
             email: string;
         };
         ResetPasswordDto: Record<string, never>;
+        ResolvedPayoutAccountDto: {
+            /** @example 6789 */
+            account_last4: string;
+            /** @example IRON TEMPLE FITNESS LTD */
+            account_name: string;
+            /** @example ******6789 */
+            account_number_masked: string;
+            /** @example 058 */
+            bank_code: string;
+            /** @example Guaranty Trust Bank */
+            bank_name: string;
+            /** @example NGN */
+            currency: string;
+        };
         ResolveReviewReportDto: {
             /**
              * @description dismiss leaves the review public; hide_review hides it and closes every open report on it.
@@ -10140,6 +12640,16 @@ export interface components {
             /** @enum {string} */
             type: "form" | "instruction";
         };
+        SetContentAccessDto: {
+            /** @description Active plans of the seller workspace whose members get this item */
+            included_in_plan_ids?: string[];
+            /** @enum {string} */
+            mode: "free" | "paid";
+            /** @description One-off prices, at most one per currency. [] = not sold on its own. */
+            prices?: components["schemas"]["ContentPriceDto"][];
+            /** @default true */
+            show_on_listing: boolean;
+        };
         SetFeatureFlagDto: {
             /** @description On or off */
             enabled: boolean;
@@ -10155,6 +12665,10 @@ export interface components {
              * @example 665f1b2c3d4e5f6a7b8c9d0e
              */
             plan_id?: string | null;
+        };
+        SetPlanIncludesDto: {
+            meal_plan_ids: string[];
+            program_ids: string[];
         };
         SetProviderAvailabilityDto: {
             rules: components["schemas"]["AvailabilityRuleInputDto"][];
@@ -10181,9 +12695,57 @@ export interface components {
             name: string;
             user_id: string;
         };
+        StarterRemindersDto: {
+            enabled: boolean;
+        };
+        StarterSharingDto: {
+            /** @description Providers (user ids) the member shares this starter with, read-only. [] turns sharing off. */
+            provider_ids: string[];
+        };
+        StartFastDto: {
+            note?: string;
+            /** @description A fasting plan this fast is a day of. The plan must be active and cover the local day the fast starts on, in the timezone of the plan. Plans never lift the 24 hour cap. */
+            plan_id?: string;
+            /** @enum {string} */
+            preset: "12_12" | "14_10" | "16_8" | "18_6" | "20_4" | "one_meal" | "custom";
+            /**
+             * @description UTC
+             * @example 2026-11-17T20:00:00.000Z
+             */
+            started_at: string;
+            target_hours: number;
+        };
         StartPlanCheckoutDto: {
+            /**
+             * @description A provider's discount code. The server prices it (preview with POST .../validate-code); a code that takes the whole price activates the membership at once (`free: true`). Cannot be combined with `renewal`.
+             * @example WELCOME10
+             */
+            coupon_code?: string;
             /** @description Save the card for automatic renewal (card-only checkout). Only when the consent-text endpoint offered it; never pre-ticked. */
             renewal?: components["schemas"]["RenewalCheckoutDto"];
+        };
+        StartPurchasedProgramDto: {
+            /** @description ISO date; default today */
+            start_date?: string;
+            /** @example Africa/Lagos */
+            timezone?: string;
+        };
+        StartStarterDto: {
+            /** @description The member confirms they are 18 or older */
+            adult_confirmed: boolean;
+            /** @description Opt-in morning reminder; default off */
+            reminders_enabled?: boolean;
+            /** @description The member saw the not-medical-advice note */
+            safety_ack: boolean;
+            /** @description True when the member answered yes to the pre-participation question. Allows the start; only this flag is stored. */
+            screening_flagged: boolean;
+            /**
+             * @description Member-local today up to 14 days ahead; default today
+             * @example 2026-11-02
+             */
+            start_date?: string;
+            /** @example Africa/Lagos */
+            timezone?: string;
         };
         StartThreadDto: {
             /** @description With organization_id: the member whose gym thread to open. */
@@ -10213,6 +12775,9 @@ export interface components {
              */
             completion_time_seconds?: number;
         };
+        SubmitHealthFormDto: {
+            answers: components["schemas"]["HealthFormAnswerDto"][];
+        };
         SubscribeSaveCardOutcomeDto: {
             /**
              * @description Set only when "Renew automatically" was ticked and the card was NOT saved: why (a code; no card detail). Absent when the card was saved or none was asked for.
@@ -10226,6 +12791,20 @@ export interface components {
              * @example Outstanding balance from March
              */
             reason?: string;
+        };
+        SwapStarterDto: {
+            adult_confirmed?: boolean;
+            /** @enum {string} */
+            reason?: "too_hard" | "too_easy" | "no_time" | "no_equipment" | "other";
+            reminders_enabled?: boolean;
+            safety_ack?: boolean;
+            screening_flagged?: boolean;
+            /** @example 2026-11-02 */
+            start_date?: string;
+            /** @description Platform starter template to switch to */
+            template_id: string;
+            /** @example Africa/Lagos */
+            timezone?: string;
         };
         ThreadPageDto: {
             next_cursor: string | null;
@@ -10336,6 +12915,24 @@ export interface components {
             /** @enum {string} */
             strategy?: "round_robin" | "first_available" | "least_loaded";
         };
+        UpdateChecklistItemDto: {
+            /** @description Paused items stay but are not shown */
+            active?: boolean;
+            /**
+             * @description Weekdays it shows on, 0 = Sunday to 6 = Saturday
+             * @example [
+             *       1,
+             *       2,
+             *       3,
+             *       4,
+             *       5
+             *     ]
+             */
+            days?: number[];
+            /** @description Custom items only */
+            label?: string;
+            order?: number;
+        };
         UpdateClientProfileDto: {
             goals?: string[];
             height_cm?: number;
@@ -10427,10 +13024,27 @@ export interface components {
             /** @example Free Weights */
             name?: string;
             /**
+             * @description Remove the current photo (and its stored file). Cannot be combined with a new "image" upload.
+             * @default false
+             */
+            remove_image: boolean;
+            /**
              * @default AVAILABLE
              * @enum {string}
              */
             status: "AVAILABLE" | "MAINTENANCE";
+        };
+        UpdateFastingPlanDto: {
+            /** @description Any value before the plan starts; afterwards it can only be extended */
+            days?: number;
+            days_of_week?: number[];
+            name?: string;
+            reminders_enabled?: boolean;
+            /** @description Only before the plan has started */
+            start_day?: string;
+            /** @description Moving to another zone */
+            timezone?: string;
+            window?: Record<string, never>;
         };
         UpdateFoodItemDto: {
             /** @example 340 */
@@ -10510,6 +13124,20 @@ export interface components {
              */
             title?: string;
         };
+        UpdateGoalDto: {
+            /** @description false archives the goal, true restores it */
+            active?: boolean;
+            /** @enum {string} */
+            metric?: "fasts" | "water_days" | "walks" | "sessions";
+            target?: number;
+            text?: string;
+        };
+        UpdateGoalSettingsDto: {
+            /** @description Hide daily weight figures (a boolean; strings are refused) */
+            hide_daily_weights?: boolean;
+            /** @enum {string} */
+            week_start?: "monday" | "sunday";
+        };
         UpdateGymClassDto: {
             /** @example 16 */
             capacity?: number;
@@ -10572,9 +13200,24 @@ export interface components {
             lng?: number;
             max_clients?: number;
             photos?: string[];
+            /**
+             * @description What price_from_minor buys on a solo listing: session, recurring or one_off. Organization listings take it from their cheapest plan and ignore this.
+             * @enum {string}
+             */
+            price_cadence?: "recurring" | "one_off" | "session";
+            /**
+             * @description Solo listings: 'auto' shows the provider's cheapest priced session (cadence 'session') and keeps it in step; 'custom' shows price_from_minor / price_cadence as typed. On 'auto' the price fields sent are ignored. Organization listings ignore this.
+             * @enum {string}
+             */
+            price_display?: "auto" | "custom";
             /** @description Display "from" price in the currency minor unit (kobo, cents). */
             price_from_minor?: number;
             price_label?: string;
+            /**
+             * @description Solo 'custom' listings: how often a recurring price repeats (required with price_cadence 'recurring') or how long a one-off covers (optional): 7, 30, 90 or 365 days. null clears it. Ignored on 'auto' and on organization listings.
+             * @enum {number|null}
+             */
+            price_period_days?: 7 | 30 | 90 | 365 | null;
             specialties?: string[];
         };
         UpdateListingSlugDto: Record<string, never>;
@@ -10615,6 +13258,11 @@ export interface components {
             status?: "active" | "inactive";
             team_role_id?: string;
         };
+        UpdateNoteDto: {
+            body?: string;
+            /** @enum {string|null} */
+            mood?: "good" | "okay" | "tired" | "low" | null;
+        };
         UpdateNotificationPreferencesDto: {
             emailBookingConfirmations?: boolean;
             emailCancellations?: boolean;
@@ -10625,7 +13273,7 @@ export interface components {
             emailSubscriptionUpdates?: boolean;
             inAppBookings?: boolean;
             inAppMessages?: boolean;
-            /** @description Streak milestones, and a program halfway mark and end. */
+            /** @description A program halfway mark and end. (Streak milestones are no longer sent.) */
             inAppMilestones?: boolean;
             /** @description A nudge after 3 days with no check-in, task or log. */
             inAppNudges?: boolean;
@@ -10696,10 +13344,10 @@ export interface components {
             /** @example VAT */
             tax_label?: string;
             /**
-             * @description Tax percentage applied on receipts/invoices (0–100).
+             * @description Tax percentage applied on receipts/invoices (0–100). Send null on an update to clear a saved rate (0 is a real rate, not "unset").
              * @example 15
              */
-            tax_rate?: number;
+            tax_rate?: number | null;
             /** @enum {string} */
             time_format?: "12h" | "24h";
             /**
@@ -10711,12 +13359,18 @@ export interface components {
             vat_registration_number?: string;
         };
         UpdateOrgMembershipPlanDto: {
+            /** @description Another active plan of this provider, in the same currency, that this plan is a saving against (e.g. Annual vs Monthly). null clears it. A label only: the price is unchanged. */
+            compare_to_plan_id?: string | null;
             currency?: string;
             description?: string;
+            /** @description The saving shown to members against compare_to_plan_id, a whole percent (0 to 90). 0 = none. */
+            discount_percent?: number;
             duration_days?: number;
             features?: string[];
             is_active?: boolean;
             is_public?: boolean;
+            /** @description The location (one of the organization's listings) that sells this plan. Required when the organization has two or more listings; defaults to the only one when it has one. */
+            listing_id?: string;
             name?: string;
             /** @enum {string} */
             plan_type?: "subscription" | "one_time";
@@ -10892,6 +13546,14 @@ export interface components {
             comment?: string;
             rating?: number;
         };
+        UpdateTargetsDto: {
+            /** @description Between min_hours and max_hours on days_per_week days. null clears it. */
+            fasting_window?: components["schemas"]["FastingWindowDto"] | null;
+            /** @description The water aim. Stored as the water setting target_glasses (GET /water/settings); this is a shortcut to it. null clears it. */
+            water_glasses?: number | null;
+            /** @description Between min_kg and max_kg, in half kilos. null clears it. */
+            weight_range?: components["schemas"]["WeightRangeDto"] | null;
+        };
         UpdateTeamRoleDto: {
             /**
              * @description Lower-case letters, digits and underscores (normalised: trimmed, lower-cased, spaces and hyphens to underscores). Built-in codes (admin, manager, consultant, assistant, owner) are refused.
@@ -10901,7 +13563,12 @@ export interface components {
             description?: string;
             /** @example Senior Trainer */
             name?: string;
-            permissions?: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "messaging:answer_members")[];
+            permissions?: ("team:view_members" | "team:invite_member" | "team:remove_member" | "team:update_member_role" | "team:deactivate_member" | "team:manage_roles" | "team:manage_organization" | "team:cancel_invitation" | "team:view_invitations" | "team:view_audit_log" | "form:create" | "form:view" | "form:edit" | "form:delete" | "form:submit" | "progress:view" | "progress:create" | "progress:edit" | "progress:delete" | "progress:manage_clients" | "progress:invite_client" | "marketplace:manage_listing" | "marketplace:view_requests" | "marketplace:respond_requests" | "marketplace:manage_reviews" | "bookings:manage" | "coupons:manage" | "messaging:answer_members")[];
+        };
+        UpdateWaterSettingsDto: {
+            glass_ml?: number;
+            /** @description The member's own goal. null clears it. */
+            target_glasses?: number | null;
         };
         UpdateWorkoutPlanDto: {
             description?: string;
@@ -10960,6 +13627,16 @@ export interface components {
         };
         UpsertProviderPlanDto: Record<string, never>;
         UpsertProviderPlanMarketPriceDto: Record<string, never>;
+        ValidateBookingCodeDto: {
+            /** @example WELCOME10 */
+            code: string;
+            consultationTypeId: string;
+            providerId: string;
+        };
+        ValidateCodeDto: {
+            /** @example WELCOME10 */
+            code: string;
+        };
         VerifyOtpDto: {
             /**
              * @description User email address
@@ -10978,6 +13655,12 @@ export interface components {
              * @example GHS
              */
             code: string;
+        };
+        WeightRangeDto: {
+            /** @example 70 */
+            max_kg: number;
+            /** @example 68 */
+            min_kg: number;
         };
     };
     responses: never;
@@ -11625,6 +14308,23 @@ export interface operations {
             };
         };
     };
+    AdminAccessController_myAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminMemberBillingController_reconcile: {
         parameters: {
             query?: never;
@@ -11666,6 +14366,23 @@ export interface operations {
             path: {
                 organizationId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminAccessController_listPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -12267,7 +14984,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 status?: "pending" | "succeeded" | "failed" | "reversed";
-                type?: "subscription" | "platform_subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
+                type?: "subscription" | "platform_subscription" | "consultation" | "content_purchase" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
                 direction?: "credit" | "debit";
                 /** @description Filter to one organization */
                 organization_id?: string;
@@ -12297,23 +15014,6 @@ export interface operations {
             path: {
                 transactionId: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminController_getPermissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -12391,6 +15091,25 @@ export interface operations {
             };
         };
     };
+    AdminUsersController_unlockLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_unsuspendUser: {
         parameters: {
             query?: never;
@@ -12398,6 +15117,23 @@ export interface operations {
             path: {
                 userId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AppConfigController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -12492,7 +15228,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description AUTH_INVALID_CREDENTIALS, or AUTH_ACCOUNT_LOCKED after repeated failures, with `retry_after_seconds` (integer) beside the message. */
+            /** @description AUTH_INVALID_CREDENTIALS, or AUTH_ACCOUNT_LOCKED after repeated failures, with `retry_after_seconds` (integer) and `lock_scope` ('email' | 'account' | 'device' | 'ip'; a password reset lifts only 'email' and 'account') beside the message. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -12901,6 +15637,26 @@ export interface operations {
             };
         };
     };
+    CheckinsController_getMemberActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CheckinsController_getOrgRejections: {
         parameters: {
             query?: never;
@@ -12955,6 +15711,189 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateChecklistItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateChecklistItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_uncomplete: {
+        parameters: {
+            query: {
+                tz: string;
+                /** @description For an offline replay: today or up to two days back */
+                local_day?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_addSystem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_removeSystem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ChecklistController_today: {
+        parameters: {
+            query: {
+                tz: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13119,6 +16058,27 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsultationsController_validateBookingCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateBookingCodeDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -13515,6 +16475,479 @@ export interface operations {
             };
         };
     };
+    ContentAccessController_setAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetContentAccessDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentAccessController_check: {
+        parameters: {
+            query: {
+                /** @description ClientProfile id */
+                client_profile_id: string;
+            };
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentAccessController_askToPay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentClientDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentPurchaseController_checkout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutContentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentAccessController_grants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentAccessController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentClientDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentMemberController_offer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentMemberController_mine: {
+        parameters: {
+            query: {
+                limit: string;
+                cursor: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentAccessController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                grantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentSalesExportController_sales: {
+        parameters: {
+            query?: {
+                /** @description csv: UTF-8, one row per record, integer minor units (no byte-order mark). json: {"items":[...]}, same columns. */
+                format?: "csv" | "json";
+                /** @description Lower bound, inclusive, ISO 8601 (a value without an offset is UTC). Default: the beginning of time. */
+                from?: string;
+                /** @description Upper bound, exclusive, ISO 8601. Default: now. */
+                to?: string;
+                status?: "paid" | "refunded";
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentOrgSalesController_list: {
+        parameters: {
+            query?: {
+                status?: "paid" | "refunded";
+                /** @description The item author (earner) user id */
+                trainer_id?: string;
+                limit?: number;
+                skip?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentPurchaseController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartPurchasedProgramDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentPurchaseController_one: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentPurchaseController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentPurchaseController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentSalesController_list: {
+        parameters: {
+            query: {
+                limit: string;
+                skip: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ContentSalesController_refund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundContentPurchaseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CouponsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CouponsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCouponDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CouponsController_activate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                couponId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CouponsController_deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                couponId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CouponsController_redemptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                couponId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CredentialsController_getMine: {
         parameters: {
             query?: never;
@@ -13648,6 +17081,445 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExerciseLibraryController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_list: {
+        parameters: {
+            query?: {
+                status?: "active" | "paused" | "ended";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFastingPlanDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFastingPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingPlansController_current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_screening: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FastingScreeningDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_history: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque, from next_cursor */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartFastDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditFastDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndFastDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_feeling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddFeelingDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_undoEnd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_summary: {
+        parameters: {
+            query: {
+                /** @description Local day, inclusive */
+                from: string;
+                /** @description Local day, inclusive */
+                to: string;
+                tz: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FastingController_mySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -15085,7 +18957,7 @@ export interface operations {
                 account_type?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
                 country_code?: string;
                 city?: string;
-                /** @description Latitude for geo-search */
+                /** @description Latitude for geo-search. With lng, results are limited to radius_km, ordered nearest first by default, and each card carries distance_km. */
                 lat?: number;
                 /** @description Longitude for geo-search */
                 lng?: number;
@@ -15104,7 +18976,10 @@ export interface operations {
                 verified_only?: boolean;
                 /** @description Minimum average rating */
                 min_rating?: number;
-                sort?: "rating" | "distance" | "newest" | "price_asc" | "price_desc";
+                /** @description distance and nearest are the same: nearest first, needs lat/lng (without them the list is top rated). price_asc and price_desc put listings with no price last (see currency). In every sort, listings not accepting new clients come after the ones that are. */
+                sort?: "rating" | "distance" | "nearest" | "newest" | "price_asc" | "price_desc";
+                /** @description The member's own currency (ISO 4217, e.g. NGN). With price_asc or price_desc, listings priced in it come first (sorted by price), then listings in other currencies grouped by currency (each sorted by price), then unpriced ones. Ignored by the other sorts. */
+                currency?: string;
                 page?: number;
                 limit?: number;
             };
@@ -15181,7 +19056,10 @@ export interface operations {
     };
     MarketplaceController_getPlanAutoRenewConsent: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description A discount code the buyer is applying: when it carries into renewals the text names the discounted renewals; otherwise auto-renew is not offered (reason "coupon"). */
+                coupon_code?: string;
+            };
             header?: never;
             path: {
                 id: string;
@@ -15212,6 +19090,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["StartPlanCheckoutDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceController_validatePlanCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateCodeDto"];
             };
         };
         responses: {
@@ -15431,6 +19333,52 @@ export interface operations {
             };
         };
     };
+    MarketplaceController_countListings: {
+        parameters: {
+            query?: {
+                account_type?: "gym_owner" | "personal_trainer" | "dietitian" | "fitness_member";
+                country_code?: string;
+                city?: string;
+                /** @description Latitude for geo-search. With lng, results are limited to radius_km, ordered nearest first by default, and each card carries distance_km. */
+                lat?: number;
+                /** @description Longitude for geo-search */
+                lng?: number;
+                /** @description Search radius in km (max 200) */
+                radius_km?: number;
+                /** @description Comma-separated specialties */
+                specialties?: string;
+                /** @description Dietitian specializations: comma-separated DietitianSpecialization codes, any match. Codes and labels: GET /credentials/options. */
+                specializations?: string;
+                /** @description Dietitian populations: comma-separated DietitianPopulation codes, any match. Codes and labels: GET /credentials/options. */
+                populations?: string;
+                /** @description Full-text search query */
+                q?: string;
+                accepting_clients?: boolean;
+                /** @description Only return listings with a verification badge */
+                verified_only?: boolean;
+                /** @description Minimum average rating */
+                min_rating?: number;
+                /** @description distance and nearest are the same: nearest first, needs lat/lng (without them the list is top rated). price_asc and price_desc put listings with no price last (see currency). In every sort, listings not accepting new clients come after the ones that are. */
+                sort?: "rating" | "distance" | "nearest" | "newest" | "price_asc" | "price_desc";
+                /** @description The member's own currency (ISO 4217, e.g. NGN). With price_asc or price_desc, listings priced in it come first (sorted by price), then listings in other currencies grouped by currency (each sorted by price), then unpriced ones. Ignored by the other sorts. */
+                currency?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ClassBookingsController_getMyBookings: {
         parameters: {
             query?: {
@@ -15612,6 +19560,23 @@ export interface operations {
                 "application/json": components["schemas"]["RespondMarketplaceRequestDto"];
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MarketplaceProController_getSessionPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -16553,6 +20518,25 @@ export interface operations {
             };
         };
     };
+    MarketplaceOrgController_getLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProviderMemberBillingController_charges: {
         parameters: {
             query?: never;
@@ -16749,6 +20733,66 @@ export interface operations {
             };
         };
     };
+    OrgHealthFormsController_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgHealthFormsController_answers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgHealthFormsController_followedUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                memberUserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MarketplaceOrgController_restoreMember: {
         parameters: {
             query?: never;
@@ -16896,6 +20940,119 @@ export interface operations {
             };
         };
     };
+    OrgPayoutAccountController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccountStatusDto"];
+                };
+            };
+        };
+    };
+    OrgPayoutAccountController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutAccountInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccountStatusDto"];
+                };
+            };
+        };
+    };
+    OrgPayoutAccountController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgPayoutAccountController_banks: {
+        parameters: {
+            query?: {
+                currency?: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutBanksViewDto"];
+                };
+            };
+        };
+    };
+    OrgPayoutAccountController_resolve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutAccountInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResolvedPayoutAccountDto"];
+                };
+            };
+        };
+    };
     MarketplaceOrgController_getPlans: {
         parameters: {
             query?: never;
@@ -17033,6 +21190,50 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanIncludesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PlanIncludesController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPlanIncludesDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -17604,6 +21805,535 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MyHealthFormsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MyHealthFormsController_one: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MyHealthFormsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitHealthFormDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberPaymentsController_owed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["OutstandingListDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    MemberPaymentsController_one: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["OutstandingChargeDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    MemberPaymentsController_checkout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["OutstandingCheckoutDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    MemberPaymentsController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["OutstandingVerifyDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    MemberGoalsController_list: {
+        parameters: {
+            query?: {
+                include_archived?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_make: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_discard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_progress: {
+        parameters: {
+            query: {
+                tz: string;
+                /** @description Any local day in the week to read. Default today. */
+                week_of?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_mySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberGoalsController_updateMySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberHistoryController_timeline: {
+        parameters: {
+            query: {
+                tz: string;
+                /** @description Local day, inclusive */
+                from?: string;
+                /** @description Local day, inclusive */
+                to?: string;
+                /** @description Comma list of fast, water, weight, meal, activity, note, session. Default all. */
+                types?: string;
+                limit?: number;
+                /** @description Opaque, from next_cursor */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberJournalController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque, from next_cursor */
+                cursor?: string;
+                /** @description Local day */
+                from?: string;
+                /** @description Local day */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberJournalController_write: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberJournalController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberJournalController_discard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberJournalController_edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberSeriesController_read: {
+        parameters: {
+            query: {
+                metric: "weight" | "fasting_hours" | "water_glasses" | "activity_minutes" | "steps";
+                /** @description Local day, inclusive */
+                from: string;
+                /** @description Local day, inclusive */
+                to: string;
+                tz: string;
+                bucket?: "day" | "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberSeriesController_compare: {
+        parameters: {
+            query: {
+                tz: string;
+                period: "4w" | "3m" | "1y";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberTargetsController_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberTargetsController_clear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberTargetsController_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTargetsDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18679,7 +23409,10 @@ export interface operations {
     };
     ProgramsClientController_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description How many days ahead of today to include occurrences for (default 7) */
+                days?: number;
+            };
             header?: never;
             path: {
                 instanceId: string;
@@ -18717,9 +23450,124 @@ export interface operations {
             };
         };
     };
+    StarterMyProgramsController_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveStarterDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterMyProgramsController_reminders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarterRemindersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterMyProgramsController_sharing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarterSharingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterMyProgramsController_swap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                instanceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwapStarterDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProgramsClientController_agenda: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsExportController_export: {
+        parameters: {
+            query?: {
+                /** @description ISO 8601 */
+                from?: string;
+                /** @description ISO 8601 */
+                to?: string;
+                format?: "json" | "csv";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18828,7 +23676,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 is_read?: boolean;
-                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "CONNECTION_ENDED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "MEAL_REPLY" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
+                type?: "BOOKING_CREATED" | "BOOKING_CONFIRMED" | "BOOKING_CANCELLED" | "BOOKING_RESCHEDULED" | "BOOKING_COMPLETED" | "BOOKING_REMINDER" | "CLIENT_INVITATION" | "CLIENT_REQUEST" | "CLIENT_ACCEPTED" | "CLIENT_DEPARTED" | "CONNECTION_ENDED" | "MARKETPLACE_REQUEST_RECEIVED" | "MARKETPLACE_REQUEST_ACCEPTED" | "MARKETPLACE_REQUEST_REJECTED" | "MARKETPLACE_TRANSFER_REQUEST" | "REVIEW_RECEIVED" | "REVIEW_RESPONSE" | "DIET_PLAN_ASSIGNED" | "WORKOUT_PLAN_ASSIGNED" | "JOURNAL_ENTRY_ADDED" | "MEAL_LOGGED" | "MEAL_REPLY" | "PROGRESS_REPORT_SHARED" | "PROGRAM_ASSIGNED" | "PROGRAM_REMINDER" | "PROGRAM_HALFWAY" | "PROGRAM_COMPLETED" | "CONTENT_OFFER" | "CONTENT_GRANTED" | "CONTENT_PURCHASED" | "CONTENT_SOLD" | "HEALTH_FORM_REQUESTED" | "STREAK_MILESTONE" | "INACTIVITY_NUDGE" | "TEAM_INVITATION" | "TEAM_MEMBER_JOINED" | "TEAM_MEMBER_REMOVED" | "SUBSCRIPTION_CREATED" | "SUBSCRIPTION_EXPIRING" | "SUBSCRIPTION_EXPIRED" | "PAYMENT_RECEIVED" | "PAYMENT_METHOD_EXPIRING" | "PAYMENT_METHOD_UNUSABLE" | "SUBSCRIPTION_RENEWAL_UPCOMING" | "SUBSCRIPTION_PAYMENT_FAILED" | "SUBSCRIPTION_PRICE_CHANGE" | "MEMBER_PAYMENT_FAILED_FINAL" | "PAYMENT_KEY_REJECTED" | "ENROLLMENT_OFFER" | "STAFF_CLIENT_ASSIGNED" | "TRAINER_ASSIGNED" | "LOYALTY_POINTS_EARNED" | "LOYALTY_REWARD_REDEEMED" | "VERIFICATION_APPROVED" | "VERIFICATION_REJECTED" | "SYSTEM_ANNOUNCEMENT" | "ACCOUNT_SUSPENDED" | "ORG_CLOSED" | "REFUND_ISSUED" | "REFUND_FAILED" | "REFUND_REQUEST_DECIDED" | "REFUND_SUGGESTED" | "DISPUTE_OPENED" | "DISPUTE_UPDATED";
                 category?: "booking" | "payment" | "mention" | "system";
             };
             header?: never;
@@ -19525,6 +24373,46 @@ export interface operations {
         };
     };
     ProgramsController_clientOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_clientResults: {
+        parameters: {
+            query: {
+                days: string;
+            };
+            header?: never;
+            path: {
+                clientProfileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProgramsController_sharedStarter: {
         parameters: {
             query?: never;
             header?: never;
@@ -22103,6 +26991,44 @@ export interface operations {
             };
         };
     };
+    ReminderBackupController_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReminderBackupController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PutReminderBackupDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ReviewsController_createReview: {
         parameters: {
             query?: never;
@@ -22307,6 +27233,86 @@ export interface operations {
                 /** @description Maximum items per section */
                 limit?: number;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterProgramsController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                templateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterProgramsController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                templateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartStarterDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StarterProgramsController_options: {
+        parameters: {
+            query?: {
+                goal?: "lose_weight" | "build_strength" | "get_active";
+                equipment?: "none" | "dumbbells" | "gym";
+                days?: 2 | 3 | 4;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgClosureController_myClosed: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -22688,7 +27694,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 /** @description Only this event type */
-                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED" | "MEMBERSHIP_PAUSED_BY_GYM" | "MEMBERSHIP_RESUMED_BY_GYM" | "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER";
+                event?: "TEAM_MEMBER_ADDED" | "TEAM_MEMBER_UPDATED" | "TEAM_MEMBER_REMOVED" | "TEAM_INVITATION_CREATED" | "TEAM_INVITATION_ACCEPTED" | "TEAM_INVITATION_CANCELLED" | "TEAM_INVITATION_SUPERSEDED" | "TEAM_STAFF_TRAINER_ACCOUNT_PROMOTED" | "TEAM_ROLE_CREATED" | "TEAM_ROLE_UPDATED" | "TEAM_ROLE_DELETED" | "ORG_PAYMENT_CONFIG_UPSERTED" | "ORG_PAYMENT_CONFIG_REMOVED" | "ORG_PAYOUT_ACCOUNT_SAVED" | "ORG_PAYOUT_ACCOUNT_REMOVED" | "ORG_PAYOUT_SETTINGS_UPDATED" | "PROVIDER_CURRENCY_VERIFIED" | "PROVIDER_CURRENCY_REMOVED" | "PROVIDER_CURRENCIES_REFRESHED" | "PROVIDER_CURRENCIES_RECHECKED" | "ORG_LOYALTY_SETTINGS_UPDATED" | "MEMBERSHIP_PAUSED_BY_GYM" | "MEMBERSHIP_RESUMED_BY_GYM" | "MEMBERSHIP_GYM_PAUSE_RESUMED_BY_MEMBER" | "MEMBER_HEALTH_FORM_VIEWED";
                 /** @description Only changes made by this user (a team member or the owner) */
                 actor_id?: string;
                 /** @description ISO date lower bound */
@@ -23002,6 +28008,79 @@ export interface operations {
             };
             /** @description Forbidden - Missing permissions */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClassesController_markAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization ID */
+                organizationId: string;
+                /** @description Class ID */
+                classId: string;
+                /** @description Booking ID */
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAttendanceDto"];
+            };
+        };
+        responses: {
+            /** @description Attendance recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not confirmed, or not started */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden - Missing permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Class or booking not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrgClosureController_close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseOrganizationDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23405,6 +28484,25 @@ export interface operations {
             };
         };
     };
+    OrgClosureController_reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TeamsController_getRoles: {
         parameters: {
             query?: never;
@@ -23491,6 +28589,227 @@ export interface operations {
             };
         };
     };
+    MemberPaymentsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque; the `next_cursor` of the previous page */
+                cursor?: string;
+                kind?: "membership" | "session" | "content" | "service" | "refund";
+                currency?: string;
+                /** @description ISO date lower bound (paid_at) */
+                from?: string;
+                /** @description ISO date upper bound (paid_at) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MemberPaymentsPageDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    MemberPaymentsController_receipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MemberReceiptDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    AttributedRevenueController_myAttributedEarnings: {
+        parameters: {
+            query?: {
+                /** @description Lower bound on occurred_at, inclusive, as an ISO 8601 instant. Offsets are honoured (e.g. 2026-10-01T00:00:00+01:00); a value without an offset is read as UTC. The window is UTC-based, not the organization's local days. Default: 30 days before `to`. */
+                from?: string;
+                /** @description ISO date upper bound on occurred_at (exclusive). Default: now. */
+                to?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MemberPaymentsController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data?: components["schemas"]["MemberPaymentsSummaryDto"];
+                        success?: boolean;
+                    };
+                };
+            };
+        };
+    };
+    AttributedRevenueController_exportLedger: {
+        parameters: {
+            query?: {
+                /** @description csv: UTF-8, one row per record, integer minor units (no byte-order mark). json: {"items":[...]}, same columns. */
+                format?: "csv" | "json";
+                /** @description Lower bound, inclusive, ISO 8601 (a value without an offset is UTC). Default: the beginning of time. */
+                from?: string;
+                /** @description Upper bound, exclusive, ISO 8601. Default: now. */
+                to?: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttributedRevenueController_exportRevenueByTrainer: {
+        parameters: {
+            query?: {
+                /** @description csv: UTF-8, one row per record, integer minor units (no byte-order mark). json: {"items":[...]}, same columns. */
+                format?: "csv" | "json";
+                /** @description Lower bound, inclusive, ISO 8601 (a value without an offset is UTC). Default: the beginning of time. */
+                from?: string;
+                /** @description Upper bound, exclusive, ISO 8601. Default: now. */
+                to?: string;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderTransactionsController_getIncomeSummary: {
+        parameters: {
+            query?: {
+                /** @description Calendar year (UTC). Defaults to the current year. */
+                year?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProviderTransactionsController_getPayoutOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttributedRevenueController_revenueByTrainer: {
+        parameters: {
+            query?: {
+                /** @description Lower bound on occurred_at, inclusive, as an ISO 8601 instant. Offsets are honoured (e.g. 2026-10-01T00:00:00+01:00); a value without an offset is read as UTC. The window is UTC-based, not the organization's local days. Default: 30 days before `to`. */
+                from?: string;
+                /** @description ISO date upper bound on occurred_at (exclusive). Default: now. */
+                to?: string;
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ProviderTransactionsController_getSummary: {
         parameters: {
             query?: never;
@@ -23535,7 +28854,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "pending" | "succeeded" | "failed" | "reversed";
-                type?: "subscription" | "platform_subscription" | "consultation" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
+                type?: "subscription" | "platform_subscription" | "consultation" | "content_purchase" | "marketplace_request" | "tip" | "adjustment" | "refund" | "payout" | "other";
                 direction?: "credit" | "debit";
                 /** @description ISO date lower bound (occurred_at) */
                 from?: string;
@@ -23817,6 +29136,32 @@ export interface operations {
             };
         };
     };
+    UtilityController_searchCities: {
+        parameters: {
+            query: {
+                /** @description Start of the city name; case and accents ignored */
+                q: string;
+                /** @description Only cities in this country (ISO 3166-1 alpha-2) */
+                country_code?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching cities, best first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitySearchResultDto"][];
+                };
+            };
+        };
+    };
     UtilityController_getCountries: {
         parameters: {
             query?: never;
@@ -23847,6 +29192,107 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Platform configuration object */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WaterController_mySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WaterController_updateMySettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWaterSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WaterController_summary: {
+        parameters: {
+            query: {
+                /** @description Local day, inclusive */
+                from: string;
+                /** @description Local day, inclusive */
+                to: string;
+                tz: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WaterController_today: {
+        parameters: {
+            query: {
+                tz: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WaterController_adjust: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustWaterDto"];
+            };
+        };
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;

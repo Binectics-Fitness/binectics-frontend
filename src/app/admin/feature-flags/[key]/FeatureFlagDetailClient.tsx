@@ -30,6 +30,8 @@ import {
 } from "@/lib/api/featureFlags";
 import { absoluteTime, describeChange, orgLabel, relativeTime } from "@/lib/featureFlags/helpers";
 import { ConfirmFlagChange, flagInputClass, flagInputStyle, flagWriteError } from "../ConfirmFlagChange";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 type Pending =
   | { kind: "global" }
@@ -41,6 +43,8 @@ export default function FeatureFlagDetailClient() {
   const params = useParams<{ key: string }>();
   const key = decodeURIComponent(String(params?.key ?? ""));
   const queryClient = useQueryClient();
+  // The global toggle and the overrides need platform:write.
+  const canChange = useAdminAccess().can(AdminPermission.PLATFORM_WRITE);
   const detail = useQuery<AdminFeatureFlagDetail>({
     queryKey: featureFlagKeys.adminDetail(key),
     enabled: !!key,
@@ -135,14 +139,16 @@ export default function FeatureFlagDetailClient() {
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn-ghost-v2 sm self-start sm:self-auto"
-                  style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
-                  onClick={() => setPending({ kind: "global" })}
-                >
-                  {flag.enabled ? "Turn off everywhere" : "Turn on everywhere"}
-                </button>
+                {canChange && (
+                  <button
+                    type="button"
+                    className="btn-ghost-v2 sm self-start sm:self-auto"
+                    style={flag.enabled ? { color: "var(--danger-ink)", borderColor: "var(--danger)" } : undefined}
+                    onClick={() => setPending({ kind: "global" })}
+                  >
+                    {flag.enabled ? "Turn off everywhere" : "Turn on everywhere"}
+                  </button>
+                )}
               </div>
             </DSCard>
 
@@ -152,12 +158,14 @@ export default function FeatureFlagDetailClient() {
                 title="Organisation overrides"
                 subtitle="An organisation set here ignores the global value until you remove its override."
               />
-              <div className="px-4 sm:px-5 py-4">
-                <AddOverride
-                  existing={flag.overrides.map((o) => o.organization.id)}
-                  onPick={(org, enabled) => setPending({ kind: "set", org, enabled })}
-                />
-              </div>
+              {canChange && (
+                <div className="px-4 sm:px-5 py-4">
+                  <AddOverride
+                    existing={flag.overrides.map((o) => o.organization.id)}
+                    onPick={(org, enabled) => setPending({ kind: "set", org, enabled })}
+                  />
+                </div>
+              )}
               {flag.overrides.length === 0 ? (
                 <EmptySlate message="No overrides" hint="Every organisation follows the global value." />
               ) : (
@@ -167,9 +175,11 @@ export default function FeatureFlagDetailClient() {
                     <DSTableTh>Value</DSTableTh>
                     <DSTableTh>Reason</DSTableTh>
                     <DSTableTh>Set</DSTableTh>
-                    <DSTableTh align="right">
-                      <span className="sr-only">Actions</span>
-                    </DSTableTh>
+                    {canChange && (
+                      <DSTableTh align="right">
+                        <span className="sr-only">Actions</span>
+                      </DSTableTh>
+                    )}
                   </DSTableHead>
                   <tbody>
                     {flag.overrides.map((o, i) => (
@@ -205,6 +215,7 @@ export default function FeatureFlagDetailClient() {
                             </div>
                           )}
                         </DSTableTd>
+                        {canChange && (
                         <DSTableTd align="right">
                           <div className="flex justify-end gap-2">
                             <button
@@ -225,6 +236,7 @@ export default function FeatureFlagDetailClient() {
                             </button>
                           </div>
                         </DSTableTd>
+                        )}
                       </DSTableRow>
                     ))}
                   </tbody>

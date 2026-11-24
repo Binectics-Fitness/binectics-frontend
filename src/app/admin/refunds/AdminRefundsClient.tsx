@@ -7,6 +7,8 @@ import { ActionModal } from "@/components/ds/ActionModal";
 import { AsyncSpinner, EmptySlate, StatusPill } from "@/components/ds";
 import { formatMinor } from "@/lib/currencies/helpers";
 import { refundsService, type Refund, type RefundStatus } from "@/lib/api/refunds";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 import { REFUND_ORIGIN_LABEL, REFUND_STATUS, adminRequestActions, refundErrorMessage } from "@/lib/refunds/refundUi";
 
 type Filter = "requested" | "attention" | "all";
@@ -36,6 +38,8 @@ function memberName(r: Refund): string {
  * the provider's key (owner ruling, Oct 12 2026; the API enforces it).
  */
 export function AdminRefundsClient() {
+  // Approve, decline, check and mark-not-sent move money: refunds:write.
+  const canAct = useAdminAccess().can(AdminPermission.REFUNDS_WRITE);
   const [filter, setFilter] = useState<Filter>("requested");
   const [items, setItems] = useState<Refund[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -150,25 +154,25 @@ export function AdminRefundsClient() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill label={s.label} tone={s.tone} title={s.help} />
-                    {req.approve ? (
+                    {canAct && req.approve ? (
                       <button className="btn-primary-v2" disabled={busy === r.id} onClick={() => act(r.id, () => refundsService.approve(r.id))}>
                         {req.onProviderKey ? "Approve and send from the provider's account" : "Approve and send"}
                       </button>
                     ) : null}
-                    {req.decline ? (
+                    {canAct && req.decline ? (
                       <button className="btn-ghost-v2" disabled={busy === r.id} onClick={() => setRejecting(r)}>Decline</button>
                     ) : null}
-                    {r.status === "requested" && !platform && !req.approve ? (
+                    {canAct && r.status === "requested" && !platform && !req.approve ? (
                       <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>
                         Provider&rsquo;s own account: declining frees it for them to refund.
                       </span>
                     ) : null}
-                    {adminSent && ["pending", "needs_attention", "unknown"].includes(r.status) ? (
+                    {canAct && adminSent && ["pending", "needs_attention", "unknown"].includes(r.status) ? (
                       <button className="btn-ghost-v2" disabled={busy === r.id} onClick={() => act(r.id, () => refundsService.check(r.id))}>
                         Check with Paystack
                       </button>
                     ) : null}
-                    {adminSent && r.status === "unknown" && r.needs_review ? (
+                    {canAct && adminSent && r.status === "unknown" && r.needs_review ? (
                       <button className="btn-ghost-v2" onClick={() => setReleasing(r)}>Mark as not sent</button>
                     ) : null}
                   </div>

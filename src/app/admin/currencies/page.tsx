@@ -20,6 +20,8 @@ import {
 } from "@/components/ds";
 import Modal from "@/components/Modal";
 import { toast } from "@/components/Toast";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 import {
   adminService,
   ADMIN_CURRENCY_USES,
@@ -447,6 +449,9 @@ function EditCurrencyModal({
 
 export default function AdminCurrenciesPage() {
   const queryClient = useQueryClient();
+  // Billing admins may read the list (the API accepts platform:read or
+  // billing:read); changing a currency needs platform:write.
+  const canEdit = useAdminAccess().can(AdminPermission.PLATFORM_WRITE);
   const { data, isLoading, error } = useQuery<AdminCurrency[]>({
     queryKey: queryKeys.currencies.admin(),
     queryFn: async () => {
@@ -541,9 +546,11 @@ export default function AdminCurrenciesPage() {
               ))}
               <DSTableTh>Payment providers</DSTableTh>
               <DSTableTh>Usage</DSTableTh>
-              <DSTableTh align="right">
-                <span className="sr-only">Actions</span>
-              </DSTableTh>
+              {canEdit && (
+                <DSTableTh align="right">
+                  <span className="sr-only">Actions</span>
+                </DSTableTh>
+              )}
             </DSTableHead>
             <tbody>
               {rows.map((c, i) => (
@@ -579,16 +586,18 @@ export default function AdminCurrenciesPage() {
                   <DSTableTd>
                     <UsageCell currency={c} />
                   </DSTableTd>
-                  <DSTableTd align="right">
-                    <button
-                      type="button"
-                      className="btn-ghost-v2 sm"
-                      onClick={() => setEditing(c)}
-                      aria-label={`Edit ${c.code}`}
-                    >
-                      Edit
-                    </button>
-                  </DSTableTd>
+                  {canEdit && (
+                    <DSTableTd align="right">
+                      <button
+                        type="button"
+                        className="btn-ghost-v2 sm"
+                        onClick={() => setEditing(c)}
+                        aria-label={`Edit ${c.code}`}
+                      >
+                        Edit
+                      </button>
+                    </DSTableTd>
+                  )}
                 </DSTableRow>
               ))}
             </tbody>
