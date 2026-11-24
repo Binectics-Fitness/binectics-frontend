@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
-import { AddLocationButton } from "./_actions";
+import { AddLocationButton, FacilityItemsPanel } from "./_actions";
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
 import { marketplaceService } from "@/lib/api/marketplace";
@@ -26,6 +26,14 @@ export default function GymLocationsPage() {
   const canAddLocation = holds(useGymViewer(), TeamPermission.MANAGE_ORGANIZATION);
   const [locations, setLocations] = useState<ListingWithItems[]>([]);
   const [loading, setLoading] = useState(true);
+  // Adding or removing a facility in a panel keeps the card's count true.
+  const setFacilityCount = useCallback((listingId: string, count: number) => {
+    setLocations((prev) =>
+      prev.some((l) => l._id === listingId && l.facilityItemsCount !== count)
+        ? prev.map((l) => (l._id === listingId ? { ...l, facilityItemsCount: count } : l))
+        : prev,
+    );
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -114,10 +122,17 @@ export default function GymLocationsPage() {
               )}
             </div>
 
+            <FacilityItemsPanel
+              listingId={l._id}
+              listingName={l.headline}
+              onCountChange={(count) => setFacilityCount(l._id, count)}
+            />
+
             {/* Footer */}
             <div className="flex items-center justify-between px-4.5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
               <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>Location · <strong style={{ color: "var(--ink)" }}>{l.city ?? "-"}, {l.country_code ?? "-"}</strong></span>
-              <Link href={`/dashboard/gym-owner/locations/${l._id}`} className="btn-ghost-v2 sm">Manage location</Link>
+              {/* A listing carries no location id (only organization_id), so this goes to the locations list, not /locations/[id]. */}
+              <Link href="/dashboard/gym-owner/locations" className="btn-ghost-v2 sm">Manage locations</Link>
             </div>
           </DSCard>
         ))}

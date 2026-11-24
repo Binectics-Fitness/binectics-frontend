@@ -149,7 +149,7 @@ export default function DietitianProtocolsPage() {
                         aria-busy={busyId === p._id}
                         aria-label={`Open as program: ${p.name}`}
                         className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1) cursor-pointer disabled:opacity-50"
-                        style={{ border: "1px solid var(--border)", color: "var(--dietitian)", background: "transparent" }}
+                        style={{ border: "1px solid var(--border)", color: "var(--dietitian-ink)", background: "transparent" }}
                       >
                         {busyId === p._id ? "Converting…" : "Open as program"}
                       </button>

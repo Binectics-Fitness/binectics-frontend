@@ -8,6 +8,7 @@ import {
 import type { PrivacyPreferences, ProfileVisibility } from "@/lib/api/auth";
 import { DSCard } from "@/components/ds";
 import { HealthAppsCard } from "./HealthAppsCard";
+import { ExportDataCard } from "./ExportDataCard";
 
 const VISIBILITY_OPTIONS: Array<{
   value: ProfileVisibility;
@@ -225,6 +226,9 @@ export default function PrivacySettingsPage() {
 
       {/* Health Connect: connected from the app, explained here. */}
       <HealthAppsCard />
+
+      {/* A copy of everything the member logged (members only). */}
+      <ExportDataCard />
     </div>
   );
 }

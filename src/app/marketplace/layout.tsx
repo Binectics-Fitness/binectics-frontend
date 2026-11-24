@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   // lose its ", Binectics".
   title: { default: "Marketplace", template: "%s, Binectics" },
   description:
-    "Explore the Binectics fitness marketplace. Browse gyms, trainers, and dietitians with verified profiles and flexible subscription plans.",
+    "Explore the Binectics fitness marketplace. Browse gyms, trainers and dietitians by place, rating and price.",
 };
 
 export default function MarketplaceLayout({

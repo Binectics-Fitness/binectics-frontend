@@ -34,7 +34,7 @@ Rule (owner, Oct 14 2026, reversing the Oct 6 one-word rule): product screens ge
 - Exclude demo components and dashboard pages
 
 ### 4. Mobile responsiveness
-- Buttons/links without `min-h-11`?
+- Buttons/links without `min-h-touch` / `min-h-11` (44px)?
 - Grids without responsive breakpoints?
 - Fixed widths without responsive alternatives?
 - Tables without `overflow-x-auto`?

@@ -5,7 +5,6 @@ import { useState } from "react";
 import type { FastSession, FastingFeelingValue } from "@/lib/api/fasting";
 import {
   FASTING_STAGES,
-  END_BUTTON,
   EDIT_START_LINK,
   FEELING_NOTE,
   FEELING_OPTIONS,
@@ -17,7 +16,9 @@ import {
   UNWELL_END,
   UNWELL_TITLE,
   daypart,
+  goalReachedEyebrow,
   progressPhrase,
+  reachedAt,
 } from "@/lib/solo/fastingCopy";
 import {
   HOUR_MS,
@@ -27,6 +28,7 @@ import {
   durationText,
   elapsedMs,
   fastProgress,
+  formatHours,
   mix,
   remainingMs,
   spokenDuration,
@@ -36,6 +38,7 @@ import {
 } from "@/lib/solo/fastingRules";
 import { SOLO_HREFS } from "@/lib/solo/nav";
 import { FastArc } from "./FastArc";
+import { FastEndAction, useGoalReached } from "./FastEndAction";
 import { WriteError } from "./parts";
 import styles from "./fasting.module.css";
 
@@ -78,11 +81,14 @@ export function FastingHero({
   const light = pal.tone === "light";
   const numerals = clockText(elapsed);
 
-  const eyebrow = `${daypart(new Date(nowMs).getHours())} · ${progressPhrase(progress)}`;
-  const sub = remaining > 0 ? `${durationText(remaining)} to go · ends ${timeOfDay(endAt)}` : `Length reached · ${timeOfDay(endAt)}`;
+  // The goal, the eyebrow, the line under the time and the end action always agree.
+  const { reached, crossedOpen } = useGoalReached(endAt, nowMs);
+  const hoursText = formatHours(fast.target_hours);
+  const eyebrow = reached ? goalReachedEyebrow(hoursText) : `${daypart(new Date(nowMs).getHours())} · ${progressPhrase(progress)}`;
+  const sub = reached ? reachedAt(timeOfDay(endAt)) : `${durationText(remaining)} to go · ends ${timeOfDay(endAt)}`;
   const arcLabel =
     `Fast progress from ${timeOfDay(startMs)} to ${timeOfDay(endAt)}. ` +
-    `${spokenDuration(elapsed)} fasted, ${remaining > 0 ? `${spokenDuration(remaining)} to go` : "length reached"}.`;
+    `${spokenDuration(elapsed)} fasted, ${reached ? "goal reached" : `${spokenDuration(remaining)} to go`}.`;
 
   const [feeling, setFeeling] = useState<FastingFeelingValue | null>(null);
   const unwell = feeling === "unwell";
@@ -93,7 +99,10 @@ export function FastingHero({
   };
 
   // Buttons on the gradient: paper on night, ink on morning.
-  const primaryBtn = light ? { background: "var(--bg)", color: "var(--ink)" } : { background: "var(--ink)", color: "var(--bg)" };
+  const primaryBtn = light
+    ? { background: "var(--bg)", color: "var(--ink)", borderColor: "var(--bg)" }
+    : { background: "var(--ink)", color: "var(--bg)", borderColor: "var(--ink)" };
+  const outlineBtn = { borderColor: "currentColor", color: pal.text, background: "transparent" };
 
   return (
     <section
@@ -188,15 +197,17 @@ export function FastingHero({
 
         {endError && <WriteError message={endError} />}
         <div className="flex flex-wrap gap-2.5">
-          <button type="button" className={styles.btnOnHero} style={primaryBtn} onClick={onEnd} disabled={ending} data-testid="end-fast">
-            {END_BUTTON}
-          </button>
-          <button
-            type="button"
-            className={styles.btnOnHero}
-            style={{ border: "1px solid currentColor", color: pal.text, background: "transparent" }}
-            onClick={onEditStart}
-          >
+          <FastEndAction
+            reached={reached}
+            crossedOpen={crossedOpen}
+            onEnd={onEnd}
+            disabled={ending}
+            elapsedText={durationText(elapsed)}
+            hoursText={hoursText}
+            filled={primaryBtn}
+            outline={outlineBtn}
+          />
+          <button type="button" className={styles.btnOnHero} style={outlineBtn} onClick={onEditStart}>
             {EDIT_START_LINK}
           </button>
         </div>

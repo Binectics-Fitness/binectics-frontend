@@ -156,11 +156,106 @@ export const START_STEP = "Step 2 of 2";
 export const START_TITLE = "How long?";
 export const START_CAP_NOTE = "Fasts can be up to 24 hours.";
 export const START_FOOT = "Binectics keeps the time. It does not give religious or medical guidance.";
-export const START_EARLIER = "Started earlier? Change the start time";
-export const START_NOW = "Start now instead";
 export const START_BUTTON = "Start fast";
 export const CUSTOM_LABEL = "Hours (1 to 24, halves allowed)";
-export const EARLIER_LABEL = "I started at";
+
+// ─── Start time (mobile #261, StartTimeControl) ─────────────────────────────
+//
+// The "Starts" half of the card is the control: Now, 30 min, 1 h or 2 h ago,
+// or a time today (Yesterday for a fast started last night). Never in the
+// future, never more than 36 hours back (the API's rule), never before the
+// last fast ended (the API's FASTING_OVERLAP).
+
+export const START_LABEL = "Starts";
+export const ENDS_LABEL = "Ends";
+export const ENDS_PICK_LENGTH = "Pick a length";
+export const START_QUESTION = "When did you start?";
+export const START_CHOICES = [
+  { key: "now", label: "Now", minutes: 0, a11y: "Now" },
+  { key: "m30", label: "30 min ago", minutes: 30, a11y: "30 minutes ago" },
+  { key: "h1", label: "1 h ago", minutes: 60, a11y: "1 hour ago" },
+  { key: "h2", label: "2 h ago", minutes: 120, a11y: "2 hours ago" },
+] as const;
+export const START_PICK = "Pick a time…";
+export const START_PICK_A11Y = "Pick a time";
+export const START_DAY_LABEL = "Day";
+export const START_TODAY = "Today";
+export const START_YESTERDAY = "Yesterday";
+export const START_TIME_LABEL = "Time";
+/** "Now · 20:30" on the card. */
+export const startNowValue = (time: string): string => `Now · ${time}`;
+/** Screen reader label of the Starts button: "Starts now, 20:30. Change when your fast started." */
+export const startButtonA11y = (when: string): string => `Starts ${when}. Change when your fast started.`;
+
+/** "1 h 15 min", "45 min", "2 h", from whole minutes. */
+export const agoWords = (minutes: number): string => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+};
+/** "Started 1 h 15 min ago, at 19:15." or "Started 21 h 30 min ago, yesterday at 23:00." */
+export const startedAgo = (minutesAgo: number, time: string, yesterday: boolean): string =>
+  minutesAgo < 1
+    ? `Started less than a minute ago, ${yesterday ? "yesterday " : ""}at ${time}.`
+    : `Started ${agoWords(minutesAgo)} ago, ${yesterday ? "yesterday " : ""}at ${time}.`;
+export const START_FUTURE = "That time is later than now. A fast cannot start in the future. Pick Yesterday if you started last night.";
+export const START_TOO_EARLY = "A fast can start at most 36 hours ago.";
+/** "Your last fast ended at 19:40. This one can start from then." */
+export const lastFastEnded = (time: string, yesterday: boolean): string =>
+  `Your last fast ended ${yesterday ? "yesterday " : ""}at ${time}. This one can start from then.`;
+/** A picked time before the last fast ended. */
+export const startBeforeLastEnd = (time: string, yesterday: boolean): string =>
+  `That is before your last fast ended (${yesterday ? "yesterday " : ""}${time}). Pick a later time.`;
+/** Screen reader: a quick choice that would start before the last fast ended. */
+export const startChoiceUnavailable = (choice: string): string => `${choice}, not available: before your last fast ended`;
+/** The server refused the start as an overlap (a fast this page did not know of). */
+export const START_REFUSED_OVERLAP =
+  "Your fast was not started: that start overlaps a fast you already logged. Pick a later start and try again.";
+
+// ─── Coach note on the start page (Today board 07-Risks, R1 and R2; mobile #251) ─
+//
+// Shown only to a member with a trainer or dietitian (gyms never count and are
+// never named). It says who can't see fasts, lists today's meal slots from a
+// dietitian's meal plan (plans have no meal times, so it never guesses which
+// meal the fast runs through), and offers "Tell <name>" with a draft the
+// member chooses to send. Start is never blocked.
+
+/** "Ngozi and Tunde can't see your fasts." First names; three or more: "Your coaches". */
+export const coachesCantSee = (firstNames: readonly string[]): string => {
+  if (firstNames.length === 0 || firstNames.length > 2) return "Your coaches can't see your fasts.";
+  return `${firstNames.join(" and ")} can't see your fasts.`;
+};
+/** "breakfast", "breakfast and dinner", "breakfast, lunch and dinner". */
+export const listSlots = (slots: readonly string[]): string =>
+  slots.length <= 1 ? slots.join("") : `${slots.slice(0, -1).join(", ")} and ${slots[slots.length - 1]}`;
+/** "Your meal plan from Ngozi has breakfast, lunch and dinner today. If this fast runs through one of them, tell Ngozi." */
+export const mealPlanToday = (dietitian: string, slots: readonly string[]): string =>
+  `Your meal plan from ${dietitian} has ${listSlots(slots)} today. ` +
+  (slots.length === 1 ? `If this fast runs through it, tell ${dietitian}.` : `If this fast runs through one of them, tell ${dietitian}.`);
+export const tellLabel = (firstName: string): string => `Tell ${firstName}`;
+/** When the conversation cannot be opened. */
+export const TELL_FAILED = "We could not open the conversation. Try again from Messages.";
+/**
+ * The chat draft behind "Tell <name>":
+ * "I'm planning a 16-hour fast, 20:00 today to 12:00 tomorrow. Is that OK with my meal plan?"
+ * Without a meal plan today the question is left off.
+ */
+export const fastDraft = (p: {
+  hours: string;
+  startTime: string;
+  startDay: string;
+  endTime: string;
+  endDay: string;
+  mealPlan: boolean;
+}): string =>
+  `I'm planning ${/^(8|11|18)(\.|$)/.test(p.hours) ? "an" : "a"} ${p.hours}-hour fast, ${p.startTime} ${p.startDay} to ${p.endTime} ${p.endDay}.` +
+  (p.mealPlan ? " Is that OK with my meal plan?" : "");
+/** The day word ("Today", "Tomorrow", "Thu 20 Nov") as the draft says it: "today", "on Thu 20 Nov". */
+export const fastDraftDay = (relativeDay: string): string =>
+  ["Today", "Tomorrow", "Yesterday"].includes(relativeDay) ? relativeDay.toLowerCase() : `on ${relativeDay}`;
+/** Above the pre-filled chat composer. */
+export const FAST_DRAFT_NOTE = "Draft. Nothing is sent until you tap Send.";
 
 // ─── Running ────────────────────────────────────────────────────────────────
 
@@ -170,6 +265,29 @@ export const EXPIRED_BODY =
 export const EXPIRED_LABEL = "I stopped at";
 export const EXPIRED_BUTTON = "Close this fast";
 export const END_BUTTON = "End fast";
+
+// ─── The end action (owner decision B, 19 Nov 2026; mobile #263) ────────────
+//
+// "early" is never shown once the goal is reached.
+
+/** Before the goal: an outline button that asks once. */
+export const END_EARLY = "End fast early";
+/** At or after the goal: the filled button, no question (Undo still follows). */
+export const FINISH_FAST = "Finish fast";
+/** Eyebrow once the goal is reached: "Goal reached · 16 hours". */
+export const goalReachedEyebrow = (hours: string): string => `Goal reached · ${hours} hours`;
+/** The line under the time once the goal is reached. */
+export const reachedAt = (time: string): string => `Reached at ${time} · the timer keeps going`;
+/** Said once by a screen reader when the goal passes with the page open. */
+export const GOAL_REACHED_ANNOUNCE = "Goal reached. Finish fast is available.";
+export const END_EARLY_TITLE = "End your fast now?";
+/** "You are at 15 h 56 min of 16 hours. It is saved as ended early. You can undo for 10 minutes." */
+export const endEarlyBody = (elapsed: string, hours: string) => ({
+  before: "You are at ",
+  strong: elapsed,
+  after: ` of ${hours} hours. It is saved as ended early. You can undo for 10 minutes.`,
+});
+export const KEEP_GOING = "Keep going";
 export const EDIT_START_LINK = "Edit start time";
 export const REMINDERS_TITLE = "Reminders are set in the mobile app";
 export const REMINDERS_NOTE = (endTime: string): string => `Mobile only. Your phone will tell you at ${endTime}.`;
@@ -229,7 +347,7 @@ export const FASTING_ERROR_MESSAGES: Record<string, string> = {
 
 /** "Morning · almost there": the time of day, then where the fast is. */
 export const progressPhrase = (progress: number): string => {
-  if (progress >= 1) return "length reached";
+  if (progress >= 1) return "goal reached";
   if (progress >= 0.75) return "almost there";
   if (progress >= 0.5) return "past halfway";
   if (progress >= 0.25) return "settling in";

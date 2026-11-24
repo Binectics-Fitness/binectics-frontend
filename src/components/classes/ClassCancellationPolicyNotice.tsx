@@ -1,8 +1,9 @@
-import { lateCancelSentence, type ClassCancellationPolicy } from "@/lib/classes/cancellationPolicy";
+import { cancelWindowSentence, type ClassCancellationPolicy } from "@/lib/classes/cancellationPolicy";
 
 /**
  * A gym's class cancellation policy as members see it: the fee sentence
- * (when there is a fee) and the gym's own note. Renders nothing when the gym
+ * (when there is a fee) or the notice it asks for (a window with no fee),
+ * and the gym's own note. Renders nothing when the gym
  * has no policy, so no fee is ever mentioned then.
  */
 export function ClassCancellationPolicyNotice({
@@ -13,7 +14,7 @@ export function ClassCancellationPolicyNotice({
   className?: string;
 }) {
   if (!policy) return null;
-  const sentence = lateCancelSentence(policy);
+  const sentence = cancelWindowSentence(policy);
   return (
     <div
       data-testid="class-cancellation-policy"

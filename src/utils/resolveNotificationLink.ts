@@ -1,4 +1,5 @@
 import { UserRole } from "@/lib/types";
+import { NotificationType } from "@/lib/api/notifications";
 import { legacyLinkTarget } from "@/lib/routing/legacyLinks";
 import { billingNotificationTarget } from "@/lib/billing/autoRenew";
 import { offerPath } from "@/lib/paidContent/helpers";
@@ -23,6 +24,15 @@ export function contentNotificationTarget(item: {
 }
 
 /**
+ * A team invitation opens the invitations page, where any role can accept
+ * or decline it. The API's action URL (/dashboard/team) is the gym's team
+ * page, which bounces the trainers and members most invitations are for.
+ */
+export function teamInvitationTarget(item: { type?: string | null }): string | null {
+  return item.type === "TEAM_INVITATION" ? "/teams/invitations" : null;
+}
+
+/**
  * Where tapping a notification goes. Billing notices are routed by TYPE
  * (the member's go to Billing, a provider's final payment failure to their
  * members), whatever action URL they carry; everything else resolves its
@@ -36,9 +46,13 @@ export function resolveNotificationTarget(
   },
   userRole?: UserRole,
 ): string {
+  // A response to a review the user wrote is read in the notification
+  // itself; its /dashboard/reviews link would open a provider's own reviews.
+  if (item.type === NotificationType.REVIEW_RESPONSE) return "/dashboard/notifications";
   return (
     billingNotificationTarget(item, userRole) ??
     contentNotificationTarget(item) ??
+    teamInvitationTarget(item) ??
     resolveNotificationLink(item.actionUrl, userRole)
   );
 }
@@ -87,16 +101,6 @@ export function resolveNotificationLink(
   // Clients
   if (url.startsWith("/dashboard/clients")) {
     if (prefix) return url.replace("/dashboard/clients", `${prefix}/clients`);
-  }
-
-  // Reviews: only the gym-owner shell has a reviews page. Trainer/
-  // dietitian prefixes and the bare member URL all 404, so fall back to
-  // the notifications list for everyone else.
-  if (url.startsWith("/dashboard/reviews")) {
-    if (userRole === UserRole.GYM_OWNER) {
-      return url.replace("/dashboard/reviews", "/dashboard/gym-owner/reviews");
-    }
-    return "/dashboard/notifications";
   }
 
   // ── Path corrections (backend typos / mismatches) ─────────

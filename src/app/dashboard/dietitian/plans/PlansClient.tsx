@@ -5,6 +5,8 @@ import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { usePaidContentSeller } from "@/hooks/usePaidContentSeller";
+import { PlanIncludesSection } from "@/components/plans/PlanIncludesSection";
 import { marketplaceService } from "@/lib/api/marketplace";
 import type {
   CreateOrgMembershipPlanRequest,
@@ -55,6 +57,8 @@ function PlanModal({
   planId,
   currencies,
   providerHint,
+  orgId,
+  includesOn = false,
   onClose,
   onSave,
 }: {
@@ -67,6 +71,10 @@ function PlanModal({
   /** The org's membership price currencies (platform plus its own account). */
   currencies: OrgPriceCurrency[] | undefined;
   providerHint: string;
+  /** The workspace, for the plan's Includes. */
+  orgId?: string | null;
+  /** Selling is on and the viewer may price: show what the plan includes. */
+  includesOn?: boolean;
   onClose: () => void;
   /** Resolves an error message when the save was refused, else null. */
   onSave: (data: CreateOrgMembershipPlanRequest) => Promise<string | null>;
@@ -345,6 +353,11 @@ function PlanModal({
             </button>
           </div>
         </form>
+        {mode === "edit" && planId && includesOn && (
+          <div className="px-6 pb-6 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
+            <PlanIncludesSection orgId={orgId} planId={planId} planName={initial.name} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -477,6 +490,8 @@ export default function DietitianPlansClient() {
   const [subscriptions, setSubscriptions] = useState<MembershipSubscription[]>([]);
   const membersByPlan = countMembersByPlan(subscriptions);
   const { data: currencies, providerHint } = useOrgPriceCurrencies(orgId);
+  // What a plan includes: shown while selling is on, to whoever may price (D10).
+  const { on: sellingOn, canPrice } = usePaidContentSeller();
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<{ mode: ModalMode; plan?: MarketplaceMembershipPlan } | null>(null);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
@@ -653,6 +668,8 @@ export default function DietitianPlansClient() {
           planId={modal.plan?._id}
           currencies={currencies}
           providerHint={providerHint}
+          orgId={orgId}
+          includesOn={sellingOn && canPrice}
           initial={
             modal.plan
               ? {

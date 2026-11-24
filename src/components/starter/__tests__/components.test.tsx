@@ -118,6 +118,16 @@ describe("StarterSession", () => {
     expect(await screen.findByText("Session finished.")).toBeInTheDocument();
     expect(api.completeTask).toHaveBeenCalledWith("o1");
   });
+  it("puts Start guided session first and keeps Finish as the secondary action", async () => {
+    wrap(<StarterSession occurrenceId="o1" />);
+    const start = await screen.findByRole("button", { name: "Start guided session" });
+    expect(start).toHaveClass("btn-primary-v2");
+    expect(screen.getByRole("button", { name: "Finish session" })).toHaveClass("btn-ghost-v2");
+    expect(screen.getByTestId("guided-settings-line")).toHaveTextContent("Voice coach on · 5 sec get-ready");
+    await userEvent.click(start);
+    expect(push).toHaveBeenCalledWith("/dashboard/member/starter/session/o1/guided");
+    expect(api.completeTask).not.toHaveBeenCalled();
+  });
   it("asks before skipping", async () => {
     api.skipTask.mockResolvedValue({ success: true, data: { ...sessionTask, status: StarterTaskStatus.Skipped } });
     wrap(<StarterSession occurrenceId="o1" />);

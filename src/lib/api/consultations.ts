@@ -48,6 +48,11 @@ export interface ConsultationType {
   bufferMinutes: number;
   minAdvanceNoticeMinutes: number;
   /**
+   * Days of the week the session runs on (0 = Sunday), in the provider's
+   * timezone. Empty or absent: every day the provider works.
+   */
+  daysOfWeek?: number[];
+  /**
    * How many people one slot takes: 1 is a 1:1 session, more is a group
    * session. Absent from an API older than group sessions (read it as 1).
    */

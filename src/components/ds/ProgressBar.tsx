@@ -8,6 +8,9 @@
  * Fill: --signal. Against the light track --signal is only 2.30:1 (non-text
  * needs 3:1), so there the fill gets a 1px --signal-ink inner outline; on
  * the dark tracks it is 5.05:1 (--ink-2) and 7.37:1 (--ink) and draws plain.
+ * `fill="paper"` draws --bg instead, for a dark card where the bar pictures
+ * where something stands rather than a goal to celebrate (the program's day
+ * on Today, board R5; mobile HeroStatCard fill "paper").
  * Accessible as role="progressbar" with aria-valuenow/min/max and a label.
  */
 export type ProgressSurface = "light" | "ink" | "raised";
@@ -27,6 +30,8 @@ interface ProgressBarProps {
   /** Spoken value when a number alone is unclear, e.g. "32 of 50 days". */
   valueText?: string;
   surface?: ProgressSurface;
+  /** "signal" (default) or "paper" (dark surfaces only). */
+  fill?: "signal" | "paper";
   className?: string;
 }
 
@@ -36,11 +41,13 @@ export function ProgressBar({
   label,
   valueText,
   surface = "light",
+  fill = "signal",
   className = "",
 }: ProgressBarProps) {
   const safeMax = max > 0 ? max : 1;
   const now = Math.min(Math.max(Number.isFinite(value) ? value : 0, 0), safeMax);
   const pct = (now / safeMax) * 100;
+  const paper = fill === "paper" && surface !== "light";
   const outlined = surface === "light" && pct > 0;
   return (
     <div
@@ -51,6 +58,7 @@ export function ProgressBar({
       aria-valuenow={now}
       aria-valuetext={valueText}
       data-surface={surface}
+      data-fill-tone={paper ? "paper" : "signal"}
       className={`h-1.5 w-full overflow-hidden rounded-[var(--r-1)] ${className}`}
       style={{ background: TRACK[surface] }}
     >
@@ -59,7 +67,7 @@ export function ProgressBar({
         className="h-full rounded-[var(--r-1)]"
         style={{
           width: `${pct}%`,
-          background: "var(--signal)",
+          background: paper ? "var(--bg)" : "var(--signal)",
           ...(outlined ? { outline: "1px solid var(--signal-ink)", outlineOffset: -1 } : null),
         }}
       />

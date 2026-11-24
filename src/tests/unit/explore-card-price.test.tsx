@@ -29,6 +29,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/contexts/RegionContext", () => ({
   useRegion: () => ({ formatAmount: (n: number) => String(n), currency: "NGN", currencies: [] }),
 }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: null, isLoading: false }) }));
 vi.mock("@/components/MarketplaceAuthCluster", () => ({ MarketplaceAuthCluster: () => null }));
 vi.mock("@/components/marketplace/SaveListingButton", () => ({ SaveListingButton: () => null }));
 vi.mock("@/lib/api/marketplace", () => ({

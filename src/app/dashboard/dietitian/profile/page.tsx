@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import { PageHeader } from "@/components/ds/PageHeader";
 import { ProfileTabs } from "./ReviewsTab";
@@ -16,7 +17,10 @@ export default function DietitianProfilePage() {
         title={{ before: "My ", emphasis: "profile" }}
         subtitle={<span className="block max-w-[60ch]">Your public profile, credentials and reviews.</span>}
       />
-      <ProfileTabs />
+      {/* ProfileTabs reads ?tab= (a review notification opens Reviews). */}
+      <Suspense fallback={null}>
+        <ProfileTabs />
+      </Suspense>
     </DietitianDashboardShell>
   );
 }

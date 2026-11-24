@@ -187,7 +187,7 @@ export default function GymCheckinsPage() {
       organizationInitials={currentOrg ? initials(currentOrg.name) : "IL"}
       actions={
         <div className="flex gap-2.5 items-center">
-          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.04em] px-2.5 py-1 rounded-full" data-tone={FRESHNESS_TONE[freshness.kind]} style={{ color: pill.color, background: pill.bg }}>
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-full" data-tone={FRESHNESS_TONE[freshness.kind]} style={{ color: pill.color, background: pill.bg }}>
             <span className={`w-1.5 h-1.5 rounded-full ${pill.pulse ? "animate-pulse" : ""}`} style={{ background: pill.color }} />
             {freshness.label} · {currentOrg ? currentOrg.name : "no org selected"}
           </span>
@@ -195,7 +195,7 @@ export default function GymCheckinsPage() {
             onClick={refresh}
             disabled={isRefreshing || !isOnline || !currentOrg}
             title={isOnline ? "Refresh now" : "Offline, reconnect to refresh"}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-(--r-2) text-[12.5px] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--fg-2)" }}
           >
             <span className={isRefreshing ? "inline-block animate-spin" : "inline-block"}>↻</span>
@@ -206,7 +206,7 @@ export default function GymCheckinsPage() {
               <button
                 key={f.value}
                 onClick={() => setActiveFilter(f.value)}
-                className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer"
+                className="px-3 py-1.5 text-[12.5px] font-medium cursor-pointer"
                 style={{
                   background: activeFilter === f.value ? "var(--ink)" : "var(--bg)",
                   color: activeFilter === f.value ? "var(--bg)" : "var(--fg-2)",
@@ -248,7 +248,7 @@ export default function GymCheckinsPage() {
           <button
             onClick={refresh}
             disabled={isRefreshing}
-            className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="shrink-0 px-3 py-1.5 rounded-(--r-2) text-[12.5px] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ border: "1px solid var(--danger)", background: "var(--bg)", color: "var(--danger-ink)" }}
           >
             {isRefreshing ? "Retrying…" : "Try again"}
@@ -260,7 +260,7 @@ export default function GymCheckinsPage() {
           <button
             onClick={refresh}
             disabled={isRefreshing}
-            className="shrink-0 px-3 py-1.5 rounded-(--r-2) font-mono text-[11px] uppercase tracking-[0.04em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="shrink-0 px-3 py-1.5 rounded-(--r-2) text-[12.5px] font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ border: "1px solid var(--border-2)", background: "var(--bg)", color: "var(--warn-ink)" }}
           >
             {isRefreshing ? "Refreshing…" : "Refresh"}
@@ -336,7 +336,7 @@ export default function GymCheckinsPage() {
                   <span className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold" style={{ background: "var(--bg-3)", color: "var(--fg-2)" }}>{initials(member)}</span>
                   <div>
                     <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{member}</div>
-                    <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-0.5" style={{ color: "var(--fg-3)" }}>
+                    <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-3)" }}>
                       {listing} · {fmtDate(checkIn.checked_in_at)}
                     </div>
                   </div>

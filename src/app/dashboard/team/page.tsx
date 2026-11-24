@@ -4,6 +4,7 @@ import { teamRoleHint } from "@/lib/workspaces";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
+import { MyTeamInvitations } from "@/components/teams/MyTeamInvitations";
 import { AsyncSpinner, EmptySlate } from "@/components/ds";
 import SearchableSelect from "@/components/SearchableSelect";
 import { GymDashboardShell, useGymViewer } from "@/components/ds/GymDashboardShell";
@@ -266,6 +267,10 @@ export default function TeamWorkspacePage() {
             invitations.
           </p>
         </div>
+
+        {/* Invitations to other workspaces' teams, answered here (the
+            invitation notification opens this page). Nothing when none. */}
+        <MyTeamInvitations />
 
         {orgLoading ? (
           <div className="rounded-(--r-3) p-4" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
