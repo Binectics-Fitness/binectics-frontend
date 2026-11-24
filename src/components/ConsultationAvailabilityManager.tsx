@@ -35,6 +35,7 @@ import {
   type RangeIssue,
 } from "@/lib/availability/issues";
 import { availabilityFixToast } from "@/lib/constants/availabilityCopy";
+import { SESSION_TYPES_CHANGED, mainSessionType } from "@/components/provider/SessionTypesCard";
 
 type DayRange = { id: string; startTime: string; endTime: string };
 
@@ -323,7 +324,8 @@ export default function ConsultationAvailabilityManager({
         setSessionLoadState("error");
         return;
       }
-      const active = (own.data ?? []).find((t) => t.isActive);
+      // The oldest active one, as the Session types list below calls it.
+      const active = mainSessionType(own.data);
       if (active) {
         setOwnTypeId(active.id);
         applySessionType(active, true);
@@ -397,11 +399,13 @@ export default function ConsultationAvailabilityManager({
     if (res.success && res.data) {
       setOwnTypeId(res.data.id);
       setSessionMessage({ text: "Session settings saved.", type: "success" });
+      // The Session types list below shows this session as the main one.
+      window.dispatchEvent(new Event(SESSION_TYPES_CHANGED));
     } else if (res.status === 409 && !ownTypeId) {
       // Created elsewhere since this page loaded (another tab, say). Point
       // the form at that session so the next Save updates it.
       const own = await consultationsService.getOwnTypes();
-      const active = own.data?.find((t) => t.isActive);
+      const active = mainSessionType(own.data);
       if (active) setOwnTypeId(active.id);
       fail(
         active

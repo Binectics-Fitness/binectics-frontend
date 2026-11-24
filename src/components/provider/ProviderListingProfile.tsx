@@ -7,6 +7,8 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, allows, gymPageRule, holds } from "@/lib/gymStaffNav";
 import { GalleryManager } from "@/components/provider/GalleryManager";
+import { ListingLogoManager } from "@/components/provider/ListingLogoManager";
+import { AmenitiesPicker } from "@/components/provider/AmenitiesPicker";
 import { authService } from "@/lib/api/auth";
 import {
   useMyListing,
@@ -54,6 +56,8 @@ interface ListingForm {
   languages: string[];
   specialties: string[];
   certifications: string[];
+  /** Gym listings: Wi-Fi, showers, parking... (AmenityKey values). */
+  amenities: string[];
   accepting_clients: boolean;
   /** Solo listings: where the "from" price comes from, and the typed one. */
   price_display: "auto" | "custom";
@@ -89,6 +93,7 @@ function seedListing(l: MarketplaceListing): ListingForm {
     languages: l.languages ?? [],
     specialties: l.specialties ?? [],
     certifications: l.certifications ?? [],
+    amenities: l.amenities ?? [],
     accepting_clients: l.accepting_clients ?? true,
     price_display: l.price_display ?? "auto",
     price_from_minor: l.price_from_minor ?? null,
@@ -431,6 +436,18 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
           <ChipEditor label="Certifications" values={form?.certifications ?? []} onChange={(v) => set("certifications", v)} disabled={!form} placeholder={fields.certificationsPlaceholder} />
         )}
       </Card>
+
+      {/* Logo + amenities: gym listings only (the API keeps both on the org listing) */}
+      {isGym && orgId && listing && (
+        <Card title="Logo" desc="Shown beside your gym's name in Explore, on your profile and in members' apps.">
+          <ListingLogoManager orgId={orgId} logoUrl={listing.profile_image} name={currentOrg?.name} />
+        </Card>
+      )}
+      {isGym && form && (
+        <Card title="Amenities" desc="What members get at your gym. Shown on your listing and the Facilities page.">
+          <AmenitiesPicker values={form.amenities} onChange={(v) => set("amenities", v)} />
+        </Card>
+      )}
 
       {/* Photos */}
       <Card title="Photos" desc="The gallery on your public listing. The first photo is your cover.">
