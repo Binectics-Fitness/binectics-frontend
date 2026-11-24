@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AsyncSpinner, DSCard, EmptySlate, Eyebrow, PageHeader } from "@/components/ds";
 import { toast } from "@/components/Toast";
@@ -26,6 +27,8 @@ import {
   type SetEntry,
 } from "@/lib/starter/model";
 import { StarterTaskStatus } from "@/lib/starter/types";
+import { GuidedStartBlock } from "@/components/guided/GuidedStartBlock";
+import { guidedHref, unlockGuidedAudio } from "@/components/guided/links";
 import { ExerciseCard } from "./ExerciseCard";
 
 const BACK = "/dashboard/member/starter";
@@ -38,6 +41,7 @@ const BACK = "/dashboard/member/starter";
  */
 export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
   const qc = useQueryClient();
+  const router = useRouter();
   const { data, isLoading, isError, error, refetch } = useActiveStarter();
 
   const [ticked, setTicked] = useState<Record<number, boolean>>({});
@@ -168,6 +172,17 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
         title={task.title}
         subtitle={[facts, progress].filter(Boolean).join(" · ") || undefined}
       />
+      {!settled && exercises.length > 0 && (
+        <GuidedStartBlock
+          className="mb-5"
+          disabled={busy}
+          onStart={() => {
+            // Inside the click: browsers only let audio and speech start after a user gesture.
+            unlockGuidedAudio();
+            router.push(guidedHref(task.id));
+          }}
+        />
+      )}
       {task.detail && (
         <p className="mb-4 text-[15px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
           {task.detail}
@@ -274,7 +289,8 @@ export function StarterSession({ occurrenceId }: { occurrenceId: string }) {
           </DSCard>
         ) : (
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-primary-v2 lg min-h-11" disabled={busy} onClick={() => void finish()}>
+            {/* Secondary: "Start guided session" is the one primary action on this page. */}
+            <button type="button" className="btn-ghost-v2 lg min-h-11" disabled={busy} onClick={() => void finish()}>
               {busy ? "Saving…" : "Finish session"}
             </button>
             <button type="button" className="btn-ghost-v2 lg min-h-11" disabled={busy} onClick={() => setConfirmSkip(true)}>
