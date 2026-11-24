@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GymDashboardShell } from "@/components/ds/GymDashboardShell";
-import { DSCard, DSStatCard, Eyebrow, PageHeader } from "@/components/ds";
+import { DSCard, DSStatCard, PageHeader } from "@/components/ds";
+import { ProviderReviewCard } from "@/components/reviews/ProviderReviews";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useOrgListing } from "@/lib/queries/marketplace";
 import { useTargetAggregate, useTargetReviews } from "@/lib/queries/reviews";
-import { queryKeys } from "@/lib/queries/keys";
-import { reviewsService, ReviewTargetType, type Review } from "@/lib/api/reviews";
-import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { ReviewTargetType } from "@/lib/api/reviews";
 import SearchableSelect from "@/components/SearchableSelect";
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, holds } from "@/lib/gymStaffNav";
@@ -25,6 +23,9 @@ type Sort = "newest" | "oldest" | "rating_high" | "rating_low";
 export function GymReviewsClient() {
   const { currentOrg } = useOrganization();
   const { data: listing } = useOrgListing(currentOrg?._id);
+  // Replying in public, and reporting, is marketplace:manage_reviews; a
+  // Manager can read the reviews but not act on them (as on mobile).
+  const canRespond = holds(useGymViewer(), TeamPermission.MARKETPLACE_MANAGE_REVIEWS);
   const listingId = listing?._id ?? "";
 
   const [page, setPage] = useState(1);
@@ -102,7 +103,7 @@ export function GymReviewsClient() {
               </DSCard>
             )}
             {reviews.map((r) => (
-              <ReviewCard key={r.id} review={r} listingId={listingId} />
+              <ProviderReviewCard key={r.id} review={r} canRespond={canRespond} canReport={canRespond} />
             ))}
           </div>
 
@@ -117,67 +118,5 @@ export function GymReviewsClient() {
         </>
       )}
     </GymDashboardShell>
-  );
-}
-
-function ReviewCard({ review, listingId }: { review: Review; listingId: string }) {
-  const { fmtDate } = useOrgFormat();
-  // Replying in public is marketplace:manage_reviews; a Manager can read
-  // the reviews but not answer them.
-  const canRespond = holds(useGymViewer(), TeamPermission.MARKETPLACE_MANAGE_REVIEWS);
-  const queryClient = useQueryClient();
-  const [replying, setReplying] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const respond = useMutation({
-    mutationFn: (message: string) =>
-      reviewsService.createProviderResponse(review.id, { message }),
-    onSuccess: (res) => {
-      if (res.success) {
-        setReplying(false);
-        void queryClient.invalidateQueries({ queryKey: queryKeys.reviews.all });
-        void queryClient.invalidateQueries({
-          queryKey: queryKeys.reviews.targetAggregate(ReviewTargetType.GYM, listingId),
-        });
-      } else {
-        setError(res.message || "Couldn't post the response.");
-      }
-    },
-  });
-
-  return (
-    <DSCard className="p-4.5">
-      <div className="flex items-center gap-2.5">
-        <span className="text-[13.5px] font-medium" style={{ color: "var(--ink)" }}>{review.reviewerName}</span>
-        <span className="text-[13px]" style={{ color: "var(--warn, var(--ink))" }}>{"★".repeat(review.rating)}<span style={{ color: "var(--border-2)" }}>{"★".repeat(Math.max(0, 5 - review.rating))}</span></span>
-        <span className="ml-auto font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>{fmtDate(review.createdAt)}</span>
-      </div>
-      {review.comment && (
-        <p className="text-[13.5px] mt-2 leading-relaxed" style={{ color: "var(--fg-2)" }}>{review.comment}</p>
-      )}
-
-      {review.providerResponse ? (
-        <div className="mt-3 pl-3.5 py-2" style={{ borderLeft: "2px solid var(--border-2)" }}>
-          <Eyebrow>Your response · {fmtDate(review.providerResponse.createdAt)}</Eyebrow>
-          <p className="text-[13px] mt-1 leading-relaxed" style={{ color: "var(--fg-2)" }}>{review.providerResponse.message}</p>
-        </div>
-      ) : replying ? (
-        <div className="mt-3 flex flex-col gap-2">
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={1000} placeholder="Write a public response…"
-            className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-y"
-            style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 70 }} />
-          {error && <span className="text-[12px]" style={{ color: "var(--danger, #b00020)" }}>{error}</span>}
-          <div className="flex gap-2">
-            <button className="btn-primary-v2 sm" disabled={respond.isPending || !draft.trim()} onClick={() => respond.mutate(draft.trim())}>
-              {respond.isPending ? "Posting…" : "Post response"}
-            </button>
-            <button className="btn-ghost-v2 sm" disabled={respond.isPending} onClick={() => setReplying(false)}>Cancel</button>
-          </div>
-        </div>
-      ) : canRespond ? (
-        <button className="btn-ghost-v2 sm mt-3" onClick={() => { setReplying(true); setError(null); }}>Respond</button>
-      ) : null}
-    </DSCard>
   );
 }
