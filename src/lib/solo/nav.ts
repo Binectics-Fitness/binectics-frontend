@@ -56,3 +56,31 @@ export function soloActiveLabel(activeLabel: string, pathname: string | null): s
   if (LOG_PATHS.some((p) => here === p || here.startsWith(`${p}/`))) return "Log";
   return "";
 }
+
+/**
+ * The member's own tools for a member with a gym or coach (owner answer, 19
+ * Nov 2026: own tracking is kept when a member gains a coach). The full bar
+ * groups them under one "Tracking" menu so it stays short; the phone menu
+ * lists them under the same heading. Same pages as the solo bar.
+ */
+export const TRACKING_LABEL = "Tracking";
+
+export function trackingNavLinks(): SoloNavLink[] {
+  return [
+    { label: "Fasting", href: SOLO_HREFS.fasting },
+    { label: "Water", href: SOLO_HREFS.water },
+    { label: "Progress", href: SOLO_HREFS.progress },
+    { label: "Daily list", href: SOLO_HREFS.todayList },
+    { label: "Log", href: SOLO_HREFS.log },
+  ];
+}
+
+/** The labels the tracking pages pass the shell ("Today" is the daily list's). */
+const TRACKING_PAGE_LABELS = new Set(["Fasting", "Water", "Progress", "Log", "Today"]);
+
+/** Whether the page on screen is one of the tracking pages, on the full bar. */
+export function isTrackingPage(activeLabel: string, pathname: string | null): boolean {
+  if (TRACKING_PAGE_LABELS.has(activeLabel)) return true;
+  if (activeLabel) return false;
+  return soloActiveLabel("", pathname) === "Log";
+}

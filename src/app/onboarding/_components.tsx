@@ -217,12 +217,15 @@ export function SelectField({
   onChange,
   options,
   id,
+  placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: string[];
   /** Pair with Field's htmlFor so the label names the control. */
   id?: string;
+  /** Shown while nothing is chosen. */
+  placeholder?: string;
 }) {
   return (
     <SearchableSelect
@@ -230,6 +233,7 @@ export function SelectField({
       options={options.map((o) => ({ label: o, value: o }))}
       value={value}
       onChange={onChange}
+      placeholder={placeholder}
     />
   );
 }
@@ -443,7 +447,8 @@ export function RadioCards({
   onSelect,
 }: {
   label?: string;
-  options: { id: string; title: string; desc: string }[];
+  /** `disabled` greys an option out; `note` says why under its description. */
+  options: { id: string; title: string; desc: string; disabled?: boolean; note?: string }[];
   selected: string;
   onSelect: (id: string) => void;
 }) {
@@ -457,8 +462,12 @@ export function RadioCards({
             type="button"
             role="radio"
             aria-checked={on}
+            aria-disabled={opt.disabled || undefined}
+            disabled={opt.disabled}
             onClick={() => onSelect(opt.id)}
             style={{
+              opacity: opt.disabled ? 0.55 : 1,
+              cursor: opt.disabled ? "not-allowed" : "pointer",
               padding: "14px 16px",
               minHeight: 44,
               border: on ? "1px solid var(--ink)" : "1px solid var(--border)",
@@ -466,7 +475,6 @@ export function RadioCards({
               display: "flex",
               gap: 12,
               alignItems: "flex-start",
-              cursor: "pointer",
               background: on ? "var(--bg-2)" : "var(--bg)",
               textAlign: "left",
               transition: "border-color 120ms, background 120ms",
@@ -487,6 +495,7 @@ export function RadioCards({
             <div>
               <div style={{ fontSize: "13.5px", fontWeight: 500, color: "var(--ink)" }}>{opt.title}</div>
               <div style={{ fontSize: "12.5px", color: "var(--fg-3)", marginTop: 2, lineHeight: 1.5 }}>{opt.desc}</div>
+              {opt.note ? <div style={{ fontSize: "12px", color: "var(--fg-2)", marginTop: 4, lineHeight: 1.5 }}>{opt.note}</div> : null}
             </div>
           </button>
         );

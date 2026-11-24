@@ -1,8 +1,8 @@
 "use client";
 
-import { StepProps, StageHead, FormGrid, Field, TextInput, MoneyField, SelectField, ChipGrid, UploadZone, RadioCards, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
+import { StepProps, StageHead, FormGrid, Field, TextInput, TextArea, MoneyField, SelectField, ChipGrid, UploadZone, PreviewCard, SessionPriceChoice, sessionPriceHint } from "./_components";
 import { PayoutChoice } from "./_payout";
-import { COUNTRY_NAME_TO_CODE, DIETITIAN_DEFAULT_COUNTRY, SESSION_MISSING, dietitianCountry, dietitianCurrency } from "./_config";
+import { SESSION_MISSING, dietitianCurrency } from "./_config";
 import { dietitianLicenseDraft } from "./_credentials";
 import {
   DIETITIAN_POPULATIONS,
@@ -16,6 +16,10 @@ import {
   toggleCode,
 } from "@/lib/credentials/dietitian";
 import { OnboardingCurrencyField } from "./_currency";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStepCountry } from "./_homeCountry";
+import { useCountries } from "@/lib/queries/utility";
+import { LISTING_BIO, LISTING_HEADLINE, providerDisplayName } from "./_providerSetup";
 
 /** The step 5 price, cleared when the currency changes. */
 const PRICE_KEYS = ["sessionPrice"] as const;
@@ -24,25 +28,23 @@ const PRICE_KEYS = ["sessionPrice"] as const;
 const SPECIALIZATION_LABELS = DIETITIAN_SPECIALIZATIONS.map((o) => o.label);
 const POPULATION_LABELS = DIETITIAN_POPULATIONS.map((o) => o.label);
 
-/** The step 1 countries, as the licence step's choices (name → code). */
-const LICENSE_COUNTRIES = Object.entries(COUNTRY_NAME_TO_CODE);
-
 export function DietStep1({ data, setField }: StepProps) {
-  const country = dietitianCountry(data);
+  // Every country, starting on the account's own (or the detected region).
+  const country = useStepCountry(data, setField);
   return (
     <>
-      <StageHead crumb="Step 01 of 07, dietitian track" title="Your practice basics." desc="We'll list this on your profile." />
+      <StageHead crumb="Step 01 of 06, dietitian track" title="Your practice basics." desc="We'll list this on your profile." />
       <FormGrid>
         <Field label="Full name (with title)" htmlFor="ob-diet-name"><TextInput id="ob-diet-name" value={(data.fullName as string) || ""} onChange={(v) => setField("fullName", v)} placeholder="Dr Nadia Hassan, RD" /></Field>
         <Field label="Pronouns" htmlFor="ob-diet-pronouns"><TextInput id="ob-diet-pronouns" value={(data.pronouns as string) || ""} onChange={(v) => setField("pronouns", v.slice(0, MAX_PRONOUNS))} placeholder="she/her" /></Field>
         <Field label="City" htmlFor="ob-diet-city"><TextInput id="ob-diet-city" value={(data.city as string) || ""} onChange={(v) => setField("city", v)} placeholder="Lagos" /></Field>
-        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={country} onChange={(v) => setField("country", v)} options={[DIETITIAN_DEFAULT_COUNTRY, "South Africa", "Kenya", "Ghana", "United States", "United Kingdom"]} /></Field>
+        <Field label="Country" htmlFor="ob-diet-country"><SelectField id="ob-diet-country" value={country.countryName} placeholder="Choose country" onChange={country.pick} options={country.options} /></Field>
         <OnboardingCurrencyField
           id="ob-diet-currency"
           data={data}
           setField={setField}
-          countryCode={COUNTRY_NAME_TO_CODE[country]}
-          countryName={country}
+          countryCode={country.countryCode || undefined}
+          countryName={country.countryName || "your country"}
           priceKeys={PRICE_KEYS}
         />
         <Field label="Practice name (optional)" htmlFor="ob-diet-practice" full><TextInput id="ob-diet-practice" value={(data.practiceName as string) || ""} onChange={(v) => setField("practiceName", v)} placeholder="Nadia Hassan Clinical Nutrition" /></Field>
@@ -59,10 +61,12 @@ export function DietStep1({ data, setField }: StepProps) {
  */
 export function DietStep2({ data, setField, onUploadStart, onUploadEnd }: StepProps) {
   const draft = dietitianLicenseDraft(data);
-  const countryName = LICENSE_COUNTRIES.find(([, code]) => code === draft.countryCode)?.[0] ?? DIETITIAN_DEFAULT_COUNTRY;
+  // The licence's country starts on step 1's, from the same full list.
+  const { data: countries = [] } = useCountries();
+  const countryName = countries.find((c) => c.code === draft.countryCode)?.name ?? "";
   return (
     <>
-      <StageHead crumb="Step 02 of 07, dietitian track" title="Licensure." desc="Your practising licence. Your profile shows that you're licensed, who issued it and where; the number and the document stay private to you and the Binectics team." />
+      <StageHead crumb="Step 02 of 06, dietitian track" title="Licensure." desc="Your practising licence. Your profile shows that you're licensed, who issued it and where; the number and the document stay private to you and the Binectics team." />
       <FormGrid>
         <Field label="Licence" htmlFor="ob-diet-lic-name">
           <TextInput id="ob-diet-lic-name" value={draft.name} onChange={(v) => setField("licName", v.slice(0, 120))} placeholder="Registered Dietitian" />
@@ -74,7 +78,7 @@ export function DietStep2({ data, setField, onUploadStart, onUploadEnd }: StepPr
           <TextInput id="ob-diet-lic-number" value={draft.number} onChange={(v) => setField("licNumber", v.slice(0, 60))} placeholder="Never shown publicly" />
         </Field>
         <Field label="Country" htmlFor="ob-diet-lic-country">
-          <SelectField id="ob-diet-lic-country" value={countryName} onChange={(v) => setField("licCountry", COUNTRY_NAME_TO_CODE[v] ?? "")} options={LICENSE_COUNTRIES.map(([name]) => name)} />
+          <SelectField id="ob-diet-lic-country" value={countryName} placeholder="Choose country" onChange={(v) => setField("licCountry", countries.find((c) => c.name === v)?.code ?? "")} options={countries.map((c) => c.name)} />
         </Field>
         <Field label="Expires" htmlFor="ob-diet-lic-expiry">
           <TextInput id="ob-diet-lic-expiry" type="date" value={draft.expiresAt} onChange={(v) => setField("licExpiry", v)} />
@@ -100,7 +104,7 @@ export function DietStep3({ data, setField }: StepProps) {
   const pops = (data.populations as string[]) || [];
   return (
     <>
-      <StageHead crumb="Step 03 of 07, dietitian track" title="Your specializations." desc={`Up to ${MAX_SPECIALIZATIONS}. Members filter on these.`} />
+      <StageHead crumb="Step 03 of 06, dietitian track" title="Your specializations." desc={`Up to ${MAX_SPECIALIZATIONS}. Members filter on these.`} />
       <Field label="Specializations" full>
         <ChipGrid
           label="Specializations"
@@ -127,24 +131,6 @@ export function DietStep3({ data, setField }: StepProps) {
   );
 }
 
-export function DietStep4({ data, setField }: StepProps) {
-  return (
-    <>
-      <StageHead crumb="Step 04 of 07, dietitian track" title="Seed your library." desc="Pick a starter pack, protocols and meal-plan templates you can customize per client." />
-      <RadioCards
-        selected={(data.library as string) || "clinical"}
-        onSelect={(v) => setField("library", v)}
-        options={[
-          { id: "clinical", title: "Clinical · 6 protocols", desc: "PCOS · T2D · gestational · IBS · CVD · weight management" },
-          { id: "sports", title: "Sports · 4 protocols", desc: "Endurance · strength · contact-sport · physique" },
-          { id: "general", title: "General · 3 protocols", desc: "Wellness · weight loss · maintenance" },
-          { id: "blank", title: "Start blank", desc: "Build your library from scratch." },
-        ]}
-      />
-    </>
-  );
-}
-
 const SESSION_LENGTHS = ["30 min", "45 min", "60 min", "90 min"];
 
 /**
@@ -153,7 +139,7 @@ const SESSION_LENGTHS = ["30 min", "45 min", "60 min", "90 min"];
  * trainer track's pricing does. A price, or Free, creates the dietitian's
  * own session; leaving both creates nothing, to set up later.
  */
-export function DietStep5({ data, setField }: StepProps) {
+export function DietStep4({ data, setField }: StepProps) {
   const currency = dietitianCurrency(data) ?? "";
   const free = data.sessionFree === true;
   const later = data.sessionLater === true;
@@ -167,7 +153,7 @@ export function DietStep5({ data, setField }: StepProps) {
   };
   return (
     <>
-      <StageHead crumb="Step 05 of 07, dietitian track" title="Set your consultation." desc="This is what clients book with you. You can change it, or add more sessions, any time." />
+      <StageHead crumb="Step 04 of 06, dietitian track" title="Set your consultation." desc="This is what clients book with you. You can change it, or add more sessions, any time." />
       <FormGrid>
         <Field label="Session length" htmlFor="ob-diet-length" full>
           <SelectField id="ob-diet-length" value={duration} onChange={(v) => setField("sessionDuration", v)} options={SESSION_LENGTHS} />
@@ -210,17 +196,18 @@ export function DietStep5({ data, setField }: StepProps) {
   );
 }
 
-export function DietStep6({ data, setField }: StepProps) {
+export function DietStep5({ data, setField }: StepProps) {
   return (
     <>
-      <StageHead crumb="Step 06 of 07, dietitian track" title="Connect your payout." desc="Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified." />
+      <StageHead crumb="Step 05 of 06, dietitian track" title="Connect your payout." desc="Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified." />
       <PayoutChoice data={data} setField={setField} />
     </>
   );
 }
 
-export function DietStep7({ data }: StepProps) {
-  const name = (data.fullName as string) || "Your Name";
+export function DietStep6({ data, setField }: StepProps) {
+  const { user } = useAuth();
+  const name = providerDisplayName("dietitian", data, user) || "Your name";
   const specs = ((data.specializations as string[]) || []).slice(0, 3).map((s) => specializationLabel(s).toLowerCase()).join(" · ") || "specializations";
   const city = (data.city as string) || "City";
   const minor = data.sessionPriceMinor;
@@ -232,10 +219,18 @@ export function DietStep7({ data }: StepProps) {
         : "";
   return (
     <>
-      <StageHead crumb="Step 07 of 07, dietitian track" title="Preview & publish." desc="Your profile goes live the moment we verify your license. Usually within 48h." />
+      <StageHead crumb="Step 06 of 06, dietitian track" title="Your marketplace profile." desc="Finishing saves this as your profile, as a draft. Add photos and publish it from My profile when you're ready." />
+      <FormGrid>
+        <Field label="Headline" htmlFor="ob-diet-headline" full>
+          <TextInput id="ob-diet-headline" value={(data[LISTING_HEADLINE] as string) || ""} onChange={(v) => setField(LISTING_HEADLINE, v.slice(0, 200))} placeholder="Registered dietitian · PCOS and diabetes" />
+        </Field>
+        <Field label="Short bio" htmlFor="ob-diet-bio" hint="Who you help and how. Needed, with the headline, to create your profile." full>
+          <TextArea id="ob-diet-bio" value={(data[LISTING_BIO] as string) || ""} onChange={(v) => setField(LISTING_BIO, v.slice(0, 3000))} placeholder="I help women with PCOS eat well with the food they already cook." />
+        </Field>
+      </FormGrid>
       <PreviewCard name={name} meta={`${specs} · ${city}${price}`} />
     </>
   );
 }
 
-export const DIETITIAN_STEPS = [DietStep1, DietStep2, DietStep3, DietStep4, DietStep5, DietStep6, DietStep7];
+export const DIETITIAN_STEPS = [DietStep1, DietStep2, DietStep3, DietStep4, DietStep5, DietStep6];

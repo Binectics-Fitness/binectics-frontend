@@ -8,13 +8,13 @@ import { DSCard, Eyebrow, PageHeader } from "@/components/ds";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymClasses, useCreateGymClass } from "@/lib/queries/classes";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
-import { ClassForm, WEEKDAYS } from "./ClassForm";
+import { ClassForm, WEEKDAYS, useClassLocations } from "./ClassForm";
 import { TeamSessionsCard } from "./TeamSessionsCard";
 import { classTime, type GymClass } from "@/lib/api/classes";
 import { PlanGate, useFeatureGate } from "@/components/ds/PlanGate";
 import { parseBillingError, type BillingError } from "@/lib/utils/billingErrors";
 import { useOrganizationDetails } from "@/lib/queries/teams";
-import { lateCancelSentence, policyFromRules } from "@/lib/classes/cancellationPolicy";
+import { cancelWindowSentence, policyFromRules } from "@/lib/classes/cancellationPolicy";
 
 /**
  * Weekly class timetable backed by the classes API. Week columns start on
@@ -29,6 +29,10 @@ export function ScheduleClient() {
   // (the API's include_inactive; deleted classes never come back).
   const { data: classes = [], isLoading } = useGymClasses(orgId, canManage);
   const create = useCreateGymClass(orgId);
+  // A gym with more than one club names each class's club on its card.
+  const { data: locations = [] } = useClassLocations(orgId);
+  const clubName = (id: string | null | undefined) =>
+    locations.length > 1 && id ? (locations.find((l) => l._id === id)?.name ?? null) : null;
   const { prefs, weekStartsOn } = useOrgFormat();
   const twelveHour = prefs.timeFormat === "12h";
 
@@ -82,7 +86,7 @@ export function ScheduleClient() {
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 overflow-visible!">
           <h2 className="text-[16px] font-medium mb-3.5" style={{ color: "var(--ink)" }}>New class</h2>
-          <ClassForm saving={create.isPending} error={error} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create class" />
+          <ClassForm organizationId={orgId} saving={create.isPending} error={error} onSubmit={(d) => void onCreate(d)} onCancel={() => setAdding(false)} submitLabel="Create class" />
         </DSCard>
       )}
 
@@ -113,7 +117,7 @@ export function ScheduleClient() {
                 {dayClasses.length === 0 ? (
                   <div className="rounded-(--r-2) px-2.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.04em]" style={{ border: "1px dashed var(--border)", color: "var(--fg-4)" }}>-</div>
                 ) : (
-                  dayClasses.map((c) => <ClassCard key={c._id} gymClass={c} twelveHour={twelveHour} />)
+                  dayClasses.map((c) => <ClassCard key={c._id} gymClass={c} twelveHour={twelveHour} club={clubName(c.location_id)} />)
                 )}
               </div>
             );
@@ -126,7 +130,7 @@ export function ScheduleClient() {
   );
 }
 
-function ClassCard({ gymClass: c, twelveHour }: { gymClass: GymClass; twelveHour: boolean }) {
+function ClassCard({ gymClass: c, twelveHour, club }: { gymClass: GymClass; twelveHour: boolean; club: string | null }) {
   return (
     <Link
       href={`/dashboard/gym-owner/schedule/${c._id}`}
@@ -142,6 +146,9 @@ function ClassCard({ gymClass: c, twelveHour }: { gymClass: GymClass; twelveHour
         {classTime(c.start_time, twelveHour)} · {c.duration_minutes}m
       </div>
       <div className="text-[13px] font-medium mt-1 leading-snug" style={{ color: "var(--ink)" }}>{c.name}</div>
+      {club && (
+        <div className="text-[12px] mt-0.5 truncate" style={{ color: "var(--fg-2)" }}>{club}</div>
+      )}
       <div className="font-mono text-[10.5px] uppercase tracking-[0.04em] mt-1" style={{ color: "var(--fg-3)" }}>
         {c.instructor_name ? `${c.instructor_name} · ` : ""}cap {c.capacity}{c.waitlist_enabled ? " · waitlist" : ""}
       </div>
@@ -159,7 +166,7 @@ function CancellationPolicyLine({ orgId, canManage }: { orgId: string | undefine
   const policy = policyFromRules(org.name ?? "", org.booking_rules);
   const summary = !policy
     ? "No class cancellation policy. Members see no fee wording."
-    : lateCancelSentence(policy) ?? "No late-cancellation fee. Members see your policy note.";
+    : cancelWindowSentence(policy) ?? "No late-cancellation fee. Members see your policy note.";
   return (
     <p className="text-[12.5px] max-w-[70ch]" style={{ color: "var(--fg-3)" }} data-testid="schedule-cancellation-policy">
       <span className="font-medium" style={{ color: "var(--fg-2)" }}>Cancellation policy:</span> {summary}{" "}

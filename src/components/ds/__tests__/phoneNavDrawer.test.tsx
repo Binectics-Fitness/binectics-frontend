@@ -10,6 +10,8 @@ import { isScrollLocked } from "@/lib/ui/scrollLock";
 
 let pathname = "/dashboard/trainer";
 // These tests are about the non-solo shell; the solo answer is a separate read.
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("@/hooks/useIsSoloMember", () => ({ useIsSoloMember: () => ({ solo: false, isLoading: false }) }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
@@ -18,6 +20,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/hooks/useRequireAuth", () => ({
   useAdminGuard: () => ({ isAuthorized: true, isLoading: false }),
+  isPlatformAdmin: () => true,
 }));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "a-1", role: "ADMIN", first_name: "Ada" }, isLoading: false, logout: vi.fn() }),
@@ -385,11 +388,11 @@ describe("member shell phone menu", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("closes at the lg breakpoint (64rem; eight links overflow a 768px tablet row), stays closed on the way back, and focuses <main>", async () => {
+  it("closes at the xl breakpoint (80rem; the full member bar with Tracking overflows 1024px), stays closed on the way back, and focuses <main>", async () => {
     const user = userEvent.setup();
     mountMember();
     await user.click(trigger());
-    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 64rem)");
+    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 80rem)");
     trigger().style.display = "none";
     resizeTo(true);
     expect(screen.queryByRole("dialog")).toBeNull();

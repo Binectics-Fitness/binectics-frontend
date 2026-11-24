@@ -25,6 +25,8 @@ export const queryKeys = {
     preview: (id: string) => [...queryKeys.starter.all, "preview", id] as const,
     mine: () => [...queryKeys.starter.all, "mine"] as const,
     program: (id: string) => [...queryKeys.starter.all, "program", id] as const,
+    history: (id: string) => [...queryKeys.starter.all, "history", id] as const,
+    numbers: () => [...queryKeys.starter.all, "numbers"] as const,
   },
 
   progress: {

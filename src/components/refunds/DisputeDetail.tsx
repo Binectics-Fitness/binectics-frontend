@@ -8,7 +8,13 @@ import { disputeTone, refundErrorMessage } from "@/lib/refunds/refundUi";
 
 export type DisputeDetailProps =
   | { mode: "provider"; orgId: string; disputeId: string }
-  | { mode: "admin"; disputeId: string };
+  | {
+      mode: "admin";
+      disputeId: string;
+      /** The admin holds refunds:write; without it the note and evidence
+       *  request are left out (the API refuses them anyway). */
+      canAct?: boolean;
+    };
 
 function when(iso?: string | null): string {
   if (!iso) return "";
@@ -140,7 +146,7 @@ export function DisputeDetail(props: DisputeDetailProps) {
         <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>No evidence yet.</p>
       )}
 
-      {mode === "provider" || d.can_act ? (
+      {mode === "provider" || (d.can_act && props.canAct !== false) ? (
         <div className="flex flex-col gap-2">
           <label className="flex flex-col gap-1.5 text-[13px]" style={{ color: "var(--ink)" }}>
             {mode === "provider" ? "Add a note" : "Message or note"}

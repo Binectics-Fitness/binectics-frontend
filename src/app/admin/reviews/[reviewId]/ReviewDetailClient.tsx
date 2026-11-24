@@ -26,6 +26,8 @@ import {
   reviewSubject,
   stars,
 } from "@/lib/admin/moderation";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 type PendingAction = { kind: "hide" } | { kind: "restore" } | { kind: "dismiss"; report: AdminReviewReport };
 
@@ -63,6 +65,8 @@ function Card({ title, children }: { title?: string; children: React.ReactNode }
 }
 
 export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
+  // Hiding, restoring and dismissing reports need content:write.
+  const canModerate = useAdminAccess().can(AdminPermission.CONTENT_WRITE);
   const [review, setReview] = useState<AdminReviewView | null>(null);
   const [reports, setReports] = useState<AdminReviewReport[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +128,7 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
         activeItem="Reviews"
         crumb="Review"
         actions={
-          review && review.status !== "REMOVED" ? (
+          canModerate && review && review.status !== "REMOVED" ? (
             <div className="flex flex-wrap items-center gap-2">
               {review.status === "VISIBLE" ? (
                 <button
@@ -304,7 +308,7 @@ export function ReviewDetailClient({ reviewId }: { reviewId: string }) {
                             ) : null}
                           </DSTableTd>
                           <DSTableTd align="right">
-                            {r.status === "OPEN" ? (
+                            {canModerate && r.status === "OPEN" ? (
                               <button
                                 type="button"
                                 className="btn-ghost-v2 sm"

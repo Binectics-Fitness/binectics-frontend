@@ -3,7 +3,12 @@ export type RoleId = "member" | "trainer" | "gym" | "dietitian";
 
 export const VALID_ROLES: RoleId[] = ["member", "trainer", "gym", "dietitian"];
 
-/** The country choices the provider tracks offer, as ISO 3166-1 alpha-2. */
+/**
+ * The six countries the provider tracks used to offer, as ISO 3166-1
+ * alpha-2. Step 1 now lists every country from /utility/countries; this
+ * only reads drafts saved before that (a country name with no code), and
+ * the dietitian profile's licence select still uses it.
+ */
 export const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   "South Africa": "ZA",
   Nigeria: "NG",
@@ -53,18 +58,18 @@ export const ACCOUNT_ROLE_TO_ID: Record<string, RoleId> = {
  * role really was preassigned (the member invite / gym enrollment flow) are
  * detected separately, via membership evidence — see the onboarding page.
  */
-/** The default the step 1 select shows when the trainer never touches it. */
-export const TRAINER_DEFAULT_COUNTRY = "South Africa";
-
 /**
- * The country a trainer chose on step 1, or the select's default. The
- * select only writes `data.country` on change, so a trainer who keeps the
- * default has nothing in the data; reading the raw value there saved no
- * country and no workspace currency while step 4 priced in the default's
- * currency anyway.
+ * The country (ISO 3166-1 alpha-2) a trainer or dietitian has on step 1, or
+ * undefined when none is chosen. Step 1 writes `countryCode` with the name,
+ * starting from the account's own country or the detected region and never
+ * from one fixed country. A draft saved before step 1 kept codes holds only
+ * a name; one of the old six still resolves.
  */
-export function trainerCountry(data: Record<string, unknown>): string {
-  return (data.country as string) || TRAINER_DEFAULT_COUNTRY;
+export function providerCountryCode(data: Record<string, unknown>): string | undefined {
+  const code = data.countryCode;
+  if (typeof code === "string" && /^[A-Z]{2}$/.test(code)) return code;
+  const name = data.country;
+  return typeof name === "string" ? COUNTRY_NAME_TO_CODE[name] : undefined;
 }
 
 /** What step 1 of the trainer track persists to the profile and the workspace. */
@@ -77,8 +82,7 @@ export function trainerLocationPatch(data: Record<string, unknown>): {
   if (data.lastName) profile.last_name = data.lastName as string;
   const city = (data.city as string | undefined)?.trim();
   if (city) profile.city = city;
-  const country = trainerCountry(data);
-  const code = COUNTRY_NAME_TO_CODE[country];
+  const code = providerCountryCode(data);
   if (code) profile.country_code = code;
   return { profile, currency: onboardingCurrency(data) };
 }
@@ -107,9 +111,17 @@ function sessionMinutes(value: unknown, fallback = 60): number {
  * "Set up later"; Continue waits for one of the three, so no provider leaves
  * the step with nothing bookable without having chosen that.
  */
+/**
+ * The trainer track's steps, by what each one saves. There is no documents
+ * step: nothing on the API holds a trainer's certificate, insurance or ID,
+ * and nobody reviews them, so asking for them only implied a check that
+ * never happened (mobile never asked either).
+ */
+export const TRAINER_STEP = { profile: 1, specializations: 2, pricing: 3, payout: 4, listing: 5 } as const;
+
 export const SESSION_FIELDS = {
-  trainer: { step: 4, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
-  dietitian: { step: 5, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
+  trainer: { step: TRAINER_STEP.pricing, minor: "price1on1Minor", free: "price1on1Free", later: "price1on1Later" },
+  dietitian: { step: 4, minor: "sessionPriceMinor", free: "sessionFree", later: "sessionLater" },
 } as const;
 
 /**
@@ -142,7 +154,7 @@ export interface OwnSessionPatch {
 }
 
 /**
- * The trainer's own "1:1 session" as step 4 describes it: a price, or 0 when
+ * The trainer's own "1:1 session" as the pricing step describes it: a price, or 0 when
  * Free was chosen. Null when neither was given; a blank price is not a free
  * session, it is no answer, and the trainer sets it up later.
  */
@@ -161,9 +173,6 @@ export function trainerSessionPatch(data: Record<string, unknown>): OwnSessionPa
   };
 }
 
-/** The default the dietitian step 1 country select shows when untouched. */
-export const DIETITIAN_DEFAULT_COUNTRY = "Nigeria";
-
 /**
  * The name of the session a dietitian's onboarding creates. The settings
  * editor (ConsultationAvailabilityManager) creates a provider's first own
@@ -171,11 +180,6 @@ export const DIETITIAN_DEFAULT_COUNTRY = "Nigeria";
  * whichever own session is active, so the two stay one session.
  */
 export const DIETITIAN_SESSION_NAME = "1:1 session";
-
-/** The country a dietitian chose on step 1, or the select's default. */
-export function dietitianCountry(data: Record<string, unknown>): string {
-  return (data.country as string) || DIETITIAN_DEFAULT_COUNTRY;
-}
 
 /** The currency a dietitian's workspace and consultation price are in, once chosen. */
 export function dietitianCurrency(data: Record<string, unknown>): string | null {
@@ -203,7 +207,7 @@ export function dietitianLocationPatch(data: Record<string, unknown>): {
   }
   const city = (data.city as string | undefined)?.trim();
   if (city) profile.city = city;
-  const code = COUNTRY_NAME_TO_CODE[dietitianCountry(data)];
+  const code = providerCountryCode(data);
   if (code) profile.country_code = code;
   return { profile, currency: dietitianCurrency(data) };
 }
@@ -507,10 +511,9 @@ export const ROLES: RoleDef[] = [
     badge: "Consumer",
     color: "var(--consumer)",
     steps: [
-      { label: "Step 01", title: "What brings you here?" },
-      { label: "Step 02", title: "Where do you train?" },
-      { label: "Step 03", title: "When do you train?" },
-      { label: "Step 04", title: "You're all set" },
+      // The mobile track (#272): the second step is only for "on my own".
+      { label: "Step 01", title: "How to start" },
+      { label: "Step 02", title: "What to use" },
     ],
   },
   {
@@ -521,10 +524,9 @@ export const ROLES: RoleDef[] = [
     steps: [
       { label: "Step 01", title: "Tell us about yourself" },
       { label: "Step 02", title: "Your specializations" },
-      { label: "Step 03", title: "Upload certifications" },
-      { label: "Step 04", title: "Set your pricing" },
-      { label: "Step 05", title: "Connect your payout" },
-      { label: "Step 06", title: "Preview & publish" },
+      { label: "Step 03", title: "Set your pricing" },
+      { label: "Step 04", title: "Connect your payout" },
+      { label: "Step 05", title: "Your marketplace profile" },
     ],
   },
   {
@@ -552,10 +554,9 @@ export const ROLES: RoleDef[] = [
       { label: "Step 01", title: "Your practice basics" },
       { label: "Step 02", title: "Licensure" },
       { label: "Step 03", title: "Your specializations" },
-      { label: "Step 04", title: "Seed your library" },
-      { label: "Step 05", title: "Set your consultation" },
-      { label: "Step 06", title: "Connect your payout" },
-      { label: "Step 07", title: "Preview & publish" },
+      { label: "Step 04", title: "Set your consultation" },
+      { label: "Step 05", title: "Connect your payout" },
+      { label: "Step 06", title: "Your marketplace profile" },
     ],
   },
 ];

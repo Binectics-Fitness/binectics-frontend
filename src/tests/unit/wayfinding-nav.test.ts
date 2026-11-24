@@ -136,9 +136,15 @@ describe("admin nav", () => {
   });
 
   it("hides pages that are still placeholders", () => {
-    for (const pending of ["Fraud", "Tickets", "Countries", "Team & roles", "Compliance"]) {
+    for (const pending of ["Fraud", "Tickets", "Countries", "Compliance"]) {
       expect(names(ADMIN_SIDEBAR)).not.toContain(pending);
     }
+  });
+
+  it("links Team & roles to the built roles page (admin roles web-2)", () => {
+    const operate = ADMIN_SIDEBAR.find((s) => s.label === "Operate")?.items ?? [];
+    expect(operate.find((i) => i.name === "Team & roles")?.href).toBe("/admin/roles");
+    expect(isAppRoute("/admin/roles")).toBe(true);
   });
 
   it.each(hrefs(ADMIN_SIDEBAR).filter((h) => h.startsWith("/admin/")))("%s is a built page, not a placeholder", (href) => {

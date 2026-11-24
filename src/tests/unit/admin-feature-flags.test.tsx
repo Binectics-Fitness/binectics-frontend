@@ -23,6 +23,8 @@ import {
 import { useFeatureFlag, useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 const params = vi.hoisted(() => ({ key: "member_recurring_billing" }));
+// Permission gating is covered in admin-access-gating.test.tsx; here the admin holds everything.
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   usePathname: () => "/admin/feature-flags",

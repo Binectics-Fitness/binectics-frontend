@@ -21,6 +21,7 @@ const auth = vi.hoisted(() => ({
 }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => auth }));
 vi.mock("@/components/ds/ShellNotificationBell", () => ({ ShellNotificationBell: () => null }));
+vi.mock("@/hooks/useAdminAccess", async () => (await import("@/test/adminAccess")).superAdminAccessModule);
 vi.mock("@/components/Toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const status = {

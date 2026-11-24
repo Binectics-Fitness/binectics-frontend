@@ -20,7 +20,7 @@ Existing DS components live in `src/components/ds/`. Current exports:
 - Use `"use client"` directive if the component uses state, effects, or event handlers
 - Props interfaces are exported alongside the component
 - Use CSS custom properties from globals.css — never raw colors
-- 44px minimum touch targets on interactive elements (`min-h-11`)
+- 44px minimum touch targets on interactive elements (`min-h-touch`, or `min-h-11`, which is pinned to 44px)
 - Use generic type parameters where the component needs to be flexible (see `TogglePill<T>`)
 
 ## Instructions

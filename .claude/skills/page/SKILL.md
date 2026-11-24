@@ -53,7 +53,7 @@ export default function PageNamePage() {
 - Body text: `text-[17px] leading-[1.55]` with `color: var(--fg-2)`
 - Serif italic: maximum 1-2 instances per page, never on every heading
 - One signal-colored button max per page
-- Buttons: `min-h-11` for 44px touch targets
+- Buttons: `min-h-touch` for 44px touch targets (`min-h-11` is pinned to the same 44px; the 15px root makes any other rem step smaller)
 - Mobile: all grids must have responsive breakpoints (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`)
 
 ### After creation

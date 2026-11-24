@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "./client";
+import type { AdminUserAccess } from "./adminRoles";
 import type {
   ApiResponse,
   MarketplaceListing,
@@ -366,7 +367,8 @@ export interface AdminListingDetail
   organization_id: { _id: string; name?: string; logo?: string } | string | null;
   badge_awarded_by?: AdminPersonRef | string | null;
   verification_badge: MarketplaceVerificationBadge;
-  documents: AdminListingDocument[];
+  /** Signed links; null when the caller lacks verification:read. */
+  documents: AdminListingDocument[] | null;
 }
 
 export interface AdminTransactionFilters {
@@ -492,7 +494,11 @@ export interface AdminUserDetail extends AdminUserListItem {
   is_onboarding_complete: boolean;
   must_change_password: boolean;
   account_type_from_team: boolean;
-  admin_permissions: string[];
+  /**
+   * Their admin roles and effective permissions: null when they aren't an
+   * admin, absent when the caller lacks admins:read.
+   */
+  admin_access?: AdminUserAccess | null;
   suspension_reason: string | null;
   updated_at: string | null;
   listings: Array<{

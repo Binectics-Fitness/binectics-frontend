@@ -31,6 +31,12 @@ interface RegionContextValue {
   locale: string;
   regionName: string;
   isDetected: boolean;
+  /**
+   * True when the country is only the API's fallback (it could not place
+   * the visitor), not where they are or what they picked. Forms that start
+   * from the visitor's country should not start from a fallback.
+   */
+  isFallback: boolean;
   /** Platform-enabled currencies, for the region selector. */
   currencies: PlatformCurrency[];
   /** A MAJOR-unit amount in the display currency. */
@@ -89,6 +95,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
   const [geo, setGeo] = useState<{ currency?: string; locale?: string; regionName?: string } | null>(null);
   const [override, setOverride] = useState<string | null>(null);
   const [isDetected, setIsDetected] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
   const { data: list } = useCurrencyList();
 
   useEffect(() => {
@@ -116,6 +123,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
             regionName: response.data?.region_name,
           });
           setCookie(REGION_COOKIE, code, 30);
+          setIsFallback(response.data?.source === "default");
           setIsDetected(true);
           return;
         }
@@ -125,6 +133,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
 
       const cookieCountry = getCookie(REGION_COOKIE)?.toUpperCase();
       if (cookieCountry && COUNTRY.test(cookieCountry)) setCountry(cookieCountry);
+      else setIsFallback(true);
       setIsDetected(true);
     };
 
@@ -169,12 +178,13 @@ export function RegionProvider({ children }: { children: ReactNode }) {
       locale,
       regionName,
       isDetected,
+      isFallback,
       currencies: list ?? [],
       formatAmount,
       setRegion,
       setCurrency,
     }),
-    [country, currency, locale, regionName, isDetected, list, formatAmount, setRegion, setCurrency],
+    [country, currency, locale, regionName, isDetected, isFallback, list, formatAmount, setRegion, setCurrency],
   );
 
   return <RegionContext.Provider value={value}>{children}</RegionContext.Provider>;
@@ -184,4 +194,9 @@ export function useRegion(): RegionContextValue {
   const ctx = useContext(RegionContext);
   if (!ctx) throw new Error("useRegion must be used within RegionProvider");
   return ctx;
+}
+
+/** The region, or null outside a RegionProvider (a component rendered on its own). */
+export function useOptionalRegion(): RegionContextValue | null {
+  return useContext(RegionContext);
 }

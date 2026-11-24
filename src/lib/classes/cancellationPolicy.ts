@@ -9,7 +9,11 @@
 export interface ClassCancellationPolicy {
   /** The gym's trading name. */
   provider_name: string;
-  /** Hours before the class inside which the fee applies; 0 = no fee. */
+  /**
+   * Hours before the class by which the gym asks members to cancel; 0 =
+   * none. With a fee it is also where the fee applies; without one it is
+   * only the gym's request.
+   */
   window_hours: number;
   /** 0–100; 0 = no fee. */
   fee_percent: number;
@@ -22,7 +26,9 @@ export const CANCELLATION_NOTE_MAX = 500;
 
 /**
  * The policy from an API value, or null when there is none to show. An API
- * before the policy sends nothing, which reads as none.
+ * before the policy sends nothing, which reads as none. The window counts
+ * without a fee (a gym asking for 12 hours' notice and charging nothing);
+ * a fee without a window is no fee.
  */
 export function readCancellationPolicy(raw: unknown): ClassCancellationPolicy | null {
   if (!raw || typeof raw !== "object") return null;
@@ -31,10 +37,11 @@ export function readCancellationPolicy(raw: unknown): ClassCancellationPolicy | 
   const hours = Number(r.window_hours ?? 0);
   const hasFee = Number.isFinite(fee) && Number.isFinite(hours) && fee > 0 && hours > 0;
   const note = typeof r.note === "string" && r.note.trim() ? r.note.trim() : null;
-  if (!hasFee && !note) return null;
+  const window = Number.isFinite(hours) && hours > 0 ? hours : 0;
+  if (!hasFee && !note && window === 0) return null;
   return {
     provider_name: typeof r.provider_name === "string" ? r.provider_name : "",
-    window_hours: hasFee ? hours : 0,
+    window_hours: window,
     fee_percent: hasFee ? fee : 0,
     note,
   };
@@ -83,12 +90,24 @@ export function policyFromRules(
 }
 
 /**
+ * The gym's window in one sentence: the fee sentence when it has a fee,
+ * else "Please cancel at least 12 hours before the class." with no fee
+ * wording. Null when it set no window.
+ */
+export function cancelWindowSentence(p: ClassCancellationPolicy | null | undefined): string | null {
+  const fee = lateCancelSentence(p);
+  if (fee) return fee;
+  if (!p || p.window_hours <= 0) return null;
+  return `Please cancel at least ${hoursLabel(p.window_hours)} before the class.`;
+}
+
+/**
  * What cancelling a confirmed booking does. The gym's fee sentence only when
  * it has a fee (a policy it sets; Binectics never charges it), its note when
  * it wrote one, and no fee wording at all otherwise.
  */
 export function confirmedCancelCopy(policy: ClassCancellationPolicy | null | undefined): string {
-  const fee = lateCancelSentence(policy);
+  const fee = cancelWindowSentence(policy);
   const note = policy?.note ? `${policy.provider_name || "The gym"}: “${policy.note}”` : null;
   return [
     "If anyone is waiting, your spot goes to them.",

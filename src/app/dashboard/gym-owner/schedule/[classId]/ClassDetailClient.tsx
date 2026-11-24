@@ -212,6 +212,7 @@ export function ClassDetailClient() {
         // overflow-visible: the form's selects open an in-flow dropdown.
         <DSCard className="p-5.5 max-w-[720px] overflow-visible!">
           <ClassForm
+            organizationId={orgId}
             initial={gymClass}
             saving={update.isPending}
             error={error}

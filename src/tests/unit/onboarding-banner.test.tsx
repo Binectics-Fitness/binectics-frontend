@@ -90,7 +90,7 @@ describe("OnboardingBanner", () => {
   });
 
   it.each([
-    [UserRole.TRAINER, /Complete your trainer profile/i, "Certifications & credentials", "Add certifications to get verified."],
+    [UserRole.TRAINER, /Complete your trainer profile/i, "Certifications & credentials", "Add your specialties, bio and prices so clients can book you."],
     [UserRole.DIETITIAN, /Complete your dietitian profile/i, "License information", "Add your licence to get verified."],
     [UserRole.GYM_OWNER, /Complete your gym setup/i, "Facilities & amenities", "Finish your listing to accept members."],
     [UserRole.USER, /Complete your profile/i, "Fitness goals", "Add your goals to see matched providers."],

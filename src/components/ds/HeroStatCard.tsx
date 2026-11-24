@@ -19,6 +19,8 @@ export interface HeroProgress {
   /** Accessible name of the bar. */
   label: string;
   valueText?: string;
+  /** The bar's fill: "signal" (default) or "paper" (see ProgressBar). */
+  fill?: "signal" | "paper";
 }
 
 interface HeroStatCardProps {
@@ -82,6 +84,7 @@ export function HeroStatCard({
           max={progress.max}
           label={progress.label}
           valueText={progress.valueText}
+          fill={progress.fill}
           className="mt-4"
         />
       )}

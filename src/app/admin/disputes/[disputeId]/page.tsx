@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminDashboardShell } from "@/components/ds/AdminDashboardShell";
-import { DisputeDetail } from "@/components/refunds/DisputeDetail";
+import { AdminDisputeDetailClient } from "./AdminDisputeDetailClient";
 
 export const metadata: Metadata = {
   title: "Dispute",
@@ -20,7 +20,7 @@ export default async function AdminDisputeDetailPage({
         Back to disputes
       </Link>
       <div className="rounded-(--r-3) p-4.5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-        <DisputeDetail mode="admin" disputeId={disputeId} />
+        <AdminDisputeDetailClient disputeId={disputeId} />
       </div>
     </AdminDashboardShell>
   );

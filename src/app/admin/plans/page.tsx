@@ -21,6 +21,8 @@ import {
   type CreateAdminPlan,
   type UpdateAdminPlan,
 } from "@/lib/api/admin";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission } from "@/lib/admin/permissions";
 
 type QuotaKey =
   | "max_active_members"
@@ -117,6 +119,10 @@ function editablePatch(draft: AdminPlan): UpdateAdminPlan {
 }
 
 export default function AdminPlansPage() {
+  // Plans, prices and tiers change with billing:write. Without it the page
+  // is a read-only view: the fields are disabled (hiding them would hide the
+  // plan itself) and the save, price and create actions are left out.
+  const canEdit = useAdminAccess().can(AdminPermission.BILLING_WRITE);
   const [plans, setPlans] = useState<AdminPlan[]>([]);
   const [drafts, setDrafts] = useState<Record<string, AdminPlan>>({});
   const [loading, setLoading] = useState(true);
@@ -369,6 +375,7 @@ export default function AdminPlansPage() {
                 className="rounded-(--r-3) p-5"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
               >
+                <fieldset disabled={!canEdit} className="contents">
                 {/* Header */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
@@ -474,12 +481,16 @@ export default function AdminPlansPage() {
                         {audienceOf(pr) !== "ALL" && (
                           <span className="font-mono text-[10px] uppercase" style={{ color: "var(--fg-3)" }}>{audienceOf(pr)}</span>
                         )}
-                        <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => setPriceDraft(draftFromPrice(pr))}>
-                          Edit
-                        </button>
-                        <button type="button" className="text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
-                          Remove
-                        </button>
+                        {canEdit && (
+                          <>
+                            <button type="button" className="ml-auto text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => setPriceDraft(draftFromPrice(pr))}>
+                              Edit
+                            </button>
+                            <button type="button" className="text-[12px] underline underline-offset-2" style={{ color: "var(--fg-3)", background: "none", border: "none", cursor: "pointer" }} onClick={() => void removePrice(pr._id)}>
+                              Remove
+                            </button>
+                          </>
+                        )}
                       </div>
                     ))}
                   {plan.code !== "free" && prices.filter((pr) => pr.plan_code === plan.code).length === 0 && (
@@ -579,7 +590,7 @@ export default function AdminPlansPage() {
                       <button type="button" className="btn-ghost-v2 sm" onClick={() => setPriceDraft(null)}>Cancel</button>
                     </div>
                   ) : (
-                    plan.code !== "free" && (
+                    canEdit && plan.code !== "free" && (
                       <button
                         type="button"
                         className="btn-ghost-v2 sm self-start"
@@ -591,7 +602,9 @@ export default function AdminPlansPage() {
                   )}
                 </div>
 
+                </fieldset>
                 {/* Actions */}
+                {canEdit && (
                 <div className="flex items-center justify-end gap-3 mt-5">
                   {dirty && !saving && (
                     <button
@@ -611,11 +624,12 @@ export default function AdminPlansPage() {
                     {saving ? "Saving…" : "Save changes"}
                   </button>
                 </div>
+                )}
               </section>
             );
           })}
 
-          {missingTiers.length > 0 && !creating && (
+          {canEdit && missingTiers.length > 0 && !creating && (
             <section
               className="rounded-(--r-3) p-5 flex flex-wrap items-center justify-between gap-3"
               style={{ background: "var(--bg)", border: "1px dashed var(--border-2)" }}

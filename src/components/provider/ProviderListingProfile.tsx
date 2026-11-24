@@ -7,6 +7,8 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { useGymViewer } from "@/hooks/useGymViewer";
 import { TeamPermission, allows, gymPageRule, holds } from "@/lib/gymStaffNav";
 import { GalleryManager } from "@/components/provider/GalleryManager";
+import { ListingLogoManager } from "@/components/provider/ListingLogoManager";
+import { AmenitiesPicker } from "@/components/provider/AmenitiesPicker";
 import { authService } from "@/lib/api/auth";
 import {
   useMyListing,
@@ -21,6 +23,7 @@ import {
 } from "@/lib/queries/marketplace";
 import { ListingPriceFields, type ListingPriceValue } from "@/components/provider/ListingPriceFields";
 import { LISTING_PRICE_COPY } from "@/lib/marketplace/listingPriceLocationCopy";
+import { listingFieldsFor } from "@/lib/marketplace/listingFields";
 import { formatMinorForInput } from "@/lib/money/moneyInput";
 import { useCountries } from "@/lib/queries/utility";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -53,6 +56,8 @@ interface ListingForm {
   languages: string[];
   specialties: string[];
   certifications: string[];
+  /** Gym listings: Wi-Fi, showers, parking... (AmenityKey values). */
+  amenities: string[];
   accepting_clients: boolean;
   /** Solo listings: where the "from" price comes from, and the typed one. */
   price_display: "auto" | "custom";
@@ -88,6 +93,7 @@ function seedListing(l: MarketplaceListing): ListingForm {
     languages: l.languages ?? [],
     specialties: l.specialties ?? [],
     certifications: l.certifications ?? [],
+    amenities: l.amenities ?? [],
     accepting_clients: l.accepting_clients ?? true,
     price_display: l.price_display ?? "auto",
     price_from_minor: l.price_from_minor ?? null,
@@ -148,6 +154,10 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
   const orgListing = useOrgListing(orgId, isGym && canEditGymListing);
   const myListing = useMyListing(!isGym);
   const accountType: MarketplaceAccountType = isGym ? "gym_owner" : roleToAccountType(user?.role);
+  // Fields that mean something for this kind (a gym has no certifications).
+  const fields = listingFieldsFor(
+    accountType === "gym_owner" ? "gym" : accountType === "dietitian" ? "dietitian" : "trainer",
+  );
   const listing = (isGym ? orgListing.data : myListing.data) ?? null;
   const listingLoading = isGym ? orgListing.isLoading : myListing.isLoading;
   const isLoading = listingLoading || (isGym && orgLoading);
@@ -368,15 +378,15 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>Accepting clients</label>
+            <label className={LABEL_CLASS} style={{ color: "var(--fg-3)" }}>{fields.availabilityLabel}</label>
             <div className="flex items-center gap-2.5 h-10">
-              <button type="button" role="switch" aria-checked={form?.accepting_clients ?? true} disabled={!form}
+              <button type="button" role="switch" aria-label={fields.availabilityLabel} aria-checked={form?.accepting_clients ?? true} disabled={!form}
                 onClick={() => form && set("accepting_clients", !form.accepting_clients)}
                 className="w-[30px] h-[18px] rounded-full relative cursor-pointer disabled:opacity-60"
                 style={{ background: form?.accepting_clients ? "var(--ink)" : "var(--border-2)", border: "none", padding: 0 }}>
                 <span className="absolute w-3.5 h-3.5 rounded-full top-0.5" style={{ background: "var(--bg)", left: form?.accepting_clients ? "14px" : "2px", transition: "left var(--motion-fast) var(--ease)" }} />
               </button>
-              <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{form?.accepting_clients ? "Shown as available" : "Hidden from new clients"}</span>
+              <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>{form?.accepting_clients ? fields.availabilityOn : fields.availabilityOff}</span>
             </div>
           </div>
         </div>
@@ -420,10 +430,24 @@ export function ProviderListingProfile({ scope = "own" }: { scope?: "gym" | "own
       )}
 
       {/* Specializations */}
-      <Card title="Specializations & credentials" desc="Shown as tags on your listing. Credentials appear next to your name.">
-        <ChipEditor label="Specialties" values={form?.specialties ?? []} onChange={(v) => set("specialties", v)} disabled={!form} placeholder="e.g. Strength & conditioning" />
-        <ChipEditor label="Certifications" values={form?.certifications ?? []} onChange={(v) => set("certifications", v)} disabled={!form} placeholder="e.g. CSCS" />
+      <Card title={fields.specialtiesCardTitle} desc={fields.specialtiesCardDesc}>
+        <ChipEditor label="Specialties" values={form?.specialties ?? []} onChange={(v) => set("specialties", v)} disabled={!form} placeholder={fields.specialtiesPlaceholder} />
+        {fields.certifications && (
+          <ChipEditor label="Certifications" values={form?.certifications ?? []} onChange={(v) => set("certifications", v)} disabled={!form} placeholder={fields.certificationsPlaceholder} />
+        )}
       </Card>
+
+      {/* Logo + amenities: gym listings only (the API keeps both on the org listing) */}
+      {isGym && orgId && listing && (
+        <Card title="Logo" desc="Shown beside your gym's name in Explore, on your profile and in members' apps.">
+          <ListingLogoManager orgId={orgId} logoUrl={listing.profile_image} name={currentOrg?.name} />
+        </Card>
+      )}
+      {isGym && form && (
+        <Card title="Amenities" desc="What members get at your gym. Shown on your listing and the Facilities page.">
+          <AmenitiesPicker values={form.amenities} onChange={(v) => set("amenities", v)} />
+        </Card>
+      )}
 
       {/* Photos */}
       <Card title="Photos" desc="The gallery on your public listing. The first photo is your cover.">

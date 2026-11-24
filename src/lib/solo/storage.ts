@@ -1,7 +1,8 @@
 /**
  * Browser keys the solo screens may keep start with `solo:`; sign-out wipes
- * them all (called by clearAuthStorage). Nothing is stored there today: the
- * hide-daily-weights choice lives on the server. Older builds kept it under
+ * them all (called by clearAuthStorage). The only keys today are the
+ * member's onboarding answers (startChoice.ts); the hide-daily-weights
+ * choice lives on the server. Older builds kept it under
  * `solo:hide-daily-weights:<userId>`, and this sweep also removes that
  * leftover key.
  */

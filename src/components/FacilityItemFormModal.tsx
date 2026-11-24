@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useEffect, useState } from "react";
+import { createElement, useEffect, useRef, useState } from "react";
 import Modal from "@/components/Modal";
 import SearchableSelect from "@/components/SearchableSelect";
 import {
@@ -18,7 +18,7 @@ import {
   getFacilityGradient,
   getFacilityIcon,
 } from "@/lib/constants/facility-catalogue";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Trash2, Upload, X } from "lucide-react";
 
 export interface FacilityFormValues {
   name: string;
@@ -32,12 +32,23 @@ export interface FacilityFormValues {
   image?: File;
 }
 
+/** What removing the saved photo came to: nothing on success, else why not. */
+export interface RemoveImageResult {
+  error?: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onSubmit: (values: FacilityFormValues) => Promise<void>;
   initial?: FacilityItem | null;
   saving?: boolean;
+  /**
+   * Takes the saved photo off the item being edited, straight away and on
+   * its own (the API refuses it in the same save as a new photo). Offered
+   * only while editing an item that has a photo and no new one is picked.
+   */
+  onRemoveImage?: () => Promise<RemoveImageResult>;
 }
 
 const empty: FacilityFormValues = {
@@ -57,9 +68,16 @@ export default function FacilityItemFormModal({
   onSubmit,
   initial,
   saving = false,
+  onRemoveImage,
 }: Props) {
   const [values, setValues] = useState<FacilityFormValues>(empty);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // The photo the item has on the API; gone once it is removed here.
+  const [savedImage, setSavedImage] = useState<string | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [removingImage, setRemovingImage] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -78,10 +96,14 @@ export default function FacilityItemFormModal({
         is_featured: initial.is_featured,
       });
       setImagePreview(initial.image_url ?? null);
+      setSavedImage(initial.image_url ?? null);
     } else {
       setValues(empty);
       setImagePreview(null);
+      setSavedImage(null);
     }
+    setConfirmingRemove(false);
+    setRemoveError(null);
   }, [open, initial]);
 
   function update<K extends keyof FacilityFormValues>(
@@ -92,16 +114,42 @@ export default function FacilityItemFormModal({
   }
 
   function handleImage(file?: File) {
+    // Let the same file be picked again after it is put back.
+    if (fileInput.current) fileInput.current.value = "";
     if (!file) {
       update("image", undefined);
-      setImagePreview(initial?.image_url ?? null);
+      setImagePreview(savedImage);
       return;
     }
+    setConfirmingRemove(false);
     update("image", file);
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview((e.target?.result as string) ?? null);
     reader.readAsDataURL(file);
   }
+
+  async function handleRemoveImage() {
+    if (!onRemoveImage || removingImage) return;
+    setRemovingImage(true);
+    setRemoveError(null);
+    try {
+      const result = await onRemoveImage();
+      if (result.error) {
+        setRemoveError(result.error);
+        return;
+      }
+      setSavedImage(null);
+      setImagePreview(null);
+      setConfirmingRemove(false);
+    } catch {
+      setRemoveError("Couldn't remove the photo. Try again.");
+    } finally {
+      setRemovingImage(false);
+    }
+  }
+
+  const busy = saving || removingImage;
+  const canRemoveSaved = !!initial && !!onRemoveImage && !!savedImage && !values.image;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -129,7 +177,7 @@ export default function FacilityItemFormModal({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imagePreview}
-              alt="preview"
+              alt=""
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
@@ -216,34 +264,97 @@ export default function FacilityItemFormModal({
 
         {/* Image */}
         <div>
-          <label className="block text-xs font-semibold text-fg-3 mb-1.5">
+          <span className="block text-xs font-semibold text-fg-3 mb-1.5">
             Image (optional)
-          </label>
-          <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-(--r-2) border border-border text-sm font-semibold text-fg-3 cursor-pointer hover:bg-bg-2">
-              <Upload className="h-4 w-4" />
-              Choose image
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className={`inline-flex items-center gap-2 min-h-11 px-3 rounded-(--r-2) border border-border text-sm font-semibold text-fg-2 focus-within:ring-2 focus-within:ring-signal/30 ${
+                busy ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-bg-2"
+              }`}
+            >
+              <Upload className="h-4 w-4" aria-hidden />
+              {imagePreview ? "Change image" : "Choose image"}
               <input
+                ref={fileInput}
                 type="file"
                 accept="image/*"
-                hidden
+                className="sr-only"
+                disabled={busy}
                 onChange={(e) => handleImage(e.target.files?.[0])}
               />
             </label>
-            {(values.image || imagePreview) && (
+            {values.image ? (
+              // A new photo goes up with the save; until then it can be put back.
               <button
                 type="button"
                 onClick={() => handleImage(undefined)}
-                className="inline-flex items-center gap-1 text-xs text-fg-2 hover:text-fg"
+                disabled={busy}
+                className="inline-flex items-center gap-1 min-h-11 px-3 rounded-(--r-2) text-sm font-medium hover:bg-bg-2 disabled:opacity-50"
+                style={{ color: "var(--fg-2)" }}
               >
-                <X className="h-3.5 w-3.5" />
-                Clear
+                <X className="h-4 w-4" aria-hidden />
+                {savedImage ? "Keep the current image" : "Don't use this image"}
               </button>
-            )}
+            ) : canRemoveSaved && !confirmingRemove ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setRemoveError(null);
+                  setConfirmingRemove(true);
+                }}
+                disabled={busy}
+                className="inline-flex items-center gap-1 min-h-11 px-3 rounded-(--r-2) text-sm font-medium hover:bg-danger-soft disabled:opacity-50"
+                style={{ color: "var(--danger-ink)" }}
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+                Remove photo
+              </button>
+            ) : null}
           </div>
-          <p className="mt-1 text-xs text-fg-4">
-            If no image is uploaded, the icon + gradient below are used.
-          </p>
+          {canRemoveSaved && confirmingRemove && (
+            <div
+              role="group"
+              aria-label="Remove this photo?"
+              className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-(--r-2) p-3"
+              style={{ background: "var(--danger-soft)", border: "1px solid var(--border)" }}
+            >
+              <span className="text-sm" style={{ color: "var(--danger-ink)" }}>
+                Remove this photo? It comes off the facility on your listing.
+              </span>
+              <span className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmingRemove(false)}
+                  disabled={removingImage}
+                  className="min-h-11 px-3 rounded-(--r-2) text-sm font-semibold bg-bg border border-border hover:bg-bg-2 disabled:opacity-50"
+                  style={{ color: "var(--fg-2)" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleRemoveImage()}
+                  disabled={removingImage}
+                  className="inline-flex items-center gap-2 min-h-11 px-3 rounded-(--r-2) text-sm font-semibold text-bg disabled:opacity-50"
+                  style={{ background: "var(--danger)" }}
+                >
+                  {removingImage && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+                  Remove photo
+                </button>
+              </span>
+            </div>
+          )}
+          {removeError && (
+            <p role="alert" className="mt-1.5 text-sm" style={{ color: "var(--danger-ink)" }}>
+              {removeError}
+            </p>
+          )}
+          {!imagePreview && (
+            <p className="mt-1 text-xs text-fg-4">
+              If no image is uploaded, the icon + gradient below are used.
+            </p>
+          )}
         </div>
 
         {/* Icon + gradient pickers (fallback when no image) */}
@@ -319,14 +430,14 @@ export default function FacilityItemFormModal({
           <button
             type="button"
             onClick={onClose}
-            disabled={saving}
+            disabled={busy}
             className="px-4 py-2 rounded-(--r-2) text-sm font-semibold text-fg-3 hover:bg-bg-2"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={saving || !values.name.trim()}
+            disabled={busy || !values.name.trim()}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-(--r-2) text-sm font-semibold bg-signal text-bg hover:bg-signal/90 disabled:opacity-50"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}

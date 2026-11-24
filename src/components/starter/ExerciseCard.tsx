@@ -1,8 +1,12 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
+import Link from "next/link";
 import ExerciseIllustration, { hasExerciseIllustration } from "@/components/ExerciseIllustration";
 import { exerciseDose, isTimedExercise, restLine, type SetEntry } from "@/lib/starter/model";
 import type { StarterExercise } from "@/lib/starter/types";
+import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
+import { exerciseDetailHref } from "@/lib/exercises/exerciseDetail";
 
 interface ExerciseCardProps {
   exercise: StarterExercise;
@@ -14,6 +18,28 @@ interface ExerciseCardProps {
   /** Numbers form rows, or null when the form is closed. */
   numbers: SetEntry[] | null;
   onNumber: (setIndex: number, key: keyof SetEntry, value: string) => void;
+  /**
+   * The session (occurrence id) this card sits in, for the exercise page's
+   * "Your plan" and its way back. Optional: on the session page it is read
+   * from the URL when not passed.
+   */
+  sessionId?: string;
+}
+
+const SESSION_PATH = /\/dashboard\/member\/starter\/session\/([^/?#]+)/;
+
+const noSubscribe = () => () => {};
+
+/** The occurrence id in the current URL (client only; undefined on the server). */
+function useSessionIdFromPath(given: string | undefined): string | undefined {
+  const path = useSyncExternalStore(
+    noSubscribe,
+    () => window.location.pathname,
+    () => "",
+  );
+  if (given) return given;
+  const m = SESSION_PATH.exec(path);
+  return m ? decodeURIComponent(m[1]) : undefined;
 }
 
 const inputStyle = {
@@ -39,7 +65,10 @@ export function ExerciseCard({
   locked,
   numbers,
   onNumber,
+  sessionId,
 }: ExerciseCardProps) {
+  const session = useSessionIdFromPath(sessionId);
+  const hasGuide = !!e.mediaId && !!getExerciseInfo(e.mediaId);
   const dose = exerciseDose(e);
   const rest = restLine(e);
   const facts = [dose, rest].filter(Boolean).join(" · ");
@@ -80,6 +109,16 @@ export function ExerciseCard({
                 </li>
               ))}
             </ul>
+          )}
+          {hasGuide && (
+            <Link
+              href={exerciseDetailHref(e.mediaId as string, { session, index })}
+              className="mt-1 inline-flex min-h-[44px] items-center text-[14px] font-medium underline decoration-[var(--border-2)] underline-offset-4 hover:decoration-[var(--ink)]"
+              style={{ color: "var(--ink)" }}
+              aria-label={`How to do it: ${e.name}`}
+            >
+              How to do it
+            </Link>
           )}
         </div>
         {hasExerciseIllustration(e.mediaId) && (

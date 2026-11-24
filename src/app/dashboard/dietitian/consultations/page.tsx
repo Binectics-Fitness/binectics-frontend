@@ -19,6 +19,7 @@ import {
   durationMins,
 } from "@/lib/consultations/bookingActions";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { isLiveBooking, slotKey } from "@/app/dashboard/trainer/_components/coachSchedule";
 
 /* ─── Data ──────────────────────────────────────────────── */
 
@@ -112,6 +113,16 @@ export default function DietitianConsultationsPage() {
       },
       { Upcoming: 0, Past: 0, Cancelled: 0 },
     );
+  }, [bookings]);
+
+  // How many live bookings share each slot: a group session's attendees.
+  const slotCounts = useMemo(() => {
+    const out = new Map<string, number>();
+    for (const b of bookings) {
+      if (!isLiveBooking(b)) continue;
+      out.set(slotKey(b), (out.get(slotKey(b)) ?? 0) + 1);
+    }
+    return out;
   }, [bookings]);
 
   const filtered = useMemo(() => {
@@ -233,7 +244,8 @@ export default function DietitianConsultationsPage() {
                 <tr><td colSpan={5} className="px-4.5 py-6"><AsyncSpinner label="Loading consultations" /></td></tr>
               ) : (
                 filtered.map((c) => {
-                  const type = bookingTypeName(c, typesById) ?? "Consultation";
+                  const inSlot = isLiveBooking(c) ? (slotCounts.get(slotKey(c)) ?? 1) : 1;
+                  const type = (bookingTypeName(c, typesById) ?? "Consultation") + (inSlot > 1 ? ` · ${inSlot} booked` : "");
                   return (
                     <tr
                       key={c.id}

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  dietitianCountry,
   dietitianCurrency,
   dietitianLocationPatch,
   dietitianSessionPatch,
@@ -10,14 +9,19 @@ import {
   SESSION_FIELDS,
   ROLES,
   type OwnSessionApi,
+  TRAINER_STEP,
 } from "@/app/onboarding/_config";
+import { TRAINER_STEPS } from "@/app/onboarding/_trainer";
 
 describe("dietitian onboarding: what each step persists", () => {
-  it("treats the untouched country select as its default, so the default is saved too", () => {
-    // The step 1 select shows "Nigeria" without writing data.country.
-    expect(dietitianCountry({})).toBe("Nigeria");
+  it("saves no country when none was chosen, never a fixed default", () => {
     const { profile } = dietitianLocationPatch({ fullName: "Dr Nadia Hassan" });
-    expect(profile).toEqual({ first_name: "Nadia", last_name: "Hassan", country_code: "NG" });
+    expect(profile).toEqual({ first_name: "Nadia", last_name: "Hassan" });
+  });
+
+  it("saves any country from the full list by its code", () => {
+    const { profile } = dietitianLocationPatch({ fullName: "Amira", country: "Egypt", countryCode: "EG" });
+    expect(profile).toEqual({ first_name: "Amira", country_code: "EG" });
   });
 
   it("saves city and country code from step 1 and the currency chosen there", () => {
@@ -62,10 +66,9 @@ describe("dietitian onboarding: what each step persists", () => {
       "Your practice basics",
       "Licensure",
       "Your specializations",
-      "Seed your library",
       "Set your consultation",
       "Connect your payout",
-      "Preview & publish",
+      "Your marketplace profile",
     ]);
   });
 });
@@ -142,19 +145,30 @@ describe("the session step waits for an answer", () => {
     expect(title("trainer", SESSION_FIELDS.trainer.step)).toBe("Set your pricing");
   });
 
+  it("names every trainer step the page saves on, and asks for no documents", () => {
+    const steps = ROLES.find((r) => r.id === "trainer")!.steps.map((s) => s.title);
+    expect(steps).toHaveLength(TRAINER_STEPS.length);
+    expect(steps[TRAINER_STEP.profile - 1]).toBe("Tell us about yourself");
+    expect(steps[TRAINER_STEP.specializations - 1]).toBe("Your specializations");
+    expect(steps[TRAINER_STEP.pricing - 1]).toBe("Set your pricing");
+    expect(steps[TRAINER_STEP.payout - 1]).toBe("Connect your payout");
+    expect(steps[TRAINER_STEP.listing - 1]).toBe("Your marketplace profile");
+    expect(steps.join(" ")).not.toMatch(/certif|document|upload/i);
+  });
+
   it("holds Continue until a price, Free or Set up later is chosen", () => {
-    expect(sessionStepUnanswered("dietitian", 5, {})).toBe(true);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 0 })).toBe(true);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionPriceMinor: 1500000 })).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionFree: true })).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 5, { sessionLater: true })).toBe(false);
-    expect(sessionStepUnanswered("trainer", 4, {})).toBe(true);
-    expect(sessionStepUnanswered("trainer", 4, { price1on1Later: true })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, {})).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 0 })).toBe(true);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionPriceMinor: 1500000 })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionFree: true })).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 4, { sessionLater: true })).toBe(false);
+    expect(sessionStepUnanswered("trainer", 3, {})).toBe(true);
+    expect(sessionStepUnanswered("trainer", 3, { price1on1Later: true })).toBe(false);
   });
 
   it("never holds other steps or roles", () => {
-    expect(sessionStepUnanswered("dietitian", 4, {})).toBe(false);
-    expect(sessionStepUnanswered("dietitian", 6, {})).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 3, {})).toBe(false);
+    expect(sessionStepUnanswered("dietitian", 5, {})).toBe(false);
     expect(sessionStepUnanswered("gym", 5, {})).toBe(false);
     expect(sessionStepUnanswered("member", 4, {})).toBe(false);
     expect(sessionStepUnanswered(null, 5, {})).toBe(false);

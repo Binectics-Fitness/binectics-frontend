@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GalleryManager, type GalleryTarget } from "@/components/provider/GalleryManager";
+import { resetUploadWindows } from "@/lib/uploads/batchUploadQueue";
 
 const svc = vi.hoisted(() => ({
   uploadSoloListingGalleryImages: vi.fn(),
@@ -27,6 +28,7 @@ function renderGM(photos: string[], target: GalleryTarget, coverUrl?: string) {
 describe("GalleryManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetUploadWindows();
     Object.values(svc).forEach((fn) =>
       fn.mockResolvedValue({ success: true, data: listing }),
     );
@@ -99,5 +101,36 @@ describe("GalleryManager", () => {
     await waitFor(() =>
       expect(svc.deleteOrgListingGalleryImage).toHaveBeenCalledWith("O1", "a.jpg"),
     );
+  });
+
+  it("uploads 11 dropped photos in two requests of at most 10", async () => {
+    const { container } = renderGM([], solo);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const files = Array.from({ length: 11 }, (_, i) => new File(["x"], `p${i}.jpg`, { type: "image/jpeg" }));
+    fireEvent.change(input, { target: { files } });
+    await waitFor(() => expect(svc.uploadSoloListingGalleryImages).toHaveBeenCalledTimes(2));
+    expect(svc.uploadSoloListingGalleryImages.mock.calls[0][1]).toHaveLength(10);
+    expect(svc.uploadSoloListingGalleryImages.mock.calls[1][1]).toHaveLength(1);
+    // Every row cleared once all landed.
+    await waitFor(() => expect(screen.queryByLabelText("Photo uploads")).not.toBeInTheDocument());
+  });
+
+  it("keeps a refused file listed with its reason, and Retry sends it again", async () => {
+    svc.uploadSoloListingGalleryImages.mockResolvedValueOnce({
+      success: false,
+      status: 400,
+      message: "File too large",
+    });
+    const { container } = renderGM([], solo);
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["x"], "big.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(await screen.findByText("File too large")).toBeInTheDocument();
+    expect(screen.getByText("big.jpg")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry failed uploads" }));
+    await waitFor(() => expect(svc.uploadSoloListingGalleryImages).toHaveBeenCalledTimes(2));
+    expect(svc.uploadSoloListingGalleryImages.mock.calls[1][1]).toEqual([file]);
+    await waitFor(() => expect(screen.queryByText("big.jpg")).not.toBeInTheDocument());
   });
 });

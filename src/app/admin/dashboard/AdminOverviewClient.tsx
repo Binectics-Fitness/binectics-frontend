@@ -7,16 +7,25 @@ import { AsyncSpinner, DSCard, DSCardHead, DSStatCard, Eyebrow, EmptySlate, Page
 import { adminService, type PlatformMetricsOverview, type FeedbackSummary } from "@/lib/api/admin";
 import { minorToMajor } from "@/lib/money/minorMoney";
 import { formatRevenue, revenueHeadline, revenueRows } from "@/lib/admin/revenue";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { AdminPermission, permissionLabel } from "@/lib/admin/permissions";
 
 const pct = formatPercent;
 
 export default function AdminOverviewClient() {
+  // Every admin may open the overview; its cards are platform KPIs and the
+  // CSAT summary, which need analytics:read. Without it they are left out
+  // rather than fetched and refused.
+  const access = useAdminAccess();
+  const canAnalytics = access.can(AdminPermission.ANALYTICS_READ);
   const [metrics, setMetrics] = useState<PlatformMetricsOverview | null>(null);
   const [feedback, setFeedback] = useState<FeedbackSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Nothing to fetch until the access answer says the cards may show.
+    if (!access.ready || !canAnalytics) return;
     let active = true;
     const run = async () => {
       setLoading(true);
@@ -41,7 +50,7 @@ export default function AdminOverviewClient() {
       active = false;
       window.clearTimeout(kick);
     };
-  }, []);
+  }, [access.ready, canAnalytics]);
 
   const byCountry = useMemo(() => {
     const rows = metrics?.verifiedProviders.byCountry ?? [];
@@ -98,14 +107,25 @@ export default function AdminOverviewClient() {
     <AdminDashboardShell activeItem="Overview" crumb="Overview">
       <PageHeader className="mb-0!" title="Platform overview" subtitle="Providers, subscriptions, and member feedback" />
 
-      {error ? (
+      {access.ready && !canAnalytics ? (
+        <DSCard>
+          <div className="px-4.5 py-4">
+            <EmptySlate
+              mt="mt-0"
+              message={`Platform metrics and member feedback need the “${permissionLabel(AdminPermission.ANALYTICS_READ)}” permission. Use the sidebar for the areas you can work in.`}
+            />
+          </div>
+        </DSCard>
+      ) : null}
+
+      {canAnalytics && error ? (
         <div className="rounded-(--r-3) p-4 text-[13px]" style={{ background: "var(--danger-soft)", border: "1px solid oklch(0.92 0.05 25)", color: "var(--danger-ink)" }}>
           <div className="font-medium">Couldn&apos;t load metrics</div>
           <div className="mt-1" style={{ color: "var(--ink)" }}>{error}</div>
         </div>
       ) : null}
 
-      {loading && !metrics ? (
+      {!canAnalytics ? null : loading && !metrics ? (
         <AsyncSpinner size="page" label="Loading platform metrics" />
       ) : metrics ? (
         <>

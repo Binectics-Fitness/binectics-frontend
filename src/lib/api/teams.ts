@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from "./client";
+import type { ClosedDate, WeeklyHours } from "@/lib/marketplace/openingHours";
 import { AccountType, type ApiResponse } from "@/lib/types";
 import type {
   FirstDayOfWeek,
@@ -57,6 +58,24 @@ export enum InvitationStatus {
 }
 
 // ==================== TYPES ====================
+
+/**
+ * One of the signed-in person's pending invitations to a workspace's team
+ * (GET /teams/invitations/mine). Carries no token: accept or decline by id.
+ */
+export interface MyTeamInvitation {
+  id: string;
+  organization_id: string;
+  /** The inviting workspace (gym) name. */
+  organization_name: string;
+  /** e.g. 'consultant' (a trainer at the gym). */
+  role_code: string | null;
+  /** e.g. 'Consultant / Trainer'. */
+  role_name: string | null;
+  invited_by_name: string | null;
+  expires_at: string;
+  created_at: string | null;
+}
 
 export type NoShowPolicy = "none" | "fee" | "block_after_3";
 
@@ -286,6 +305,12 @@ export interface OrganizationLocation {
   country?: string;
   is_primary: boolean;
   is_active: boolean;
+  /** Weekly hours, local times in the location's zone; absent = not set. */
+  opening_hours?: WeeklyHours | null;
+  /** Dates the location is shut (YYYY-MM-DD). */
+  closed_dates?: ClosedDate[];
+  /** IANA zone when it differs from the organization's. */
+  time_zone?: string;
   created_at: string;
   updated_at: string;
 }
@@ -297,6 +322,10 @@ export interface CreateLocationRequest {
   postal_code?: string;
   country?: string;
   is_primary?: boolean;
+  /** null clears the hours (not stated). */
+  opening_hours?: WeeklyHours | null;
+  /** Replaces the whole list. */
+  closed_dates?: ClosedDate[];
 }
 
 export interface CreateTeamRoleRequest {
@@ -636,6 +665,37 @@ export const teamsService = {
     return await apiClient.post<OrganizationMember>(
       "/teams/invitations/accept",
       data,
+    );
+  },
+
+  /**
+   * The signed-in person's pending, unexpired team invitations, sent to
+   * their email. Empty until the email is verified.
+   */
+  async getMyInvitations(): Promise<ApiResponse<MyTeamInvitation[]>> {
+    return await apiClient.get<MyTeamInvitation[]>("/teams/invitations/mine");
+  },
+
+  /**
+   * Accept one of those by id: the same as the emailed link. The API answers
+   * 404 when it isn't this account's, 409 when already on the team, 410 when
+   * expired, withdrawn or declined, and 403 BILLING_LIMIT_REACHED when the
+   * workspace has no staff seats left (AUTH_EMAIL_NOT_VERIFIED when unverified).
+   */
+  async acceptInvitationById(
+    invitationId: string,
+  ): Promise<ApiResponse<OrganizationMember>> {
+    return await apiClient.post<OrganizationMember>(
+      `/teams/invitations/${encodeURIComponent(invitationId)}/accept`,
+    );
+  },
+
+  /** Say no to one of those by id; the workspace may invite again. */
+  async declineInvitationById(
+    invitationId: string,
+  ): Promise<ApiResponse<{ id: string; status: string }>> {
+    return await apiClient.post<{ id: string; status: string }>(
+      `/teams/invitations/${encodeURIComponent(invitationId)}/decline`,
     );
   },
 

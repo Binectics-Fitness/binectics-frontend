@@ -2,9 +2,27 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DietStep1, DietStep5 } from "@/app/onboarding/_dietitian";
+import { DietStep1, DietStep4 } from "@/app/onboarding/_dietitian";
 import { dietitianSessionPatch } from "@/app/onboarding/_config";
 import { SEEDED_CURRENCIES } from "../setup/currencyFixtures";
+
+// The steps start from the account's name and country; this account has neither.
+const auth = vi.hoisted(() => ({ user: null as null | Record<string, unknown> }));
+vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
+
+// Step 1 lists every country the API knows (/utility/countries).
+vi.mock("@/lib/queries/utility", () => ({
+  useCountries: () => ({
+    data: [
+      { code: "NG", name: "Nigeria", dialCode: "+234", cities: [] },
+      { code: "ZA", name: "South Africa", dialCode: "+27", cities: [] },
+      { code: "KE", name: "Kenya", dialCode: "+254", cities: [] },
+      { code: "US", name: "United States", dialCode: "+1", cities: [] },
+      { code: "FR", name: "France", dialCode: "+33", cities: [] },
+    ],
+    isLoading: false,
+  }),
+}));
 
 vi.mock("@/lib/queries/currencies", () => ({
   useCurrencies: () => ({ data: SEEDED_CURRENCIES, all: SEEDED_CURRENCIES, isError: false }),
@@ -13,7 +31,7 @@ vi.mock("@/lib/queries/currencies", () => ({
 /** What the page's step data holds, written from setField like the page does. */
 const latest: Record<string, unknown> = {};
 
-function Harness({ initial = { currency: "NGN" }, Step = DietStep5 }: { initial?: Record<string, unknown>; Step?: typeof DietStep5 }) {
+function Harness({ initial = { currency: "NGN" }, Step = DietStep4 }: { initial?: Record<string, unknown>; Step?: typeof DietStep4 }) {
   const [data, setData] = useState<Record<string, unknown>>(initial);
   const setField = (k: string, v: unknown) => {
     latest[k] = v;
@@ -23,8 +41,9 @@ function Harness({ initial = { currency: "NGN" }, Step = DietStep5 }: { initial?
 }
 
 beforeEach(() => {
+  auth.user = null;
   for (const k of Object.keys(latest)) delete latest[k];
-  // What step 1 chose, as the page's data carries it into step 5.
+  // What step 1 chose, as the page's data carries it into step 4.
   latest.currency = "NGN";
 });
 
@@ -84,7 +103,8 @@ describe("dietitian basics step", () => {
   });
 
   it("uses the country's currency as a suggestion when it can be charged", () => {
-    // The select's default country is Nigeria, and NGN is selectable.
+    // The account is in Nigeria, and NGN is selectable.
+    auth.user = { country_code: "NG" };
     render(<Harness Step={DietStep1} initial={{}} />);
     expect(latest.currency).toBe("NGN");
     expect(screen.getByText(/Suggested for Nigeria/)).toBeInTheDocument();
@@ -109,5 +129,18 @@ describe("dietitian basics step", () => {
   it("shows the missing-currency prompt as an alert after Continue", () => {
     render(<Harness Step={DietStep1} initial={{ country: "Ghana", currencyMissing: true }} />);
     expect(screen.getByRole("alert")).toHaveTextContent("Choose the currency you charge in to continue.");
+  });
+
+  it("starts on no country, not Nigeria, when the account and the visit name none", () => {
+    render(<Harness Step={DietStep1} initial={{}} />);
+    expect(latest.country).toBeUndefined();
+    expect(screen.getByText("Choose country")).toBeInTheDocument();
+  });
+
+  it("starts on the account's own country from the full list", () => {
+    auth.user = { country_code: "fr" };
+    render(<Harness Step={DietStep1} initial={{}} />);
+    expect(latest.countryCode).toBe("FR");
+    expect(latest.country).toBe("France");
   });
 });

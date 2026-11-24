@@ -21,6 +21,10 @@ const BASE: OrgPriceCurrency[] = [
   orgPrice("USD", { name: "US Dollar", symbol: "$" }),
 ];
 const cur = vi.hoisted(() => ({ list: [] as unknown[], orgIds: [] as unknown[] }));
+// The plan's Includes and the gym's content item show only while selling is on.
+vi.mock("@/hooks/usePaidContentSeller", () => ({
+  usePaidContentSeller: () => ({ on: false, flagsLoading: false, ownsWorkspace: true, canPrice: true }),
+}));
 vi.mock("@/lib/queries/currencies", () => ({
   useOrgPriceCurrencies: (orgId: unknown) => {
     cur.orgIds.push(orgId);

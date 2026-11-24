@@ -11,6 +11,7 @@ import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { teamsService, type OrganizationLocation } from "@/lib/api/teams";
 import { locationErrorMessage } from "@/lib/locationErrors";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { OpeningHoursEditor, type OpeningHoursValue } from "@/components/locations/OpeningHoursEditor";
 
 export default function LocationDetailClient() {
   const params = useParams<{ locationId: string }>();
@@ -94,6 +95,24 @@ export default function LocationDetailClient() {
       }
     } catch {
       toast.error("Couldn't save the location");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveHours(value: OpeningHoursValue) {
+    if (!currentOrg || !location || saving) return;
+    setSaving(true);
+    try {
+      const res = await teamsService.updateLocation(currentOrg._id, location._id, value);
+      if (res.success && res.data) {
+        setLocation(res.data);
+        toast.success("Hours saved");
+      } else {
+        toast.error(res.message || "Couldn't save the hours");
+      }
+    } catch {
+      toast.error("Couldn't save the hours");
     } finally {
       setSaving(false);
     }
@@ -217,6 +236,15 @@ export default function LocationDetailClient() {
               )}
             </fieldset>
           </DSCard>
+
+          <OpeningHoursEditor
+            key={location._id}
+            initialHours={location.opening_hours}
+            initialClosedDates={location.closed_dates}
+            saving={saving}
+            readOnly={!canManage}
+            onSave={(value) => void handleSaveHours(value)}
+          />
 
           {canManage && (
           <DSCard className="p-4.5">
