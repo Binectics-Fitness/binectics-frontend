@@ -73,6 +73,8 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/components/OnboardingBanner", () => ({ default: () => null }));
 vi.mock("@/components/provider/SetupChecklist", () => ({ SetupChecklist: () => null }));
+// The teaching-classes card (#379) reads a query client; not under test here.
+vi.mock("@/components/classes/TeachingClassesCard", () => ({ TeachingClassesCard: () => null }));
 
 // Lagos wall clock (UTC+1) on 6 Oct 2026.
 const lagos = (h: number, dayOffset = 0, min = 0) => new Date(Date.UTC(2026, 9, 6 + dayOffset, h - 1, min));
