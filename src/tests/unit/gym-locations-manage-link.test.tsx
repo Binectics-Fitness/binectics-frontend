@@ -16,6 +16,9 @@ vi.mock("@/components/ds/GymDashboardShell", () => ({
 vi.mock("@/hooks/useGymViewer", () => ({ useGymViewer: () => ({ isOwner: true, permissions: new Set() }) }));
 vi.mock("@/app/dashboard/gym-owner/facility/_actions", () => ({
   AddLocationButton: () => <button type="button">+ Add location</button>,
+  // The page also renders this panel once facility photo removal lands
+  // (#360); it is not what this test is about.
+  FacilityItemsPanel: () => null,
 }));
 vi.mock("@/lib/api/marketplace", () => ({
   marketplaceService: {

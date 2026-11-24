@@ -11,7 +11,10 @@ import { GRADIENT_OPTIONS, getFacilityGradient } from "@/lib/constants/facility-
  */
 function themeColours(): Set<string> {
   const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-  const theme = css.slice(css.indexOf("@theme"));
+  // The at-rule itself, at the start of a line: a comment that mentions
+  // "@theme" (globals.css has one) must not be taken for the block.
+  const start = css.search(/^@theme\b/m);
+  const theme = css.slice(start);
   const block = theme.slice(0, theme.indexOf("\n}"));
   return new Set([...block.matchAll(/--color-([a-z0-9-]+)\s*:/g)].map((m) => m[1]));
 }
