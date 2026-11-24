@@ -52,7 +52,8 @@ export function ClassCancellationPolicyEditor({
   const hours = rules?.cancellation_window_hours ?? 0;
   const note = rules?.cancellation_policy_note ?? "";
   const preview = policyFromRules(providerName, rules);
-  const halfSet = (fee > 0) !== (hours > 0);
+  // A fee needs a window to apply in; a window alone is a no-fee request.
+  const feeWithoutWindow = fee > 0 && hours === 0;
   const isEmpty = fee === 0 && hours === 0 && note.trim() === "";
 
   return (
@@ -98,9 +99,9 @@ export function ClassCancellationPolicyEditor({
             />
           </div>
         </div>
-        {halfSet && (
+        {feeWithoutWindow && (
           <p role="status" className="text-[12px] -mt-2" style={{ color: "var(--fg-2)" }}>
-            Set both a window and a fee for members to see a fee. With either at 0 there is none.
+            Set a window for the fee to apply in. With the window at 0 there is no fee.
           </p>
         )}
 

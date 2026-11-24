@@ -6,15 +6,27 @@
 import type { MarketplaceMembershipPlan } from "@/lib/types";
 import { MembershipPlanType } from "@/lib/types";
 
-/** "/ month" for 30d subscriptions, "/ year" for 365d, "/ week", "/ N days", or "once" for one-time. */
+/**
+ * The cadence a plan's length reads as: 7 days a week, 30 a month, 90 a
+ * quarter, 180 six months, 365 a year (a day either side of the calendar
+ * lengths too). Null for any other length.
+ */
+export function planCadenceNoun(durationDays: number): string | null {
+  if (durationDays === 7) return "week";
+  if (durationDays >= 28 && durationDays <= 31) return "month";
+  if (durationDays >= 89 && durationDays <= 92) return "quarter";
+  if (durationDays >= 180 && durationDays <= 184) return "6 months";
+  if (durationDays === 365 || durationDays === 366) return "year";
+  return null;
+}
+
+/** "/ month", "/ quarter", "/ year" and so on, "/ N days" otherwise, or "once" for one-time. */
 export function planPerLabel(
   plan: Pick<MarketplaceMembershipPlan, "plan_type" | "duration_days">,
 ): string {
   if (plan.plan_type === MembershipPlanType.ONE_TIME) return "once";
-  if (plan.duration_days === 30 || plan.duration_days === 31) return "/ month";
-  if (plan.duration_days === 365 || plan.duration_days === 366) return "/ year";
-  if (plan.duration_days === 7) return "/ week";
-  return `/ ${plan.duration_days} days`;
+  const noun = planCadenceNoun(plan.duration_days);
+  return noun ? `/ ${noun}` : `/ ${plan.duration_days} days`;
 }
 
 /** Ceiling the API puts on a plan's advertised saving. */

@@ -3,6 +3,7 @@
  * org roster (backed by binectics-api feat/class-bookings).
  */
 
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { apiClient } from "./client";
 import type { ApiResponse } from "@/lib/types";
 import type { GymClass } from "./classes";
@@ -86,20 +87,47 @@ export function keepsWaitlistPlace(res: ApiResponse<unknown>): boolean {
   return /ahead of you on the waitlist/i.test(res.message ?? "");
 }
 
+/** A class I teach, with the gym it is at. */
+export interface TeachingClass extends GymClass {
+  organization_name: string;
+  time_zone: string;
+}
+
 export const classBookingsService = {
   /** Public weekly timetable for a listing. */
   /**
    * Public weekly timetable for a listing, with the gym's class cancellation
    * policy beside it (null when it has none, and from an API before it).
    */
-  async getListingClasses(
-    listingId: string,
-  ): Promise<ApiResponse<GymClass[]> & { cancellation_policy?: ClassCancellationPolicy | null }> {
+  async getListingClasses(listingId: string): Promise<
+    ApiResponse<GymClass[]> & {
+      cancellation_policy?: ClassCancellationPolicy | null;
+      /** The gym's IANA zone: class times are wall-clock in it. Absent from an older API. */
+      time_zone?: string | null;
+      /** Bookings close this many hours before the start (0 = at the start). */
+      booking_lead_time_hours?: number;
+    }
+  > {
     const res = await apiClient.get<GymClass[]>(
       `/marketplace/listings/${listingId}/classes`,
       false,
     );
-    return { ...res, cancellation_policy: readCancellationPolicy(res.envelope?.cancellation_policy) };
+    const zone = res.envelope?.time_zone;
+    const lead = Number(res.envelope?.booking_lead_time_hours ?? 0);
+    return {
+      ...res,
+      cancellation_policy: readCancellationPolicy(res.envelope?.cancellation_policy),
+      time_zone: typeof zone === "string" && zone ? zone : null,
+      booking_lead_time_hours: Number.isFinite(lead) && lead > 0 ? lead : 0,
+    };
+  },
+
+  /**
+   * The classes the signed-in team member teaches, at gyms whose team they
+   * are on (each with the gym's name, zone and club).
+   */
+  async getMyTeachingClasses(): Promise<ApiResponse<TeachingClass[]>> {
+    return apiClient.get<TeachingClass[]>("/marketplace/my-teaching-classes");
   },
 
   /** Book one occurrence; server enforces the gym's booking rules. */
@@ -172,6 +200,36 @@ export const classBookingsService = {
     );
   },
 };
+
+/**
+ * The next `count` dates ("YYYY-MM-DD", the gym's calendar) a weekly class
+ * can still be booked for: an occurrence that has started, or starts inside
+ * the gym's booking lead time, is skipped, the same cut-off the API holds a
+ * booking to. "Started" is read in the gym's zone; without one (an older
+ * API) the device's zone is used, as before.
+ */
+export function bookableOccurrences(
+  c: Pick<GymClass, "day_of_week" | "start_time">,
+  opts: { timeZone?: string | null; leadHours?: number; count?: number; now?: Date } = {},
+): string[] {
+  const zone = opts.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const now = opts.now ?? new Date();
+  const count = opts.count ?? 4;
+  const leadMs = Math.max(0, opts.leadHours ?? 0) * 3_600_000;
+  const today = formatInTimeZone(now, zone, "yyyy-MM-dd");
+  const cursor = new Date(`${today}T12:00:00Z`);
+  const out: string[] = [];
+  // Five weeks covers four occurrences when today's has already closed.
+  for (let i = 0; i < 36 && out.length < count; i++) {
+    if (cursor.getUTCDay() === c.day_of_week) {
+      const date = cursor.toISOString().slice(0, 10);
+      const startsAt = fromZonedTime(`${date}T${c.start_time}:00`, zone);
+      if (startsAt.getTime() - now.getTime() >= leadMs) out.push(date);
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return out;
+}
 
 /** Next N occurrence dates ("YYYY-MM-DD") of a weekly class from today. */
 export function nextOccurrences(dayOfWeek: number, count = 4): string[] {

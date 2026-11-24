@@ -10,6 +10,7 @@
  * Left out of the mock for want of data: slot utilisation, the 30-day
  * rating, the "forecast" and the per-row Check-in / Join buttons.
  */
+import { TeachingClassesCard } from "@/components/classes/TeachingClassesCard";
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -266,6 +267,8 @@ export function CoachToday({
                   </ScheduleList>
                 </DSCard>
               )}
+              {/* A gym's staff trainer: the classes the gym linked them to. */}
+              <TeachingClassesCard />
             </div>
 
             <section aria-labelledby="coach-active-clients" className="flex flex-col gap-2 min-w-0">

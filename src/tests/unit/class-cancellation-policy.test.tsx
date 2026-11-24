@@ -184,8 +184,11 @@ describe("provider settings: the policy editor", () => {
 
     await userEvent.clear(screen.getByLabelText("Window (hours before class)"));
     await userEvent.type(screen.getByLabelText("Window (hours before class)"), "24");
-    // Only the window: no fee yet, so members see none.
-    expect(screen.getByText(/Set both a window and a fee/)).toBeInTheDocument();
+    // Only the window: no fee yet, so members are asked for the notice and see no fee.
+    expect(screen.getByTestId("class-cancellation-policy")).toHaveTextContent(
+      "Please cancel at least 24 hours before the class.",
+    );
+    expect(screen.queryByText(/Set a window for the fee/)).toBeNull();
     await userEvent.clear(screen.getByLabelText("Late-cancellation fee (%)"));
     await userEvent.type(screen.getByLabelText("Late-cancellation fee (%)"), "50");
     await userEvent.type(screen.getByLabelText("Policy note (optional)"), "Emergencies are waived.");
@@ -223,7 +226,11 @@ describe("provider settings: the policy editor", () => {
 
   it("previews exactly what the API will send members", () => {
     expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 50, cancellation_window_hours: 24 })).toEqual(POLICY);
-    expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 0, cancellation_window_hours: 24 })).toBeNull();
+    expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 0, cancellation_window_hours: 24 })).toEqual({
+      ...POLICY,
+      fee_percent: 0,
+    });
+    expect(policyFromRules("Iron Temple", { cancellation_fee_percent: 50, cancellation_window_hours: 0 })).toBeNull();
   });
 });
 

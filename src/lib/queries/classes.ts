@@ -77,9 +77,18 @@ export function useDeleteGymClass(orgId: string | undefined) {
   });
 }
 
-/** A listing's public weekly timetable and the gym's class cancellation policy. */
-export type ListingTimetable = { classes: GymClass[]; policy: ClassCancellationPolicy | null };
-export const NO_TIMETABLE: ListingTimetable = { classes: [], policy: null };
+/**
+ * A listing's public weekly timetable and the gym's class cancellation
+ * policy, with the gym's time zone (class times are wall-clock in it; null
+ * from an API before it) and its booking lead time.
+ */
+export type ListingTimetable = {
+  classes: GymClass[];
+  policy: ClassCancellationPolicy | null;
+  timeZone: string | null;
+  leadHours: number;
+};
+export const NO_TIMETABLE: ListingTimetable = { classes: [], policy: null, timeZone: null, leadHours: 0 };
 
 /**
  * The public timetable of a listing, one cache entry per listing. Every
@@ -94,7 +103,12 @@ export function useListingTimetable(listingId: string | null | undefined) {
       if (!listingId) return NO_TIMETABLE;
       const res = await classBookingsService.getListingClasses(listingId);
       if (!res.success) return NO_TIMETABLE;
-      return { classes: res.data ?? [], policy: res.cancellation_policy ?? null };
+      return {
+        classes: res.data ?? [],
+        policy: res.cancellation_policy ?? null,
+        timeZone: res.time_zone ?? null,
+        leadHours: res.booking_lead_time_hours ?? 0,
+      };
     },
     enabled: !!listingId,
   });

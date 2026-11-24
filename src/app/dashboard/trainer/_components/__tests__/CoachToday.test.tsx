@@ -45,6 +45,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/components/OnboardingBanner", () => ({ default: () => null }));
+// Its own read (my-teaching-classes) is tested in qv-classes-listing.test.tsx.
+vi.mock("@/components/classes/TeachingClassesCard", () => ({ TeachingClassesCard: () => null }));
 const checklistPeople = vi.fn();
 vi.mock("@/components/provider/SetupChecklist", () => ({
   SetupChecklist: ({ people }: { people: number | null }) => (checklistPeople(people), null),
