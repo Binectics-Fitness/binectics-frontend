@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CLASS_REMOVED_MESSAGE,
+  bookableOccurrences,
   classBookingsService,
   classWasRemoved,
   keepsWaitlistPlace,
-  nextOccurrences,
   type ClassBooking,
 } from "@/lib/api/classBookings";
+import { useConfirmationModal } from "@/hooks/useConfirmationModal";
+import { confirmedCancelCopy } from "@/lib/classes/cancellationPolicy";
 import { useAuth } from "@/contexts/AuthContext";
 import { classTime, type GymClass } from "@/lib/api/classes";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -34,8 +36,13 @@ function occurrenceLabel(dateStr: string): string {
  * Booking requires login + an active membership — the API's error messages
  * (lead time, class full, no membership) surface inline per class.
  *
- * A signed-in member waitlisted on the chosen date sees that, and "Take the
- * spot" when one is open: booking again fills open spots in waitlist order.
+ * Each row names its club and instructor, and offers only dates that can
+ * still be booked: today's class drops off once it starts (in the gym's
+ * zone, inside its lead time), as the API would refuse it.
+ *
+ * A member already booked on the chosen date sees "Booked · Cancel". One
+ * waitlisted on it sees that, and "Take the spot" when one is open: booking
+ * again fills open spots in waitlist order.
  * "Someone ahead of you got it" and "no spot yet" leave their place as it
  * was, so they read as information, not as errors.
  */
@@ -48,8 +55,8 @@ export function ListingClassesSection({
   organizationId?: string | null;
 }) {
   const { user } = useAuth();
-  // The member's own waitlist entries, to say "you're on the waitlist" and
-  // offer an open spot. Shared with MyClassBookingsCard's cache.
+  // The member's own live bookings, to say "Booked" or "you're on the
+  // waitlist" and offer an open spot. Shared with MyClassBookingsCard's cache.
   const { data: mine = [] } = useQuery<ClassBooking[]>({
     queryKey: ["myClassBookings"],
     queryFn: async () => {
@@ -61,8 +68,8 @@ export function ListingClassesSection({
   // The cache key isn't per user (MyClassBookingsCard shares it): after a
   // sign-out the last member's entries could still be cached, so nothing
   // is read from it without a signed-in user.
-  const myWaitlist = user ? mine : [];
-  const { data: { classes, policy } = NO_TIMETABLE, isLoading } = useListingTimetable(listingId);
+  const myBookings = user ? mine : [];
+  const { data: { classes, policy, timeZone, leadHours } = NO_TIMETABLE, isLoading } = useListingTimetable(listingId);
 
   if (!isLoading && classes.length === 0) return null; // gyms without classes skip the section
 
@@ -92,8 +99,12 @@ export function ListingClassesSection({
                     listingId={listingId}
                     organizationId={organizationId}
                     gymClass={c}
-                    waitlisted={myWaitlist.filter(
-                      (b) => b.status === "waitlisted" && (typeof b.class_id === "object" ? b.class_id._id : b.class_id) === c._id,
+                    timeZone={timeZone}
+                    leadHours={leadHours}
+                    mine={myBookings.filter(
+                      (b) =>
+                        (b.status === "waitlisted" || b.status === "confirmed") &&
+                        (typeof b.class_id === "object" ? b.class_id._id : b.class_id) === c._id,
                     )}
                   />
                 ))}
@@ -110,27 +121,61 @@ type RowMessage = { text: string; tone: "ok" | "info" | "error" };
 const MESSAGE_COLOR: Record<RowMessage["tone"], string> = {
   ok: "var(--signal-ink)",
   info: "var(--fg-2)",
-  error: "var(--danger, #b00020)",
+  error: "var(--danger-ink)",
 };
 
 function BookableClassRow({
   listingId,
   organizationId,
   gymClass: c,
-  waitlisted,
+  timeZone,
+  leadHours,
+  mine,
 }: {
   listingId: string;
   organizationId: string | null;
   gymClass: GymClass;
-  /** The member's waitlist entries for this class, any date. */
-  waitlisted: ClassBooking[];
+  /** The gym's zone; null from an older API (the device's zone is used). */
+  timeZone: string | null;
+  leadHours: number;
+  /** The member's confirmed and waitlisted bookings for this class, any date. */
+  mine: ClassBooking[];
 }) {
   const queryClient = useQueryClient();
-  const dates = nextOccurrences(c.day_of_week, 4);
-  const [date, setDate] = useState(dates[0]);
+  const dates = bookableOccurrences(c, { timeZone, leadHours, count: 4 });
+  const [picked, setPicked] = useState<string | null>(null);
+  // The first bookable date until the member picks one; a picked date that
+  // has since closed falls back to it.
+  const date = picked && dates.includes(picked) ? picked : dates[0];
   const [message, setMessage] = useState<RowMessage | null>(null);
-  const onWaitlist = waitlisted.find((b) => b.booking_date === date);
+  const onWaitlist = mine.find((b) => b.status === "waitlisted" && b.booking_date === date);
+  const booked = mine.find((b) => b.status === "confirmed" && b.booking_date === date);
   const spotOpen = onWaitlist?.spot_open === true;
+  const { requestConfirmation, confirmationModal } = useConfirmationModal();
+
+  const cancel = useMutation({
+    mutationFn: (bookingId: string) => classBookingsService.cancelClassBooking(bookingId),
+    onSuccess: (res) => {
+      if (res.success) {
+        setMessage({ text: `Cancelled your booking for ${occurrenceLabel(date)}.`, tone: "info" });
+      } else {
+        setMessage({ text: res.message || "Couldn't cancel this booking. Try again.", tone: "error" });
+      }
+      void queryClient.invalidateQueries({ queryKey: ["myClassBookings"] });
+    },
+  });
+
+  const askCancel = (b: ClassBooking) =>
+    requestConfirmation({
+      title: `Cancel ${c.name} on ${occurrenceLabel(b.booking_date)}?`,
+      description: confirmedCancelCopy(b.cancellation_policy),
+      confirmLabel: "Cancel booking",
+      cancelLabel: "Keep booking",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        await cancel.mutateAsync(b._id);
+      },
+    });
 
   const book = useMutation({
     mutationFn: async () => {
@@ -179,6 +224,7 @@ function BookableClassRow({
           <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{c.name}</div>
           <div className="font-mono text-[11px] mt-0.5" style={{ color: "var(--fg-3)", fontVariantNumeric: "tabular-nums" }}>
             {classTime(c.start_time, false)} · {c.duration_minutes}m
+            {c.location?.name ? ` · ${c.location.name}` : ""}
             {c.instructor_name ? ` · ${c.instructor_name}` : ""} · cap {c.capacity}
             {c.waitlist_enabled ? " · waitlist" : ""}
           </div>
@@ -191,17 +237,24 @@ function BookableClassRow({
           )}
         </div>
         <SearchableSelect
-          value={date}
-          onChange={(v) => { setDate(v); setMessage(null); }}
+          value={date ?? ""}
+          onChange={(v) => { setPicked(v); setMessage(null); }}
           options={dates.map((d) => ({ label: occurrenceLabel(d), value: d }))}
         />
-        <button className="btn-primary-v2 sm shrink-0" disabled={book.isPending} onClick={() => book.mutate()}>
-          {book.isPending ? (spotOpen ? "Taking…" : "Booking…") : spotOpen ? "Take the spot" : "Book"}
-        </button>
+        {booked ? (
+          <button className="btn-ghost-v2 sm shrink-0" disabled={cancel.isPending} onClick={() => askCancel(booked)}>
+            {cancel.isPending ? "Cancelling…" : "Booked · Cancel"}
+          </button>
+        ) : (
+          <button className="btn-primary-v2 sm shrink-0" disabled={book.isPending || !date} onClick={() => book.mutate()}>
+            {book.isPending ? (spotOpen ? "Taking…" : "Booking…") : spotOpen ? "Take the spot" : "Book"}
+          </button>
+        )}
       </div>
       {message && (
         <p role="status" className="text-[12px] mt-2" style={{ color: MESSAGE_COLOR[message.tone] }}>{message.text}</p>
       )}
+      {confirmationModal}
     </div>
   );
 }

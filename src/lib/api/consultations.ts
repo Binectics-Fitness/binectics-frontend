@@ -47,6 +47,16 @@ export interface ConsultationType {
   defaultDurationMinutes: number;
   bufferMinutes: number;
   minAdvanceNoticeMinutes: number;
+  /**
+   * Days of the week the session runs on (0 = Sunday), in the provider's
+   * timezone. Empty or absent: every day the provider works.
+   */
+  daysOfWeek?: number[];
+  /**
+   * How many people one slot takes: 1 is a 1:1 session, more is a group
+   * session. Absent from an API older than group sessions (read it as 1).
+   */
+  capacity?: number;
   isActive: boolean;
   /** Optional session price in the currency's minor unit (kobo/cents). */
   priceMinor?: number | null;
@@ -62,6 +72,8 @@ export interface CreateConsultationTypeRequest {
   defaultDurationMinutes: number;
   bufferMinutes?: number;
   minAdvanceNoticeMinutes?: number;
+  /** People per slot, 1-20 (default 1). */
+  capacity?: number;
   isActive?: boolean;
   /**
    * Session price in the currency's minor unit (kobo/cents). The backend
@@ -84,6 +96,8 @@ export interface CreateOwnConsultationTypeRequest {
   defaultDurationMinutes: number;
   bufferMinutes?: number;
   minAdvanceNoticeMinutes?: number;
+  /** People per slot, 1-20 (default 1). */
+  capacity?: number;
   isActive?: boolean;
   /** Minor units (kobo/cents). `currency` is required whenever this is set. */
   priceMinor?: number;
@@ -100,6 +114,11 @@ export interface UpdateOwnConsultationTypeRequest {
   defaultDurationMinutes?: number;
   bufferMinutes?: number;
   minAdvanceNoticeMinutes?: number;
+  /**
+   * People per slot, 1-20. Lowering it below the most people booked into
+   * one upcoming slot is a 409 CONSULTATION_CAPACITY_BELOW_BOOKED.
+   */
+  capacity?: number;
   isActive?: boolean;
   priceMinor?: number | null;
   currency?: string | null;
@@ -133,6 +152,23 @@ export interface ConsultationSlot {
   endsAt: string;
   providerTimezone: string;
   isAvailable: boolean;
+  /** People this slot takes (1 = 1:1). Absent from an older API. */
+  capacity?: number;
+  /** How many more people it takes now; 0 when taken or full. */
+  seatsLeft?: number;
+}
+
+/**
+ * "2 of 4 left" for a group slot with places left; null for a 1:1 slot (or
+ * an API that doesn't send capacity), where there is nothing to say.
+ */
+export function slotSeatsLabel(
+  slot: Pick<ConsultationSlot, "capacity" | "seatsLeft" | "isAvailable">,
+): string | null {
+  const capacity = slot.capacity ?? 1;
+  if (capacity <= 1 || !slot.isAvailable) return null;
+  const left = Math.max(0, Math.min(slot.seatsLeft ?? capacity, capacity));
+  return `${left} of ${capacity} left`;
 }
 
 /** POST /consultations/bookings/:id/payment. */

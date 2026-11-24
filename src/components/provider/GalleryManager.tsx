@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileUploadZone } from "@/components/ds/FileUploadZone";
 import { marketplaceService } from "@/lib/api/marketplace";
 import { queryKeys } from "@/lib/queries/keys";
+import { uploadInBatches, type FileProgress } from "@/lib/uploads/batchUploadQueue";
 
 /**
  * Which listing the gallery belongs to. Org (gym) listings are keyed by the
@@ -16,6 +17,36 @@ export type GalleryTarget =
   | { kind: "solo"; listingId: string };
 
 const GALLERY_LIMIT = 50;
+
+/**
+ * The API's gallery upload takes up to 10 files a request
+ * (FilesInterceptor('files', 10)) and 5 requests a minute (@Throttle). The
+ * queue sends batches within both, so a big drop is paced instead of refused.
+ */
+export const GALLERY_UPLOAD_PACING = { batchSize: 10, limit: 5, windowMs: 60_000 } as const;
+
+interface QueuedFile {
+  id: number;
+  file: File;
+  progress: FileProgress;
+}
+
+function statusLabel(p: FileProgress, now: number): string {
+  switch (p.status) {
+    case "queued":
+      return "Queued";
+    case "uploading":
+      return "Uploading…";
+    case "waiting": {
+      const secs = p.resumeAt ? Math.max(1, Math.ceil((p.resumeAt - now) / 1000)) : null;
+      return secs ? `Upload limit reached · resumes in ${secs}s` : "Upload limit reached · waiting";
+    }
+    case "done":
+      return "Added";
+    case "failed":
+      return p.message ?? "Failed";
+  }
+}
 
 /**
  * Upload, remove, and reorder a marketplace listing's gallery photos. Each
@@ -42,9 +73,22 @@ export function GalleryManager({
   const queryClient = useQueryClient();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Bumped after each successful upload to remount FileUploadZone, clearing the
-  // files it would otherwise keep listed below the dropzone.
+  // Bumped on each drop to remount FileUploadZone, clearing the files it would
+  // otherwise list below the dropzone (the upload rows below replace them).
   const [uploadNonce, setUploadNonce] = useState(0);
+  // One row per file in the current upload, with its own status, so a file
+  // the API refused is never silently lost: it shows as failed, with Retry.
+  const [queue, setQueue] = useState<QueuedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const nextId = useRef(0);
+  // Ticks once a second while a batch waits, for the "resumes in Ns" label.
+  const [now, setNow] = useState(() => Date.now());
+  const waiting = queue.some((q) => q.progress.status === "waiting");
+  useEffect(() => {
+    if (!waiting) return;
+    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(t);
+  }, [waiting]);
 
   const invalidate = () =>
     queryClient.invalidateQueries({
@@ -75,23 +119,65 @@ export function GalleryManager({
     }
   };
 
+  const uploadFiles = async (items: QueuedFile[]) => {
+    setUploading(true);
+    setError(null);
+    const ids = items.map((q) => q.id);
+    const result = await uploadInBatches(
+      items.map((q) => q.file),
+      (batch) =>
+        target.kind === "org"
+          ? marketplaceService.uploadOrgListingGalleryImages(target.orgId, batch)
+          : marketplaceService.uploadSoloListingGalleryImages(target.listingId, batch),
+      {
+        key: target.kind === "org" ? `org:${target.orgId}` : `solo:${target.listingId}`,
+        ...GALLERY_UPLOAD_PACING,
+        onProgress: (index, progress) => {
+          setNow(Date.now());
+          setQueue((prev) => prev.map((q) => (q.id === ids[index] ? { ...q, progress } : q)));
+        },
+        // Show each batch's photos as soon as they land.
+        onBatchDone: () => void invalidate(),
+      },
+    );
+    setUploading(false);
+    // Rows that made it drop off; failed ones stay with a Retry.
+    if (result.failed.length === 0) setQueue([]);
+    else setQueue((prev) => prev.filter((q) => q.progress.status !== "done"));
+  };
+
   const handleUpload = async (files: File[]) => {
+    // The drop zone keeps its own file list; ours replaces it.
+    setUploadNonce((n) => n + 1);
     if (files.length === 0) return;
+    if (uploading) {
+      setError("Wait for these photos to finish, then add more.");
+      return;
+    }
     const room = GALLERY_LIMIT - gallery.length;
     if (room <= 0) {
       setError(`You already have the maximum of ${GALLERY_LIMIT} photos.`);
       return;
     }
-    const batch = files.slice(0, room);
-    const ok = await run(() =>
-      target.kind === "org"
-        ? marketplaceService.uploadOrgListingGalleryImages(target.orgId, batch)
-        : marketplaceService.uploadSoloListingGalleryImages(target.listingId, batch),
-    );
-    if (ok) setUploadNonce((n) => n + 1);
-    if (ok && files.length > room) {
+    const items: QueuedFile[] = files.slice(0, room).map((file) => ({
+      id: nextId.current++,
+      file,
+      progress: { status: "queued" },
+    }));
+    setQueue(items);
+    await uploadFiles(items);
+    if (files.length > room) {
       setError(`Only ${room} more photo${room === 1 ? "" : "s"} could be added (limit is ${GALLERY_LIMIT}).`);
     }
+  };
+
+  const retryFailed = () => {
+    const failed = queue
+      .filter((q) => q.progress.status === "failed")
+      .map((q) => ({ ...q, progress: { status: "queued" } as FileProgress }));
+    if (failed.length === 0 || uploading) return;
+    setQueue(failed);
+    void uploadFiles(failed);
   };
 
   const handleRemove = (url: string) =>
@@ -147,7 +233,7 @@ export function GalleryManager({
                   <button
                     type="button"
                     onClick={() => move(i, i - 1)}
-                    disabled={pending || i === 0}
+                    disabled={pending || uploading || i === 0}
                     aria-label={`Move photo ${i + 1} earlier`}
                     className={ctrlClass}
                     style={ctrlStyle}
@@ -157,7 +243,7 @@ export function GalleryManager({
                   <button
                     type="button"
                     onClick={() => move(i, i + 1)}
-                    disabled={pending || i === gallery.length - 1}
+                    disabled={pending || uploading || i === gallery.length - 1}
                     aria-label={`Move photo ${i + 1} later`}
                     className={ctrlClass}
                     style={ctrlStyle}
@@ -168,7 +254,7 @@ export function GalleryManager({
                 <button
                   type="button"
                   onClick={() => handleRemove(url)}
-                  disabled={pending}
+                  disabled={pending || uploading}
                   aria-label={`Remove photo ${i + 1}`}
                   className="rounded-(--r-1) px-2 py-0.5 text-[11.5px] font-medium disabled:opacity-40"
                   style={{ background: "var(--bg)", color: "var(--danger-ink)", border: "1px solid var(--border)" }}
@@ -190,12 +276,41 @@ export function GalleryManager({
           onFiles={(files) => void handleUpload(files)}
         >
           <p className="text-[13.5px] font-medium text-fg-2">
-            {pending ? "Uploading…" : "Drop photos or click to upload"}
+            {uploading ? "Uploading…" : "Drop photos or click to upload"}
           </p>
           <p className="mt-1 text-[12px] text-fg-4">
             JPG or PNG, up to 10 MB each · {gallery.length}/{GALLERY_LIMIT} added
           </p>
         </FileUploadZone>
+      )}
+
+      {queue.length > 0 && (
+        <ul className="flex flex-col gap-1.5" aria-label="Photo uploads">
+          {queue.map((q) => (
+            <li
+              key={q.id}
+              className="flex items-center justify-between gap-3 rounded-(--r-2) px-3 py-2"
+              style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+            >
+              <span className="min-w-0 truncate text-[13px]" style={{ color: "var(--ink)" }}>
+                {q.file.name}
+              </span>
+              <span
+                className="shrink-0 text-[12px]"
+                style={{ color: q.progress.status === "failed" ? "var(--danger-ink)" : "var(--fg-3)" }}
+              >
+                {statusLabel(q.progress, now)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!uploading && queue.some((q) => q.progress.status === "failed") && (
+        <div>
+          <button type="button" className="btn-ghost-v2 sm" onClick={retryFailed}>
+            Retry failed uploads
+          </button>
+        </div>
       )}
 
       {error && (

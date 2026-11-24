@@ -142,14 +142,26 @@ export function legacyLinkTarget(
     );
   }
   if (path === "/dashboard/reviews") {
+    // A new review is answered on the provider's own reviews page; a member
+    // has none (a response to their review is the notification itself).
     return pick(
       {
-        // Only the gym dashboard has a reviews page.
         USER: "/dashboard/notifications",
+        TRAINER: "/dashboard/trainer/reviews",
+        DIETITIAN: "/dashboard/dietitian/profile?tab=Reviews",
         GYM_OWNER: "/dashboard/gym-owner/reviews",
       },
       role,
     );
+  }
+  if (path === "/dashboard/dietitian/clients") {
+    // MEAL_LOGGED links here with the client's profile for every coach, but
+    // the list ignores it: open that client, on the coach's own pages.
+    const profileId = params.get("profileId");
+    const valid = !!profileId && /^[a-f0-9]{24}$/i.test(profileId);
+    if (role === "TRAINER") return valid ? `/dashboard/trainer/clients/${profileId}` : "/dashboard/trainer/clients";
+    if (role === "DIETITIAN" && valid) return `/dashboard/dietitian/clients/${profileId}`;
+    return null;
   }
   const nutrition = /^\/dashboard\/nutrition(?:\/([^/]+))?$/.exec(path);
   if (nutrition) {

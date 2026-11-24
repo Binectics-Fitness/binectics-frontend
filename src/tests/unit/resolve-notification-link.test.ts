@@ -65,15 +65,16 @@ describe("resolveNotificationLink", () => {
   });
 
   // ── Role-specific reviews ─────────────────────────────────
-  it("routes review links to the gym-owner reviews page, and to notifications for roles without one", () => {
+  it("routes review links to each provider's own reviews, and to notifications for a member", () => {
     expect(
       resolveNotificationLink("/dashboard/reviews?id=r1", UserRole.GYM_OWNER),
     ).toBe("/dashboard/gym-owner/reviews");
-    // /dashboard/trainer/reviews and /dashboard/dietitian/reviews do not
-    // exist; neither does a bare member reviews page.
     expect(
-      resolveNotificationLink("/dashboard/reviews", UserRole.TRAINER),
-    ).toBe("/dashboard/notifications");
+      resolveNotificationLink("/dashboard/reviews?reviewId=r1", UserRole.TRAINER),
+    ).toBe("/dashboard/trainer/reviews");
+    expect(
+      resolveNotificationLink("/dashboard/reviews", UserRole.DIETITIAN),
+    ).toBe("/dashboard/dietitian/profile?tab=Reviews");
     expect(resolveNotificationLink("/dashboard/reviews", UserRole.USER)).toBe(
       "/dashboard/notifications",
     );

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { AsyncSpinner, DSCard, Eyebrow } from "@/components/ds";
 import { toast } from "@/components/Toast";
 import { UploadZone } from "@/app/onboarding/_components";
-import { COUNTRY_NAME_TO_CODE } from "@/app/onboarding/_config";
 import { credentialsService } from "@/lib/api/credentials";
+import { useCountries } from "@/lib/queries/utility";
 import {
   DIETITIAN_POPULATIONS,
   DIETITIAN_SPECIALIZATIONS,
@@ -59,6 +59,9 @@ export function CredentialsTab() {
   const [licenses, setLicenses] = useState<LicenseDraft[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploads, setUploads] = useState(0);
+  // Every country the API knows (GET /utility/countries), never a fixed list:
+  // a dietitian can be licensed anywhere.
+  const { data: countries = [], isLoading: countriesLoading } = useCountries();
 
   const apply = (view: CredentialsView) => {
     setLoaded(view);
@@ -127,8 +130,6 @@ export function CredentialsTab() {
   }
   if (!loaded) return <AsyncSpinner size="page" label="Loading credentials" />;
 
-  const countryOptions = Object.entries(COUNTRY_NAME_TO_CODE);
-
   return (
     <div className="flex flex-col gap-4 max-w-[760px]">
       <DSCard>
@@ -192,11 +193,11 @@ export function CredentialsTab() {
                 <div>
                   <label htmlFor={`cred-lic-country-${i}`} className={LABEL_CLS} style={{ color: "var(--fg-3)" }}>Country</label>
                   <select id={`cred-lic-country-${i}`} className={INPUT_CLS} style={{ color: "var(--ink)" }} value={l.countryCode} onChange={(e) => setLicense(i, { countryCode: e.target.value })}>
-                    <option value="">Choose…</option>
-                    {countryOptions.map(([name, code]) => (
-                      <option key={code} value={code}>{name}</option>
+                    <option value="">{countriesLoading ? "Loading countries…" : "Choose…"}</option>
+                    {countries.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
-                    {l.countryCode && !countryOptions.some(([, code]) => code === l.countryCode) && (
+                    {l.countryCode && !countries.some((c) => c.code === l.countryCode) && (
                       <option value={l.countryCode}>{l.countryCode}</option>
                     )}
                   </select>

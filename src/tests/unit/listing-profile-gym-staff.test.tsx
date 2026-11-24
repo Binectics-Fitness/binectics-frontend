@@ -22,6 +22,7 @@ vi.mock("@/components/provider/GalleryManager", () => ({
     <p>gallery {target.kind} {target.orgId ?? ""}</p>
   ),
 }));
+vi.mock("@/components/provider/ListingLogoManager", () => ({ ListingLogoManager: () => <p>logo</p> }));
 vi.mock("@/lib/queries/utility", () => ({ useCountries: () => ({ data: [] }) }));
 
 const gymListing = {

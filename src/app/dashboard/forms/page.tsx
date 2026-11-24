@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import SearchableSelect from "@/components/SearchableSelect";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
@@ -51,6 +51,22 @@ export default function FormsPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
+  // "New form" opened this section below eight template cards, off screen on
+  // a laptop, so the button looked dead. It now sits above the templates, and
+  // opening it scrolls to it and puts the caret in Title. The counter makes a
+  // second press (already open) scroll back to it too.
+  const createSectionRef = useRef<HTMLElement>(null);
+  const createTitleRef = useRef<HTMLInputElement>(null);
+  const [createFocusNonce, setCreateFocusNonce] = useState(0);
+  const openCreateForm = () => {
+    setShowCreateForm(true);
+    setCreateFocusNonce((n) => n + 1);
+  };
+  useEffect(() => {
+    if (createFocusNonce === 0) return;
+    createSectionRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    createTitleRef.current?.focus({ preventScroll: true });
+  }, [createFocusNonce]);
   const [creatingForm, setCreatingForm] = useState(false);
 
   // Add question state
@@ -338,7 +354,7 @@ export default function FormsPage() {
               {view === "list" && (
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(!showCreateForm)}
+                  onClick={openCreateForm}
                   className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
                   style={{ background: "var(--ink)", color: "var(--bg)", cursor: "pointer" }}
                 >
@@ -400,18 +416,11 @@ export default function FormsPage() {
 
         {view === "list" && (
           <>
-            <TemplateGallery
-              onCreated={(form) => {
-                setForms((prev) => [...prev, form]);
-                showMessage("Form created. Publish it when ready.");
-                void openBuilder(form);
-              }}
-              onError={(text) => showMessage(text, "error")}
-            />
-
             {showCreateForm && (
               <section
-                className="rounded-(--r-3) p-4"
+                ref={createSectionRef}
+                aria-label="Create new form"
+                className="scroll-mt-20 rounded-(--r-3) p-4"
                 style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
               >
                 <h2 className="text-[18px] font-medium" style={{ color: "var(--ink)" }}>
@@ -421,6 +430,7 @@ export default function FormsPage() {
                   <div>
                     <Eyebrow as="label">Title *</Eyebrow>
                     <input
+                      ref={createTitleRef}
                       type="text"
                       required
                       value={newTitle}
@@ -463,6 +473,15 @@ export default function FormsPage() {
               </section>
             )}
 
+            <TemplateGallery
+              onCreated={(form) => {
+                setForms((prev) => [...prev, form]);
+                showMessage("Form created. Publish it when ready.");
+                void openBuilder(form);
+              }}
+              onError={(text) => showMessage(text, "error")}
+            />
+
             <section
               className="rounded-(--r-3) p-4"
               style={{ border: "1px solid var(--border)", background: "var(--bg)" }}
@@ -479,7 +498,7 @@ export default function FormsPage() {
                   action={
                     <button
                       type="button"
-                      onClick={() => setShowCreateForm(true)}
+                      onClick={openCreateForm}
                       className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
                       style={{ background: "var(--ink)", color: "var(--bg)", cursor: "pointer" }}
                     >

@@ -12,7 +12,11 @@ export interface GymClass {
   name: string;
   description?: string;
   instructor_name?: string;
+  /** The team member who teaches it; null/absent for an outside instructor. */
+  instructor_user_id?: string | null;
   location_id?: string | null;
+  /** Public timetable only: the club it runs at, or null when the gym didn't say. */
+  location?: { id: string; name: string } | null;
   /** 0 = Sunday … 6 = Saturday. */
   day_of_week: number;
   /** "HH:mm" wall-clock time in the org's time zone. */
@@ -29,7 +33,10 @@ export interface CreateGymClassRequest {
   name: string;
   description?: string;
   instructor_name?: string;
-  location_id?: string;
+  /** An active team member; null unlinks (then instructor_name is someone from outside the team). */
+  instructor_user_id?: string | null;
+  /** One of the gym's active locations; required when it has more than one. */
+  location_id?: string | null;
   day_of_week: number;
   start_time: string;
   duration_minutes: number;

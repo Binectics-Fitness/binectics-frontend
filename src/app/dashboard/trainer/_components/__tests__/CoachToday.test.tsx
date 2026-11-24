@@ -20,6 +20,10 @@ vi.mock("@/lib/api/consultations", async (orig) => ({
 vi.mock("@/lib/api/progress", () => ({
   progressService: { getMyClientProfiles: () => getMyClientProfiles() },
 }));
+vi.mock("@/lib/api/coachAttention", async (orig) => ({
+  ...(await orig<typeof import("@/lib/api/coachAttention")>()),
+  coachAttentionService: { getAttention: () => Promise.resolve([]) },
+}));
 vi.mock("@/lib/api/earnings", () => ({
   earningsService: { getOrgSummary: (id: string) => getOrgSummary(id) },
 }));
@@ -45,6 +49,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/components/OnboardingBanner", () => ({ default: () => null }));
+// Its own read (my-teaching-classes) is tested in qv-classes-listing.test.tsx.
+vi.mock("@/components/classes/TeachingClassesCard", () => ({ TeachingClassesCard: () => null }));
 const checklistPeople = vi.fn();
 vi.mock("@/components/provider/SetupChecklist", () => ({
   SetupChecklist: ({ people }: { people: number | null }) => (checklistPeople(people), null),

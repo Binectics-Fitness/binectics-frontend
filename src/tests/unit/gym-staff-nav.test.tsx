@@ -38,11 +38,11 @@ const EXPECTED: Record<string, string[]> = {
   owner: SIDEBAR.flatMap((s) => s.items.map((i) => i.name)),
   admin: [
     "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Discount codes", "Plans & pricing",
-    "My listing", "Loyalty", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
+    "Programs & meal plans", "My listing", "Loyalty", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages", "Settings",
   ],
   manager: [
     "Overview", "Members", "Schedule", "Requests", "Check‑ins", "Check-in kiosk", "Revenue", "Discount codes", "Plans & pricing",
-    "My listing", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
+    "Programs & meal plans", "My listing", "Team & roles", "Assignment rules", "Locations", "Staff", "Messages",
   ],
   assistant: ["Schedule", "Requests", "Team & roles", "Locations", "Staff"],
   front_desk: ["Schedule", "Team & roles", "Locations", "Staff", "Messages"],
@@ -132,6 +132,11 @@ let mockOrg: Record<string, unknown> = ownerOrg;
 let mockUser = { id: "u1", role: "GYM_OWNER", first_name: "Dapo", last_name: "A" };
 const replace = vi.fn();
 
+// Paid content (the "Programs & meal plans" item) is on unless a test says otherwise.
+let mockSelling = true;
+vi.mock("@/hooks/usePaidContentSeller", () => ({
+  usePaidContentSeller: () => ({ on: mockSelling, flagsLoading: false, ownsWorkspace: true, canPrice: true }),
+}));
 vi.mock("@/lib/queries/orgClosure", () => ({
   useClosedOrganizations: () => ({ data: [], isLoading: false }),
   useCloseOrganization: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -207,6 +212,7 @@ beforeEach(() => {
   refundCountCalls.length = 0;
   requestCountCalls.length = 0;
   mockPendingRequests = 0;
+  mockSelling = true;
 });
 afterEach(() => act(() => resetShellNav()));
 
@@ -336,5 +342,25 @@ describe("GymDashboardShell for a gym's staff", () => {
     renderShell();
     act(() => sidebar().getByRole("button", { name: "Account menu" }).click());
     expect(sidebar().getByRole("menuitem", { name: "Your member home" })).toHaveAttribute("href", "/dashboard/member");
+  });
+
+  it("links Programs & meal plans to the gym content page while selling is on", () => {
+    renderShell();
+    expect(sidebar().getByRole("link", { name: "Programs & meal plans" })).toHaveAttribute("href", "/dashboard/gym-owner/content");
+  });
+
+  it("hides Programs & meal plans when paid content is off for the gym", () => {
+    mockSelling = false;
+    renderShell();
+    expect(sidebar().queryByRole("link", { name: "Programs & meal plans" })).not.toBeInTheDocument();
+    expect(commandBarNames()).not.toContain("Programs & meal plans");
+  });
+
+  it("keeps Programs & meal plans from an assistant and covers the content page for manage_listing only", () => {
+    mockOrg = staffOrg("assistant");
+    mockUser = { id: "u1", role: "USER", first_name: "Tobi", last_name: "B" };
+    renderShell();
+    expect(sidebar().queryByRole("link", { name: "Programs & meal plans" })).not.toBeInTheDocument();
+    expect(gymPageRule("/dashboard/gym-owner/content")).toEqual({ all: [P.MARKETPLACE_MANAGE_LISTING] });
   });
 });

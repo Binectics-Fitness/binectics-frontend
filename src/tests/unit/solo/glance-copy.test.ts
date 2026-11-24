@@ -135,7 +135,7 @@ describe("fasting words", () => {
     expect(progressPhrase(0.3)).toBe("settling in");
     expect(progressPhrase(0.5)).toBe("past halfway");
     expect(progressPhrase(0.8)).toBe("almost there");
-    expect(progressPhrase(1)).toBe("length reached");
+    expect(progressPhrase(1)).toBe("goal reached");
   });
 });
 

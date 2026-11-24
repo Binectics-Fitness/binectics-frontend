@@ -2,6 +2,7 @@
 
 import { DietitianDashboardShell } from "@/components/ds/DietitianDashboardShell";
 import ConsultationAvailabilityManager from "@/components/ConsultationAvailabilityManager";
+import { SessionTypesCard } from "@/components/provider/SessionTypesCard";
 import { GatewaysSection } from "@/components/provider/GatewaysSection";
 import { CancellationPolicyCard } from "@/components/provider/CancellationPolicyCard";
 import { TaxSettingsCard } from "@/components/provider/TaxSettingsCard";
@@ -16,6 +17,10 @@ export default function DietitianSettingsPage() {
       {/* Only while the Today setup checklist is hidden: the way back. */}
       <ShowSetupChecklist where="Today" className="mb-8" />
       <ConsultationAvailabilityManager description="Weekly hours and blocked dates." />
+      {/* A second session type and beyond (the first is Session settings). */}
+      <div className="mt-8">
+        <SessionTypesCard />
+      </div>
       {/* Membership plans charge on the org's own keys when connected, and
           can then use currencies that account has enabled. */}
       <div className="mt-8">

@@ -51,6 +51,7 @@ export function TaskInspector({
 }) {
   const titleId = useId();
   const titleErrId = useId();
+  const noteId = useId();
   const issue = showIssues ? taskIssue(task) : null;
   const titleError = issue?.kind === "title";
   const optionalTitle = task.kind === "checkin" || task.kind === "meal";
@@ -142,17 +143,19 @@ export function TaskInspector({
         )}
       </div>
 
-      <details className="flex flex-col gap-1.5" open={task.detail.trim() !== "" || undefined}>
-        <summary className={`${fieldLabel} cursor-pointer flex items-center`} style={{ ...fieldLabelStyle, minHeight: 36 }}>{C.note}</summary>
+      {/* Always shown: a collapsed <details> hid the box until its label was
+          clicked, and coaches missed it (demo finding 17). */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={noteId} className={fieldLabel} style={fieldLabelStyle}>{C.note}</label>
         <textarea
-          aria-label={C.note}
+          id={noteId}
           value={task.detail}
           maxLength={2000}
           onChange={(e) => onChange({ detail: e.target.value })}
           placeholder={C.notePlaceholderDetail}
           style={{ ...inputStyle(), padding: "10px 12px", minHeight: 72, resize: "vertical" }}
         />
-      </details>
+      </div>
 
       <LinkBtn danger className="self-start" style={{ minHeight: 40 }} onClick={onRemove}>{C.remove}</LinkBtn>
     </div>

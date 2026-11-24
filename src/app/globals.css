@@ -141,6 +141,14 @@
   --space-xl: 28px;
   --space-2xl: 40px;
 
+  /* Touch target: the 44px minimum for anything tapped (WCAG 2.5.5, Apple
+     HIG). In px on purpose: the root font size is 15px, so a rem size (the
+     stock Tailwind min-h-11 is 2.75rem) comes out at 41.25px. Use it through
+     min-h-touch / min-w-touch / size-touch; min-h-11, h-11, w-11, min-w-11
+     and size-11 are pinned to it too (see @theme below).
+     touch-target.test.ts guards both. */
+  --touch-target: 44px;
+
   /* Named font-size scale */
   --fs-xs: 11px;
   --fs-sm: 12.5px;
@@ -221,6 +229,14 @@
   --radius-2: 6px;
   --radius-3: 10px;
   --radius-full: 999px;
+
+  /* Touch targets. min-h-touch, min-w-touch, h-touch, w-touch, size-touch
+     are 44px. Step 11 is pinned to the same value: across the app "-11" is
+     the touch-target class, and with the 15px root the stock step is only
+     41.25px. Every other step keeps the default 0.25rem multiplier, so
+     h-10 is 37.5px and h-12 is 45px. */
+  --spacing-touch: var(--touch-target);
+  --spacing-11: var(--touch-target);
 }
 
 /* ─── Skip-to-content link ──────────────────────────────────── */

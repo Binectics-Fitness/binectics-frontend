@@ -314,7 +314,7 @@ export default function DietitianCalendarPage() {
           </div>
           <button
             onClick={() => setAnchor(new Date())}
-            className="h-7 px-3 font-mono text-[11px] uppercase tracking-[0.04em] rounded-(--r-2) cursor-pointer"
+            className="h-7 px-3 text-[12.5px] font-medium rounded-(--r-2) cursor-pointer"
             style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink)" }}
           >
             Today
@@ -356,8 +356,8 @@ export default function DietitianCalendarPage() {
               <span className="text-[12.5px]" style={{ color: "var(--fg-2)" }}>
                 {bookingClientName(booking)}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.04em]" style={{ color: STATUS_COLORS[booking.status]?.color ?? "var(--fg-2)" }}>
-                {booking.status.toLowerCase().replace("_", " ")}
+              <span className="text-[12px] font-medium" style={{ color: STATUS_COLORS[booking.status]?.color ?? "var(--fg-2)" }}>
+                {STATUS_COLORS[booking.status]?.label ?? booking.status.toLowerCase().replace("_", " ")}
               </span>
             </div>
           ))}
@@ -427,12 +427,12 @@ export default function DietitianCalendarPage() {
                     <div key={h} className="h-14" style={{ borderBottom: "1px solid var(--border)" }} />
                   ))}
                   {fullDayBlock && (
-                    <div className="absolute inset-0 flex items-center justify-center px-2 text-center font-mono text-[11px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-4)" }}>
+                    <div className="absolute inset-0 flex items-center justify-center px-2 text-center text-[12px]" style={{ color: "var(--fg-3)" }}>
                       Blocked{fullDayBlock.reason ? ` · ${fullDayBlock.reason}` : ""}
                     </div>
                   )}
                   {customHours && !fullDayBlock && (
-                    <div className="absolute top-1 left-1 right-1 rounded-(--r-1) px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.04em]" style={{ background: "var(--bg-2)", border: "1px dashed var(--border-2)", color: "var(--fg-3)" }}>
+                    <div className="absolute top-1 left-1 right-1 rounded-(--r-1) px-1.5 py-0.5 text-[11px]" style={{ background: "var(--bg-2)", border: "1px dashed var(--border-2)", color: "var(--fg-3)" }}>
                       Custom hours {customHours.startTime}&ndash;{customHours.endTime}
                     </div>
                   )}
@@ -527,7 +527,7 @@ export default function DietitianCalendarPage() {
             {/* With no hours yet, the empty state above carries this link. */}
             {(rules.length > 0 || scheduleError) && (
               <div className="px-3.5 py-2.5">
-                <Link href="/dashboard/dietitian/settings" className="font-mono text-[11px] uppercase tracking-[0.04em] underline" style={{ color: "var(--fg-2)" }}>
+                <Link href="/dashboard/dietitian/settings" className="text-[12.5px] underline" style={{ color: "var(--fg-2)" }}>
                   Edit availability in Settings
                 </Link>
               </div>
@@ -575,7 +575,7 @@ export default function DietitianCalendarPage() {
                       aria-label={`Remove block on ${exc.date}`}
                       disabled={deletingId === exc.id}
                       onClick={() => void removeException(exc.id)}
-                      className="font-mono text-[10.5px] uppercase tracking-[0.04em] cursor-pointer"
+                      className="text-[12.5px] font-medium cursor-pointer"
                       style={{ background: "none", border: "none", color: "var(--danger-ink)" }}
                     >
                       {deletingId === exc.id ? "…" : "Remove"}

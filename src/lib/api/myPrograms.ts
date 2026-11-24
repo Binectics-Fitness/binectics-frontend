@@ -41,6 +41,43 @@ export interface MyProgram {
   started_at?: string;
   ends_at?: string | null;
   progress?: MyProgramProgress;
+  /** "starter" for the member's own Starter Program; absent for a coach's. */
+  source?: string;
+}
+
+/**
+ * One task on GET /my-programs/agenda, reduced to what Today reads: the day,
+ * what it measures and what ticks it. Web shows no task list (owner ruling
+ * F17); Today uses these only to keep its privacy line and cards honest.
+ */
+export interface AgendaTask {
+  scheduled_for: string;
+  component_type?: string;
+  metric?: string | null;
+  /** The auto rule's metric ("fasting_hours", "water_glasses", "steps"...). */
+  auto_metric?: string | null;
+  source?: string;
+}
+
+const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+
+/** The agenda's items as AgendaTask; anything without a day is dropped, never guessed. */
+export function agendaTasksFrom(data: unknown): AgendaTask[] {
+  const items = isRec(data) && Array.isArray(data.items) ? data.items : [];
+  const out: AgendaTask[] = [];
+  for (const raw of items) {
+    if (!isRec(raw)) continue;
+    const day = str(raw.scheduled_for);
+    if (!day) continue;
+    out.push({
+      scheduled_for: day,
+      component_type: str(raw.component_type),
+      metric: str(raw.metric) ?? null,
+      auto_metric: isRec(raw.auto) ? (str(raw.auto.metric) ?? null) : null,
+      source: str(raw.source),
+    });
+  }
+  return out;
 }
 
 /** A workout task a provider wrote with its exercises inline (no linked plan). */
@@ -113,6 +150,13 @@ export const myProgramsService = {
     return { ...res, data: programAboutFrom(res.data) };
   },
 
+  /** Today's tasks across the member's programs (GET /my-programs/agenda). */
+  async agenda(): Promise<ApiResponse<AgendaTask[]>> {
+    const res = await apiClient.get<unknown>("/my-programs/agenda");
+    if (!res.success) return { ...res, data: undefined } as ApiResponse<AgendaTask[]>;
+    return { ...res, data: agendaTasksFrom(res.data) };
+  },
+
   /** My programs, newest first, each with its progress summary. */
   listMine(): Promise<ApiResponse<MyProgram[]>> {
     return apiClient.get<MyProgram[]>("/my-programs");
@@ -136,10 +180,14 @@ export interface ProgramDay {
  * started and hasn't run past its last day counts: one-off task holders have
  * no day count, and a paused, finished or not-yet-started program has no
  * "today". The API lists newest first, so the most recent one wins.
+ *
+ * The member's own Starter is never this: it has its own card, and the hero
+ * and "From <coach> today" under it would credit it to their coach (QA 23 Nov
+ * 2026). As mobile's programHero.
  */
 export function currentProgramDay(programs: readonly MyProgram[]): ProgramDay | null {
   for (const p of programs) {
-    if ((p.kind ?? "program") !== "program" || p.status !== "active") continue;
+    if ((p.kind ?? "program") !== "program" || p.status !== "active" || p.source === "starter") continue;
     const progress = p.progress;
     if (!progress || progress.day == null || progress.day < 1) continue;
     const total = progress.total_days && progress.total_days > 0 ? progress.total_days : null;

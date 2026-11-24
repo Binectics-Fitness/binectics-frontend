@@ -35,7 +35,7 @@ vi.mock("@/lib/queries/reviews", () => ({
   useTargetReviews: () => ({
     data: {
       reviews: [
-        { _id: "r1", rating: 4, comment: "Good gym", createdAt: "2026-10-01T00:00:00Z", reviewer: { first_name: "Ade" } },
+        { id: "r1", rating: 4, comment: "Good gym", createdAt: "2026-10-01T00:00:00Z", reviewerName: "Ade" },
       ],
       pagination: { page: 1, totalPages: 1 },
     },
@@ -65,23 +65,26 @@ beforeEach(() => {
   mockOrg = { _id: "gym", name: "Iron Temple", owner_id: "u1", is_owner: true };
 });
 
-describe("replying to a review", () => {
+describe("replying to and reporting a review", () => {
   it("is offered to the owner", () => {
     render(<GymReviewsClient />);
-    expect(screen.getByRole("button", { name: "Respond" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Respond to Ade" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Report the review by Ade" })).toBeInTheDocument();
   });
 
   it("is not offered to a Manager, who may read the reviews but not answer them", () => {
     mockOrg = staff(["marketplace:manage_listing", "team:view_members"]);
     render(<GymReviewsClient />);
     expect(screen.getByText("Good gym")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Respond" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Respond to Ade" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Report the review by Ade" })).toBeNull();
   });
 
   it("is offered to a role that holds manage_reviews", () => {
     mockOrg = staff(["marketplace:manage_listing", "marketplace:manage_reviews"]);
     render(<GymReviewsClient />);
-    expect(screen.getByRole("button", { name: "Respond" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Respond to Ade" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Report the review by Ade" })).toBeInTheDocument();
   });
 });
 

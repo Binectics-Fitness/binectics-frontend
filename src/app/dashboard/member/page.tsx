@@ -3,22 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { StartConversationButton } from "@/components/messaging/StartConversationButton";
-import { MyCoachesCard } from "@/components/messaging/MyCoachesCard";
+import { MyCoachesCard, useMyProviders } from "@/components/messaging/MyCoachesCard";
 import { MemberDashboardShell } from "@/components/ds/MemberDashboardShell";
 import { StatusPill } from "@/components/ds/StatusPill";
 import { IconTile } from "@/components/ds/IconTile";
 import { PageHeader } from "@/components/ds/PageHeader";
 import { HeroStatCard } from "@/components/ds/HeroStatCard";
 import { DSCard } from "@/components/ds/DSCard";
-import { DSStatCard } from "@/components/ds/DSStatCard";
 import { Eyebrow } from "@/components/ds/Eyebrow";
 import { ListRow } from "@/components/ds/ListRow";
-import { WeekStrip } from "@/components/ds/WeekStrip";
 import { Building2 } from "lucide-react";
 import { bookingLabel } from "@/lib/bookings/labels";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
 import { bookingPaymentStateTone } from "@/lib/ui/statusTones";
-import { weekStrip } from "@/lib/ui/activity";
 import { useClientNow } from "@/lib/ui/useClientNow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleGuard } from "@/hooks/useRequireAuth";
@@ -28,27 +25,52 @@ import { classBookingsService } from "@/lib/api/classBookings";
 import { consultationsService } from "@/lib/api/consultations";
 import { loyaltyService } from "@/lib/api/loyalty";
 import { marketplaceService } from "@/lib/api/marketplace";
-import { currentProgramDay, myProgramsService, type ProgramDay } from "@/lib/api/myPrograms";
-import { progressService } from "@/lib/api/progress";
-import type { WeightLog } from "@/lib/api/progress";
+import type { FastSession } from "@/lib/api/fasting";
+import { currentProgramDay, myProgramsService, type AgendaTask, type MyProgram, type ProgramDay } from "@/lib/api/myPrograms";
 import type { LoyaltyProgram } from "@/lib/types";
 import type { MyCheckInDashboardStats } from "@/lib/types";
 import { memberGoalsService } from "@/lib/api/memberGoals";
-import { countVisitsThisWeek, toWeekStart, visitsRow, weekStartsOn, type WeekStart } from "@/lib/checkins/visits";
-import { VisitsRow } from "./_components/VisitsRow";
+import { countVisitsThisWeek, toWeekStart, visitsRow, type WeekStart } from "@/lib/checkins/visits";
+import { useCurrentFast } from "@/lib/queries/fasting";
+import { useActiveStarter } from "@/lib/queries/starter";
+import { isStarterProgramEnabled } from "@/lib/starter/flag";
+import { localStatus } from "@/lib/solo/fastingRules";
 import {
-  activeGyms,
-  lastCheckInLabel,
-  membershipNotice,
-  nextUp,
-  weightSummary,
-  type MembershipNotice,
-  type NextUpItem,
-} from "./memberHome";
+  audienceOf,
+  coachOf,
+  coachTasks,
+  darkCard,
+  hasCoachPlan,
+  hasHealthTask,
+  linkedKinds,
+  linkedKindsToday,
+  planAsksWeightToday,
+  providersOf,
+  shortDay,
+  showCoachList,
+  startsLater,
+} from "@/lib/today/oneToday";
+import {
+  PLAN_STARTS_HINT,
+  TASKS_IN_APP,
+  coachNoPlan,
+  coachNoPlanHint,
+  firstNameOf,
+  planFrom,
+  planStartsOn,
+} from "@/lib/today/todayCopy";
+import { VisitsRow } from "./_components/VisitsRow";
+import { activeGyms, membershipNotice, nextUp, type MembershipNotice, type NextUpItem } from "./memberHome";
+import { CoachCard } from "./_components/CoachCard";
 import { EnrollmentOffersCard } from "./_components/EnrollmentOffersCard";
+import { FastRow } from "./_components/FastRow";
 import { GymClassesLink } from "./_components/GymClassesLink";
 import { MembershipNoticeCard } from "./_components/MembershipNoticeCard";
+import { OwnTracking } from "./_components/OwnTracking";
+import { PendingRequestsCard } from "./_components/PendingRequestsCard";
 import { ProgramAboutCard } from "./_components/ProgramAboutCard";
+import { FastTodayCard } from "./_components/solo/FastTodayCard";
+import { StarterCard } from "./_components/solo/StarterCard";
 import { formatDate } from "@/utils/format";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
 import { SoloToday, SoloTodayLoading } from "./_components/solo/SoloToday";
@@ -66,10 +88,12 @@ interface MemberSnapshot {
    * own opt-in, not something every member has.
    */
   loyalty: LoyaltyProgram[];
-  /** null when the read failed (no profile is not a failure: that's []). */
-  weights: WeightLog[] | null;
   gyms: { orgId: string; name: string }[];
   program: ProgramDay | null;
+  /** Every program of the member's; null when the read failed (the plan is then unknown). */
+  programs: MyProgram[] | null;
+  /** Today's agenda, a coach's tasks only; null when the read failed. */
+  tasks: AgendaTask[] | null;
   /** A membership that is overdue or ends this week with nothing renewing it. */
   notice: MembershipNotice | null;
 }
@@ -80,9 +104,10 @@ const EMPTY: MemberSnapshot = {
   weekStart: "monday",
   next: null,
   loyalty: [],
-  weights: [],
   gyms: [],
   program: null,
+  programs: [],
+  tasks: [],
   notice: null,
 };
 
@@ -102,9 +127,9 @@ export default function MemberHomePage() {
 }
 
 /**
- * Today for a member on their own (no provider, nothing pending), otherwise the home this page always had. While
- * the first answer is still coming the page shows shapes; a read that fails
- * falls back to the usual home, never to a guess.
+ * Today for a member on their own (no provider, nothing pending), otherwise
+ * the coached Today. While the first answer is still coming the page shows
+ * shapes; a read that fails falls back to the coached Today, never to a guess.
  */
 function MemberHomeSwitch() {
   const { solo, isLoading } = useIsSoloMember();
@@ -122,6 +147,14 @@ function succeeded(res: PromiseSettledResult<{ success?: boolean }>): boolean {
   return res.status === "fulfilled" && res.value.success !== false;
 }
 
+/**
+ * Today for a member with a gym, a coach or someone waiting on their answer
+ * ("one Today", today-canvas Direction C; mobile HomeScreen). Top to bottom:
+ * the pending-requests card, one status card at most (a membership, else the
+ * coach card), one dark card at most (the program, then a running fast; the
+ * loser is a light row), the visits row, the plan, Next up, then the member's
+ * own tracking with its privacy line. Nothing animates on open.
+ */
 function MemberHomeContent() {
   const { user } = useAuth();
   const now = useClientNow();
@@ -130,49 +163,43 @@ function MemberHomeContent() {
   const [error, setError] = useState<string | null>(null);
   // Bumped when the member accepts a gym's offer, so "My gyms" picks it up.
   const [reloadKey, setReloadKey] = useState(0);
+  const myProviders = useMyProviders();
+  const fasting = useCurrentFast();
+  // A fast ended from the dark card: kept so the card does not vanish under its Undo.
+  const [endedHere, setEndedHere] = useState<FastSession | null>(null);
+  const starterOn = isStarterProgramEnabled();
+  const starter = useActiveStarter(starterOn);
 
   useEffect(() => {
     let isMounted = true;
     void (async () => {
       try {
-        const [checkinsRes, historyRes, bookingsRes, classesRes, loyaltyRes, profilesRes, subsRes, programsRes, goalsRes] =
+        const [checkinsRes, historyRes, bookingsRes, classesRes, loyaltyRes, subsRes, programsRes, goalsRes, agendaRes] =
           await Promise.allSettled([
             checkinsService.getMyDashboardStats(),
             checkinsService.getMyHistory(CheckInHistoryPeriod.WEEK),
             consultationsService.getMyBookings("upcoming"),
             classBookingsService.getMyClassBookings(),
             loyaltyService.getPrograms(),
-            progressService.getMyOwnProfiles(),
             marketplaceService.getMyMembershipSubscriptions(),
             myProgramsService.listMine(),
             memberGoalsService.getSettings(),
+            myProgramsService.agenda(),
           ]);
         if (!isMounted) return;
 
-        // A failed read is shown as "–", never as an empty history.
-        let weights: WeightLog[] | null = succeeded(profilesRes) ? [] : null;
-        const profileId = settled(profilesRes)?.[0]?._id;
-        if (profileId) {
-          try {
-            // Enough for a 30-day change; the API returns newest first.
-            const res = await progressService.getWeightLogs(profileId, 30);
-            weights = res.success === false ? null : (res.data ?? []);
-          } catch {
-            weights = null;
-          }
-        }
-        if (!isMounted) return;
-
         const at = Date.now();
+        const programs = succeeded(programsRes) ? (settled(programsRes) ?? []) : null;
         setSnapshot({
           checkins: settled(checkinsRes) ?? null,
           weekCheckIns: succeeded(historyRes) ? (settled(historyRes) ?? []).map((c) => c.checked_in_at) : null,
           weekStart: toWeekStart(succeeded(goalsRes) ? settled(goalsRes)?.week_start : undefined),
           next: nextUp(settled(bookingsRes) ?? [], settled(classesRes) ?? [], at),
           loyalty: settled(loyaltyRes) ?? [],
-          weights,
           gyms: activeGyms(settled(subsRes) ?? [], at),
-          program: currentProgramDay(settled(programsRes) ?? []),
+          program: currentProgramDay(programs ?? []),
+          programs,
+          tasks: succeeded(agendaRes) ? coachTasks(settled(agendaRes)) : null,
           notice: membershipNotice(settled(subsRes) ?? [], new Date(at), noticeDate),
         });
       } catch (err) {
@@ -187,25 +214,39 @@ function MemberHomeContent() {
     };
   }, [reloadKey]);
 
-  const week = useMemo(
-    () =>
-      now && snapshot.weekCheckIns ? weekStrip(snapshot.weekCheckIns, now, weekStartsOn(snapshot.weekStart)) : null,
-    [snapshot.weekCheckIns, snapshot.weekStart, now],
-  );
-  const weight = useMemo(
-    () => (now && snapshot.weights ? weightSummary(snapshot.weights, now.getTime()) : null),
-    [snapshot.weights, now],
-  );
+  const providers = useMemo(() => providersOf(myProviders.data), [myProviders.data]);
+  const coach = coachOf(providers);
+  const coachFirst = coach ? firstNameOf(coach.name) : null;
 
   const stats = snapshot.checkins;
   // Check-ins only mean something to a gym member, or to someone who has
-  // checked in before (a lapsed membership): everyone else gets no visits
-  // row, no week strip and no check-in stat.
+  // checked in before (a lapsed membership): everyone else gets no visits row.
   const checksIn = snapshot.gyms.length > 0 || (stats?.total_check_ins ?? 0) > 0;
   // This week's visits, in the member's week (null while unknown).
   const weekCount =
     now && snapshot.weekCheckIns ? countVisitsThisWeek(snapshot.weekCheckIns, now, snapshot.weekStart) : null;
   const visits = checksIn ? visitsRow({ stats, weekCount }) : null;
+
+  // The plan.
+  const program = snapshot.program;
+  const tasks = snapshot.tasks ?? [];
+  const hasStarter = starterOn && !!starter.data?.program;
+  const later = now && !program ? startsLater(snapshot.programs, now) : null;
+  const hasPlan = !!program || hasStarter || hasCoachPlan(snapshot.programs, tasks);
+  const planUnknown = snapshot.programs === null || snapshot.tasks === null;
+
+  // The member's own fast: dark when nothing outranks it (R6).
+  const fast = fasting.data ?? null;
+  const fastRunning = !!fast && !fast.ended_at;
+  const dark = darkCard({ program: !!program, fastRunning: fastRunning || !!endedHere });
+
+  // One status card at most: a membership first, then the coach card (no
+  // plan from them yet, or a plan that starts later). Never "No plan" when
+  // the plan could not be read.
+  const coachCard =
+    !loading && !snapshot.notice && !!coach && (!!later || (!hasPlan && !planUnknown));
+  const pros = myProviders.data?.professionals.length ?? 0;
+
   const firstName = user?.first_name?.trim() || "there";
   const dateLine = now
     ? `${now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}${
@@ -230,54 +271,70 @@ function MemberHomeContent() {
         </div>
       )}
 
-      {/* The one status card: money that keeps the member's access (F8). */}
-      {!loading && snapshot.notice && (
-        <div className="mb-3.5">
-          <MembershipNoticeCard notice={snapshot.notice} />
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3.5">
         <div className="flex min-w-0 flex-col gap-3.5">
+          {/* Whoever is asking to coach the member: nothing they would do can start until this is answered. */}
+          <PendingRequestsCard />
+
+          {/* The one status card: money that keeps the member's access (F8), else the coach. */}
+          {!loading && snapshot.notice && <MembershipNoticeCard notice={snapshot.notice} />}
+          {coachCard && coach && (
+            later ? (
+              <CoachCard
+                coach={coach}
+                line={planStartsOn(later.name, shortDay(later.startsOn))}
+                hint={PLAN_STARTS_HINT}
+              />
+            ) : (
+              <CoachCard coach={coach} line={coachNoPlan(coachFirst ?? coach.name)} hint={coachNoPlanHint(coachFirst ?? coach.name)} />
+            )
+          )}
+
           {loading ? (
             <div aria-hidden="true" className="h-36 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
           ) : (
-            <div>
-              {snapshot.program && <ProgramHero program={snapshot.program} />}
-              {/* Program tasks are ticked in the app; the web has no task
-                  list (owner decision, F17), so say where they are. */}
-              {snapshot.program && (
-                <p className="mt-2 text-[12.5px]" style={{ color: "var(--fg-3)" }} data-testid="tasks-in-app">
-                  Your daily tasks are in the Binectics app on your phone.
-                </p>
-              )}
-              {/* D4: the coach's description and cautions for this program. */}
-              {snapshot.program && (
-                <div className="mt-3.5 empty:hidden">
-                  <ProgramAboutCard instanceId={snapshot.program.id} />
+            <>
+              {/* One dark card at most (R6): the program, then a running fast. */}
+              {dark === "program" && program && (
+                <div className="flex flex-col gap-3.5" data-testid="today-program">
+                  <ProgramHero program={program} />
+                  {fastRunning && fast && now && localStatus(fast, now.getTime()) === "running" ? (
+                    <FastRow fast={fast} />
+                  ) : fastRunning || endedHere ? (
+                    <FastTodayCard fast={fastRunning ? fast : null} justEnded={endedHere} onEnded={setEndedHere} />
+                  ) : null}
                 </div>
               )}
+              {dark === "fast" && (
+                <FastTodayCard fast={fastRunning ? fast : null} justEnded={endedHere} onEnded={setEndedHere} />
+              )}
+
               {/* Gym visits where the check-in streak was (board web-visits H1). */}
-              {visits && (
-                <div className={snapshot.program ? "mt-3.5" : undefined}>
-                  <VisitsRow row={visits} href="/dashboard/member/activity" />
+              {visits && <VisitsRow row={visits} href="/dashboard/member/activity" />}
+
+              {hasStarter && <StarterCard />}
+
+              {/* The program's today, after the visits row as on the phone. */}
+              {program && <ProgramTodayCard from={coachFirst} />}
+              {/* D4: the coach's description and cautions for this program. */}
+              {program && (
+                <div className="empty:hidden">
+                  <ProgramAboutCard instanceId={program.id} />
                 </div>
               )}
-            </div>
+            </>
           )}
 
           <EnrollmentOffersCard onAccepted={() => setReloadKey((k) => k + 1)} />
 
-          <section aria-labelledby="next-up-label">
-            {/* Gaps go on wrappers: globals.css zeroes heading margins. */}
-            <div className="mb-2">
-              <Eyebrow id="next-up-label" as="h2">
-                Next up
-              </Eyebrow>
-            </div>
-            {loading ? (
-              <div aria-hidden="true" className="h-15 rounded-(--r-3) animate-pulse" style={{ background: "var(--bg-3)" }} />
-            ) : snapshot.next ? (
+          {!loading && snapshot.next && (
+            <section aria-labelledby="next-up-label">
+              {/* Gaps go on wrappers: globals.css zeroes heading margins. */}
+              <div className="mb-2">
+                <h2 id="next-up-label" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+                  Next up
+                </h2>
+              </div>
               <ListRow
                 href="/dashboard/bookings"
                 title={snapshot.next.title}
@@ -291,73 +348,27 @@ function MemberHomeContent() {
                   ) : undefined
                 }
               />
-            ) : (
-              <ListRow
-                href="/marketplace"
-                title="Nothing booked"
-                meta="Browse the marketplace"
-              />
-            )}
-          </section>
-
-          {/* A pair when the member checks in; otherwise Weight takes the row. */}
-          <div className={`grid gap-2.5 ${checksIn ? "grid-cols-2" : "grid-cols-1"}`}>
-            {checksIn && (
-              <DSStatCard
-                size="sm"
-                label="Check-ins · this week"
-                value={loading || weekCount === null ? "–" : weekCount}
-                delta={
-                  stats && now
-                    ? stats.last_check_in_at
-                      ? `Last: ${lastCheckInLabel(stats.last_check_in_at, now)}`
-                      : "None yet"
-                    : undefined
-                }
-              />
-            )}
-            <DSStatCard
-              size="sm"
-              label="Weight"
-              value={loading || !snapshot.weights ? "–" : weight ? weight.kg : "No log"}
-              unit={weight ? "kg" : undefined}
-              delta={
-                loading || !snapshot.weights ? undefined : weight ? (
-                  weight.delta
-                ) : (
-                  <Link href="/dashboard/member/weight-log" className="underline underline-offset-2">
-                    Log your weight
-                  </Link>
-                )
-              }
-            />
-          </div>
-
-          {checksIn && (
-            <DSCard className={CARD_PAD}>
-              <div className="mb-3">
-                <Eyebrow as="h2">Check-ins this week</Eyebrow>
-              </div>
-              {!loading && !snapshot.weekCheckIns ? (
-                <p className="text-[13px]" style={{ color: "var(--fg-3)" }}>
-                  Couldn&rsquo;t load this week&rsquo;s check-ins. Try again later.
-                </p>
-              ) : week && !loading ? (
-                <WeekStrip
-                  days={week}
-                  label="Check-ins this week"
-                  stateLabels={{ done: "checked in", missed: "no check-in" }}
-                />
-              ) : (
-                <div aria-hidden="true" className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: 7 }, (_, i) => (
-                    <div key={i} className="aspect-square rounded-(--r-2) animate-pulse" style={{ background: "var(--bg-3)" }} />
-                  ))}
-                </div>
-              )}
-            </DSCard>
+            </section>
           )}
 
+          {/* The member's own tools, kept when they gain a coach (owner answer
+              19 Nov 2026): full cards without a plan, one compact card with one. */}
+          {/* Waits for the providers, so the privacy line never names nobody and then someone. */}
+          {!loading && now && !myProviders.isLoading && (
+            <OwnTracking
+              mode={hasPlan ? "compact" : "full"}
+              audience={audienceOf(providers)}
+              providers={providers}
+              fastRunning={fastRunning || !!endedHere}
+              hideWeight={planAsksWeightToday(tasks, now)}
+              linkedToday={linkedKindsToday(tasks, now)}
+              linked={linkedKinds(tasks).fast || linkedKinds(tasks).water}
+              healthTask={hasHealthTask(tasks)}
+            />
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-3.5">
           {!loading && snapshot.gyms.length > 0 && (
             <DSCard className={CARD_PAD}>
               <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)", marginBottom: 14 }}>
@@ -376,18 +387,16 @@ function MemberHomeContent() {
                       <div className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
                         {gym.name}
                       </div>
-                      <div className="text-[12.5px] mt-0.5" style={{ color: "var(--fg-3)" }}>
-                        Active membership · scan the front-desk QR to check in
-                      </div>
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                       <StartConversationButton
                         organizationId={gym.orgId}
                         messagesHref="/dashboard/messages"
                         label="Message"
+                        className="btn-ghost-v2 min-h-11"
                       />
                       <GymClassesLink organizationId={gym.orgId} gymName={gym.name} />
-                      <Link href="/check-in" className="btn-primary-v2 sm" style={{ whiteSpace: "nowrap" }}>
+                      <Link href="/check-in" className="btn-primary-v2 min-h-11" style={{ whiteSpace: "nowrap" }}>
                         Check in
                       </Link>
                     </div>
@@ -397,7 +406,8 @@ function MemberHomeContent() {
             </DSCard>
           )}
 
-          <MyCoachesCard className={CARD_PAD} />
+          {/* The coaches, with Message and Book; one coach is left out when the coach card or their plan already leads to them. */}
+          <MyCoachesCard className={CARD_PAD} hidden={!showCoachList({ coaches: pros, coachCard, hasPlan: hasPlan || planUnknown })} />
 
           {!loading && snapshot.loyalty.length > 0 && (
             <DSCard className={CARD_PAD}>
@@ -407,7 +417,7 @@ function MemberHomeContent() {
                 </h3>
                 <Link
                   href="/dashboard/loyalty"
-                  className="font-mono text-[11px] uppercase tracking-[0.04em]"
+                  className="inline-flex min-h-11 items-center font-mono text-[11px] uppercase tracking-[0.04em]"
                   style={{ color: "var(--fg-3)" }}
                 >
                   Rewards →
@@ -434,28 +444,29 @@ function MemberHomeContent() {
             </DSCard>
           )}
         </div>
-
-        <div>
-          <DSCard className={CARD_PAD}>
-            <h3 className="text-[14px] font-medium" style={{ color: "var(--ink)", marginBottom: 14 }}>
-              Quick log
-            </h3>
-            <div className="flex flex-col gap-2">
-              {[
-                { href: "/dashboard/member/weight-log", label: "Log weight" },
-                { href: "/dashboard/member/meal-log", label: "Log meal" },
-                { href: "/dashboard/member/workout-log", label: "Log workout" },
-                { href: "/dashboard/bookings", label: "My bookings" },
-              ].map((item) => (
-                <Link key={item.href} href={item.href} className="btn-ghost-v2 sm w-full justify-center">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </DSCard>
-        </div>
       </div>
     </MemberDashboardShell>
+  );
+}
+
+/**
+ * The program's today, under the hero. Web has no task list (owner ruling
+ * F17, 14 Oct 2026; being asked again): the card says where the tasks are.
+ * A web task list, if the ruling changes, replaces the hint in this card
+ * (the `program-task-list` slot) and nothing else on the page moves.
+ */
+function ProgramTodayCard({ from }: { from: string | null }) {
+  return (
+    <DSCard className="px-5 py-4">
+      <section aria-labelledby="program-today-h" data-slot="program-task-list">
+        <h2 id="program-today-h" className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>
+          {planFrom(from)}
+        </h2>
+        <p className="mt-1 text-[13.5px]" style={{ color: "var(--fg-3)" }} data-testid="tasks-in-app">
+          {TASKS_IN_APP}
+        </p>
+      </section>
+    </DSCard>
   );
 }
 
@@ -471,13 +482,13 @@ function ProgramHero({ program }: { program: ProgramDay }) {
       eyebrow="Your program"
       value={`Day ${day}`}
       unit={totalDays ? `of ${totalDays}` : undefined}
-      sub={name}
+      // One line, as on the phone (board R5): the program, then the last 7 days.
+      sub={week ? `${name} · ${week.done} of ${week.scheduled} done in the last 7 days` : name}
       progress={
         totalDays
-          ? { value: day, max: totalDays, label: `Progress through ${name}`, valueText: `Day ${day} of ${totalDays}` }
+          ? { value: day, max: totalDays, label: `Progress through ${name}`, valueText: `Day ${day} of ${totalDays}`, fill: "paper" }
           : undefined
       }
-      footnote={week ? `${week.done} of ${week.scheduled} tasks done · last 7 days` : undefined}
     />
   );
 }

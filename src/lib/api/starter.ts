@@ -320,10 +320,17 @@ export const starterService = {
   /**
    * Downloads the member's history. The reply is a file, not the usual JSON
    * envelope, so it is fetched directly (same-origin proxy, cookie auth).
+   * `range` narrows it (ISO 8601 `from` / `to`); none sends everything.
    */
-  async downloadExport(format: StarterExportFormat): Promise<ApiResponse<StarterExportFile>> {
+  async downloadExport(
+    format: StarterExportFormat,
+    range: { from?: string; to?: string } = {},
+  ): Promise<ApiResponse<StarterExportFile>> {
+    const qs = new URLSearchParams({ format });
+    if (range.from) qs.set("from", range.from);
+    if (range.to) qs.set("to", range.to);
     try {
-      const res = await fetch(`${API_BASE_URL}/my-programs/export?format=${format}`, {
+      const res = await fetch(`${API_BASE_URL}/my-programs/export?${qs.toString()}`, {
         credentials: "include",
         headers: { Accept: format === StarterExportFormat.Csv ? "text/csv" : "application/json" },
       });

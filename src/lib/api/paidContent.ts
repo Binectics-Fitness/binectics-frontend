@@ -517,6 +517,19 @@ export const paidContentService = {
     return apiClient.post(`${base(kind, id)}/grants`, { client_profile_id: clientProfileId });
   },
 
+  /**
+   * Ask a client to buy the item or join a plan that includes it (a notice to
+   * them). already_has_access: they have it now, so the caller can go ahead.
+   */
+  async askToPay(
+    kind: ContentItemKind,
+    id: string,
+    clientProfileId: string,
+  ): Promise<ApiResponse<{ sent: boolean; alreadyHasAccess: boolean }>> {
+    const res = await apiClient.post<Record<string, unknown>>(`${base(kind, id)}/ask-to-pay`, { client_profile_id: clientProfileId });
+    return mapOk(res, (d) => ({ sent: d?.sent === true, alreadyHasAccess: d?.already_has_access === true }));
+  },
+
   async revokeGrant(grantId: string): Promise<ApiResponse<unknown>> {
     return apiClient.delete(`/content/grants/${enc(grantId)}`);
   },
