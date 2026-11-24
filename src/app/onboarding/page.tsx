@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
@@ -21,7 +21,7 @@ import { clearOnboardingDraft, isDraftTrack, loadOnboardingDraft, resumableDraft
 import { describeCurrencyError } from "@/lib/currencies/helpers";
 import { StageHead } from "./_components";
 import Modal from "@/components/Modal";
-import { MEMBER_STEPS } from "./_member";
+import { MEMBER_STEPS, MEMBER_TOOLS, clampMemberStep, memberCanContinue, memberContinueLabel, memberFinishesAt, memberLanding, persistMemberStep, pickedPath, SKIP, stepOf } from "./_member";
 import { TRAINER_STEPS } from "./_trainer";
 import { GYM_STEPS } from "./_gym";
 import { DIETITIAN_STEPS } from "./_dietitian";
@@ -155,7 +155,10 @@ function OnboardingContent() {
   // takes hold the same render the evidence arrives.
   const invitedMember = accountRole === "member" && memberGate === "invited";
   const role = invitedMember ? "member" : (manualRole ?? accountRole);
-  const step = invitedMember && rawStep === 0 ? 1 : rawStep;
+  const trackStep = invitedMember && rawStep === 0 ? 1 : rawStep;
+  // The member track is two steps (it was four): a step past its end shows
+  // the last one rather than an empty stage.
+  const step = role === "member" ? clampMemberStep(trackStep) : trackStep;
   const [data, setData] = useState<Record<string, unknown>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSavingLater, setIsSavingLater] = useState(false);
@@ -176,7 +179,12 @@ function OnboardingContent() {
   const steps = roleDef?.steps || GENERIC_STEPS;
   const totalSteps = steps.length;
 
+  // Set while finishing: the member track lands on Explore or Requests, and
+  // the redirect below (which fires once the refreshed account says
+  // onboarding is complete) must not send them to the dashboard instead.
+  const finishingTo = useRef<string | null>(null);
   useEffect(() => {
+    if (finishingTo.current) return;
     if (user?.is_onboarding_complete && user) {
       const routes: Record<string, string> = { USER: "/dashboard/member", GYM_OWNER: "/dashboard/gym-owner", TRAINER: "/dashboard/trainer", DIETITIAN: "/dashboard/dietitian", ADMIN: "/admin/dashboard" };
       window.location.replace(routes[user.role] || "/dashboard/member");
@@ -324,8 +332,11 @@ function OnboardingContent() {
   const handleSelectRole = (id: RoleId) => {
     if (roleLocked) return;
     setWorkspaceError(null);
+    // Another track starts at its own step 1. Only the member track can be
+    // past step 1 with the rail still open (a provider has a workspace by
+    // then, which locks it).
+    if (step === 0 || (id !== role && step > 1)) setStep(1);
     setManualRole(id);
-    if (step === 0) setStep(1);
   };
 
   /**
@@ -503,31 +514,6 @@ function OnboardingContent() {
     return null;
   }, []);
 
-  const persistMemberStep = useCallback(async (currentStep: number, stepData: Record<string, unknown>) => {
-    try {
-      if (currentStep === 1) {
-        const goal = stepData.goal as string;
-        if (goal) await authService.updateProfile({ fitness_goals: [goal] });
-      } else if (currentStep === 2) {
-        const patch: Record<string, unknown> = {};
-        const providerTypes = stepData.providerTypes as string[];
-        if (providerTypes?.length) patch.preferred_activities = providerTypes;
-        const city = (stepData.city as string | undefined)?.trim();
-        if (city) patch.city = city;
-        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
-      } else if (currentStep === 3) {
-        // Training times/days were collected and thrown away until the API
-        // gained fields for them — persisted here so the answers survive.
-        const patch: Record<string, unknown> = {};
-        const times = stepData.times as string[] | undefined;
-        const days = stepData.days as string[] | undefined;
-        if (times?.length) patch.preferred_training_times = times;
-        if (days?.length) patch.preferred_training_days = days;
-        if (Object.keys(patch).length > 0) await authService.updateProfile(patch);
-      }
-    } catch { /* non-blocking */ }
-  }, []);
-
   /**
    * Resolves an error message when the currency chosen on step 1 was refused
    * or the consultation the dietitian answered could not be saved, else null.
@@ -611,12 +597,38 @@ function OnboardingContent() {
     } else if (role === "trainer" && orgId) {
       error = await persistTrainerStep(step, data, orgId);
     } else if (role === "member") {
-      await persistMemberStep(step, data);
+      // Kept in this browser only; nothing goes to the profile.
+      persistMemberStep(step, data, user?.id);
     } else if (role === "dietitian") {
       error = await persistDietitianStep(step, data, orgId);
     }
     if (error) setStepError(error);
     return error === null;
+  };
+
+  // Marks onboarding complete and leaves for `destination`.
+  const finish = async (destination: string) => {
+    finishingTo.current = destination;
+    if (user?.id) clearOnboardingDraft(user.id);
+    setIsFinishing(true);
+    // dismiss() is what marks onboarding complete server-side. A silent
+    // failure here re-onboards the user on every fresh device — surface
+    // it instead of swallowing it (a swallowed 404 hid exactly that bug).
+    const dismissed = await onboardingService.dismiss();
+    if (!dismissed.success) {
+      toast.error(
+        "We couldn't save your onboarding progress, you may be asked again next time.",
+      );
+    }
+    // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
+    // before navigating — the dashboard's useRoleGuard reads from localStorage.
+    try {
+      const fresh = await authService.refreshUserFromApi();
+      if (fresh) updateUser(fresh);
+    } catch {
+      // best-effort; navigate anyway
+    }
+    window.location.href = destination;
   };
 
   const handleContinue = async () => {
@@ -632,6 +644,15 @@ function OnboardingContent() {
   const advance = async () => {
     if (step === 0 && role) {
       setStep(1);
+    } else if (role === "member" && step >= 1) {
+      // A gym's member has nothing to choose; everyone else picks a path.
+      if (!invitedMember && !memberCanContinue(step, data)) return;
+      persistMemberStep(step, data, user?.id);
+      if (!invitedMember && !memberFinishesAt(step, data)) {
+        setStep(step + 1);
+        return;
+      }
+      await finish(invitedMember ? ROLE_DASHBOARD_ROUTES.member : memberLanding(pickedPath(data)));
     } else if (step < totalSteps) {
       // A provider's step 1 needs a currency: the country only suggests one,
       // and when it has none the person chooses.
@@ -654,26 +675,21 @@ function OnboardingContent() {
       // A provider's last step saves too (the trainer's and dietitian's
       // listing); a refusal keeps them on it.
       if (role !== "member" && !(await persistStep(orgId))) return;
-      if (user?.id) clearOnboardingDraft(user.id);
-      setIsFinishing(true);
-      // dismiss() is what marks onboarding complete server-side. A silent
-      // failure here re-onboards the user on every fresh device — surface
-      // it instead of swallowing it (a swallowed 404 hid exactly that bug).
-      const dismissed = await onboardingService.dismiss();
-      if (!dismissed.success) {
-        toast.error(
-          "We couldn't save your onboarding progress, you may be asked again next time.",
-        );
-      }
-      // Refresh from API so localStorage has the promoted role (e.g. USER→GYM_OWNER)
-      // before navigating — the dashboard's useRoleGuard reads from localStorage.
-      try {
-        const fresh = await authService.refreshUserFromApi();
-        if (fresh) updateUser(fresh);
-      } catch {
-        // best-effort; navigate anyway
-      }
-      window.location.href = ROLE_DASHBOARD_ROUTES[role];
+      await finish(ROLE_DASHBOARD_ROUTES[role]);
+    }
+  };
+
+  // Skip on "What would you like to use?": finish with nothing picked.
+  const handleSkipTools = async () => {
+    if (advancing) return;
+    setAdvancing(true);
+    try {
+      const none = { ...data, [MEMBER_TOOLS]: [] };
+      setField(MEMBER_TOOLS, []);
+      persistMemberStep(step, none, user?.id);
+      await finish(memberLanding(pickedPath(none)));
+    } finally {
+      setAdvancing(false);
     }
   };
 
@@ -719,6 +735,13 @@ function OnboardingContent() {
     hasError: Boolean(workspaceError),
   });
 
+  const memberTrack = role === "member" && step >= 1;
+  const memberContinueBlocked =
+    (!invitedMember && !memberCanContinue(step, data)) || isFinishing || advancing || orgLoading;
+  // The steps still to come: none once Continue finishes (every path but
+  // "on my own" ends on step 1).
+  const upcoming = memberTrack && (invitedMember || memberFinishesAt(step, data)) ? [] : (roleDef?.steps || GENERIC_STEPS).slice(step);
+
   const renderStage = () => {
     if (step === 0 || !role) {
       return (
@@ -747,6 +770,13 @@ function OnboardingContent() {
           </div>
         </>
       );
+    }
+
+    // A gym's member has nothing to choose (mobile finishes for them at
+    // once); the note above says whose member they are.
+    if (memberTrack && invitedMember) {
+      const firstName = user?.first_name?.trim().split(/\s+/)[0];
+      return <StageHead crumb="Member" title={firstName ? `Welcome, ${firstName}.` : "Welcome."} desc="Your gym has set you up." />;
     }
 
     const renderers = STEP_RENDERERS[role];
@@ -946,36 +976,68 @@ function OnboardingContent() {
         </div>
 
         {/* Bottom nav bar */}
-        <div className="ob-nav">
-          <div className="ob-progress" style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", color: "var(--fg-3)", letterSpacing: "0.05em" }}>
-            Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong>, about {minsLeft} min left
+        {memberTrack ? (
+          // The member track (mobile #272): Back, Skip on the tools step, and
+          // one button that says what it does. No "save for later": there is
+          // nothing to type, so there is nothing to save.
+          <div className="ob-nav">
+            <div className="ob-progress" style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", color: "var(--fg-3)", letterSpacing: "0.05em" }}>
+              {invitedMember ? "" : stepOf(step === 2 ? 2 : 1)}
+            </div>
+            <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
+              {(step > 1 || !roleLocked) && (
+                <button type="button" className="btn-ghost-v2 lg" style={{ minHeight: 44 }} onClick={handleBack} disabled={advancing || isFinishing}>
+                  &larr; Back
+                </button>
+              )}
+              {step === 2 && (
+                <button type="button" className="btn-ghost-v2 lg" style={{ minHeight: 44 }} onClick={() => void handleSkipTools()} disabled={advancing || isFinishing}>
+                  {SKIP}
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn-primary-v2 lg"
+                style={{ minHeight: 44, opacity: memberContinueBlocked ? 0.4 : 1 }}
+                disabled={memberContinueBlocked}
+                onClick={handleContinue}
+              >
+                {isFinishing ? "Finishing..." : invitedMember ? "Go to dashboard" : memberContinueLabel(step, data)}
+              </button>
+            </div>
           </div>
-          <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
-            <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || workspacePending || advancing || orgLoading || uploadCount > 0}>
-              {isSavingLater ? "Saving..." : "Save & finish later"}
-            </button>
-            {(step > 1 || (step === 1 && !roleLocked)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack} disabled={advancing}>&larr; Back</button>}
-            <button
-              type="button"
-              disabled={(step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0}
-              onClick={handleContinue}
-              className="btn-primary-v2 sm"
-              style={{ opacity: (step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0 ? 0.4 : 1 }}
-            >
-              {step >= totalSteps
-                ? isFinishing
-                  ? "Finishing..."
-                  : "Go to dashboard"
-                : workspacePending
-                  ? "Preparing workspace..."
-                  : advancing
-                    ? "Saving..."
-                    : step < totalSteps && roleDef
-                      ? <>Continue<span className="ob-next-title"> → {roleDef.steps[step]?.title || ""}</span><span className="ob-next-arrow" aria-hidden="true"> →</span></>
-                      : "Continue →"}
-            </button>
+        ) : (
+          <div className="ob-nav">
+            <div className="ob-progress" style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", color: "var(--fg-3)", letterSpacing: "0.05em" }}>
+              Progress <strong style={{ color: "var(--ink)", fontWeight: 500 }}>· {progress}%</strong>, about {minsLeft} min left
+            </div>
+            <div className="ob-actions" style={{ display: "flex", gap: 10 }}>
+              <button type="button" className="btn-ghost-v2 sm" onClick={handleSaveLater} disabled={isSavingLater || workspacePending || advancing || orgLoading || uploadCount > 0}>
+                {isSavingLater ? "Saving..." : "Save & finish later"}
+              </button>
+              {(step > 1 || (step === 1 && !roleLocked)) && <button type="button" className="btn-ghost-v2 sm" onClick={handleBack} disabled={advancing}>&larr; Back</button>}
+              <button
+                type="button"
+                disabled={(step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0}
+                onClick={handleContinue}
+                className="btn-primary-v2 sm"
+                style={{ opacity: (step === 0 && !role) || isFinishing || advancing || isSavingLater || orgLoading || uploadCount > 0 ? 0.4 : 1 }}
+              >
+                {step >= totalSteps
+                  ? isFinishing
+                    ? "Finishing..."
+                    : "Go to dashboard"
+                  : workspacePending
+                    ? "Preparing workspace..."
+                    : advancing
+                      ? "Saving..."
+                      : step < totalSteps && roleDef
+                        ? <>Continue<span className="ob-next-title"> → {roleDef.steps[step]?.title || ""}</span><span className="ob-next-arrow" aria-hidden="true"> →</span></>
+                        : "Continue →"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* ═══ Right summary rail ═══ */}
@@ -1025,7 +1087,7 @@ function OnboardingContent() {
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--fg-3)", marginBottom: 4 }}>
             {step > 0 && roleDef ? "Up next" : "What happens next"}
           </div>
-          {(roleDef?.steps || GENERIC_STEPS).slice(step).map((s, i) => (
+          {upcoming.map((s, i) => (
             <div key={i} style={{ display: "flex", gap: 16, padding: "14px 0", borderBottom: "1px solid var(--border)", alignItems: "center" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", fontVariantNumeric: "tabular-nums", width: 28, textAlign: "right" }}>
                 {String(step + i + 1).padStart(2, "0")}
