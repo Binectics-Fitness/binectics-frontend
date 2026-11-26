@@ -9,6 +9,7 @@ import { BinecticsLockup } from "@/components/BinecticsLogo";
 import { useVerification } from "@/hooks/useVerification";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDashboardRoute, getOnboardingRoute } from "@/lib/constants/routes";
+import { safeRedirectPath } from "@/lib/routing/accountState";
 import {
   verificationOtpSchema,
   type VerificationOtpFormData,
@@ -18,6 +19,9 @@ function VerificationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  // The page that sent the visitor to sign up, e.g. a team invitation link
+  // (AuthContext carries it here). Same-origin paths only.
+  const back = safeRedirectPath(searchParams.get("redirect"));
   const { refreshUser } = useAuth();
 
   const {
@@ -78,10 +82,14 @@ function VerificationForm() {
       if (fresh) {
         setRedirecting(true);
         setSuccess("Account verified. Taking you in...");
+        // Back to where they came from first: an invitation accepted before
+        // onboarding sets the account up as the gym's staff, where Member
+        // onboarding would have stranded it (Q-V, Nov 2026).
         router.replace(
-          fresh.is_onboarding_complete === false
-            ? getOnboardingRoute(fresh.role)
-            : getDashboardRoute(fresh.role),
+          back ??
+            (fresh.is_onboarding_complete === false
+              ? getOnboardingRoute(fresh.role)
+              : getDashboardRoute(fresh.role)),
         );
         return;
       }

@@ -16,6 +16,7 @@ import {
   MemberStatus,
   type OrganizationMember,
   type TeamInvitation,
+  type TeamRole,
 } from "@/lib/api/teams";
 import type { ApiResponse } from "@/lib/types";
 import { parseBillingError, billingResourceLabel } from "@/lib/utils/billingErrors";
@@ -72,10 +73,12 @@ function userEmail(member: OrganizationMember): string {
   return member.user_id.email;
 }
 
-function roleNameFromInvitation(invite: TeamInvitation): string {
-  return typeof invite.team_role_id === "string"
-    ? invite.team_role_id
-    : invite.team_role_id.name;
+/** The invitation's role by name: populated, or looked up when only an id. */
+function roleNameFromInvitation(invite: TeamInvitation, roles: TeamRole[]): string {
+  const role = invite.team_role_id;
+  if (!role) return "Role";
+  if (typeof role === "string") return roles.find((r) => r._id === role)?.name ?? "Role";
+  return role.name ?? "Role";
 }
 
 export default function TeamWorkspacePage() {
@@ -532,7 +535,7 @@ export default function TeamWorkspacePage() {
                             {invitation.email}
                           </div>
                           <div className="font-mono text-[11px] uppercase mt-1" style={{ color: "var(--fg-3)", letterSpacing: "0.04em" }}>
-                            {roleNameFromInvitation(invitation)} · expires {fmtDate(invitation.expires_at)}
+                            {roleNameFromInvitation(invitation, roles)} · expires {fmtDate(invitation.expires_at)}
                           </div>
                         </div>
                         {cancellable(invitation) && (
@@ -552,13 +555,6 @@ export default function TeamWorkspacePage() {
                   </ul>
                 )}
 
-                <div className="mt-4 text-sm" style={{ color: "var(--fg-3)" }}>
-                  Invite acceptance link is available at{" "}
-                  <Link href="/teams/invite/accept" style={{ color: "var(--ink)", textDecoration: "underline" }}>
-                    /teams/invite/accept
-                  </Link>
-                  .
-                </div>
               </div>
               )}
             </section>
