@@ -144,7 +144,7 @@ export default function ExercisePicker({
                 </div>
               </div>
               <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
-              <DemoTag />
+              {hasExerciseIllustration(e.id) && <DemoTag />}
               {hasExerciseIllustration(e.id) && (
                 <button
                   type="button"
