@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import ExercisePicker from "../ExercisePicker";
+import { hasExerciseIllustration } from "@/components/ExerciseIllustration";
 import { loadLibrary, type LibraryState } from "../exerciseLibraryCache";
 import {
   DEMO_ART_NOTE,
@@ -182,7 +183,7 @@ function WorkoutFields({ task, error, onChange }: { task: BuilderTask; error: bo
       {full && <span className="text-[13px]" style={metaStyle}>{C.workout.full(MAX_INLINE_EXERCISES)}</span>}
       {error && <span className={errText} style={errStyle}>{C.workout.error}</span>}
       <span className="text-[13px]" style={metaStyle}>{C.workout.defaults}</span>
-      {ex.some((e) => e.library_exercise_id) && !open && <span className="text-[13px]" style={metaStyle}>{DEMO_ART_NOTE}.</span>}
+      {ex.some((e) => hasExerciseIllustration(e.library_exercise_id)) && !open && <span className="text-[13px]" style={metaStyle}>{DEMO_ART_NOTE}.</span>}
     </div>
   );
 }
