@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, useRef, useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/Toast";
+import Modal from "@/components/Modal";
 import { OrganizationContextBanner } from "@/components/ds/OrganizationContextBanner";
 import { AsyncSpinner } from "@/components/ds";
 import { WorkspaceShell } from "@/components/ds/WorkspaceShell";
@@ -17,6 +18,7 @@ import {
   ProviderInvoiceStatus,
   ProviderPlanTier,
   ProviderSubscriptionStatus,
+  BILLING_RESUBSCRIBE_REQUIRED,
   seatHeadroomLabel,
   type ProviderBillingStatus,
   type ProviderInvoice,
@@ -70,6 +72,11 @@ export default function ProviderBillingPage() {
   const [error, setError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "plans" | "invoices">("overview");
+
+  // Owner "Cancel plan": the sheet, and the two requests it can make.
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [keepBusy, setKeepBusy] = useState(false);
 
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [awaitingActivation, setAwaitingActivation] = useState(false);
@@ -219,12 +226,57 @@ export default function ProviderBillingPage() {
     }
   }
 
+  // Draft wording, needs counsel (NEEDS-COUNSEL.md K7).
+  async function handleCancelPlan() {
+    if (!orgId || cancelBusy) return;
+    setCancelBusy(true);
+    try {
+      const res = await providerBillingApi.cancelPlan(orgId);
+      if (res.success && res.data) {
+        setBillingStatus(res.data);
+        setCancelOpen(false);
+        const plan = TIER_LABELS[res.data.plan_tier];
+        toast.success(
+          `${plan} ends on ${fmtDate(res.data.plan_cancel?.ends_at ?? res.data.subscription_current_period_end)}. You keep it until then.`,
+          { label: "Undo", onClick: () => void handleKeepPlan() },
+        );
+      } else {
+        toast.error(res.message || "Couldn't cancel your plan. You haven't been changed.");
+      }
+    } finally {
+      setCancelBusy(false);
+    }
+  }
+
+  async function handleKeepPlan() {
+    if (!orgId || keepBusy) return;
+    setKeepBusy(true);
+    try {
+      const res = await providerBillingApi.keepPlan(orgId);
+      if (res.success && res.data) {
+        setBillingStatus(res.data);
+        toast.success("Your plan stays. Nothing has changed.");
+      } else if (res.code === BILLING_RESUBSCRIBE_REQUIRED) {
+        // The gateway could not switch the subscription back on: the way
+        // back is to buy the plan again.
+        toast.info("To keep your plan, check out again.");
+        if (billingStatus) void handleCheckout(billingStatus.plan_tier);
+      } else {
+        toast.error(res.message || "Couldn't keep your plan. Try again.");
+      }
+    } finally {
+      setKeepBusy(false);
+    }
+  }
+
   function renderLimitValue(val: number | null): string {
     return val === null ? "Unlimited" : fmtNumber(val);
   }
 
 
   const currentTier = billingStatus?.plan_tier ?? ProviderPlanTier.FREE;
+  const planCancel = billingStatus?.plan_cancel;
+  const endsAt = planCancel?.ends_at ?? billingStatus?.subscription_current_period_end ?? null;
   // Rank the current plan by sort_order so any lower-tier card (not just Free)
   // is presented as a downgrade rather than a spurious "upgrade".
   const currentPlanOrder =
@@ -331,6 +383,33 @@ export default function ProviderBillingPage() {
               </div>
             )}
 
+            {billingStatus && planCancel?.cancelled && (
+              <div
+                className="rounded-(--r-3) p-3.5 text-sm flex flex-wrap items-center justify-between gap-3"
+                style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium" style={{ color: "var(--ink)" }}>
+                    Your {TIER_LABELS[currentTier]} plan ends on {fmtDate(endsAt)}.
+                  </span>
+                  <span style={{ color: "var(--fg-2)" }}>
+                    After that you&apos;re on Free, and your members, programs and records stay, read-only.
+                  </span>
+                </div>
+                {planCancel.can_keep && (
+                  <button
+                    type="button"
+                    onClick={() => void handleKeepPlan()}
+                    disabled={keepBusy}
+                    className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+                    style={{ background: "var(--ink)", color: "var(--bg)", opacity: keepBusy ? 0.7 : 1 }}
+                  >
+                    Keep my plan
+                  </button>
+                )}
+              </div>
+            )}
+
             {billingStatus && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div
@@ -353,7 +432,9 @@ export default function ProviderBillingPage() {
                       className="font-mono text-xs uppercase tracking-wider px-2 py-1 rounded-(--r-2)"
                       style={subscriptionStatusColor(billingStatus.subscription_status)}
                     >
-                      {billingStatus.subscription_status.replace("_", " ")}
+                      {planCancel?.cancelled
+                        ? `Ends ${fmtDate(endsAt)}`
+                        : billingStatus.subscription_status.replace("_", " ")}
                     </span>
                   </div>
                 </div>
@@ -630,8 +711,18 @@ export default function ProviderBillingPage() {
                                 regardless of feature count. */}
                             <div className="mt-auto pt-1">
                               {isCurrent ? (
-                                <div className="text-sm" style={{ color: "var(--fg-3)" }}>
-                                  Your current plan
+                                <div className="flex items-center justify-between gap-2 text-sm">
+                                  <span style={{ color: "var(--fg-3)" }}>Your current plan</span>
+                                  {planCancel?.can_cancel && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCancelOpen(true)}
+                                      className="underline"
+                                      style={{ color: "var(--danger-ink)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                                    >
+                                      Cancel plan
+                                    </button>
+                                  )}
                                 </div>
                               ) : !plan.is_self_serve ? (
                                 /* No buy action: there is no price to charge.
@@ -646,7 +737,11 @@ export default function ProviderBillingPage() {
                                 </a>
                               ) : isDowngrade || plan.code === ProviderPlanTier.FREE ? (
                                 <div className="text-sm" style={{ color: "var(--fg-3)" }}>
-                                  Contact support to downgrade
+                                  {planCancel?.cancelled
+                                    ? `Starts ${fmtDate(endsAt)}`
+                                    : planCancel?.can_cancel && plan.code === ProviderPlanTier.FREE
+                                      ? `Cancel your ${TIER_LABELS[currentTier]} plan to move to Free`
+                                      : "Contact support to downgrade"}
                                 </div>
                               ) : (
                                 <button
@@ -749,6 +844,62 @@ export default function ProviderBillingPage() {
           </>
         )}
       </div>
+      {/* Draft wording, needs counsel (NEEDS-COUNSEL.md K7). Ends at the
+          period end, no refund, then Free with data kept. */}
+      <Modal
+        open={cancelOpen}
+        onClose={() => (cancelBusy ? undefined : setCancelOpen(false))}
+        title={`Cancel your ${TIER_LABELS[currentTier]} plan?`}
+        size="sm"
+        disableCloseGuard
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setCancelOpen(false)}
+              disabled={cancelBusy}
+              className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+              style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
+            >
+              Keep my plan
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleCancelPlan()}
+              disabled={cancelBusy}
+              className="rounded-(--r-2) px-4 py-2 text-sm font-medium"
+              style={{ background: "var(--ink)", color: "var(--bg)", opacity: cancelBusy ? 0.7 : 1 }}
+            >
+              {cancelBusy ? "Cancelling..." : "Cancel plan"}
+            </button>
+          </div>
+        }
+      >
+        <dl className="flex flex-col gap-3 text-sm">
+          <div>
+            <dt className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+              Until {fmtDate(endsAt)}
+            </dt>
+            <dd style={{ color: "var(--ink)" }}>
+              {TIER_LABELS[currentTier]} stays active until the end of the period you&apos;ve paid for.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+              Billing
+            </dt>
+            <dd style={{ color: "var(--ink)" }}>No more charges. The current period isn&apos;t refunded.</dd>
+          </div>
+          <div>
+            <dt className="font-mono text-[10.5px] uppercase tracking-[0.06em]" style={{ color: "var(--fg-3)" }}>
+              After that
+            </dt>
+            <dd style={{ color: "var(--ink)" }}>
+              You move to Free. Your members, programs and records stay, read-only.
+            </dd>
+          </div>
+        </dl>
+      </Modal>
     </WorkspaceShell>
   );
 }
