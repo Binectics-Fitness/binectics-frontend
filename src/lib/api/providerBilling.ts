@@ -96,6 +96,24 @@ export interface ProviderBillingSeats {
   over_limit: boolean;
 }
 
+/**
+ * What the owner may do about cancelling, decided by the API (flag, plan
+ * source, gateway subscription, period). Absent from an API older than the
+ * owner-cancel endpoints, which reads as "nothing to offer".
+ */
+export interface PlanCancelState {
+  enabled: boolean;
+  can_cancel: boolean;
+  /** Cancelled and still running until `ends_at`. */
+  cancelled: boolean;
+  /** Keep my plan (Undo) is available. */
+  can_keep: boolean;
+  ends_at: string | null;
+}
+
+/** 409 from keepPlan: the gateway could not switch the plan back on. */
+export const BILLING_RESUBSCRIBE_REQUIRED = "BILLING_RESUBSCRIBE_REQUIRED";
+
 export interface ProviderBillingStatus {
   organization_id: string;
   plan_tier: ProviderPlanTier;
@@ -106,6 +124,7 @@ export interface ProviderBillingStatus {
   features: ProviderBillingFeatures;
   usage: ProviderBillingUsage;
   seats: ProviderBillingSeats;
+  plan_cancel?: PlanCancelState;
 }
 
 export interface ProviderPlanPrice {
@@ -255,6 +274,22 @@ export const providerBillingApi = {
     return apiClient.post<CheckoutSessionResult>(
       `/provider-billing/organizations/${organizationId}/checkout`,
       payload,
+    );
+  },
+
+  /** Cancel at the end of the paid period. No refund. Owner-only. */
+  cancelPlan(organizationId: string): Promise<ApiResponse<ProviderBillingStatus>> {
+    return apiClient.post<ProviderBillingStatus>(
+      `/provider-billing/organizations/${organizationId}/plan/cancel`,
+      {},
+    );
+  },
+
+  /** Take a cancellation back before the period ends (Undo). */
+  keepPlan(organizationId: string): Promise<ApiResponse<ProviderBillingStatus>> {
+    return apiClient.post<ProviderBillingStatus>(
+      `/provider-billing/organizations/${organizationId}/plan/keep`,
+      {},
     );
   },
 

@@ -12,6 +12,8 @@ let mockCurrent: Org | null = null;
 const getStatus = vi.fn();
 const listPlansForOrganization = vi.fn();
 const listInvoices = vi.fn();
+const cancelPlan = vi.fn();
+const keepPlan = vi.fn();
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/components/ds/WorkspaceShell", () => ({
@@ -41,6 +43,8 @@ vi.mock("@/lib/api/providerBilling", async (orig) => ({
     listPlansForOrganization: (...a: unknown[]) => listPlansForOrganization(...a),
     listInvoices: (...a: unknown[]) => listInvoices(...a),
     createCheckout: vi.fn(),
+    cancelPlan: (...a: unknown[]) => cancelPlan(...a),
+    keepPlan: (...a: unknown[]) => keepPlan(...a),
   },
 }));
 
@@ -182,5 +186,64 @@ describe("Binectics billing page", () => {
     render(<ProviderBillingPage />);
     expect(screen.getByText("Billing organization")).toBeInTheDocument();
     await screen.findByText("Free");
+  });
+
+  describe("owner Cancel plan", () => {
+    const proStatus = (planCancel: Record<string, unknown>) => ({
+      ...status(),
+      plan_tier: "pro",
+      subscription_current_period_end: "2027-01-08T00:00:00.000Z",
+      plan_cancel: {
+        enabled: true,
+        can_cancel: true,
+        cancelled: false,
+        can_keep: false,
+        ends_at: "2027-01-08T00:00:00.000Z",
+        ...planCancel,
+      },
+    });
+    const freePlan = { ...proPlan, code: "free", name: "Free", sort_order: 1, prices: { month: null, year: null } };
+
+    it("offers no Cancel plan link when the API does not (flag off or nothing to stop)", async () => {
+      getStatus.mockResolvedValue({ success: true, data: proStatus({ enabled: false, can_cancel: false }) });
+      listPlansForOrganization.mockResolvedValue({ success: true, data: [freePlan, proPlan] });
+      render(<ProviderBillingPage />);
+      fireEvent.click(await screen.findByRole("button", { name: "plans" }));
+      expect(screen.queryByRole("button", { name: "Cancel plan" })).not.toBeInTheDocument();
+      expect(screen.getByText("Contact support to downgrade")).toBeInTheDocument();
+    });
+
+    it("confirms in a sheet with the three lines, then cancels and offers Undo", async () => {
+      getStatus.mockResolvedValue({ success: true, data: proStatus({}) });
+      listPlansForOrganization.mockResolvedValue({ success: true, data: [freePlan, proPlan] });
+      cancelPlan.mockResolvedValue({
+        success: true,
+        data: proStatus({ can_cancel: false, cancelled: true, can_keep: true }),
+      });
+      render(<ProviderBillingPage />);
+      fireEvent.click(await screen.findByRole("button", { name: "plans" }));
+      expect(screen.getByText("Cancel your Pro plan to move to Free")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Cancel plan" }));
+      expect(await screen.findByText("No more charges. The current period isn't refunded.")).toBeInTheDocument();
+      expect(cancelPlan).not.toHaveBeenCalled();
+      const confirm = screen.getAllByRole("button", { name: "Cancel plan" }).at(-1)!;
+      fireEvent.click(confirm);
+      await waitFor(() => expect(cancelPlan).toHaveBeenCalledWith("o1"));
+      expect(await screen.findByText(/Your Pro plan ends on 2027-01-08/)).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: "Keep my plan" }).length).toBeGreaterThan(0);
+    });
+
+    it("Keep my plan takes it back; a gateway that cannot re-enable falls back to checkout", async () => {
+      getStatus.mockResolvedValue({
+        success: true,
+        data: proStatus({ can_cancel: false, cancelled: true, can_keep: true }),
+      });
+      listPlansForOrganization.mockResolvedValue({ success: true, data: [freePlan, proPlan] });
+      keepPlan.mockResolvedValueOnce({ success: true, data: proStatus({}) });
+      render(<ProviderBillingPage />);
+      fireEvent.click(await screen.findByRole("button", { name: "Keep my plan" }));
+      await waitFor(() => expect(keepPlan).toHaveBeenCalledWith("o1"));
+      await waitFor(() => expect(screen.queryByText(/Your Pro plan ends on/)).not.toBeInTheDocument());
+    });
   });
 });
