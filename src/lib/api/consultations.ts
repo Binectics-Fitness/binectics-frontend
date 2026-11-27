@@ -221,6 +221,10 @@ export interface ConsultationBooking {
   completionNote?: string;
   cancelledBy?: ConsultationCancelledBy;
   cancelReason?: string;
+  /** The coach-app session log for this booking, when the trainer logged one. */
+  sessionLogId?: string | null;
+  /** Set when the trainer started or logged the session; it is then never an auto no-show. */
+  checkedInAt?: string | null;
   /**
    * Present only while a priced booking is an unpaid hold: the slot is
    * kept until `expiresAt` and released by the API if payment never lands.
@@ -576,13 +580,21 @@ export const consultationsService = {
     );
   },
 
+  /**
+   * Close a session out as done. The private note (the API takes up to 255
+   * characters) is sent only when there is one; the web used to drop it.
+   */
   completeBooking(
     id: string,
-    payload?: CompleteBookingRequest,
+    note?: string,
   ): Promise<ApiResponse<ConsultationBooking>> {
+    const trimmed = note?.trim();
+    const payload: CompleteBookingRequest = trimmed
+      ? { note: trimmed.slice(0, 255) }
+      : {};
     return apiClient.patch<ConsultationBooking>(
       `/consultations/bookings/${id}/complete`,
-      payload ?? {},
+      payload,
     );
   },
 };

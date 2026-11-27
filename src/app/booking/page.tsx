@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BinecticsLockup } from "@/components/BinecticsLogo";
@@ -70,6 +70,12 @@ function BookingPageInner() {
   const searchParams = useSearchParams();
   const listingId = searchParams.get("listingId");
   const initialTypeId = searchParams.get("consultationTypeId") ?? undefined;
+  // "Book next" from a coach's session summary pre-picks the suggested time.
+  const suggestedStart = useMemo(() => {
+    const raw = searchParams.get("startsAt");
+    const at = raw ? new Date(raw) : null;
+    return at && !Number.isNaN(at.getTime()) && at > new Date() ? at : null;
+  }, [searchParams]);
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null);
   const [types, setTypes] = useState<ConsultationType[]>([]);
@@ -82,8 +88,10 @@ function BookingPageInner() {
   const [slots, setSlots] = useState<ConsultationSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(() => isoDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(() => isoDate(suggestedStart ?? new Date()));
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  // The suggested time, until the first slot list for its day has been read.
+  const pendingStart = useRef<Date | null>(suggestedStart);
 
   const [step, setStep] = useState(0);
   const [notes, setNotes] = useState("");
@@ -156,7 +164,16 @@ function BookingPageInner() {
         setSlots([]);
         return;
       }
-      setSlots(res.data ?? []);
+      const list = res.data ?? [];
+      setSlots(list);
+      // Select the suggested time when that day offers it; otherwise leave
+      // the pick to the client, who sees the day's real times.
+      if (pendingStart.current) {
+        const want = pendingStart.current.getTime();
+        const hit = list.find((x) => x.isAvailable && Date.parse(x.startsAt) === want);
+        if (hit) setSelectedSlot(hit.startsAt);
+        pendingStart.current = null;
+      }
     } catch (err) {
       setSlotsError(err instanceof Error ? err.message : "Couldn't load slots");
       setSlots([]);

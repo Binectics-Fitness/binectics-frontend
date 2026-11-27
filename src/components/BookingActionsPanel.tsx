@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { EmptySlate } from "@/components/ds";
 import { toast } from "@/components/Toast";
+import { useOrgFormat } from "@/lib/format/useOrgFormat";
+import { dayLabel, noShowDate } from "@/lib/coachSessions/format";
 import {
   consultationsService,
+  ConsultationBookingStatus,
   type ConsultationBooking,
 } from "@/lib/api/consultations";
 import {
@@ -19,10 +22,14 @@ import {
   type BookingActionKind,
 } from "@/lib/consultations/bookingActions";
 
+/** The close-out note's limit; the API refuses a longer one. */
+export const CLOSE_OUT_NOTE_MAX = 255;
+
 /**
- * Provider actions on a consultation booking — Complete, Mark no-show,
- * Cancel — shared by the dietitian consultations drawer and the trainer
- * sessions drawer.
+ * Provider actions on a consultation booking: close out as Done (with an
+ * optional private note) or No-show, and Cancel. Shared by the dietitian
+ * consultations drawer and the trainer session page (board
+ * coach-session-canvas 08/09, WEB2).
  *
  * Rules:
  *  - only PENDING/CONFIRMED bookings are actionable — API-enforced;
@@ -51,6 +58,9 @@ export interface BookingActionsPanelProps {
 export function BookingActionsPanel({ booking, now, onActionComplete }: BookingActionsPanelProps) {
   const [acting, setActing] = useState<BookingActionKind | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [choice, setChoice] = useState<"done" | "no-show">("done");
+  const [note, setNote] = useState("");
+  const { prefs } = useOrgFormat();
 
   if (!isActionable(booking.status)) {
     return (
@@ -71,7 +81,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
     try {
       const res =
         kind === "complete"
-          ? await consultationsService.completeBooking(booking.id)
+          ? await consultationsService.completeBooking(booking.id, note)
           : kind === "no-show"
             ? await consultationsService.markNoShow(booking.id)
             : await consultationsService.cancelBooking(
@@ -82,6 +92,7 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
         succeeded = true;
         toast.success(ACTION_SUCCESS_MESSAGE[kind]);
         setCancelReason("");
+        setNote("");
       } else {
         toast.error(res.message ?? "That didn't work, try again.");
       }
@@ -104,24 +115,57 @@ export function BookingActionsPanel({ booking, now, onActionComplete }: BookingA
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex gap-2 flex-wrap">
+      <div role="group" aria-label="How did it go" className="flex gap-2 flex-wrap">
+        {(["done", "no-show"] as const).map((c) => (
+          <button
+            key={c}
+            type="button"
+            aria-pressed={choice === c}
+            disabled={acting !== null}
+            className={`${choice === c ? "btn-primary-v2" : "btn-ghost-v2"} sm`}
+            style={{ borderRadius: 999 }}
+            onClick={() => setChoice(c)}
+          >
+            {c === "done" ? "Done" : "No-show"}
+          </button>
+        ))}
+      </div>
+      {choice === "done" && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`close-out-note-${booking.id}`} className="font-mono text-[10.5px] uppercase tracking-[0.04em]" style={{ color: "var(--fg-3)" }}>
+            Private note
+          </label>
+          <textarea
+            id={`close-out-note-${booking.id}`}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={CLOSE_OUT_NOTE_MAX}
+            disabled={acting !== null}
+            className="rounded-(--r-2) px-3 py-2.5 text-[13.5px] resize-y"
+            style={{ border: "1px solid var(--border-2)", color: "var(--ink)", background: "var(--bg)", fontFamily: "inherit", minHeight: 80 }}
+          />
+          <div className="text-right font-mono text-[11px]" style={{ color: "var(--fg-3)" }} aria-live="polite">
+            {note.length} / {CLOSE_OUT_NOTE_MAX}
+          </div>
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
         <button
-          className="btn-primary-v2 sm"
-          disabled={acting !== null || !completeAllowed}
-          onClick={() => void runAction("complete")}
+          type="button"
+          className="btn-primary-v2"
+          disabled={acting !== null || (choice === "done" ? !completeAllowed : !noShowAllowed)}
+          onClick={() => void runAction(choice === "done" ? "complete" : "no-show")}
         >
-          {acting === "complete" ? "Completing…" : "Complete"}
+          {acting === "complete" || acting === "no-show" ? "Closing out…" : "Close out"}
         </button>
-        <button
-          className="btn-ghost-v2 sm"
-          disabled={acting !== null || !noShowAllowed}
-          onClick={() => void runAction("no-show")}
-        >
-          {acting === "no-show" ? "Marking…" : "Mark no-show"}
-        </button>
+        {booking.status === ConsultationBookingStatus.CONFIRMED && (
+          <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+            {`No-show on ${dayLabel(noShowDate(booking.endsAt), prefs?.timeZone)} if left open`}
+          </span>
+        )}
       </div>
       {!completeAllowed && (
-        // Complete and no-show open together, at the start time.
+        // Done and no-show open together, at the start time.
         <div className="font-mono text-[11px]" style={{ color: "var(--fg-3)" }}>
           {NOT_STARTED_REASON}
         </div>

@@ -23,6 +23,7 @@ vi.mock("@/components/clients/StartProgramDialog", () => ({
     </div>
   ),
 }));
+vi.mock("@/components/coachSessions/SessionLogsSection", () => ({ SessionLogsSection: () => <section>Session logs</section> }));
 vi.mock("@/lib/format/useOrgFormat", () => ({
   useOrgFormat: () => ({ fmtDate: (s: string) => s.slice(0, 10), fmtDateTime: (s: string) => s.slice(0, 16) }),
 }));
@@ -88,7 +89,7 @@ describe("coach client page", () => {
     renderPage();
     await screen.findByText("Chidi Obi");
     const text = document.body.textContent ?? "";
-    const order = [C.nextSession, C.thisWeek, "Program results", C.noteTo("Chidi"), C.sessions, C.body].map((s) => text.indexOf(s));
+    const order = [C.nextSession, C.thisWeek, "Session logs", "Program results", C.noteTo("Chidi"), C.body].map((s) => text.indexOf(s));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(text.indexOf(C.latestWeight)).toBeGreaterThan(text.indexOf(C.body));
