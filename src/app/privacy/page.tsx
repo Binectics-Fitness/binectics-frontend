@@ -181,10 +181,10 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
       { num: "07", title: "Your rights", content: (<>
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Wherever you are, you have these rights. Data protection law and our own policy converge on them.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, download a full copy of your data from settings.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, members can download their own history from Settings, Privacy: programs, activity, weight, fasts, water, daily list, journal notes and goals. Meals and the rest of your account data are not in that file yet; email privacy@binectics.com for a copy of anything else.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Correction</strong>, fix anything wrong from settings or email privacy@binectics.com.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Deletion</strong>, purge your account. 30-day processing.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong>, your data exports as machine‑readable JSON.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong>, that history file comes as JSON or a spreadsheet (CSV). There is no single download of everything in your account yet.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Object to processing</strong>, turn off behavioral analytics in cookie settings.</li>
         </ul>
       </>)},

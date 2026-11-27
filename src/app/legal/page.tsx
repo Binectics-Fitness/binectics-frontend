@@ -548,10 +548,10 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       </h2>
       <p style={S.docP}>Wherever you are, you have these rights. Data protection law and our own policy converge on them.</p>
       <ul style={S.docUl}>
-        <li><strong style={S.docStrong}>Access</strong>, download a full copy of your data from settings - ZIP delivery in under 24 hours.</li>
+        <li><strong style={S.docStrong}>Access</strong>, members can download their own history from Settings, Privacy: programs, activity, weight, fasts, water, daily list, journal notes and goals. Meals and the rest of your account data are not in that file yet; email <code style={S.code}>privacy@binectics.com</code> for a copy of anything else.</li>
         <li><strong style={S.docStrong}>Correction</strong>, fix anything wrong from settings, or email <code style={S.code}>privacy@binectics.com</code>.</li>
         <li><strong style={S.docStrong}>Deletion</strong>, purge your account - your coach keeps their record of past sessions for tax reasons, but we strip your name from anything else within 30 days.</li>
-        <li><strong style={S.docStrong}>Portability</strong>, your data exports as machine{"‑"}readable JSON, not a PDF you can&apos;t reuse.</li>
+        <li><strong style={S.docStrong}>Portability</strong>, that history file comes as JSON or a spreadsheet (CSV). There is no single download of everything in your account yet.</li>
         <li><strong style={S.docStrong}>Object to processing</strong>, turn off behavioral analytics in cookie settings - still works for fraud detection.</li>
       </ul>
 

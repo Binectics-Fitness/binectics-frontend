@@ -22,7 +22,7 @@ const FAQS = [
   { q: "What happens if I cross my plan's member limit?", a: <>We tell you as you get close. We don&apos;t auto-upgrade you: you choose a larger plan, or archive members you no longer work with to free seats. <strong style={{ color: "var(--ink)", fontWeight: 500 }}>No surprise charges.</strong></> },
   { q: "Can I use my own payment account?", a: "Yes. Payments go straight to your own Paystack account when you've connected one. Until then, Binectics collects them and pays them out to you once payouts are available and your account is verified. Binectics takes no cut." },
   { q: "What do members pay?", a: "Nothing to join. Members pay at each provider's own prices and in the provider's currency, into the provider's own Paystack account or, before the provider connects one, to Binectics, which pays the provider. The full amount is shown before they confirm." },
-  { q: "What if I'm not happy with my plan?", a: "Change or cancel it from your billing settings. Your data stays exportable after you leave." },
+  { q: "What if I'm not happy with my plan?", a: "Change or cancel it from your billing settings. You can export your member list, sessions log and food library to CSV from your dashboard." },
   { q: "What if my business needs more than the largest plan?", a: "Each plan's limits are listed above. If you need more locations, staff or members than a plan allows, talk to us and we'll shape a custom plan." },
 ];
 
