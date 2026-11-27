@@ -44,7 +44,8 @@ function ToastEntry({ toast, onDismiss }: ToastProps) {
     const dismissTimer = setTimeout(() => {
       setVisible(false);
       setTimeout(() => onDismiss(toast.id), 220);
-    }, 3500);
+    // A toast with an action (Undo) stays longer: it is a decision, not a note.
+    }, toast.action ? 6000 : 3500);
     return () => {
       clearTimeout(enterTimer);
       clearTimeout(dismissTimer);
