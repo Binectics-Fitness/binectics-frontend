@@ -10,6 +10,31 @@ describe("legacyLinkTarget", () => {
     expect(legacyLinkTarget("/dashboard/subscriptions", "", "GYM_OWNER")).toBe("/dashboard/gym-owner/members");
   });
 
+  describe("/dashboard/consultations?bookingId=<id> (close-out reminder and booking notifications)", () => {
+    const search = `?bookingId=${id}`;
+    it("opens the trainer's session page", () => {
+      expect(legacyLinkTarget("/dashboard/consultations", search, "TRAINER")).toBe(`/dashboard/trainer/sessions/${id}`);
+    });
+    it("opens the dietitian's consultation drawer", () => {
+      expect(legacyLinkTarget("/dashboard/consultations", search, "DIETITIAN")).toBe(
+        `/dashboard/dietitian/consultations?bookingId=${id}`,
+      );
+    });
+    it("opens a member's booking", () => {
+      expect(legacyLinkTarget("/dashboard/consultations", search, "USER")).toBe(`/dashboard/bookings?booking=${id}`);
+      expect(legacyLinkTarget("/dashboard/consultations", search, undefined)).toBe(`/dashboard/bookings?booking=${id}`);
+    });
+    it("keeps the role's list for a gym owner or admin, which have no per-booking page", () => {
+      expect(legacyLinkTarget("/dashboard/consultations", search, "GYM_OWNER")).toBe("/dashboard/gym-owner/schedule");
+      expect(legacyLinkTarget("/dashboard/consultations", search, "ADMIN")).toBe("/admin/dashboard");
+    });
+    it("ignores an id that is not a well-formed ObjectId (no path injection)", () => {
+      for (const bad of ["?bookingId=../../admin", "?bookingId=abc", "?bookingId=", `?bookingId=${id}/x`]) {
+        expect(legacyLinkTarget("/dashboard/consultations", bad, "TRAINER")).toBe("/dashboard/trainer/sessions");
+      }
+    });
+  });
+
   it.each([
     ["/dashboard/settings/billing", "USER", "/dashboard/member/billing"],
     ["/dashboard/settings/billing", "TRAINER", "/dashboard/trainer/earnings"],
@@ -17,6 +42,8 @@ describe("legacyLinkTarget", () => {
     ["/dashboard/consultations", "USER", "/dashboard/bookings"],
     ["/dashboard/consultations", "TRAINER", "/dashboard/trainer/sessions"],
     ["/dashboard/consultations", "DIETITIAN", "/dashboard/dietitian/consultations"],
+    ["/dashboard/members", "GYM_OWNER", "/dashboard/gym-owner/members"],
+    ["/dashboard/member/streaks", "USER", "/dashboard/member"],
     ["/dashboard/clients", "USER", "/dashboard/member/requests"],
     ["/dashboard/clients", "DIETITIAN", "/dashboard/dietitian/clients"],
     ["/dashboard/professionals", "USER", "/dashboard/member/requests"],
