@@ -28,6 +28,8 @@ vi.mock("@/lib/api/auth", () => ({
   authService: { updateProfile: h.updateProfile },
 }));
 vi.mock("@/lib/api/teams", () => ({ teamsService: {} }));
+// The exercise figure card reads a runtime flag (off here): no query client needed.
+vi.mock("@/hooks/useFeatureFlags", () => ({ useFeatureFlag: () => false }));
 vi.mock("@/lib/queries/utility", () => ({
   useCountries: () => ({ data: [], isLoading: false }),
 }));
