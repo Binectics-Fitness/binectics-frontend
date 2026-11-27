@@ -91,7 +91,12 @@ export default function DietitianConsultationsPage() {
     const run = async () => {
       setLoading(true);
       await load();
-      if (mounted) setLoading(false);
+      if (mounted) {
+        setLoading(false);
+        // A notification link (?bookingId=<id>) opens that consultation.
+        const wanted = new URLSearchParams(window.location.search).get("bookingId");
+        if (wanted) setSelectedId(wanted);
+      }
     };
     const kick = window.setTimeout(() => void run(), 0);
     return () => {

@@ -95,6 +95,15 @@ export function legacyLinkTarget(
     );
   }
   if (path === "/dashboard/consultations") {
+    // SESSION_CLOSE_OUT_REMINDER and the booking notifications link here with
+    // ?bookingId=<id>. A trainer's session page, a member's booking and a
+    // dietitian's consultation drawer each open that one booking.
+    const bookingId = params.get("bookingId");
+    if (bookingId && /^[a-f0-9]{24}$/i.test(bookingId)) {
+      if (role === "TRAINER") return `/dashboard/trainer/sessions/${bookingId}`;
+      if (role === "DIETITIAN") return `/dashboard/dietitian/consultations?bookingId=${bookingId}`;
+      if (role === "USER" || !role) return `/dashboard/bookings?booking=${bookingId}`;
+    }
     return pick(
       {
         USER: "/dashboard/bookings",
@@ -115,6 +124,10 @@ export function legacyLinkTarget(
     return pick(PROVIDER_CLIENTS, role);
   }
   if (path === "/dashboard/professionals") return pick(PROVIDER_CLIENTS, role);
+  // MEMBER_PAYMENT_FAILED_FINAL: the gym's members list (there is no /dashboard/members).
+  if (path === "/dashboard/members") return pick(PROVIDER_CLIENTS, role);
+  // STREAK_MILESTONE: streaks live on the member home (there is no streaks page).
+  if (path === "/dashboard/member/streaks") return "/dashboard/member";
   if (path === "/dashboard/marketplace") {
     return pick(
       {
