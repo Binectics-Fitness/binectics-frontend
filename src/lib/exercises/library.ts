@@ -30,6 +30,11 @@ export interface LibraryExercise {
   secondaryMuscles?: string[];
   steps?: string[];
   cues?: string[];
+  /**
+   * True when the exercise is a hold or a timed effort (plank, stretch):
+   * prescribe it in seconds, not reps. Absent on an older API.
+   */
+  timed?: boolean;
 }
 
 /**
@@ -111,6 +116,7 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
     if (secondaryMuscles) exercise.secondaryMuscles = secondaryMuscles;
     if (steps) exercise.steps = steps;
     if (cues) exercise.cues = cues;
+    if (row.timed === true) exercise.timed = true;
     exercises.push(exercise);
   }
   return { available: exercises.length > 0, exercises };

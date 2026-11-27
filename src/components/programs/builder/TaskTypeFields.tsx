@@ -22,6 +22,7 @@ import {
   OWN_LOG,
   measureDefaultTitle,
   measureMetric,
+  isTimedRow,
   newExercise,
   taskIssue,
   type AutoSource,
@@ -123,6 +124,7 @@ function WorkoutFields({ task, error, onChange }: { task: BuilderTask; error: bo
   }, []);
   const library = lib.status === "ready" ? lib.library : UNAVAILABLE_LIBRARY;
   const ex = task.exercises;
+  const timedIds = new Set(library.exercises.filter((x) => x.timed).map((x) => x.id));
   const full = ex.length >= MAX_INLINE_EXERCISES;
   const set = (i: number, patch: Partial<BuilderTask["exercises"][number]>) =>
     onChange({ exercises: ex.map((e, j) => (j === i ? { ...e, ...patch } : e)) });
@@ -152,7 +154,17 @@ function WorkoutFields({ task, error, onChange }: { task: BuilderTask; error: bo
               )}
               <input style={mini} inputMode="numeric" aria-label={C.workout.sets(e.name || C.workout.customName(i + 1))} value={e.sets} onChange={(v) => set(i, { sets: digits(v.target.value) })} />
               <span className="text-[13px]" style={metaStyle}>×</span>
-              <input style={mini} inputMode="numeric" aria-label={C.workout.reps(e.name || C.workout.customName(i + 1))} value={e.reps} onChange={(v) => set(i, { reps: digits(v.target.value) })} />
+              {isTimedRow(e, timedIds) ? (
+                <>
+                  <input style={mini} inputMode="numeric" aria-label={C.workout.seconds(e.name || C.workout.customName(i + 1))} value={e.seconds} onChange={(v) => set(i, { seconds: digits(v.target.value) })} />
+                  <span className="shrink-0 text-[13px]" style={{ ...metaStyle, width: 10 }} aria-hidden="true">s</span>
+                </>
+              ) : (
+                <>
+                  <input style={mini} inputMode="numeric" aria-label={C.workout.reps(e.name || C.workout.customName(i + 1))} value={e.reps} onChange={(v) => set(i, { reps: digits(v.target.value) })} />
+                  <span className="shrink-0" style={{ width: 10 }} aria-hidden="true" />
+                </>
+              )}
               <button
                 type="button"
                 aria-label={C.workout.remove(e.name || C.workout.customName(i + 1))}
@@ -169,7 +181,7 @@ function WorkoutFields({ task, error, onChange }: { task: BuilderTask; error: bo
       {open && library.available ? (
         <ExercisePicker
           exercises={library.exercises}
-          onPick={(p) => !full && onChange({ exercises: [...ex, newExercise(truncateName(p.name, PROGRAM_EXERCISE_NAME_MAX), libraryRef(p.id))] })}
+          onPick={(p) => !full && onChange({ exercises: [...ex, newExercise(truncateName(p.name, PROGRAM_EXERCISE_NAME_MAX), libraryRef(p.id), p.timed === true)] })}
           onClose={() => setOpen(false)}
         />
       ) : (
