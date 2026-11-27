@@ -39,6 +39,8 @@ export interface User {
   country_code?: string;
   /** Profile city, free text from onboarding or settings. */
   city?: string | null;
+  /** The exercise figure the member chose (body, skin tone 1 to 5); absent or null shows the default. Private. */
+  exercise_figure?: { body: "a" | "b"; tone: number } | null;
   is_suspended?: boolean;
   /** Platform admin flag — orthogonal to role, so a gym owner can also be an admin. */
   is_admin?: boolean;

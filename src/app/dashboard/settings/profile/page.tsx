@@ -23,6 +23,7 @@ import {
   todayYmd,
 } from "@/lib/schemas/settings";
 import { DSCard } from "@/components/ds";
+import { ExerciseFigureCard } from "@/components/ExerciseFigureCard";
 
 const FITNESS_GOAL_SUGGESTIONS = [
   "Weight Loss",
@@ -493,6 +494,8 @@ export default function ProfileSettingsPage() {
           </div>
         </div>
       </DSCard>
+
+      <ExerciseFigureCard />
 
       {/* Default Currency (providers only) */}
       {(user.role === UserRole.GYM_OWNER ||
