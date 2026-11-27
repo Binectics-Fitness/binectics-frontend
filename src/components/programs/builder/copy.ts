@@ -305,3 +305,68 @@ export const TASK_TYPE_COPY = {
   meal: { label: "Meal plan", meta: "One of your meal plans, daily" },
   note: { label: "Note", meta: "Advice to read once" },
 } as const;
+
+/**
+ * "Update clients" (propagate a newer version to clients already running a
+ * program). DRAFT WORDING: needs copy review. Wording from the roadmap
+ * board 02 (U1-U7); the client-facing notification text lives in the API.
+ */
+export const UPDATE_COPY = {
+  button: "Update clients",
+  pill: (n: number) => `${n} client${n === 1 ? "" : "s"} on an older version`,
+  /** The builder banner, when someone is behind. */
+  banner: (names: string[]) =>
+    `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` and ${names.length - 2} more` : ""} ${names.length > 1 ? "are" : "is"} on an older version. Your edits reach clients you start from now on.`,
+  title: (name: string) => `Update clients on ${name}`,
+  moves: (from: number | null, to: number) => (from ? `Moves them from v${from} to v${to}` : `Moves them to v${to}`),
+  whatChanges: "What changes",
+  fromVersion: (n: number) => `From v${n}`,
+  more: (n: number) => `and ${n} more`,
+  kind: { added: "Added", removed: "Removed", changed: "Changed" },
+  clients: "Clients",
+  clientLine: (from: number, behind: number, changes: number) =>
+    `On v${from}${behind > 1 ? `, ${behind} versions behind` : ""} · ${changes} future task${changes === 1 ? "" : "s"} change`,
+  disabledLine: (from: number, reason: string) => `On v${from} · ${reason}`,
+  soldTitle: "This program is sold",
+  soldBody: (names: string, v: number | null) =>
+    `${names} paid${v ? ` for v${v}` : ""}. Updating changes what they bought. Check the changes first.`,
+  futureOnly: (day: string) => `Future tasks only, from ${day}.`,
+  untouched: "Done, skipped and missed tasks stay as they are.",
+  notified: "Clients get a notification.",
+  apply: (n: number) => `Update ${n} client${n === 1 ? "" : "s"}`,
+  applyOne: (first: string) => `Update ${first}`,
+  pickOne: "Pick at least one client",
+  applying: "Updating…",
+  cancel: "Cancel",
+  loading: "Checking who is behind…",
+  loadFailed: "We couldn't check your clients. Try again.",
+  nobody: "Everyone is on the latest version.",
+  publishNote: "Your unpublished edits will be published with this update.",
+  failed: "We couldn't update. Nothing changed. Try again.",
+  // Result
+  resultTitle: (done: number, total: number) => `Updated ${done} of ${total}`,
+  resultDone: (v: number) => (n: string) => `On v${v}. ${n}`,
+  resultTasks: (n: number) => `${n} task${n === 1 ? "" : "s"} changed.`,
+  resultSkipped: "Already up to date.",
+  resultNothing: "Nothing left to change.",
+  resultFailed: (first: string) => `Didn't update. Nothing changed for ${first}.`,
+  tryAgain: "Try again",
+  done: "Done",
+  // Toasts
+  toastUpdated: (n: number, v: number) => `${n} client${n === 1 ? "" : "s"} updated to v${v}.`,
+  undo: "Undo",
+  toastReverted: (n: number) => (n === 1 ? "Update taken back." : `${n} updates taken back.`),
+  toastRevertFailed: "We couldn't take that back. It may be past 24 hours.",
+  // Client program page
+  newerTitle: "A newer version is available",
+  newerBody: (name: string, from: number, to: number) => `${name} is on v${from}. v${to} is the latest.`,
+  seeChanges: "See changes",
+  revertTitle: "After an update, for 24 hours",
+  revertBody: (to: number, day: string) => `Updated to v${to} on ${day}. Done tasks were not touched.`,
+  revert: "Revert",
+  revertUntil: (when: string) => `until ${when}`,
+  revertConfirmTitle: "Take this update back?",
+  revertConfirmBody: "Tasks still waiting go back to how they were. Anything your client did since stays.",
+  revertConfirm: "Revert update",
+  versionPill: (n: number, older: boolean) => `v${n} · ${older ? "older" : "latest"}`,
+} as const;

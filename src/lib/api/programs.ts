@@ -158,6 +158,8 @@ export interface ProgramTemplate {
   publish_state?: ProgramPublishState;
   /** On list rows: tasks in the latest version. Absent on older responses. */
   task_count?: number;
+  /** On list rows: clients on a version older than the latest published one. */
+  clients_on_older_version?: number;
   created_at: string;
   updated_at: string;
 }
@@ -232,6 +234,10 @@ export interface ProgramInstance {
   goals: InstanceGoal[];
   occurrences_scheduled: number;
   occurrences_done: number;
+  /** On GET /programs/:id/assignments: the version this client is on. */
+  version_no?: number | null;
+  latest_published_version_no?: number;
+  on_older_version?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -252,6 +258,92 @@ export interface InstanceDetail {
   instance: ProgramInstance;
   adherence: AdherenceSummary;
   goals: InstanceGoal[];
+  /** The client's name ("First Last"); the instance itself only carries the id. */
+  client_name?: string | null;
+  /** Which version this client is on, and whether a newer one is published. */
+  version?: {
+    version_no: number;
+    latest_published_version_no: number;
+    newer_available: boolean;
+  } | null;
+  /** An update that can still be taken back (24 hours). */
+  revertable_update?: {
+    update_id: string;
+    from_version_no: number;
+    to_version_no: number;
+    applied_at: string;
+    revert_until: string;
+  } | null;
+}
+
+// ── Update clients (propagate a newer version, future tasks only) ────
+
+export type UpdateDiffKind = "added" | "removed" | "changed";
+
+export interface UpdateDiffItem {
+  kind: UpdateDiffKind;
+  title: string;
+  /** "Week 2", "Weeks 3-4". */
+  where: string;
+  detail?: string;
+}
+
+export interface UpdateClientPreview {
+  instance_id: string;
+  client_profile_id: string;
+  client_name: string | null;
+  status: ProgramInstanceStatus;
+  from_version_no: number;
+  versions_behind: number;
+  future_tasks: { added: number; changed: number; removed: number; total: number };
+  /** The client's own calendar day the update starts to apply (YYYY-MM-DD). */
+  effective_from: string;
+  selectable: boolean;
+  disabled_reason: string | null;
+  default_checked: boolean;
+  paid: boolean;
+}
+
+export interface UpdatePreview {
+  template: { id: string; name: string };
+  target_version_no: number;
+  will_publish: boolean;
+  sold: {
+    is_sold: boolean;
+    paid_clients: Array<{ client_name: string | null; from_version_no: number }>;
+  };
+  changes: Array<{
+    from_version_no: number;
+    client_count: number;
+    items: UpdateDiffItem[];
+    total_items: number;
+  }>;
+  clients: UpdateClientPreview[];
+}
+
+export type UpdateResultStatus =
+  | "updated"
+  | "replayed"
+  | "already_current"
+  | "nothing_to_change"
+  | "failed";
+
+export interface UpdateClientResult {
+  instance_id: string;
+  client_name: string | null;
+  status: UpdateResultStatus;
+  update_id?: string;
+  to_version_no?: number;
+  tasks_changed?: number;
+  revert_until?: string;
+  error_code?: string;
+  message?: string;
+}
+
+export interface UpdateClientsResponse {
+  target_version_no: number;
+  published: boolean;
+  results: UpdateClientResult[];
 }
 
 // ── Request payloads ─────────────────────────────────────────────────
@@ -504,6 +596,28 @@ export const programsService = {
     return apiClient.delete<{ withdrawn: boolean }>(
       `/programs/clients/${clientProfileId}/tasks/${taskId}`,
     );
+  },
+
+  // ── Update clients ─────────────────────────────────────────────
+  /** Step 1: who is behind, what would change. Writes nothing. */
+  previewUpdate(id: string, publishLatest = false): Promise<ApiResponse<UpdatePreview>> {
+    const q = publishLatest ? "?publish_latest=true" : "";
+    return apiClient.get<UpdatePreview>(`/programs/${id}/update-preview${q}`);
+  },
+
+  /** Step 2: update the picked clients (future tasks only). Same key = a retry, never a second apply. */
+  updateClients(
+    id: string,
+    payload: { instance_ids: string[]; idempotency_key: string; publish_latest?: boolean },
+  ): Promise<ApiResponse<UpdateClientsResponse>> {
+    return apiClient.post<UpdateClientsResponse>(`/programs/${id}/update-clients`, payload);
+  },
+
+  /** Take updates back (the Undo toast; 24 hours). */
+  revertUpdates(
+    updates: Array<{ instance_id: string; update_id: string }>,
+  ): Promise<ApiResponse<UpdateClientResult[]>> {
+    return apiClient.post<UpdateClientResult[]>("/programs/updates/revert", { updates });
   },
 
   cancelInstance(instanceId: string): Promise<ApiResponse<ProgramInstance>> {

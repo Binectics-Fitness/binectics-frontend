@@ -194,6 +194,7 @@ export interface AdminPlan {
   custom_domain_enabled: boolean;
   branded_email_enabled: boolean;
   exercise_library_enabled: boolean;
+  program_updates_enabled: boolean;
   forms_enabled: boolean;
   classes_enabled: boolean;
   loyalty_enabled: boolean;

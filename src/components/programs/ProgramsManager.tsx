@@ -20,6 +20,8 @@ import { leftoverProtocolsText } from "./protocol-retirement";
 import type { ProgramsRoleConfig } from "./config";
 import { NewProgramDialog } from "./builder/NewProgramDialog";
 import { draftAhead } from "./builder/startClient";
+import { UpdateClientsDialog } from "./builder/UpdateClientsDialog";
+import { UPDATE_COPY } from "./builder/copy";
 import { programsService, type ProgramTemplate, type ProgramInstance } from "@/lib/api/programs";
 
 function instanceClientName(i: ProgramInstance): string {
@@ -37,15 +39,20 @@ function AssignmentsModal({
   basePath,
   onClose,
   onAssign,
+  onChanged,
 }: {
   template: ProgramTemplate;
   basePath: string;
   onClose: () => void;
   /** Set when the program can take a client (not archived): opens its page. */
   onAssign?: () => void;
+  /** After an update or an Undo: the list's counts moved. */
+  onChanged?: () => void;
 }) {
   const [instances, setInstances] = useState<ProgramInstance[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [reload, setReload] = useState(0);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,7 +66,11 @@ function AssignmentsModal({
     return () => {
       active = false;
     };
-  }, [template._id]);
+  }, [template._id, reload]);
+
+  const behind = (instances ?? []).filter(
+    (i) => i.on_older_version && (i.status === "active" || i.status === "assigned" || i.status === "paused"),
+  ).length;
 
   return (
     <div
@@ -114,13 +125,45 @@ function AssignmentsModal({
                       {i.occurrences_done} / {i.occurrences_scheduled} tasks done
                     </div>
                   </div>
-                  <StatusPill tone={instanceStatusTone(i.status)} label={i.status} />
+                  <div className="flex items-center gap-2 shrink-0">
+                    {i.version_no ? (
+                      i.on_older_version ? (
+                        <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
+                          {UPDATE_COPY.versionPill(i.version_no, true)}
+                        </span>
+                      ) : (
+                        <span className="text-[12px]" style={{ color: "var(--fg-3)" }}>
+                          {i.version_no === i.latest_published_version_no ? UPDATE_COPY.versionPill(i.version_no, false) : `v${i.version_no}`}
+                        </span>
+                      )
+                    ) : null}
+                    <StatusPill tone={instanceStatusTone(i.status)} label={i.status} />
+                  </div>
                 </Link>
               ))}
             </div>
           )}
         </div>
+        {behind > 0 && template.status !== "archived" && (
+          <div className="flex items-center justify-between gap-3 px-6 py-3" style={{ borderTop: "1px solid var(--border)" }}>
+            <span className="text-[13px]" style={{ color: "var(--fg-3)" }}>{UPDATE_COPY.pill(behind)}</span>
+            <button type="button" onClick={() => setUpdating(true)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium" style={{ background: "var(--ink)", color: "var(--bg)", border: "none" }}>
+              {UPDATE_COPY.button}
+            </button>
+          </div>
+        )}
       </div>
+      {updating && (
+        <UpdateClientsDialog
+          templateId={template._id}
+          programName={template.name}
+          onClose={() => setUpdating(false)}
+          onApplied={() => {
+            setReload((n) => n + 1);
+            onChanged?.();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -170,6 +213,11 @@ function ProgramCard({
             // "Published" pill on every role, incl. the amber trainer accent.
             <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
               Unpublished changes
+            </span>
+          )}
+          {(template.clients_on_older_version ?? 0) > 0 && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
+              {UPDATE_COPY.pill(template.clients_on_older_version ?? 0)}
             </span>
           )}
           {isPaid(access) && (
@@ -250,6 +298,8 @@ export default function ProgramsManager({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("All");
+  // A second chip row filters by the existing category field (folders deferred).
+  const [category, setCategory] = useState<string | null>(null);
 
   const [creating, setCreating] = useState(initialCreateOpen);
   // A publish the plan refused (F4), shown above the list.
@@ -274,6 +324,7 @@ export default function ProgramsManager({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [listReload, setListReload] = useState(0);
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -292,7 +343,7 @@ export default function ProgramsManager({
     return () => {
       active = false;
     };
-  }, []);
+  }, [listReload]);
 
   useEffect(() => {
     if (!protocolsPath) return;
@@ -320,12 +371,24 @@ export default function ProgramsManager({
   // list on an empty view whose chip is gone.
   const activeFilter: Filter = filter === "Archived" && counts.Archived === 0 ? "All" : filter;
 
+  const categories = useMemo(
+    () => [...new Set(templates.filter((t) => t.status !== "archived").map((t) => t.category?.trim()).filter((c): c is string => !!c))].sort((a, b) => a.localeCompare(b)),
+    [templates],
+  );
+  // A category that no longer exists (renamed, archived) must not leave an empty list.
+  const activeCategory = category && categories.includes(category) ? category : null;
+
   const filtered = useMemo(() => {
-    if (activeFilter === "Draft") return templates.filter((t) => t.status === "draft");
-    if (activeFilter === "Published") return templates.filter((t) => t.status === "published");
-    if (activeFilter === "Archived") return templates.filter((t) => t.status === "archived");
-    return templates.filter((t) => t.status !== "archived");
-  }, [templates, activeFilter]);
+    const byStatus =
+      activeFilter === "Draft"
+        ? templates.filter((t) => t.status === "draft")
+        : activeFilter === "Published"
+          ? templates.filter((t) => t.status === "published")
+          : activeFilter === "Archived"
+            ? templates.filter((t) => t.status === "archived")
+            : templates.filter((t) => t.status !== "archived");
+    return activeCategory ? byStatus.filter((t) => t.category?.trim() === activeCategory) : byStatus;
+  }, [templates, activeFilter, activeCategory]);
 
   const openCreate = () => {
     setGate(null);
@@ -457,6 +520,28 @@ export default function ProgramsManager({
         </div>
       )}
 
+      {!loading && !error && categories.length > 0 && (
+        <div className="flex gap-1 flex-wrap items-center" role="group" aria-label="Category">
+          <span className="font-mono text-[10px] uppercase tracking-[0.05em] mr-1" style={{ color: "var(--fg-4)" }}>Category</span>
+          {[null, ...categories].map((c) => (
+            <button
+              key={c ?? "all"}
+              type="button"
+              aria-pressed={activeCategory === c}
+              onClick={() => setCategory(c)}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-[5px] rounded-full cursor-pointer"
+              style={{
+                background: activeCategory === c ? "var(--ink)" : "var(--bg)",
+                color: activeCategory === c ? "var(--bg)" : "var(--fg-3)",
+                border: activeCategory === c ? "1px solid var(--ink)" : "1px solid var(--border)",
+              }}
+            >
+              {c ?? "All categories"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <AsyncSpinner size="page" label="Loading programs" />
       ) : !error && templates.length === 0 ? (
@@ -522,6 +607,7 @@ export default function ProgramsManager({
           basePath={basePath}
           onClose={() => setClientsTemplate(null)}
           onAssign={clientsTemplate.status !== "archived" ? () => openProgram(clientsTemplate) : undefined}
+          onChanged={() => setListReload((n) => n + 1)}
         />
       )}
       {confirmationModal}

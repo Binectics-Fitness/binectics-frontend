@@ -41,15 +41,16 @@ function ToastEntry({ toast, onDismiss }: ToastProps) {
 
   useEffect(() => {
     const enterTimer = setTimeout(() => setVisible(true), 10);
+    // A toast with an action (Undo) stays long enough to be read and hit.
     const dismissTimer = setTimeout(() => {
       setVisible(false);
       setTimeout(() => onDismiss(toast.id), 220);
-    }, 3500);
+    }, toast.action ? 6000 : 3500);
     return () => {
       clearTimeout(enterTimer);
       clearTimeout(dismissTimer);
     };
-  }, [toast.id, onDismiss]);
+  }, [toast.id, toast.action, onDismiss]);
 
   return (
     <div
