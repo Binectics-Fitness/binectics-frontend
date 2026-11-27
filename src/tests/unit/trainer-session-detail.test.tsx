@@ -26,6 +26,11 @@ vi.mock("@/components/ds/TrainerDashboardShell", () => ({
   ),
 }));
 vi.mock("@/contexts/OrganizationContext", () => ({ useOptionalOrganization: () => null }));
+vi.mock("@/components/coachSessions/BookingSessionLog", () => ({
+  BookingSessionLog: ({ sessionLogId }: { sessionLogId?: string | null }) => (
+    <div data-testid="booking-session-log">{sessionLogId ? `log ${sessionLogId}` : "no log"}</div>
+  ),
+}));
 vi.mock("@/components/Toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const inTwoDays = new Date(Date.now() + 2 * 86_400_000);
@@ -92,9 +97,8 @@ describe("trainer session detail page", () => {
   it("shows the real session: client, type, status, notes and payment, with no invented workout data", async () => {
     get.mockResolvedValue(ok(session));
     renderPage();
-    expect(await screen.findByRole("heading", { name: "Linda Mokoena" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "1:1 strength \u00b7 Linda Mokoena" })).toBeInTheDocument();
     expect(get).toHaveBeenCalledWith(session.id);
-    expect(screen.getByText("1:1 strength")).toBeInTheDocument();
     expect(screen.getByText("Confirmed")).toBeInTheDocument();
     expect(screen.getByText("Knee is sore")).toBeInTheDocument();
     const payment = screen.getByTestId("payment-state");
@@ -152,7 +156,7 @@ describe("trainer session detail page", () => {
     get.mockResolvedValue(ok(session));
     renderPage();
     // The session is two days out: it can't have happened yet.
-    const button = await screen.findByRole("button", { name: "Complete" });
+    const button = await screen.findByRole("button", { name: "Close out" });
     expect(button).toBeDisabled();
     expect(screen.getByText("Complete and no-show become available once the session start time has passed.")).toBeInTheDocument();
     await userEvent.click(button);
@@ -169,10 +173,25 @@ describe("trainer session detail page", () => {
     get.mockResolvedValueOnce(ok({ ...started, status: ConsultationBookingStatus.COMPLETED }));
     complete.mockResolvedValue(ok({ ...started, status: ConsultationBookingStatus.COMPLETED }));
     renderPage();
-    await userEvent.click(await screen.findByRole("button", { name: "Complete" }));
-    expect(complete).toHaveBeenCalledWith(session.id);
+    await userEvent.type(await screen.findByLabelText("Private note"), "Good fit. Send the PAR-Q.");
+    await userEvent.click(screen.getByRole("button", { name: "Close out" }));
+    // The private note travels with the completion (it was dropped before).
+    expect(complete).toHaveBeenCalledWith(session.id, "Good fit. Send the PAR-Q.");
     await waitFor(() => expect(screen.getByText("Completed")).toBeInTheDocument());
     expect(get).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows the session log card slot with the booking's log id, or the no-log state", async () => {
+    get.mockResolvedValue(ok({ ...session, sessionLogId: "log-9" }));
+    renderPage();
+    expect(await screen.findByTestId("booking-session-log")).toHaveTextContent("log log-9");
+  });
+
+  it("offers no close-out for a session that is already completed", async () => {
+    get.mockResolvedValue(ok({ ...session, status: ConsultationBookingStatus.COMPLETED }));
+    renderPage();
+    await screen.findByRole("heading", { name: /Linda Mokoena/ });
+    expect(screen.queryByRole("button", { name: "Close out" })).toBeNull();
   });
 
   it("reschedules to one of the trainer's offered slots", async () => {

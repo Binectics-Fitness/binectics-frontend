@@ -16,6 +16,7 @@ import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { useOnline } from "@/hooks/useOnline";
 import OneOffTasksCard from "@/components/programs/OneOffTasksCard";
 import ProgramResultsSection from "@/components/programs/results/ProgramResultsSection";
+import { SessionLogsSection } from "@/components/coachSessions/SessionLogsSection";
 import { ClientReportsCard } from "@/components/progress-reports/ClientReportsCard";
 import { TRAINER_PROGRAMS_CONFIG } from "@/components/programs/config";
 import { StartProgramDialog } from "@/components/clients/StartProgramDialog";
@@ -193,16 +194,11 @@ function ClientPage({
   const week = lead?.progress?.last_7_days;
   const latestWeight = weights[0];
 
-  const { next, recent } = useMemo(() => {
-    const mine = bookings.filter((b) => b.clientUserId === userId);
-    const upcoming = mine
-      .filter((b) => (b.status === "CONFIRMED" || b.status === "PENDING") && Date.parse(b.endsAt) > now)
+  const next = useMemo(() => {
+    const upcoming = bookings
+      .filter((b) => b.clientUserId === userId && (b.status === "CONFIRMED" || b.status === "PENDING") && Date.parse(b.endsAt) > now)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-    const past = mine
-      .filter((b) => Date.parse(b.startsAt) <= now && !upcoming.includes(b))
-      .sort((a, b) => b.startsAt.localeCompare(a.startsAt))
-      .slice(0, 5);
-    return { next: upcoming[0] ?? null, recent: past };
+    return upcoming[0] ?? null;
   }, [bookings, userId, now]);
 
   const saveNote = async () => {
@@ -292,6 +288,14 @@ function ClientPage({
         />
       </div>
 
+      {/* Session logs from the coach app (board coach-session-canvas 09, WEB1) */}
+      <SessionLogsSection
+        clientProfileId={clientId}
+        clientFirstName={firstName}
+        bookings={bookings.filter((b) => b.clientUserId === userId)}
+        now={now}
+      />
+
       {/* What they did, and the note it prompts */}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 items-start">
         <div className="min-w-0">
@@ -344,28 +348,7 @@ function ClientPage({
       </div>
 
       {/* The record */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <DSCard className="p-3.5">
-          <section aria-labelledby="sessions-heading">
-            <h2 id="sessions-heading" className={`${h2} mb-2`} style={ink}>{C.sessions}</h2>
-            {!next && recent.length === 0 ? (
-              <div className="text-[12.5px]" style={muted}>{C.noSessions}</div>
-            ) : (
-              [...(next ? [next] : []), ...recent].map((b) => (
-                <div key={b.id} className="py-2" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div className="flex justify-between gap-2 text-[12.5px]">
-                    <span style={{ ...ink, fontVariantNumeric: "tabular-nums" }}>{fmtDateTime(b.startsAt)}</span>
-                    <span style={muted}>{b === next ? C.next : SESSION_LABEL[b.status]}</span>
-                  </div>
-                  {b.completionNote && <div className="text-[12px] mt-0.5" style={{ color: "var(--fg-2)" }}>{b.completionNote}</div>}
-                </div>
-              ))
-            )}
-            <Link href="/dashboard/trainer/sessions" className="inline-block text-[12.5px] underline mt-2" style={ink}>
-              {C.allSessions}
-            </Link>
-          </section>
-        </DSCard>
+      <div className="grid grid-cols-1 gap-4 items-start">
         {profile.is_active && <ClientReportsCard clientProfileId={clientId} clientFirstName={firstName} />}
       </div>
 

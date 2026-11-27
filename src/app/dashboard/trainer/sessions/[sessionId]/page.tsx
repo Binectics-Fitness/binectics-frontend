@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TrainerDashboardShell } from "@/components/ds/TrainerDashboardShell";
 import { AsyncSpinner, BookingStatusBadge, DSCard, Eyebrow } from "@/components/ds";
 import { bookingPaymentState } from "@/lib/bookings/paymentState";
+import { BookingSessionLog } from "@/components/coachSessions/BookingSessionLog";
 import { BookingActionsPanel } from "@/components/BookingActionsPanel";
 import { RescheduleBookingModal } from "@/components/bookings/RescheduleBookingModal";
 import { toast } from "@/components/Toast";
@@ -31,6 +32,10 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
       {children}
     </DSCard>
   );
+}
+
+function clientFirstName(booking: ConsultationBooking): string {
+  return booking.clientFirstName?.trim() || "your client";
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -84,6 +89,7 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
 
   const booking = state.kind === "ready" ? state.booking : null;
   const name = booking ? clientDisplayName(booking) : "Session";
+  const title = booking ? [booking.consultationTypeName, name].filter(Boolean).join(" \u00b7 ") : "Session";
 
   return (
     <TrainerDashboardShell
@@ -136,11 +142,9 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
             </span>
             <div className="min-w-0">
               <h1 className="text-[26px] sm:text-[30px] font-medium" style={{ letterSpacing: "-0.024em", color: "var(--ink)" }}>
-                {name}
+                {title}
               </h1>
               <p className="text-[13.5px] mt-1 flex flex-wrap items-center gap-2" style={{ color: "var(--fg-3)" }}>
-                <span>{booking.consultationTypeName || "Consultation"}</span>
-                <span>&middot;</span>
                 <span>{fmtDateTime(booking.startsAt)} – {fmtTime(booking.endsAt)}</span>
                 <span>&middot;</span>
                 <span>{durationMins(booking)} min</span>
@@ -151,10 +155,23 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
 
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3.5">
             <div className="flex flex-col gap-3.5">
+              {/* Remounted per load so a draft note or cancel reason can't outlive an action. */}
+              {isActionable(booking.status) && (
+                <Card title="Close out">
+                  <BookingActionsPanel key={`${booking.id}-${booking.status}`} booking={booking} now={now} onActionComplete={load} />
+                </Card>
+              )}
+
+              <BookingSessionLog
+                sessionLogId={booking.sessionLogId}
+                clientFirstName={clientFirstName(booking)}
+                typeName={booking.consultationTypeName}
+              />
+
               <Card title="Details">
                 <div className="flex flex-col gap-4">
                   <DetailRow label="Client notes">{booking.notes?.trim() || "No notes from the client."}</DetailRow>
-                  {booking.completionNote && <DetailRow label="Completion note">{booking.completionNote}</DetailRow>}
+                  {booking.completionNote && <DetailRow label="Private note">{booking.completionNote}</DetailRow>}
                   {booking.cancelReason && (
                     <DetailRow label={`Cancelled${booking.cancelledBy ? ` by ${booking.cancelledBy.toLowerCase()}` : ""}`}>
                       {booking.cancelReason}
@@ -167,11 +184,6 @@ export default function TrainerSessionDetailPage({ params }: { params: Promise<{
                       : ""}
                   </DetailRow>
                 </div>
-              </Card>
-
-              <Card title="Actions">
-                {/* Remounted per load so a draft cancel reason can't outlive an action. */}
-                <BookingActionsPanel key={`${booking.id}-${booking.status}`} booking={booking} now={now} onActionComplete={load} />
               </Card>
             </div>
 
