@@ -62,6 +62,8 @@ export const KIND_DEFAULTS: Record<TaskKind, { cadence: ProgramCadence; n: numbe
 /** Sets × reps a new exercise starts at (D5). */
 export const DEFAULT_SETS = "3";
 export const DEFAULT_REPS = "10";
+/** Seconds a new timed exercise (a hold) starts at: 3 × 30 s. */
+export const DEFAULT_TIMED_SECONDS = "30";
 
 /** Days of the week a task lands on, n times a week (= API N_PER_WEEK_DAYS). */
 export const N_PER_WEEK_DAYS: Record<number, number[]> = {
@@ -311,9 +313,30 @@ export function newTask(
   return t;
 }
 
-/** A new exercise from the library or a custom one, at 3 × 10 (D5). */
-export function newExercise(name: string, ref: Partial<ExerciseFormRow> = {}): ExerciseFormRow {
-  return { name, sets: DEFAULT_SETS, reps: DEFAULT_REPS, seconds: "", rest_seconds: "", cues: "", ...ref };
+/**
+ * A new exercise from the library or a custom one, at 3 × 10 (D5), or at
+ * 3 × 30 s when the library marks it timed (a hold).
+ */
+export function newExercise(name: string, ref: Partial<ExerciseFormRow> = {}, timed = false): ExerciseFormRow {
+  return {
+    name,
+    sets: DEFAULT_SETS,
+    reps: timed ? "" : DEFAULT_REPS,
+    seconds: timed ? DEFAULT_TIMED_SECONDS : "",
+    rest_seconds: "",
+    cues: "",
+    ...ref,
+  };
+}
+
+/**
+ * Whether a row is prescribed in seconds: it has seconds and no reps, or it
+ * is a library hold whose reps were cleared. Rows saved before the marker
+ * (reps set) keep showing reps.
+ */
+export function isTimedRow(e: Pick<ExerciseFormRow, "reps" | "seconds" | "library_exercise_id">, timedIds: ReadonlySet<string>): boolean {
+  if (e.reps.trim() !== "") return false;
+  return e.seconds.trim() !== "" || (!!e.library_exercise_id && timedIds.has(e.library_exercise_id));
 }
 
 // ── Windows (weeks on screen, days underneath) ───────────────────────
