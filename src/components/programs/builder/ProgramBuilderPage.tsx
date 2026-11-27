@@ -15,7 +15,7 @@ import { libraryErrorMessage } from "@/lib/exercises/library";
 import { parseBillingError } from "@/lib/utils/billingErrors";
 import { programsService, type ProgramInstance, type ProgramTemplate } from "@/lib/api/programs";
 import type { ProgramsRoleConfig } from "../config";
-import { BUILDER_COPY, TASK_TYPE_COPY } from "./copy";
+import { BUILDER_COPY, TASK_TYPE_COPY, UPDATE_COPY } from "./copy";
 import { Btn, LinkBtn, TaskTile, metaStyle } from "./controls";
 import { ClientWeek } from "./ClientWeek";
 import { TaskInspector } from "./TaskInspector";
@@ -24,6 +24,7 @@ import { NewContentSheet } from "./NewContentSheet";
 import { useContentOptions } from "./useContentOptions";
 import { SettingsDrawer } from "./SettingsDrawer";
 import { StartClientDialog, type Started } from "./StartClientDialog";
+import { UpdateClientsDialog } from "./UpdateClientsDialog";
 import { draftAhead } from "./startClient";
 import { useAutosave } from "./useAutosave";
 import {
@@ -73,6 +74,9 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
   const [started, setStarted] = useState<Started | null>(null);
   const [pricing, setPricing] = useState(false);
   const [onProgram, setOnProgram] = useState<string[]>([]);
+  /** Clients on a version older than the latest published one (U3). */
+  const [behind, setBehind] = useState<string[]>([]);
+  const [updating, setUpdating] = useState(false);
   const [sheet, setSheet] = useState<"form" | "meal" | null>(null);
   const [publishing, setPublishing] = useState(false);
   const sheetBefore = useRef<{ kind: "form" | "meal"; ids: Set<string>; taskKey: string } | null>(null);
@@ -81,6 +85,17 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const autosave = useAutosave(id, (detail) => setTemplate({ ...detail.template, publish_state: detail.publish_state ?? detail.template.publish_state }));
+
+  const loadAssignments = useCallback(
+    (isLive: () => boolean = () => true) =>
+      programsService.listAssignments(id).then((res) => {
+        if (!isLive() || !res.success || !res.data) return;
+        const live_ = res.data.filter((i) => i.status === "active" || i.status === "assigned" || i.status === "paused");
+        setOnProgram(live_.map(instanceName).filter((n): n is string => !!n));
+        setBehind(live_.filter((i) => i.on_older_version).map(instanceName).filter((n): n is string => !!n));
+      }),
+    [id],
+  );
 
   useEffect(() => {
     let live = true;
@@ -93,15 +108,11 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
         setLoadError(res.status === 404 ? C.notFound : (res.message ?? C.loadFailed));
       }
     });
-    void programsService.listAssignments(id).then((res) => {
-      if (!live || !res.success || !res.data) return;
-      const live_ = res.data.filter((i) => i.status === "active" || i.status === "assigned" || i.status === "paused");
-      setOnProgram(live_.map(instanceName).filter((n): n is string => !!n));
-    });
+    void loadAssignments(() => live);
     return () => {
       live = false;
     };
-  }, [id]);
+  }, [id, loadAssignments]);
 
   /** Every edit goes through here: state, then autosave. */
   const edit = useCallback(
@@ -305,8 +316,11 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
         </div>
 
         {onProgram.length > 0 && (
-          <div className="mx-4 lg:mx-7 mt-3.5 text-[13.5px]" style={{ background: "var(--bg-3)", borderRadius: 8, padding: "10px 12px", color: "var(--fg-2)" }}>
-            {C.banner(onProgram)}
+          <div className="mx-4 lg:mx-7 mt-3.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-[13.5px]" style={{ background: "var(--bg-3)", borderRadius: 8, padding: "10px 12px", color: "var(--fg-2)" }}>
+            <span>{behind.length > 0 ? UPDATE_COPY.banner(behind) : C.banner(onProgram)}</span>
+            {behind.length > 0 && (
+              <Btn variant="ghost" size="sm" onClick={() => setUpdating(true)}>{UPDATE_COPY.button}</Btn>
+            )}
           </div>
         )}
         {autosave.gate && (
@@ -445,6 +459,21 @@ export default function ProgramBuilderPage({ config, id }: { config: ProgramsRol
             setTemplate(t);
             setOnProgram((cur) => [...cur, s.clientName]);
             setStarted(s);
+          }}
+        />
+      )}
+      {updating && template && (
+        <UpdateClientsDialog
+          templateId={template._id}
+          programName={program.name}
+          publishLatest={!sold}
+          beforeApply={autosave.flush}
+          onClose={() => setUpdating(false)}
+          onApplied={() => {
+            void loadAssignments();
+            void programsService.getTemplate(id).then((res) => {
+              if (res.success && res.data) setTemplate({ ...res.data.template, publish_state: res.data.publish_state ?? res.data.template.publish_state });
+            });
           }}
         />
       )}

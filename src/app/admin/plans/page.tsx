@@ -42,7 +42,8 @@ type FeatureKey =
   | "white_label_enabled"
   | "custom_domain_enabled"
   | "branded_email_enabled"
-  | "exercise_library_enabled";
+  | "exercise_library_enabled"
+  | "program_updates_enabled";
 
 const QUOTAS: { key: QuotaKey; label: string }[] = [
   { key: "max_active_members", label: "Active members" },
@@ -65,6 +66,7 @@ const FEATURES: { key: FeatureKey; label: string }[] = [
   { key: "custom_domain_enabled", label: "Custom domain" },
   { key: "branded_email_enabled", label: "Branded email" },
   { key: "exercise_library_enabled", label: "Exercise library (illustrated picker)" },
+  { key: "program_updates_enabled", label: "Update clients on a program" },
 ];
 
 const EDITABLE_KEYS: (keyof UpdateAdminPlan)[] = [
@@ -98,6 +100,7 @@ function emptyPlan(code: string, sortOrder: number): CreateAdminPlan {
     custom_domain_enabled: false,
     branded_email_enabled: false,
     exercise_library_enabled: true,
+    program_updates_enabled: true,
     forms_enabled: true,
     classes_enabled: false,
     loyalty_enabled: false,

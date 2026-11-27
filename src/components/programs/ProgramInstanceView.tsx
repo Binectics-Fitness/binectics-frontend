@@ -14,8 +14,11 @@ import {
   type ProgramInstance,
 } from "@/lib/api/programs";
 import type { ProgramsRoleConfig } from "./config";
+import { UpdateClientsDialog } from "./builder/UpdateClientsDialog";
+import { UPDATE_COPY as UC } from "./builder/copy";
 
-function clientName(i: ProgramInstance): string {
+function clientName(i: ProgramInstance, fallback?: string | null): string {
+  if (fallback?.trim()) return fallback.trim();
   if (typeof i.client_id === "object" && i.client_id !== null) {
     return `${i.client_id.first_name} ${i.client_id.last_name}`.trim();
   }
@@ -47,6 +50,7 @@ export default function ProgramInstanceView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const { requestConfirmation, confirmationModal } = useConfirmationModal();
 
   const applyDetail = (res: Awaited<ReturnType<typeof programsService.getInstance>>) => {
@@ -93,7 +97,7 @@ export default function ProgramInstanceView({
   // Complete and cancel end the program for the client, so they ask first.
   const askComplete = (i: ProgramInstance) =>
     requestConfirmation({
-      title: `Mark "${i.name}" complete for ${clientName(i)}?`,
+      title: `Mark "${i.name}" complete for ${clientName(i, detail?.client_name)}?`,
       description:
         "The program ends and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen in the app shows the program has ended. This can't be undone.",
       confirmLabel: "Mark complete",
@@ -103,13 +107,32 @@ export default function ProgramInstanceView({
 
   const askCancel = (i: ProgramInstance) =>
     requestConfirmation({
-      title: `Cancel "${i.name}" for ${clientName(i)}?`,
+      title: `Cancel "${i.name}" for ${clientName(i, detail?.client_name)}?`,
       description:
         "The program stops and leaves their active programs. Tasks they haven't done stay as they are. They aren't sent a notification, but their Today screen in the app shows the program has ended. This can't be undone.",
       confirmLabel: "Cancel program",
       cancelLabel: "Keep program",
       confirmVariant: "danger",
       onConfirm: () => runAction("cancel"),
+    });
+
+  const reload = async () => applyDetail(await programsService.getInstance(instanceId));
+
+  const askRevert = (i: ProgramInstance, updateId: string, fromNo: number) =>
+    requestConfirmation({
+      title: UC.revertConfirmTitle,
+      description: UC.revertConfirmBody,
+      confirmLabel: UC.revertConfirm,
+      confirmVariant: "primary",
+      onConfirm: async () => {
+        const res = await programsService.revertUpdates([{ instance_id: instanceId, update_id: updateId }]);
+        if (res.success && res.data && res.data.every((r) => r.status !== "failed")) {
+          toast.success(`Back on v${fromNo} for ${clientName(i, detail?.client_name).split(" ")[0]}.`);
+        } else {
+          toast.error(res.data?.[0]?.message ?? UC.toastRevertFailed);
+        }
+        await reload();
+      },
     });
 
   const instance = detail?.instance;
@@ -136,11 +159,16 @@ export default function ProgramInstanceView({
             <div>
               <h1 className="text-[26px] font-medium" style={{ letterSpacing: "-0.02em", color: "var(--ink)" }}>{instance.name}</h1>
               <p className="text-[13.5px] mt-1" style={{ color: "var(--fg-3)" }}>
-                {clientName(instance)}
+                {clientName(instance, detail?.client_name)}
                 {instance.started_at ? ` · started ${fmtDate(instance.started_at)}` : ""}
               </p>
-              <div className="mt-2">
+              <div className="mt-2 flex items-center gap-2">
                 <StatusPill tone={instanceStatusTone(instance.status)} label={instance.status} />
+                {detail.version && detail.version.version_no > 0 && (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.05em] px-1.75 py-0.5 rounded-full" style={{ background: "var(--bg-3)", color: "var(--fg-2)", border: "1px solid var(--border-2)" }}>
+                    {UC.versionPill(detail.version.version_no, detail.version.newer_available)}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -158,6 +186,41 @@ export default function ProgramInstanceView({
               )}
             </div>
           </div>
+
+          {/* Newer version, or the 24 hour way back (one quiet row, not a second ink button) */}
+          {detail.revertable_update ? (
+            <div role="note" className="flex flex-wrap items-center justify-between gap-3 rounded-(--r-2) px-4 py-3" style={{ background: "var(--bg-3)", border: "1px solid var(--border)" }}>
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.05em]" style={{ color: "var(--fg-3)" }}>{UC.revertTitle}</div>
+                <div className="text-[13.5px]" style={{ color: "var(--ink)" }}>
+                  {UC.revertBody(detail.revertable_update.to_version_no, fmtDate(detail.revertable_update.applied_at))}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[12.5px]" style={{ color: "var(--fg-3)" }}>
+                  {UC.revertUntil(new Date(detail.revertable_update.revert_until).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}
+                </span>
+                <button type="button" onClick={() => askRevert(instance, detail.revertable_update!.update_id, detail.revertable_update!.from_version_no)} className="text-[13.5px] underline underline-offset-[3px]" style={{ color: "var(--ink)" }}>
+                  {UC.revert}
+                </button>
+              </div>
+            </div>
+          ) : (
+            detail.version?.newer_available &&
+            !isTerminal && (
+              <div role="note" className="flex flex-wrap items-center justify-between gap-3 rounded-(--r-2) px-4 py-3" style={{ background: "var(--bg-3)", border: "1px solid var(--border)" }}>
+                <div>
+                  <div className="text-[14px] font-medium" style={{ color: "var(--ink)" }}>{UC.newerTitle}</div>
+                  <div className="text-[13px]" style={{ color: "var(--fg-2)" }}>
+                    {UC.newerBody(clientName(instance, detail?.client_name).split(" ")[0], detail.version.version_no, detail.version.latest_published_version_no)}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setUpdating(true)} className="h-9 px-4 rounded-(--r-2) text-[13px] font-medium" style={{ background: "var(--bg)", border: "1px solid var(--border-2)", color: "var(--ink)" }}>
+                  {UC.seeChanges}
+                </button>
+              </div>
+            )
+          )}
 
           {/* Adherence */}
           <div>
@@ -200,6 +263,15 @@ export default function ProgramInstanceView({
             )}
           </div>
         </div>
+      )}
+      {updating && instance && (
+        <UpdateClientsDialog
+          templateId={instance.template_id}
+          programName={instance.name}
+          onlyInstanceId={instanceId}
+          onClose={() => setUpdating(false)}
+          onApplied={() => void reload()}
+        />
       )}
       {confirmationModal}
     </Shell>

@@ -84,6 +84,7 @@ export function billingResourceLabel(key: string | null): string {
       custom_domain_enabled: "custom domains",
       branded_email_enabled: "branded email",
       exercise_library_enabled: "the exercise library",
+      program_updates_enabled: "updating clients on a program",
       forms_enabled: "forms",
       classes_enabled: "class schedules",
       api_access_enabled: "API access",
