@@ -22,6 +22,45 @@ export interface LibraryExercise {
   category: string;
   equipment: string;
   variants: string[];
+  /**
+   * Written guidance, where the library has it. General guidance, not
+   * medical advice, and not read by a coach (see MEMBER_GUIDANCE_FLAG).
+   */
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  steps?: string[];
+  cues?: string[];
+}
+
+/**
+ * The runtime flag that lets a member see the written steps and cues of an
+ * exercise the Starter program does not already explain. Providers always
+ * see them when picking.
+ */
+export const MEMBER_GUIDANCE_FLAG = "exercise_guidance_for_members";
+
+/** Shown under any written guidance. */
+export const GUIDANCE_NOTE = "General guidance, not medical advice.";
+
+/** A library row's lines of text: strings only, trimmed, capped. */
+function lines(v: unknown, max: number): string[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out = v
+    .filter((x): x is string => typeof x === "string")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, max);
+  return out.length ? out : undefined;
+}
+
+/** True when the exercise has steps or cues to read. */
+export function hasGuidance(e: Pick<LibraryExercise, "steps" | "cues"> | null | undefined): boolean {
+  return !!e && ((e.steps?.length ?? 0) > 0 || (e.cues?.length ?? 0) > 0);
+}
+
+/** "none" is how the library spells "needs nothing". */
+export function equipmentLabel(equipment: string): string {
+  return equipment === "none" ? "no equipment" : equipment;
 }
 
 export interface ExerciseLibrary {
@@ -54,7 +93,7 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
     const id = str(row.id);
     const name = str(row.name);
     if (!id || !name) continue;
-    exercises.push({
+    const exercise: LibraryExercise = {
       id,
       name,
       category: str(row.category) ?? "Other",
@@ -62,7 +101,17 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
       variants: Array.isArray(row.variants)
         ? row.variants.filter((v): v is string => typeof v === "string" && v.length > 0)
         : [],
-    });
+    };
+    // Optional text: absent on an older API, so every reader copes without it.
+    const primaryMuscles = lines(row.primary_muscles, 8);
+    const secondaryMuscles = lines(row.secondary_muscles, 8);
+    const steps = lines(row.steps, 12);
+    const cues = lines(row.cues, 8);
+    if (primaryMuscles) exercise.primaryMuscles = primaryMuscles;
+    if (secondaryMuscles) exercise.secondaryMuscles = secondaryMuscles;
+    if (steps) exercise.steps = steps;
+    if (cues) exercise.cues = cues;
+    exercises.push(exercise);
   }
   return { available: exercises.length > 0, exercises };
 }

@@ -8,7 +8,10 @@ import {
   truncateName,
   distinctValues,
   PROGRAM_EXERCISE_NAME_MAX,
+  equipmentLabel,
+  hasGuidance,
 } from "@/lib/exercises/library";
+import { guideLookup, libraryIdOf, memberMaySeeGuidance } from "@/lib/exercises/clientGuides";
 
 const lib = normalizeLibrary({
   available: true,
@@ -31,6 +34,65 @@ describe("normalizeLibrary", () => {
     expect(normalizeLibrary({ available: true, exercises: [] }).available).toBe(false);
     expect(normalizeLibrary(undefined).available).toBe(false);
     expect(normalizeLibrary("x").exercises).toEqual([]);
+  });
+});
+
+describe("normalizeLibrary: written guidance", () => {
+  it("reads muscles, steps and cues when the API sends them, and copes when it does not", () => {
+    const out = normalizeLibrary({
+      available: true,
+      exercises: [
+        {
+          id: "pull-up",
+          name: "Pull-Up",
+          category: "Pull",
+          equipment: "pull-up bar",
+          variants: [],
+          primary_muscles: ["Sides of the back (lats)", 7, "  "],
+          secondary_muscles: [],
+          steps: ["Hang with straight arms.", " Pull your chest toward the bar. "],
+          cues: "not a list",
+        },
+        { id: "squat", name: "Squat", category: "Squat", equipment: "none", variants: [] },
+      ],
+    }).exercises;
+    expect(out[0]).toMatchObject({
+      primaryMuscles: ["Sides of the back (lats)"],
+      steps: ["Hang with straight arms.", "Pull your chest toward the bar."],
+    });
+    expect(out[0].secondaryMuscles).toBeUndefined();
+    expect(out[0].cues).toBeUndefined();
+    expect(hasGuidance(out[0])).toBe(true);
+    expect(hasGuidance(out[1])).toBe(false);
+    expect(hasGuidance(null)).toBe(false);
+    expect(equipmentLabel("none")).toBe("no equipment");
+    expect(equipmentLabel("barbell")).toBe("barbell");
+  });
+});
+
+describe("guideLookup: what a member may read", () => {
+  const exercises = normalizeLibrary({
+    available: true,
+    exercises: [
+      { id: "plank", name: "Plank", category: "Core", equipment: "none", variants: [], steps: ["Hold."] },
+      { id: "pull-up", name: "Pull-Up", category: "Pull", equipment: "pull-up bar", variants: [], steps: ["Hang."] },
+      { id: "squat", name: "Squat", category: "Squat", equipment: "none", variants: [] },
+    ],
+  }).exercises;
+  it("switch off: only the exercises the Starter program already explains", () => {
+    const find = guideLookup(exercises, false);
+    expect(find({ libraryExerciseId: "plank" })?.id).toBe("plank");
+    expect(find({ mediaId: "plank--front" })?.id).toBe("plank");
+    expect(find({ libraryExerciseId: "pull-up" })).toBeNull();
+    expect(memberMaySeeGuidance("pull-up", false)).toBe(false);
+  });
+  it("switch on: every library exercise that has text; never a custom or text-less row", () => {
+    const find = guideLookup(exercises, true);
+    expect(find({ libraryExerciseId: "pull-up" })?.id).toBe("pull-up");
+    expect(find({ libraryExerciseId: "squat" })).toBeNull();
+    expect(find({ libraryExerciseId: "not-in-the-library" })).toBeNull();
+    expect(find({})).toBeNull();
+    expect(libraryIdOf({ mediaId: "goblet-squat--front" })).toBe("goblet-squat");
   });
 });
 

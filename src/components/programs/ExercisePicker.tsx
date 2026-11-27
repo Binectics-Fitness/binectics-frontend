@@ -3,12 +3,15 @@
 import { useMemo, useState } from "react";
 import SearchableSelect from "@/components/SearchableSelect";
 import ExerciseIllustration, { hasExerciseIllustration } from "@/components/ExerciseIllustration";
+import { ExerciseGuide } from "@/components/exercises/ExerciseGuide";
 import {
   ALL,
   DEMO_ART_NOTE,
   DEMO_TAG,
   distinctValues,
+  equipmentLabel,
   filterLibrary,
+  hasGuidance,
   type LibraryExercise,
 } from "@/lib/exercises/library";
 
@@ -52,6 +55,10 @@ function ExerciseThumb({ mediaId, size = 48 }: { mediaId?: string; size?: number
  * Pick an exercise from the library: search by name, narrow by category and
  * equipment. Choosing returns the exercise (a variant is chosen on the row
  * afterwards). A custom exercise is always one click away in the parent.
+ *
+ * A row opens to show what the library holds for it: the illustration where
+ * there is one ("Preview") and the written steps and cues. A row with text
+ * but no art opens the same way under "Details".
  */
 export default function ExercisePicker({
   exercises,
@@ -121,7 +128,7 @@ export default function ExercisePicker({
         <SearchableSelect
           value={equipment}
           onChange={setEquipment}
-          options={[{ label: "All equipment", value: ALL }, ...equipments.map((c) => ({ label: c, value: c }))]}
+          options={[{ label: "All equipment", value: ALL }, ...equipments.map((c) => ({ label: equipmentLabel(c), value: c }))]}
           placeholder="All equipment"
         />
       </div>
@@ -132,7 +139,12 @@ export default function ExercisePicker({
             No library exercise matches. Close this and add a custom exercise instead.
           </li>
         )}
-        {results.map((e) => (
+        {results.map((e) => {
+          const hasArt = hasExerciseIllustration(e.id);
+          const hasText = hasGuidance(e);
+          const open = previewId === e.id;
+          const panelId = `exercise-panel-${e.id}`;
+          return (
           <li key={e.id} className="px-3 py-2.5" style={{ borderBottom: "1px solid var(--border)" }}>
             {/* Phones: the name block takes the first line, the actions wrap under it. */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -140,20 +152,22 @@ export default function ExercisePicker({
               <div className="min-w-0 flex-1 basis-[calc(100%-4rem)] sm:basis-0">
                 <div className="text-[13px] font-medium break-words" style={{ color: "var(--ink)" }}>{e.name}</div>
                 <div className="font-mono text-[10.5px] break-words" style={{ color: "var(--fg-3)" }}>
-                  {e.category} · {e.equipment}
+                  {e.category} · {equipmentLabel(e.equipment)}
                 </div>
               </div>
               <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
-              {hasExerciseIllustration(e.id) && <DemoTag />}
-              {hasExerciseIllustration(e.id) && (
+              {hasArt && <DemoTag />}
+              {(hasArt || hasText) && (
                 <button
                   type="button"
                   onClick={() => setPreviewId((p) => (p === e.id ? null : e.id))}
-                  aria-expanded={previewId === e.id}
+                  aria-expanded={open}
+                  aria-controls={panelId}
+                  aria-label={open ? `Hide ${e.name}` : hasArt ? `Preview ${e.name}` : `Details for ${e.name}`}
                   className="min-h-touch sm:min-h-0 text-[12px] px-3 sm:px-2 py-1 rounded-(--r-1)"
                   style={{ color: "var(--fg-2)", border: "1px solid var(--border)", background: "transparent" }}
                 >
-                  {previewId === e.id ? "Hide" : "Preview"}
+                  {open ? "Hide" : hasArt ? "Preview" : "Details"}
                 </button>
               )}
               <button
@@ -167,13 +181,20 @@ export default function ExercisePicker({
               </button>
               </div>
             </div>
-            {previewId === e.id && (
-              <div className="mt-2 flex justify-center">
-                <ExerciseIllustration mediaId={e.id} className="w-full max-w-[280px] rounded-(--r-2)" />
+            {open && (
+              // The picker sits in a narrow side panel: the picture goes above the text, never beside it.
+              <div id={panelId} className="mt-3 flex flex-col gap-3">
+                {hasArt && (
+                  <div className="flex justify-center">
+                    <ExerciseIllustration mediaId={e.id} className="w-full max-w-[280px] rounded-(--r-2)" />
+                  </div>
+                )}
+                <ExerciseGuide guide={e} />
               </div>
             )}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
