@@ -108,7 +108,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
       { num: "00", title: "Plain‑English summary", content: (
         <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-1" style={{ color: "var(--fg-3)" }}>In one paragraph</div>
-          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.</p>
+          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> Members can download their own history (programs, activity, weight, fasts, water, daily list, journal notes and goals) from settings, and you can delete your account from settings, any time, and the deletion is real. Meals and the rest of your account data are not in that download yet; email privacy@binectics.com for a copy of anything else.</p>
         </div>
       )},
       { num: "01", title: "What we collect", content: (<>
@@ -181,10 +181,10 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
       { num: "07", title: "Your rights", content: (<>
         <p className="text-[15px] leading-[1.65] mb-3.5 max-w-[60ch]" style={{ color: "var(--fg-2)" }}>Wherever you are, you have these rights. Data protection law and our own policy converge on them.</p>
         <ul className="flex flex-col gap-1 pl-5.5 text-[15px] leading-[1.65] max-w-[60ch]" style={{ color: "var(--fg-2)" }}>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, download a full copy of your data from settings.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Access</strong>, members can download their own history from Settings, Privacy: programs, activity, weight, fasts, water, daily list, journal notes and goals. Meals and the rest of your account data are not in that file yet; email privacy@binectics.com for a copy of anything else.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Correction</strong>, fix anything wrong from settings or email privacy@binectics.com.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Deletion</strong>, purge your account. 30-day processing.</li>
-          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong>, your data exports as machine‑readable JSON.</li>
+          <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Portability</strong>, that history file comes as JSON or a spreadsheet (CSV). There is no single download of everything in your account yet.</li>
           <li><strong style={{ color: "var(--ink)", fontWeight: 500 }}>Object to processing</strong>, turn off behavioral analytics in cookie settings.</li>
         </ul>
       </>)},
