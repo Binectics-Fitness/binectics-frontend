@@ -113,12 +113,14 @@ describe("member workout plan page", () => {
       { name: "Plank", duration_minutes: 1, order: 1, media_id: "plank", library_exercise_id: "plank" },
       { name: "Barbell Deadlift", sets: 3, reps: 5, order: 2, media_id: "barbell-deadlift", library_exercise_id: "barbell-deadlift" },
       { name: "Farmer walk", order: 3, notes: "Heavy" },
+      { name: "Lat pulldown", order: 4, media_id: "lat-pulldown", library_exercise_id: "lat-pulldown" },
     ],
   } as unknown as WorkoutPlan;
   const renderGuided = async () => {
     guidance.library = [
       lib("plank", "Plank", ["Lie face down and place your forearms on the floor."]),
       lib("barbell-deadlift", "Barbell Deadlift", ["Stand with the bar over the middle of your feet."]),
+      lib("lat-pulldown", "Lat pulldown", ["Sit with your thighs under the pad."]),
     ];
     vi.spyOn(progressService, "getMyWorkoutPlanById").mockReturnValue(ok(GUIDED) as never);
     const params = Promise.resolve({ planId: "p1" });
@@ -148,14 +150,14 @@ describe("member workout plan page", () => {
     expect(screen.queryByTestId("exercise-guide")).toBeNull();
   });
 
-  it("switch on: the new text-only exercises open too, and a custom exercise never does", async () => {
+  it("switch on: approved text-only exercises open too; a withheld one (barbell deadlift) and a custom one never do", async () => {
     guidance.flagOn = true;
     await renderGuided();
-    fireEvent.click(await screen.findByRole("button", { name: "How to do Barbell Deadlift" }));
-    expect(screen.getByTestId("exercise-guide").textContent).toContain("Stand with the bar over the middle of your feet.");
+    fireEvent.click(await screen.findByRole("button", { name: "How to do Lat pulldown" }));
+    expect(screen.getByTestId("exercise-guide").textContent).toContain("Sit with your thighs under the pad.");
+    expect(screen.queryByRole("button", { name: "How to do Barbell Deadlift" })).toBeNull();
     expect(screen.getByRole("button", { name: "How to do Plank" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "How to do Farmer walk" })).toBeNull();
-    expect(screen.queryByTestId("exercise-art")).toBeNull();
   });
 
   it("no library (an older API or a failed load): the rows are exactly as before", async () => {

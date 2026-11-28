@@ -3,6 +3,7 @@
  * Keep the behaviour identical to the mobile file; change both together.
  */
 import type { StarterExercise } from '@/lib/starter/types';
+import { bundledTextApproved } from '@/lib/exercises/memberText';
 
 /**
  * Guided session engine: a pure state machine, no timers, no speech, no React.
@@ -186,7 +187,8 @@ export function buildPlan(
       reps: !timed && e.reps !== undefined ? e.reps : undefined,
       restSeconds: Math.max(0, Math.round(e.restSeconds ?? defaultRestSeconds)),
       // The plan's own cues come first; the library fills in only where the plan is silent.
-      cues: e.cues?.length ? e.cues : (fallbackCues?.(e.mediaId) ?? []),
+      // A withheld exercise (see exercises/memberText) shows and speaks no written cue: name, picture and timing stay.
+      cues: e.mediaId && !bundledTextApproved(e.mediaId) ? [] : e.cues?.length ? e.cues : (fallbackCues?.(e.mediaId) ?? []),
     };
   });
 }
