@@ -15,6 +15,8 @@ import { accessSummary, isPaid } from "@/lib/paidContent/helpers";
 import { useConfirmationModal } from "@/hooks/useConfirmationModal";
 import { useDialogFocus } from "@/lib/ui/useDialogFocus";
 import { FoodPicker } from "./FoodPicker";
+import { MealPlanUpdateClientsDialog } from "./UpdateClientsDialog";
+import { MEAL_UPDATE_COPY } from "./_updateCopy";
 import { toast } from "@/components/Toast";
 import { useOrgFormat } from "@/lib/format/useOrgFormat";
 import { DietPlanDeliveryType, PlanStatus, MealSlot } from "@/lib/types";
@@ -508,6 +510,7 @@ function MealPlanCard({
   plan,
   onEdit,
   onAssign,
+  onUpdateClients,
   onArchive,
   onToggle,
   onPricing,
@@ -516,6 +519,8 @@ function MealPlanCard({
   plan: DietPlan;
   onEdit: () => void;
   onAssign: () => void;
+  /** Library templates only: preview, then update the copies clients hold. */
+  onUpdateClients?: () => void;
   onArchive: () => void;
   onToggle: () => void;
   /** Present for a sellable template while paid content is on (or already paid). */
@@ -599,6 +604,16 @@ function MealPlanCard({
               Assign
             </button>
           )}
+          {onUpdateClients && (
+            <button
+              type="button"
+              onClick={onUpdateClients}
+              className="font-mono text-[10.5px] uppercase tracking-[0.04em] px-2.5 py-1.25 rounded-(--r-1)"
+              style={{ border: "1px solid var(--border)", color: "var(--fg-2)", background: "transparent" }}
+            >
+              {MEAL_UPDATE_COPY.button}
+            </button>
+          )}
           {onPricing && (
             <button
               type="button"
@@ -652,6 +667,7 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
     initialCreateOpen ? { mode: "create" } : null,
   );
   const [assignPlan, setAssignPlan] = useState<DietPlan | null>(null);
+  const [updatePlan, setUpdatePlan] = useState<DietPlan | null>(null);
   const [pricingPlan, setPricingPlan] = useState<DietPlan | null>(null);
   // Pricing shows by the one paid-content rule, and not to a gym's staff trainer (D10).
   const { on: sellingOn, canPrice } = usePaidContentSeller();
@@ -742,7 +758,16 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
         ),
       );
       setModal(null);
-      toast.success("Meal plan updated.");
+      // Edits never reach clients on their own (owner decision G3): say so,
+      // and offer the preview right where the dietitian just finished.
+      if (isTemplatePlan(plan) && !isDocument) {
+        toast.success(MEAL_UPDATE_COPY.savedNote, {
+          label: MEAL_UPDATE_COPY.button,
+          onClick: () => setUpdatePlan({ ...plan, ...res.data!, client_id: plan.client_id }),
+        });
+      } else {
+        toast.success("Meal plan updated.");
+      }
     } else {
       toast.error(res.message ?? "Failed to update meal plan.");
     }
@@ -863,6 +888,11 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
               fmtDate={fmtDate}
               onEdit={() => setModal({ mode: "edit", plan })}
               onAssign={() => setAssignPlan(plan)}
+              onUpdateClients={
+                isTemplatePlan(plan) && isAssignableTemplate(plan) && plan.status !== PlanStatus.ARCHIVED
+                  ? () => setUpdatePlan(plan)
+                  : undefined
+              }
               onArchive={() => handleArchive(plan)}
               onToggle={() => handleToggle(plan)}
               // Only library templates in the platform format can be sold (PDF plans cannot, D13).
@@ -927,6 +957,13 @@ export default function MealPlansClient({ initialCreateOpen = false }: { initial
           plan={assignPlan}
           onClose={() => setAssignPlan(null)}
           onAssigned={(created) => setPlans((p) => [created, ...p])}
+        />
+      )}
+      {updatePlan && (
+        <MealPlanUpdateClientsDialog
+          planId={updatePlan._id}
+          planTitle={updatePlan.title}
+          onClose={() => setUpdatePlan(null)}
         />
       )}
       {confirmationModal}

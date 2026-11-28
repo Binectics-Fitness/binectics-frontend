@@ -85,6 +85,7 @@ export function billingResourceLabel(key: string | null): string {
       branded_email_enabled: "branded email",
       exercise_library_enabled: "the exercise library",
       program_updates_enabled: "updating clients on a program",
+      meal_plan_updates_enabled: "updating clients on a meal plan",
       forms_enabled: "forms",
       classes_enabled: "class schedules",
       api_access_enabled: "API access",
