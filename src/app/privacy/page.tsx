@@ -108,7 +108,7 @@ const DOCS: Record<DocType, { label: string; version: string; sections: Section[
       { num: "00", title: "Plain‑English summary", content: (
         <div className="rounded-r-(--r-2) py-3 px-4 my-4 max-w-[60ch]" style={{ background: "var(--bg-2)", borderLeft: "2px solid var(--ink)" }}>
           <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] mb-1" style={{ color: "var(--fg-3)" }}>In one paragraph</div>
-          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.</p>
+          <p className="text-[14px] leading-[1.5]" style={{ color: "var(--ink)", margin: 0 }}>We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong>We don&apos;t sell your data, ever.</strong> Members can download their own history (programs, activity, weight, fasts, water, daily list, journal notes and goals) from settings, and you can delete your account from settings, any time, and the deletion is real. Meals and the rest of your account data are not in that download yet; email privacy@binectics.com for a copy of anything else.</p>
         </div>
       )},
       { num: "01", title: "What we collect", content: (<>

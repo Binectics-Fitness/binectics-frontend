@@ -431,7 +431,7 @@ function PrivacyDoc({ onJump }: { onJump: (t: DocTab) => void }) {
       <div style={S.plainBox}>
         <div style={S.plainH}>In one paragraph</div>
         <p style={S.plainP}>
-          We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong style={S.docStrong}>We don&apos;t sell your data, ever.</strong> You can download a full copy or delete your account from settings, any time, and the deletion is real.
+          We collect what we need to run a marketplace, your account info, what you book, who you message, and how you pay. We use it to keep the service working, prevent fraud, and follow the law. <strong style={S.docStrong}>We don&apos;t sell your data, ever.</strong> Members can download their own history (programs, activity, weight, fasts, water, daily list, journal notes and goals) from settings, and you can delete your account from settings, any time, and the deletion is real. Meals and the rest of your account data are not in that download yet; email privacy@binectics.com for a copy of anything else.
         </p>
       </div>
 
