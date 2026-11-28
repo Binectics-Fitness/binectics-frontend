@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, screen, within, fireEvent, waitFor, act } from "@testing-library/react";
 import MealPlansClient from "@/app/dashboard/dietitian/meal-plans/MealPlansClient";
 import { progressService, type DietPlan } from "@/lib/api/progress";
 import { DietPlanDeliveryType, MealSlot, PlanStatus } from "@/lib/types";
@@ -72,6 +72,40 @@ describe("MealPlansClient cards", () => {
     expect(within(card("Template week")).getByRole("button", { name: "Assign" })).toBeInTheDocument();
     expect(within(card("Assigned week")).queryByRole("button", { name: "Assign" })).toBeNull();
     expect(within(card("PDF plan")).queryByRole("button", { name: "Assign" })).toBeNull();
+  });
+
+  it("offers Update clients only on platform templates, and it opens the preview", async () => {
+    const preview = vi.spyOn(progressService, "previewMealPlanUpdate").mockResolvedValue({
+      success: true,
+      data: { template: { id: "t1", title: "Template week", version: 2 }, timezone: "UTC", effective_from: "2026-12-01", up_to_date_count: 0, clients: [] },
+    } as never);
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    expect(within(card("Assigned week")).queryByRole("button", { name: "Update clients" })).toBeNull();
+    expect(within(card("PDF plan")).queryByRole("button", { name: "Update clients" })).toBeNull();
+    fireEvent.click(within(card("Template week")).getByRole("button", { name: "Update clients" }));
+    expect(await screen.findByRole("dialog", { name: "Update clients on Template week" })).toBeInTheDocument();
+    expect(preview).toHaveBeenCalledWith("t1", expect.anything());
+  });
+
+  it("saving a template says clients keep their plan until updated, with an Update clients action", async () => {
+    vi.spyOn(progressService, "updateStandaloneDietPlan").mockResolvedValue({ success: true, data: { ...TEMPLATE, title: "Template week" } } as never);
+    vi.spyOn(progressService, "previewMealPlanUpdate").mockResolvedValue({
+      success: true,
+      data: { template: { id: "t1", title: "Template week", version: 3 }, timezone: "UTC", effective_from: "2026-12-01", up_to_date_count: 0, clients: [] },
+    } as never);
+    const { toast } = await import("@/components/Toast");
+    const spy = vi.spyOn(toast, "success");
+    render(<MealPlansClient />);
+    await screen.findByText("Template week");
+    fireEvent.click(within(card("Template week")).getByRole("button", { name: "Edit" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    const [msg, action] = spy.mock.calls[0] as [string, { label: string; onClick: () => void }];
+    expect(msg).toMatch(/Clients keep their current plan until you update them/);
+    expect(action.label).toBe("Update clients");
+    act(() => action.onClick());
+    expect(await screen.findByRole("dialog", { name: "Update clients on Template week" })).toBeInTheDocument();
   });
 
   it("shows kcal per day as a range instead of the week's sum", async () => {

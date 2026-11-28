@@ -606,7 +606,114 @@ export interface UpdateDietPlanRequest {
 
 // ==================== SERVICE ====================
 
+// ==================== UPDATE CLIENTS (meal plans) ====================
+
+export type MealPlanDiffKind = "added" | "removed" | "changed" | "plan";
+
+export interface MealPlanDiffItem {
+  kind: MealPlanDiffKind;
+  /** A day bucket ("monday", "every_day"), or null for the plan's own title/description. */
+  day_of_week: string | null;
+  meal_type: string | null;
+  title: string;
+  /** Plain names of the parts that differ ("calories", "foods", ...). */
+  fields: string[];
+  was_title?: string;
+}
+
+export interface MealPlanUpdateClientPreview {
+  plan_id: string;
+  client_profile_id: string;
+  client_name: string | null;
+  meals: { added: number; changed: number; removed: number; total: number };
+  items: MealPlanDiffItem[];
+  total_items: number;
+  /** First day (YYYY-MM-DD) the client sees the new menu. */
+  effective_from: string;
+  selectable: boolean;
+  disabled_reason: string | null;
+  /** The dietitian edited this copy by hand; updating replaces the edits. */
+  hand_edited: boolean;
+  paid: boolean;
+  default_checked: boolean;
+}
+
+export interface MealPlanUpdatePreview {
+  template: { id: string; title: string; version: number };
+  timezone: string;
+  effective_from: string;
+  up_to_date_count: number;
+  clients: MealPlanUpdateClientPreview[];
+}
+
+export type MealPlanUpdateResultStatus =
+  | "updated"
+  | "replayed"
+  | "nothing_to_change"
+  | "skipped_edited"
+  | "skipped_bought"
+  | "failed";
+
+export interface MealPlanUpdateClientResult {
+  plan_id: string;
+  client_name: string | null;
+  status: MealPlanUpdateResultStatus;
+  update_id?: string;
+  things_changed?: number;
+  revert_until?: string;
+  error_code?: string;
+  message?: string;
+}
+
+export interface MealPlanRevertableUpdate {
+  plan_id: string;
+  update_id: string;
+  client_name: string | null;
+  things_changed: number;
+  applied_at?: string;
+  revert_until?: string;
+}
+
 export const progressService = {
+  // ==================== UPDATE CLIENTS (meal plans) ====================
+
+  /** Step 1: who holds an out-of-date copy and what would change. Writes nothing. */
+  async previewMealPlanUpdate(
+    planId: string,
+    timezone?: string,
+  ): Promise<ApiResponse<MealPlanUpdatePreview>> {
+    const q = timezone ? `?timezone=${encodeURIComponent(timezone)}` : "";
+    return await apiClient.get<MealPlanUpdatePreview>(
+      `/progress/diet-plans/${planId}/update-preview${q}`,
+    );
+  },
+
+  /** Step 2: update the picked copies from tomorrow. Same key = a retry, never a second apply. */
+  async updateMealPlanClients(
+    planId: string,
+    payload: {
+      plan_ids: string[];
+      overwrite_edited_plan_ids?: string[];
+      idempotency_key: string;
+      timezone?: string;
+    },
+  ): Promise<ApiResponse<{ results: MealPlanUpdateClientResult[] }>> {
+    return await apiClient.post<{ results: MealPlanUpdateClientResult[] }>(
+      `/progress/diet-plans/${planId}/update-clients`,
+      payload,
+    );
+  },
+
+  /** Take updates back (the Undo toast; 24 hours). */
+  async revertMealPlanUpdates(
+    updates: Array<{ plan_id: string; update_id: string }>,
+  ): Promise<ApiResponse<MealPlanUpdateClientResult[]>> {
+    return await apiClient.post<MealPlanUpdateClientResult[]>(
+      "/progress/diet-plan-updates/revert",
+      { updates },
+    );
+  },
+
   // ==================== ADD CLIENT (unified — by email) ====================
 
   async addClient(
