@@ -63,6 +63,8 @@ export interface User {
    * any other authenticated route (used for seeded/temporary credentials).
    */
   must_change_password?: boolean;
+  /** IANA zone the API uses for server-computed dates; synced from the browser. */
+  time_zone?: string | null;
 }
 
 export interface AuthTokens {
