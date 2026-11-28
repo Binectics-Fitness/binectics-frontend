@@ -7,6 +7,7 @@ import {
   normalizeLibrary,
   truncateName,
   distinctValues,
+  distinctMuscles,
   PROGRAM_EXERCISE_NAME_MAX,
   equipmentLabel,
   hasGuidance,
@@ -74,9 +75,13 @@ describe("guideLookup: what a member may read", () => {
   const exercises = normalizeLibrary({
     available: true,
     exercises: [
-      { id: "plank", name: "Plank", category: "Core", equipment: "none", variants: [], steps: ["Hold."] },
-      { id: "pull-up", name: "Pull-Up", category: "Pull", equipment: "pull-up bar", variants: [], steps: ["Hang."] },
-      { id: "squat", name: "Squat", category: "Squat", equipment: "none", variants: [] },
+      { id: "plank", name: "Plank", category: "Core", equipment: "none", variants: [], steps: ["Hold."], member_text_approved: true },
+      { id: "pull-up", name: "Pull-Up", category: "Pull", equipment: "pull-up bar", variants: [], steps: ["Hang."], member_text_approved: true },
+      { id: "squat", name: "Squat", category: "Squat", equipment: "none", variants: [], member_text_approved: true },
+      // In the coach-review scope: the API withholds its text from members.
+      { id: "barbell-deadlift", name: "Barbell Deadlift", category: "Hinge", equipment: "barbell", variants: [], steps: ["Lift."], member_text_approved: false },
+      // An older API that sends no field at all: fails closed.
+      { id: "goblet-squat", name: "Goblet Squat", category: "Squat", equipment: "dumbbells", variants: [], steps: ["Hold."] },
     ],
   }).exercises;
   it("switch off: only the exercises the Starter program already explains", () => {
@@ -96,6 +101,41 @@ describe("guideLookup: what a member may read", () => {
   });
 });
 
+const exercises2 = normalizeLibrary({
+  available: true,
+  exercises: [
+    { id: "pull-up", name: "Pull-Up", category: "Pull", equipment: "pull-up bar", variants: [], steps: ["Hang."], member_text_approved: true },
+    { id: "barbell-deadlift", name: "Barbell Deadlift", category: "Hinge", equipment: "barbell", variants: [], steps: ["Lift."], member_text_approved: false },
+    { id: "goblet-squat", name: "Goblet Squat", category: "Squat", equipment: "dumbbells", variants: [], steps: ["Hold."] },
+  ],
+}).exercises;
+
+describe("approved member text (the API's member_text_approved)", () => {
+  const raw = (extra: object) =>
+    normalizeLibrary({ available: true, exercises: [{ id: "x", name: "X", category: "Push", equipment: "none", variants: [], ...extra }] }).exercises[0];
+  it("is true only when the API says so", () => {
+    expect(raw({ member_text_approved: true }).memberTextApproved).toBe(true);
+    expect(raw({ member_text_approved: false }).memberTextApproved).toBe(false);
+    expect(raw({}).memberTextApproved).toBeUndefined();
+  });
+  it("withheld text never reaches a member, switch on or off, even for a Starter exercise", () => {
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", true, false)).toBe(false);
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", false, false)).toBe(false);
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", true)).toBe(false);
+  });
+  it("approved text still follows the master switch", () => {
+    expect(memberMaySeeGuidance("pull-up", false, true)).toBe(false);
+    expect(memberMaySeeGuidance("pull-up", true, true)).toBe(true);
+    expect(memberMaySeeGuidance("plank", false, true)).toBe(true);
+  });
+  it("the lookup hides withheld rows; an unmarked row (older API) follows the bundled approved list", () => {
+    const find = guideLookup(exercises2, true);
+    expect(find({ libraryExerciseId: "barbell-deadlift" })).toBeNull();
+    expect(find({ libraryExerciseId: "goblet-squat" })?.id).toBe("goblet-squat"); // unmarked, but on the bundled approved list
+    expect(find({ libraryExerciseId: "pull-up" })?.id).toBe("pull-up");
+  });
+});
+
 describe("filterLibrary", () => {
   const all = lib.exercises;
   it("matches every word of the query against the name", () => {
@@ -105,6 +145,18 @@ describe("filterLibrary", () => {
   it("narrows by category and equipment", () => {
     expect(filterLibrary(all, { query: "", category: "Push", equipment: "" })).toHaveLength(1);
     expect(filterLibrary(all, { query: "squat", category: "", equipment: "none" }).map((e) => e.id)).toEqual(["squat"]);
+  });
+  it("filters by muscle and lists distinct primary muscles", () => {
+    const m = normalizeLibrary({
+      available: true,
+      exercises: [
+        { id: "a", name: "A", category: "Push", equipment: "none", variants: [], primary_muscles: ["Chest"], secondary_muscles: ["Core"] },
+        { id: "b", name: "B", category: "Pull", equipment: "none", variants: [], primary_muscles: ["Upper back"] },
+      ],
+    }).exercises;
+    expect(filterLibrary(m, { query: "", category: "", equipment: "", muscle: "Core" }).map((e) => e.id)).toEqual(["a"]);
+    expect(filterLibrary(m, { query: "", category: "", equipment: "", muscle: "Chest" })).toHaveLength(1);
+    expect(distinctMuscles(m)).toEqual(["Chest", "Upper back"]);
   });
   it("lists distinct sorted filter values", () => {
     expect(distinctValues(all, "equipment")).toEqual(["dumbbells", "none"]);

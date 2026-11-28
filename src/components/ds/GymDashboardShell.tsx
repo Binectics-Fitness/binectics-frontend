@@ -3,7 +3,9 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserRole } from "@/lib/types";
-import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
+import { ProviderShell, SidebarIcon as I, withLibraryItem, withNavBadge, type NavSection } from "./ProviderShell";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { LIBRARY_PAGE_FLAG } from "@/lib/exercises/library";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
 import { useGymViewer } from "@/hooks/useGymViewer";
@@ -87,15 +89,14 @@ export function GymDashboardShell({ activeItem, crumb, actions, children }: GymD
   // Only asked for when the role may see requests; the API refuses the rest.
   const requestsWaiting = useOrgPendingRequestCount(viewer.orgId ?? undefined, allows(viewer, GYM_NAV_ACCESS.Requests));
   const { on: sellingOn } = usePaidContentSeller();
-  const sections = gymSidebarFor(
-    withNavBadge(
-      withNavBadge(withNavBadge(withContentItem(SIDEBAR, sellingOn), "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
-      "Requests",
-      requestsWaiting,
-      "warn",
-    ),
-    viewer,
+  const libraryOn = useFeatureFlag(LIBRARY_PAGE_FLAG);
+  const badged = withNavBadge(
+    withNavBadge(withNavBadge(withContentItem(SIDEBAR, sellingOn), "Messages", unreadMessages), "Refunds", refundsWaiting, "warn"),
+    "Requests",
+    requestsWaiting,
+    "warn",
   );
+  const sections = gymSidebarFor(withLibraryItem(badged, libraryOn, "/dashboard/gym-owner/library", "My listing"), viewer);
   const { staff } = viewer;
   const gymName = viewer.orgName ?? "the gym";
   // A deep link to a gym page the role doesn't cover gets one line, not a

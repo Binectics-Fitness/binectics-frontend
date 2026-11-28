@@ -41,6 +41,8 @@ export interface LibraryExercise {
    * bundled list in memberText.ts. Providers see all text regardless.
    */
   memberTextApproved?: boolean;
+  /** The client builds the API says bundle art for this exercise. Informational: this app checks its own bundle. */
+  artOn?: string[];
 }
 
 /**
@@ -124,6 +126,7 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
     if (cues) exercise.cues = cues;
     if (row.timed === true) exercise.timed = true;
     if (typeof row.member_text_approved === "boolean") exercise.memberTextApproved = row.member_text_approved;
+    if (Array.isArray(row.art_on)) exercise.artOn = row.art_on.filter((v): v is string => typeof v === "string");
     exercises.push(exercise);
   }
   return { available: exercises.length > 0, exercises };
@@ -158,6 +161,8 @@ export interface LibraryFilter {
   query: string;
   category: string;
   equipment: string;
+  /** Matches a primary or secondary muscle that contains this text. */
+  muscle?: string;
 }
 
 export const ALL = "";
@@ -167,17 +172,26 @@ const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 
 /** Search by name (every word must match), narrowed by category and equipment. */
 export function filterLibrary(
   exercises: LibraryExercise[],
-  { query, category, equipment }: LibraryFilter,
+  { query, category, equipment, muscle }: LibraryFilter,
 ): LibraryExercise[] {
   const words = norm(query).split(" ").filter(Boolean);
   return exercises.filter((e) => {
     if (category && e.category !== category) return false;
     if (equipment && e.equipment !== equipment) return false;
+    if (muscle && ![...(e.primaryMuscles ?? []), ...(e.secondaryMuscles ?? [])].some((m) => m === muscle)) return false;
     if (words.length === 0) return true;
     const hay = norm(`${e.name} ${e.id.replace(/-/g, " ")}`);
     return words.every((w) => hay.includes(w));
   });
 }
+
+/** Distinct primary muscles, sorted, for the Library's muscle filter. */
+export function distinctMuscles(exercises: LibraryExercise[]): string[] {
+  return [...new Set(exercises.flatMap((e) => e.primaryMuscles ?? []))].sort((a, b) => a.localeCompare(b));
+}
+
+/** The honest art tag every Library row carries. */
+export type ArtTag = "Illustrated" | "Text only";
 
 /** Distinct values for a filter dropdown, sorted. */
 export function distinctValues(exercises: LibraryExercise[], key: "category" | "equipment"): string[] {
@@ -202,3 +216,12 @@ const BY_CODE: Record<string, string> = {
 export function libraryErrorMessage(res: { code?: string }): string | null {
   return (res.code && BY_CODE[res.code]) || null;
 }
+
+/** The runtime flag behind the web Library page (default off). */
+export const LIBRARY_PAGE_FLAG = "exercise_library_page";
+
+/** Shown with every Library listing: no claim of review or certification. */
+export const LIBRARY_NOTE = "General guidance, not medical advice.";
+
+/** Shown in the detail of an exercise whose text is not yet approved for members. */
+export const WITHHELD_NOTE = "Members and clients do not see this written text yet.";
