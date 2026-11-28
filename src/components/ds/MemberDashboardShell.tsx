@@ -18,6 +18,10 @@ import { paidContentOn } from "@/lib/paidContent/helpers";
 import { useIsSoloMember } from "@/hooks/useIsSoloMember";
 import { SOLO_MENU_LINKS, TRACKING_LABEL, isTrackingPage, soloActiveLabel, soloNavLinks, trackingNavLinks } from "@/lib/solo/nav";
 import { MemberTrackingMenu } from "@/components/ds/MemberTrackingMenu";
+import { MemberTrainTabs } from "@/components/ds/MemberTrainTabs";
+import { useMemberShellV2 } from "@/hooks/useMemberShellV2";
+import { useMemberCentreAction } from "@/hooks/useMemberCentreAction";
+import { MEMBER_NAV_V2, memberNavActiveV2 } from "@/lib/member/shellV2";
 
 /* ── Lucide-style icon wrapper ── */
 function I({ children, d }: { children?: React.ReactNode; d?: string }) {
@@ -80,6 +84,22 @@ function NavCount({ count }: { count: number }) {
       {count > 99 ? "99+" : count}
       <span className="sr-only"> unread</span>
     </span>
+  );
+}
+
+/* ── The centre action of the new bar: Check in for a gym member, Log for everyone else ── */
+function CentreAction({ active }: { active: boolean }) {
+  // Its own component so the memberships are read only while the flag is on.
+  const action = useMemberCentreAction(true);
+  return (
+    <Link
+      href={action.href}
+      aria-current={active ? "page" : undefined}
+      className="btn-primary-v2 sm whitespace-nowrap"
+      data-testid="member-centre-action"
+    >
+      {action.label}
+    </Link>
   );
 }
 
@@ -194,13 +214,24 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
   // Solo members (no provider, nothing pending) get their own short bar.
   // While the answer is unknown, or for anyone else, the bar is exactly what
   // it always was.
-  const isSolo = solo;
-  const navLinks = isSolo ? soloNavLinks() : memberNavLinks;
+  // With the runtime flag `member_shell_v2` on, every member gets the one bar
+  // (Today, Train, Progress, Messages, Me) and the centre Log / Check in
+  // action; solo or not. Off, nothing below changes.
+  const v2 = useMemberShellV2();
+  const isSolo = solo && !v2;
+  const navLinks = v2 ? MEMBER_NAV_V2 : isSolo ? soloNavLinks() : memberNavLinks;
   const navActiveLabel = isSolo ? soloActiveLabel(activeLabel, pathname) : activeLabel;
-  const accountExtras = isSolo ? SOLO_MENU_LINKS : undefined;
+  const v2Active = v2 ? memberNavActiveV2(pathname) : null;
+  const accountExtras = solo || v2 ? SOLO_MENU_LINKS : undefined;
+  const linkActive = (link: { label: string; href: string }) =>
+    v2 ? v2Active === (link as { key?: string }).key : isMemberNavActive(link, navActiveLabel, pathname);
+  // The centre action is current on the Log pages.
+  const centreActive = v2 && v2Active === "log";
+  // The short bar (solo, or the new five) fits from lg; the full one from xl.
+  const compact = isSolo || v2;
   // Everyone else reaches their own tools from "Tracking", right after Home
   // (the solo bar already lists them).
-  const showTracking = !isSolo;
+  const showTracking = !isSolo && !v2;
   const onTrackingPage = showTracking && isTrackingPage(activeLabel, pathname);
   // A gym's staff reach the gym's dashboard from here (F1).
   const workspaceLink = useWorkspaceSwitch(false);
@@ -219,14 +250,14 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
     triggerRef: mobileTriggerRef,
     overlayRef: mobileOverlayRef,
     panelRef: mobilePanelRef,
-  } = useNavDrawer(isSolo ? "(min-width: 64rem)" : "(min-width: 80rem)");
+  } = useNavDrawer(compact ? "(min-width: 64rem)" : "(min-width: 80rem)");
   const setMobileOpen = (next: boolean) => (next ? openMobileMenu() : closeMobileMenu());
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-2)" }}>
       {/* ── Desktop top nav (lg and up) ── */}
       <header
-        className={`sticky top-0 z-50 hidden ${isSolo ? "lg:block" : "xl:block"}`}
+        className={`sticky top-0 z-50 hidden ${compact ? "lg:block" : "xl:block"}`}
         style={{
           background: "oklch(0.985 0.005 85 / 0.85)",
           backdropFilter: "blur(8px) saturate(140%)",
@@ -246,7 +277,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
           {/* Center — nav links */}
           <nav className="flex items-center" style={{ gap: 4 }} aria-label="Main navigation">
             {navLinks.map((link, i) => {
-              const isActive = isMemberNavActive(link, navActiveLabel, pathname);
+              const isActive = linkActive(link);
               return (
                 <Fragment key={link.label}>
                 <Link
@@ -285,6 +316,8 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
           {/* Right — actions */}
           <div className="flex items-center" style={{ gap: 8 }}>
+            {v2 && <CentreAction active={centreActive} />}
+
             {/* Search — opens the global command bar (also ⌘K / Ctrl-K) */}
             <button
               type="button"
@@ -339,7 +372,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
       {/* ── Phone + tablet top bar ── */}
       <header
-        className={`${isSolo ? "lg:hidden" : "xl:hidden"} sticky top-0 z-50 flex items-center justify-between`}
+        className={`${compact ? "lg:hidden" : "xl:hidden"} sticky top-0 z-50 flex items-center justify-between`}
         style={{
           height: 56,
           padding: "0 16px",
@@ -356,6 +389,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
         {/* Right — bell + avatar + hamburger */}
         <div className="flex items-center" style={{ gap: 8 }}>
+          {v2 && <CentreAction active={centreActive} />}
           <ShellNotificationBell />
           <Link
             href="/dashboard/settings"
@@ -400,7 +434,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
 
       {/* ── Mobile dropdown overlay ── */}
       {mobileOpen && (
-        <div ref={mobileOverlayRef} className={`fixed inset-0 z-50 ${isSolo ? "lg:hidden" : "xl:hidden"}`} style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
+        <div ref={mobileOverlayRef} className={`fixed inset-0 z-50 ${compact ? "lg:hidden" : "xl:hidden"}`} style={{ animation: "fade-in var(--motion-base, 220ms) var(--ease, ease-out)" }}>
           {/* Backdrop */}
           <div
             className="absolute inset-0"
@@ -448,7 +482,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
             {/* Nav links */}
             <nav className="flex flex-col px-5 pt-6" style={{ gap: 4 }} aria-label="Mobile navigation">
               {navLinks.map((link, i) => {
-                const isActive = isMemberNavActive(link, navActiveLabel, pathname);
+                const isActive = linkActive(link);
                 return (
                   <Fragment key={link.label}>
                   <Link
@@ -566,6 +600,7 @@ function MemberShellView({ activeLabel, children, actions, solo = false }: Membe
         className="mx-auto flex flex-col flex-1"
         style={{ maxWidth: 1100, padding: 28 }}
       >
+        {v2 && <MemberTrainTabs />}
         {actions && (
           <div className="flex justify-end mb-4" style={{ gap: 8 }}>
             {actions}
