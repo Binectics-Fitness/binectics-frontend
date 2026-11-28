@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { authService, type RegisterClaimLinkSent } from "@/lib/api/auth";
 import { getDashboardRoute, getLoginRoute, getOnboardingRoute } from "@/lib/constants/routes";
 import { tokenStorage } from "@/lib/utils/storage";
+import { syncBrowserTimeZone } from "@/lib/utils/timeZoneSync";
 import SessionModal from "@/components/SessionModal";
 import {
   ACCOUNT_STATE_ROUTES,
@@ -116,7 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             void authService
               .refreshUserFromApi()
               .then((fresh) => {
-                if (active && fresh) setUser(fresh);
+                if (active && fresh) {
+                  setUser(fresh);
+                  void syncBrowserTimeZone(fresh);
+                }
               })
               .catch(() => {
                 // best-effort; the cached user stays
@@ -129,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // cookie revives the session; a dead one clears the ghost.
           const fresh = await authService.refreshUserFromApi();
           if (active) setUser(fresh);
+          void syncBrowserTimeZone(fresh);
           return;
         }
 
@@ -277,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.success && response.data) {
         setUser(response.data.user);
+        void syncBrowserTimeZone(response.data.user);
         const u = response.data.user;
         if (u.must_change_password) {
           router.push("/admin/change-password");
@@ -412,7 +418,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fresh = await authService.refreshUserFromApi().catch(() => null);
     // A failed refresh is not a sign-out: keep whatever user is cached,
     // the way the mount-time revalidation does.
-    if (fresh) setUser(fresh);
+    if (fresh) {
+      setUser(fresh);
+      void syncBrowserTimeZone(fresh);
+    }
     return fresh;
   };
 
