@@ -68,6 +68,13 @@ describe("ChoiceGroup", () => {
 
 describe("ExerciseCard", () => {
   const base = { index: 0, ticked: false, onTick: vi.fn(), numbers: null, onNumber: vi.fn() };
+  it("hides the cues of a withheld exercise but keeps name, dose and picture", () => {
+    render(<ExerciseCard {...base} exercise={{ name: "Glute bridge", sets: 2, reps: 10, cues: ["Squeeze at the top"], mediaId: "glute-bridge" }} />);
+    expect(screen.getByRole("heading", { name: "Glute bridge" })).toBeInTheDocument();
+    expect(screen.queryByText("Squeeze at the top")).toBeNull();
+    expect(screen.getByText(/2 x 10/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View exercise: Glute bridge" })).toBeInTheDocument();
+  });
   it("shows dose, rest, cues and the illustration with its alt text", () => {
     render(<ExerciseCard {...base} exercise={{ name: "Squat", sets: 2, reps: 10, restSeconds: 45, cues: ["Chest tall"], mediaId: "squat" }} />);
     expect(screen.getByText("2 x 10 · Rest 45 sec")).toBeInTheDocument();

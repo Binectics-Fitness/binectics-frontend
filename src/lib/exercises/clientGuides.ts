@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadLibrary } from "@/components/programs/exerciseLibraryCache";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
+import { memberTextApproved } from "@/lib/exercises/memberText";
 import { hasGuidance, MEMBER_GUIDANCE_FLAG, type LibraryExercise } from "@/lib/exercises/library";
 import type { LibraryRef } from "@/lib/exercises/clientArt";
 
@@ -21,7 +22,9 @@ export function libraryIdOf(ref: LibraryRef): string | null {
  * allowed. Every other exercise's text is new and has not been read by a
  * coach: it shows only when the owner has switched MEMBER_GUIDANCE_FLAG on.
  */
-export function memberMaySeeGuidance(id: string, flagOn: boolean): boolean {
+export function memberMaySeeGuidance(id: string, flagOn: boolean, apiApproved?: boolean | null): boolean {
+  // The approved-text gate only removes: withheld exercises show no library text whatever the flag says.
+  if (!memberTextApproved(id, apiApproved)) return false;
   return flagOn || !!getExerciseInfo(id);
 }
 
@@ -36,7 +39,7 @@ export function guideLookup(exercises: readonly LibraryExercise[], flagOn: boole
     if (!id) return null;
     const entry = byId.get(id);
     if (!entry || !hasGuidance(entry)) return null;
-    return memberMaySeeGuidance(id, flagOn) ? entry : null;
+    return memberMaySeeGuidance(id, flagOn, entry.memberTextApproved) ? entry : null;
   };
 }
 

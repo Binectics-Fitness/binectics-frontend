@@ -35,6 +35,12 @@ export interface LibraryExercise {
    * prescribe it in seconds, not reps. Absent on an older API.
    */
   timed?: boolean;
+  /**
+   * From the API's approved-text list: false = the written text must not be
+   * shown to a member or client. Absent (an older API) falls back to the
+   * bundled list in memberText.ts. Providers see all text regardless.
+   */
+  memberTextApproved?: boolean;
 }
 
 /**
@@ -117,6 +123,7 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
     if (steps) exercise.steps = steps;
     if (cues) exercise.cues = cues;
     if (row.timed === true) exercise.timed = true;
+    if (typeof row.member_text_approved === "boolean") exercise.memberTextApproved = row.member_text_approved;
     exercises.push(exercise);
   }
   return { available: exercises.length > 0, exercises };
