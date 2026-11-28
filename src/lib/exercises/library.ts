@@ -36,9 +36,9 @@ export interface LibraryExercise {
    */
   timed?: boolean;
   /**
-   * From the API's approved-text list: true only when the written text may be
-   * shown to a member or client. Absent (an older API) reads as NOT approved,
-   * so member display fails closed. Providers see all text regardless.
+   * From the API's approved-text list: false = the written text must not be
+   * shown to a member or client. Absent (an older API) falls back to the
+   * bundled list in memberText.ts. Providers see all text regardless.
    */
   memberTextApproved?: boolean;
   /** The client builds the API says bundle art for this exercise. Informational: this app checks its own bundle. */
@@ -125,7 +125,7 @@ export function normalizeLibrary(raw: unknown): ExerciseLibrary {
     if (steps) exercise.steps = steps;
     if (cues) exercise.cues = cues;
     if (row.timed === true) exercise.timed = true;
-    if (row.member_text_approved === true) exercise.memberTextApproved = true;
+    if (typeof row.member_text_approved === "boolean") exercise.memberTextApproved = row.member_text_approved;
     if (Array.isArray(row.art_on)) exercise.artOn = row.art_on.filter((v): v is string => typeof v === "string");
     exercises.push(exercise);
   }

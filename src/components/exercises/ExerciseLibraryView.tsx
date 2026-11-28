@@ -6,6 +6,7 @@ import ExerciseIllustration, { hasExerciseIllustration } from "@/components/Exer
 import { ExerciseGuide } from "@/components/exercises/ExerciseGuide";
 import { ExerciseThumb } from "@/components/programs/ExercisePicker";
 import { loadLibrary, type LibraryState } from "@/components/programs/exerciseLibraryCache";
+import { memberTextApproved } from "@/lib/exercises/memberText";
 import { AsyncSpinner, Drawer, EmptySlate, Eyebrow, FilterPill, PageHeader } from "@/components/ds";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import {
@@ -92,7 +93,7 @@ function Rail({ label, values, current, onPick, count, format }: {
 }
 
 function Detail({ e, audience }: { e: LibraryExercise; audience: LibraryAudience }) {
-  const withheld = e.memberTextApproved !== true && hasGuidance(e);
+  const withheld = !memberTextApproved(e.id, e.memberTextApproved) && hasGuidance(e);
   return (
     <div className="flex flex-col gap-4 px-6 py-5" data-testid="library-detail">
       <div className="flex items-center gap-2">

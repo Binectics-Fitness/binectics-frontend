@@ -114,6 +114,7 @@ describe("member workout plan page", () => {
       { name: "Plank", duration_minutes: 1, order: 1, media_id: "plank", library_exercise_id: "plank" },
       { name: "Barbell Deadlift", sets: 3, reps: 5, order: 2, media_id: "barbell-deadlift", library_exercise_id: "barbell-deadlift" },
       { name: "Farmer walk", order: 3, notes: "Heavy" },
+      { name: "Lat pulldown", order: 4, media_id: "lat-pulldown", library_exercise_id: "lat-pulldown" },
     ],
   } as unknown as WorkoutPlan;
   // The deadlift is in the coach-review scope: withheld unless a test says it is approved.
@@ -121,6 +122,7 @@ describe("member workout plan page", () => {
     guidance.library = [
       lib("plank", "Plank", ["Lie face down and place your forearms on the floor."]),
       lib("barbell-deadlift", "Barbell Deadlift", ["Stand with the bar over the middle of your feet."], deadliftApproved),
+      lib("lat-pulldown", "Lat pulldown", ["Sit with your thighs under the pad."]),
     ];
     vi.spyOn(progressService, "getMyWorkoutPlanById").mockReturnValue(ok(GUIDED) as never);
     const params = Promise.resolve({ planId: "p1" });
@@ -165,7 +167,6 @@ describe("member workout plan page", () => {
     expect(screen.getByTestId("exercise-guide").textContent).toContain("Stand with the bar over the middle of your feet.");
     expect(screen.getByRole("button", { name: "How to do Plank" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "How to do Farmer walk" })).toBeNull();
-    expect(screen.queryByTestId("exercise-art")).toBeNull();
   });
 
   it("no library (an older API or a failed load): the rows are exactly as before", async () => {

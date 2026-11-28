@@ -5,6 +5,7 @@ import Link from "next/link";
 import ExerciseIllustration, { hasExerciseIllustration } from "@/components/ExerciseIllustration";
 import { exerciseDose, isTimedExercise, restLine, type SetEntry } from "@/lib/starter/model";
 import type { StarterExercise } from "@/lib/starter/types";
+import { bundledTextApproved } from "@/lib/exercises/memberText";
 import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
 import { exerciseDetailHref } from "@/lib/exercises/exerciseDetail";
 
@@ -69,6 +70,8 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const session = useSessionIdFromPath(sessionId);
   const hasGuide = !!e.mediaId && !!getExerciseInfo(e.mediaId);
+  // Written text of a withheld exercise is hidden from members; the picture, name and dose stay.
+  const showCues = !e.mediaId || bundledTextApproved(e.mediaId);
   const dose = exerciseDose(e);
   const rest = restLine(e);
   const facts = [dose, rest].filter(Boolean).join(" · ");
@@ -101,7 +104,7 @@ export function ExerciseCard({
               {facts}
             </p>
           )}
-          {e.cues.length > 0 && (
+          {showCues && e.cues.length > 0 && (
             <ul className="mt-2 flex flex-col gap-1">
               {e.cues.map((c, ci) => (
                 <li key={ci} className="text-[14px] leading-snug" style={{ color: "var(--fg-2)" }}>
@@ -115,9 +118,9 @@ export function ExerciseCard({
               href={exerciseDetailHref(e.mediaId as string, { session, index })}
               className="mt-1 inline-flex min-h-[44px] items-center text-[14px] font-medium underline decoration-[var(--border-2)] underline-offset-4 hover:decoration-[var(--ink)]"
               style={{ color: "var(--ink)" }}
-              aria-label={`How to do it: ${e.name}`}
+              aria-label={`${showCues ? "How to do it" : "View exercise"}: ${e.name}`}
             >
-              How to do it
+              {showCues ? "How to do it" : "View exercise"}
             </Link>
           )}
         </div>

@@ -17,6 +17,7 @@ import {
   resolveExercisePlanContext,
   type ExerciseBack,
 } from "@/lib/exercises/exerciseDetail";
+import { bundledTextApproved, WITHHELD_TEXT_LINE } from "@/lib/exercises/memberText";
 import { useActiveStarter } from "@/lib/queries/starter";
 import { exerciseDose, restLine } from "@/lib/starter/model";
 
@@ -83,7 +84,9 @@ export function ExerciseDetail({ mediaId, session, index = null, back }: Exercis
   const planEx = plan?.exercise ?? null;
   const dose = planEx ? exerciseDose(planEx) : "";
   const rest = planEx ? restLine(planEx) : null;
-  const planCues = planEx?.cues ?? [];
+  // The owner's rule: written text of a withheld exercise is hidden from members (name, art, dose and facts stay).
+  const textOk = bundledTextApproved(mediaId);
+  const planCues = textOk ? (planEx?.cues ?? []) : [];
   const partOf = plan
     ? plan.position
       ? `Part of ${plan.workoutTitle} · Exercise ${plan.position.index} of ${plan.position.total}`
@@ -178,9 +181,11 @@ export function ExerciseDetail({ mediaId, session, index = null, back }: Exercis
       )}
       {fromPlan}
 
-      <p className="mt-6 text-[15px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
-        {displaySummary(info.summary, hasArt)}
-      </p>
+      {textOk && (
+        <p className="mt-6 text-[15px] leading-relaxed" style={{ color: "var(--fg-2)" }}>
+          {displaySummary(info.summary, hasArt)}
+        </p>
+      )}
 
       <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
         <Fact label="Difficulty" value={info.difficulty} />
@@ -200,43 +205,53 @@ export function ExerciseDetail({ mediaId, session, index = null, back }: Exercis
         )}
       </Section>
 
-      <Section id="ex-how-h" title="How to do it">
-        <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-[15px] leading-relaxed marker:font-mono" style={{ color: "var(--fg-2)" }}>
-          {info.steps.map((t, i) => (
-            <li key={i}>{t}</li>
-          ))}
-        </ol>
-        <p className="mt-2 text-[14px]" style={{ color: "var(--fg-3)" }}>
-          Pace: {info.tempo}
+      {textOk ? (
+        <>
+          <Section id="ex-how-h" title="How to do it">
+            <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-[15px] leading-relaxed marker:font-mono" style={{ color: "var(--fg-2)" }}>
+              {info.steps.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ol>
+            <p className="mt-2 text-[14px]" style={{ color: "var(--fg-3)" }}>
+              Pace: {info.tempo}
+            </p>
+          </Section>
+
+          <Section id="ex-cues-h" title="Form cues">
+            <Bullets items={info.formCues} />
+          </Section>
+          <Section id="ex-mistakes-h" title="Common mistakes">
+            <Bullets items={info.commonMistakes} />
+          </Section>
+          <Section id="ex-safe-h" title="Stay safe">
+            <Bullets items={info.safetyNotes} />
+          </Section>
+
+          <Section id="ex-easier-h" title="Make it easier">
+            <VariationCard v={info.easierVariation} href={variationHref} />
+          </Section>
+          <Section id="ex-noequip-h" title="No equipment?">
+            {info.withoutEquipment ? (
+              <VariationCard v={info.withoutEquipment} href={variationHref} />
+            ) : (
+              <p className="text-[15px]" style={{ color: "var(--fg-2)" }}>
+                This one needs no equipment.
+              </p>
+            )}
+          </Section>
+        </>
+      ) : (
+        <p data-testid="exercise-text-withheld" className="mt-7 text-[15px] leading-relaxed" style={{ color: "var(--fg-3)" }}>
+          {WITHHELD_TEXT_LINE}
         </p>
-      </Section>
+      )}
 
-      <Section id="ex-cues-h" title="Form cues">
-        <Bullets items={info.formCues} />
-      </Section>
-      <Section id="ex-mistakes-h" title="Common mistakes">
-        <Bullets items={info.commonMistakes} />
-      </Section>
-      <Section id="ex-safe-h" title="Stay safe">
-        <Bullets items={info.safetyNotes} />
-      </Section>
-
-      <Section id="ex-easier-h" title="Make it easier">
-        <VariationCard v={info.easierVariation} href={variationHref} />
-      </Section>
-      <Section id="ex-noequip-h" title="No equipment?">
-        {info.withoutEquipment ? (
-          <VariationCard v={info.withoutEquipment} href={variationHref} />
-        ) : (
-          <p className="text-[15px]" style={{ color: "var(--fg-2)" }}>
-            This one needs no equipment.
-          </p>
-        )}
-      </Section>
-
-      <p className="mt-8 text-[13px] leading-snug" style={{ color: "var(--fg-3)" }}>
-        {EXERCISE_GUIDANCE_DISCLAIMER}
-      </p>
+      {textOk && (
+        <p className="mt-8 text-[13px] leading-snug" style={{ color: "var(--fg-3)" }}>
+          {EXERCISE_GUIDANCE_DISCLAIMER}
+        </p>
+      )}
       <div className="mt-5">{backButton}</div>
     </article>
   );

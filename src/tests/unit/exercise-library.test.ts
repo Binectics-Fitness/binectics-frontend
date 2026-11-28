@@ -12,7 +12,7 @@ import {
   equipmentLabel,
   hasGuidance,
 } from "@/lib/exercises/library";
-import { guideLookup, libraryIdOf, memberMaySeeGuidance, memberMaySeeLibraryText } from "@/lib/exercises/clientGuides";
+import { guideLookup, libraryIdOf, memberMaySeeGuidance } from "@/lib/exercises/clientGuides";
 
 const lib = normalizeLibrary({
   available: true,
@@ -115,23 +115,23 @@ describe("approved member text (the API's member_text_approved)", () => {
     normalizeLibrary({ available: true, exercises: [{ id: "x", name: "X", category: "Push", equipment: "none", variants: [], ...extra }] }).exercises[0];
   it("is true only when the API says so", () => {
     expect(raw({ member_text_approved: true }).memberTextApproved).toBe(true);
-    expect(raw({ member_text_approved: false }).memberTextApproved).toBeUndefined();
+    expect(raw({ member_text_approved: false }).memberTextApproved).toBe(false);
     expect(raw({}).memberTextApproved).toBeUndefined();
   });
   it("withheld text never reaches a member, switch on or off, even for a Starter exercise", () => {
-    const withheld = { id: "dumbbell-romanian-deadlift", memberTextApproved: undefined };
-    expect(memberMaySeeLibraryText(withheld, true)).toBe(false);
-    expect(memberMaySeeLibraryText(withheld, false)).toBe(false);
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", true, false)).toBe(false);
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", false, false)).toBe(false);
+    expect(memberMaySeeGuidance("dumbbell-romanian-deadlift", true)).toBe(false);
   });
   it("approved text still follows the master switch", () => {
-    expect(memberMaySeeLibraryText({ id: "pull-up", memberTextApproved: true }, false)).toBe(false);
-    expect(memberMaySeeLibraryText({ id: "pull-up", memberTextApproved: true }, true)).toBe(true);
-    expect(memberMaySeeLibraryText({ id: "plank", memberTextApproved: true }, false)).toBe(true);
+    expect(memberMaySeeGuidance("pull-up", false, true)).toBe(false);
+    expect(memberMaySeeGuidance("pull-up", true, true)).toBe(true);
+    expect(memberMaySeeGuidance("plank", false, true)).toBe(true);
   });
-  it("the lookup hides withheld and unmarked rows from a member", () => {
+  it("the lookup hides withheld rows; an unmarked row (older API) follows the bundled approved list", () => {
     const find = guideLookup(exercises2, true);
     expect(find({ libraryExerciseId: "barbell-deadlift" })).toBeNull();
-    expect(find({ libraryExerciseId: "goblet-squat" })).toBeNull();
+    expect(find({ libraryExerciseId: "goblet-squat" })?.id).toBe("goblet-squat"); // unmarked, but on the bundled approved list
     expect(find({ libraryExerciseId: "pull-up" })?.id).toBe("pull-up");
   });
 });

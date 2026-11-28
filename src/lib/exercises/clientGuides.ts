@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadLibrary } from "@/components/programs/exerciseLibraryCache";
 import { useFeatureFlag } from "@/hooks/useFeatureFlags";
 import { getExerciseInfo } from "@/lib/exercises/exerciseInfo";
+import { memberTextApproved } from "@/lib/exercises/memberText";
 import { hasGuidance, MEMBER_GUIDANCE_FLAG, type LibraryExercise } from "@/lib/exercises/library";
 import type { LibraryRef } from "@/lib/exercises/clientArt";
 
@@ -21,20 +22,10 @@ export function libraryIdOf(ref: LibraryRef): string | null {
  * allowed. Every other exercise's text is new and has not been read by a
  * coach: it shows only when the owner has switched MEMBER_GUIDANCE_FLAG on.
  */
-export function memberMaySeeGuidance(id: string, flagOn: boolean): boolean {
+export function memberMaySeeGuidance(id: string, flagOn: boolean, apiApproved?: boolean | null): boolean {
+  // The approved-text gate only removes: withheld exercises show no library text whatever the flag says.
+  if (!memberTextApproved(id, apiApproved)) return false;
   return flagOn || !!getExerciseInfo(id);
-}
-
-/**
- * The same rule with the API's approved-text list on top. An exercise whose
- * text the API has not approved for members (the coach-review scope: loaded
- * lifts, hinges, overhead work, carries, spine-sensitive moves, and anything
- * flagged in the content audit) never shows its library text to a member,
- * whatever the flag says; the flag stays the master switch for the rest.
- * Fails closed: an API that does not send the field approves nothing.
- */
-export function memberMaySeeLibraryText(entry: Pick<LibraryExercise, "id" | "memberTextApproved">, flagOn: boolean): boolean {
-  return entry.memberTextApproved === true && memberMaySeeGuidance(entry.id, flagOn);
 }
 
 /** Looks up the guidance a member may read for a provider-assigned row. */
@@ -48,7 +39,7 @@ export function guideLookup(exercises: readonly LibraryExercise[], flagOn: boole
     if (!id) return null;
     const entry = byId.get(id);
     if (!entry || !hasGuidance(entry)) return null;
-    return memberMaySeeLibraryText(entry, flagOn) ? entry : null;
+    return memberMaySeeGuidance(id, flagOn, entry.memberTextApproved) ? entry : null;
   };
 }
 
