@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import { UserRole } from "@/lib/types";
-import { ProviderShell, SidebarIcon as I, withNavBadge, type NavSection } from "./ProviderShell";
+import { ProviderShell, SidebarIcon as I, withLibraryItem, withNavBadge, type NavSection } from "./ProviderShell";
+import { useFeatureFlag } from "@/hooks/useFeatureFlags";
+import { LIBRARY_PAGE_FLAG } from "@/lib/exercises/library";
 import { usePendingListingRequestCount } from "@/lib/queries/marketplace";
 import { useMessagingUnread } from "@/components/messaging/queries";
 import { useRefundsAttentionCount } from "@/lib/queries/refunds";
@@ -46,6 +48,7 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
   const pendingRequests = usePendingListingRequestCount();
   const unreadMessages = useMessagingUnread();
   const refundsWaiting = useRefundsAttentionCount();
+  const libraryOn = useFeatureFlag(LIBRARY_PAGE_FLAG);
   return (
     <ProviderShell
       activeItem={activeItem}
@@ -53,11 +56,16 @@ export function DietitianDashboardShell({ activeItem, crumb, actions, children }
       actions={actions}
       config={{
         role: UserRole.DIETITIAN,
-        sections: withNavBadge(
-          withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages),
-          "Refunds",
-          refundsWaiting,
-          "warn",
+        sections: withLibraryItem(
+          withNavBadge(
+            withNavBadge(withNavBadge(SIDEBAR, "Requests", pendingRequests, "warn"), "Inbox", unreadMessages),
+            "Refunds",
+            refundsWaiting,
+            "warn",
+          ),
+          libraryOn,
+          "/dashboard/dietitian/library",
+          "Programs",
         ),
         identity: "user",
         tone: { avatarBg: "var(--dietitian-soft)", avatarColor: "var(--dietitian)" },

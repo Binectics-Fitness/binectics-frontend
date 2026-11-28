@@ -36,7 +36,7 @@ function DemoTag() {
 }
 
 /** A small still (end pose) thumbnail; an empty tile when there is no art. */
-function ExerciseThumb({ mediaId, size = 48 }: { mediaId?: string; size?: number }) {
+export function ExerciseThumb({ mediaId, size = 48 }: { mediaId?: string; size?: number }) {
   const has = hasExerciseIllustration(mediaId);
   return (
     <div

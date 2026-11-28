@@ -61,6 +61,27 @@ export function withNavBadge(sections: NavSection[], name: string, count: number
   }));
 }
 
+/** Dumbbell mark for the Library nav item. */
+const LIBRARY_ICON = (
+  <SidebarIcon>
+    <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
+  </SidebarIcon>
+);
+
+/**
+ * Adds the Library item after `afterName` while the runtime flag
+ * `exercise_library_page` is on; returns the sections unchanged otherwise
+ * (or when `afterName` is not in them).
+ */
+export function withLibraryItem(sections: NavSection[], enabled: boolean, href: string, afterName: string): NavSection[] {
+  if (!enabled) return sections;
+  return sections.map((s) =>
+    s.items.some((i) => i.name === afterName)
+      ? { ...s, items: s.items.flatMap((i) => (i.name === afterName ? [i, { name: "Library", href, icon: LIBRARY_ICON }] : [i])) }
+      : s,
+  );
+}
+
 /** Avatar styling for the identity chip + user footer. */
 interface ShellTone {
   avatarBg: string;

@@ -25,6 +25,18 @@ export function memberMaySeeGuidance(id: string, flagOn: boolean): boolean {
   return flagOn || !!getExerciseInfo(id);
 }
 
+/**
+ * The same rule with the API's approved-text list on top. An exercise whose
+ * text the API has not approved for members (the coach-review scope: loaded
+ * lifts, hinges, overhead work, carries, spine-sensitive moves, and anything
+ * flagged in the content audit) never shows its library text to a member,
+ * whatever the flag says; the flag stays the master switch for the rest.
+ * Fails closed: an API that does not send the field approves nothing.
+ */
+export function memberMaySeeLibraryText(entry: Pick<LibraryExercise, "id" | "memberTextApproved">, flagOn: boolean): boolean {
+  return entry.memberTextApproved === true && memberMaySeeGuidance(entry.id, flagOn);
+}
+
 /** Looks up the guidance a member may read for a provider-assigned row. */
 export type GuideLookup = (ref: LibraryRef) => LibraryExercise | null;
 
@@ -36,7 +48,7 @@ export function guideLookup(exercises: readonly LibraryExercise[], flagOn: boole
     if (!id) return null;
     const entry = byId.get(id);
     if (!entry || !hasGuidance(entry)) return null;
-    return memberMaySeeGuidance(id, flagOn) ? entry : null;
+    return memberMaySeeLibraryText(entry, flagOn) ? entry : null;
   };
 }
 

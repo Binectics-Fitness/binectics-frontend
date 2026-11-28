@@ -78,7 +78,8 @@ describe("the gym nav for each role", () => {
   });
 
   it("has a rule for every sidebar item and no rule for an item that isn't there", () => {
-    const items = names(SIDEBAR).sort();
+    // Library is added by the shell while the runtime flag exercise_library_page is on.
+    const items = [...names(SIDEBAR), "Library"].sort();
     expect(Object.keys(GYM_NAV_ACCESS).sort()).toEqual(items);
   });
 
@@ -134,6 +135,8 @@ const replace = vi.fn();
 
 // Paid content (the "Programs & meal plans" item) is on unless a test says otherwise.
 let mockSelling = true;
+// The Library nav item sits behind a runtime flag; these tests run with it off.
+vi.mock("@/hooks/useFeatureFlags", () => ({ useFeatureFlag: () => false }));
 vi.mock("@/hooks/usePaidContentSeller", () => ({
   usePaidContentSeller: () => ({ on: mockSelling, flagsLoading: false, ownsWorkspace: true, canPrice: true }),
 }));

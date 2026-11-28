@@ -9,6 +9,8 @@ let mockRefundCount = 0;
 const refundCountCalls: boolean[] = [];
 
 // The plan's Includes and the gym's content item show only while selling is on.
+// The Library nav item sits behind a runtime flag; these tests run with it off.
+vi.mock("@/hooks/useFeatureFlags", () => ({ useFeatureFlag: () => false }));
 vi.mock("@/hooks/usePaidContentSeller", () => ({
   usePaidContentSeller: () => ({ on: false, flagsLoading: false, ownsWorkspace: true, canPrice: true }),
 }));

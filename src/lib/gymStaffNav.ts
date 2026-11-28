@@ -110,6 +110,8 @@ export const GYM_NAV_ACCESS: Readonly<Record<string, GymAccessRule>> = {
   Loyalty: needs(P.MANAGE_ORGANIZATION, P.VIEW_MEMBERS),
   // GET /teams/organizations/:id, .../members, .../roles
   "Team & roles": needs(P.VIEW_MEMBERS),
+  // GET /exercise-library answers any signed-in user; read-only reference.
+  Library: needs(),
   // /marketplace/organizations/:id/assignment-rules
   "Assignment rules": needs(P.MARKETPLACE_MANAGE_LISTING),
   // /provider-billing/organizations/:id/*: owner only
@@ -153,6 +155,7 @@ export const GYM_PAGE_ACCESS: ReadonlyArray<readonly [string, GymAccessRule]> = 
   ["/dashboard/gym-owner/tax", needs(P.MARKETPLACE_MANAGE_LISTING, P.VIEW_MEMBERS)],
   ["/dashboard/gym-owner/plans", NAV["Plans & pricing"]],
   ["/dashboard/gym-owner/content", NAV["Programs & meal plans"]],
+  ["/dashboard/gym-owner/library", NAV.Library],
   ["/dashboard/gym-owner/locations", NAV.Locations],
   // GET /marketplace/my-listings + facility items (manage_listing)
   ["/dashboard/gym-owner/facility", needs(P.MARKETPLACE_MANAGE_LISTING)],

@@ -30,7 +30,7 @@ vi.mock("@/components/programs/exerciseLibraryCache", () => ({
         : { status: "failed" },
     ),
 }));
-const lib = (id: string, name: string, steps: string[]) => ({
+const lib = (id: string, name: string, steps: string[], memberTextApproved = true) => ({
   id,
   name,
   category: "Core",
@@ -39,6 +39,7 @@ const lib = (id: string, name: string, steps: string[]) => ({
   primaryMuscles: ["Core"],
   steps,
   cues: ["Keep breathing."],
+  memberTextApproved,
 });
 
 const ok = <T,>(data: T) => Promise.resolve({ success: true as const, data });
@@ -115,10 +116,11 @@ describe("member workout plan page", () => {
       { name: "Farmer walk", order: 3, notes: "Heavy" },
     ],
   } as unknown as WorkoutPlan;
-  const renderGuided = async () => {
+  // The deadlift is in the coach-review scope: withheld unless a test says it is approved.
+  const renderGuided = async (deadliftApproved = false) => {
     guidance.library = [
       lib("plank", "Plank", ["Lie face down and place your forearms on the floor."]),
-      lib("barbell-deadlift", "Barbell Deadlift", ["Stand with the bar over the middle of your feet."]),
+      lib("barbell-deadlift", "Barbell Deadlift", ["Stand with the bar over the middle of your feet."], deadliftApproved),
     ];
     vi.spyOn(progressService, "getMyWorkoutPlanById").mockReturnValue(ok(GUIDED) as never);
     const params = Promise.resolve({ planId: "p1" });
@@ -148,9 +150,17 @@ describe("member workout plan page", () => {
     expect(screen.queryByTestId("exercise-guide")).toBeNull();
   });
 
-  it("switch on: the new text-only exercises open too, and a custom exercise never does", async () => {
+  it("switch on: an exercise whose text is withheld from members still does not open", async () => {
     guidance.flagOn = true;
-    await renderGuided();
+    await renderGuided(false);
+    expect(await screen.findByRole("button", { name: "How to do Plank" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "How to do Barbell Deadlift" })).toBeNull();
+    expect(screen.queryByText(/Stand with the bar/)).toBeNull();
+  });
+
+  it("switch on: approved text-only exercises open too, and a custom exercise never does", async () => {
+    guidance.flagOn = true;
+    await renderGuided(true);
     fireEvent.click(await screen.findByRole("button", { name: "How to do Barbell Deadlift" }));
     expect(screen.getByTestId("exercise-guide").textContent).toContain("Stand with the bar over the middle of your feet.");
     expect(screen.getByRole("button", { name: "How to do Plank" })).toBeTruthy();
